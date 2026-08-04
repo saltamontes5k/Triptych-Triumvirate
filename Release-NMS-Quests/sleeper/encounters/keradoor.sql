@@ -1,0 +1,1 @@
+UPDATE `doors` SET `invert_state`=1 WHERE `id`=8504;
