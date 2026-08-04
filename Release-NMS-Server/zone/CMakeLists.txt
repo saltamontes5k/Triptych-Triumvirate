@@ -1,0 +1,517 @@
+CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
+
+SET(zone_sources
+    aa.cpp
+    aa_ability.cpp
+    aggro.cpp
+    aggromanager.cpp
+    api_service.cpp
+    attack.cpp
+    aura.cpp
+    beacon.cpp
+    bonuses.cpp
+    bot.cpp
+    bot_raid.cpp
+    bot_database.cpp
+    botspellsai.cpp
+    cheat_manager.cpp
+    client.cpp
+    client_evolving_items.cpp
+    client_bot.cpp
+    client_mods.cpp
+    client_packet.cpp
+    client_process.cpp
+    combat_record.cpp
+    corpse.cpp
+    ../common/data_bucket.cpp
+    ../common/data_bucket.cpp
+    doors.cpp
+    dialogue_window.cpp
+    dynamic_zone.cpp
+    effects.cpp
+    embparser.cpp
+    embparser_api.cpp
+    embperl.cpp
+    encounter.cpp
+    entity.cpp
+    exp.cpp
+    expedition_request.cpp
+    fastmath.cpp
+    fearpath.cpp
+    forage.cpp
+    groups.cpp
+    guild.cpp
+    guild_mgr.cpp
+    hate_list.cpp
+    heal_rotation.cpp
+    horse.cpp
+    inventory.cpp
+    loot.cpp
+    embperl.cpp
+    entity.cpp
+    exp.cpp
+    fearpath.cpp
+    forage.cpp
+    global_loot_manager.cpp
+    groups.cpp
+    guild.cpp
+    guild_mgr.cpp
+    hate_list.cpp
+    horse.cpp
+    inventory.cpp
+    loot.cpp
+    main.cpp
+    map.cpp
+    merc.cpp
+    mob.cpp
+    mob_ai.cpp
+    mob_appearance.cpp
+    mob_movement_manager.cpp
+    mob_info.cpp
+    npc.cpp
+    npc_scale_manager.cpp
+    object.cpp
+    oriented_bounding_box.cpp
+    parcels.cpp
+    pathfinder_interface.cpp
+    pathfinder_nav_mesh.cpp
+    pathfinder_null.cpp
+    pathing.cpp
+    petitions.cpp
+    pets.cpp
+    position.cpp
+    qglobals.cpp
+    queryserv.cpp
+    questmgr.cpp
+    quest_db.cpp
+    quest_parser_collection.cpp
+    raids.cpp
+    raycast_mesh.cpp
+    sidecar_api/sidecar_api.cpp
+    sidecar_api/loot_simulator_controller.cpp
+    shared_task_zone_messaging.cpp
+    spawn2.cpp
+    spawn2.h
+    spawngroup.cpp
+    special_attacks.cpp
+    spell_effects.cpp
+    spells.cpp
+    task_client_state.cpp
+    task_manager.cpp
+    tasks.cpp
+    titles.cpp
+    nms_waypoints.cpp
+    tradeskills.cpp
+    trading.cpp
+    trap.cpp
+    tribute.cpp
+    tune.cpp
+    water_map.cpp
+    water_map_v1.cpp
+    water_map_v2.cpp
+    waypoints.cpp
+    worldserver.cpp
+    xtargetautohaters.cpp
+    zone.cpp
+    zone_config.cpp
+    zonedb.cpp
+    zone_base_data.cpp
+    zone_event_scheduler.cpp
+    zone_npc_factions.cpp
+    zone_reload.cpp
+    zone_save_state.cpp
+    zoning.cpp
+)
+
+SET(zone_headers
+    aa.h
+    aa_ability.h
+    aggromanager.h
+    api_service.h
+    aura.h
+    beacon.h
+    bot.h
+    bot_command.h
+    bot_database.h
+    bot_structs.h
+    cheat_manager.h
+    client.h
+    client_packet.h
+    combat_record.h
+    command.h
+    common.h
+    corpse.h
+    ../common/data_bucket.h
+    doors.h
+    dialogue_window.h
+    dynamic_zone.h
+    embparser.h
+    embperl.h
+    encounter.h
+    entity.h
+    event_codes.h
+    expedition_request.h
+    fastmath.h
+    forage.h
+    global_loot_manager.h
+    groups.h
+    guild_mgr.h
+    hate_list.h
+    heal_rotation.h
+    horse.h
+    lua_bot.h
+    lua_bit.h
+    lua_buff.h
+    lua_client.h
+    lua_corpse.h
+    lua_database.h
+    lua_door.h
+    lua_encounter.h
+    lua_entity.h
+    lua_entity_list.h
+    lua_expedition.h
+    lua_general.h
+    lua_group.h
+    lua_hate_list.h
+    lua_inventory.h
+    lua_item.h
+    lua_iteminst.h
+    lua_merc.h
+    lua_mob.h
+    lua_mod.h
+    lua_npc.h
+    lua_object.h
+    lua_packet.h
+    lua_parser.h
+    lua_parser_events.h
+    lua_ptr.h
+    lua_raid.h
+    lua_spawn.h
+    lua_spell.h
+    lua_stat_bonuses.h
+    lua_zone.h
+    map.h
+    masterentity.h
+    merc.h
+    mob.h
+    mob_movement_manager.h
+    npc.h
+    npc_scale_manager.h
+    object.h
+    oriented_bounding_box.h
+    pathfinder_interface.h
+    pathfinder_nav_mesh.h
+    pathfinder_null.h
+    perl_database.h
+    perlpacket.h
+    petitions.h
+    pets.h
+    position.h
+    qglobals.h
+    quest_interface.h
+    queryserv.h
+    quest_interface.h
+    questmgr.h
+    quest_db.h
+    quest_parser_collection.h
+    raids.h
+    raycast_mesh.h
+    sidecar_api/sidecar_api.h
+    shared_task_zone_messaging.h
+    spawn2.cpp
+    spawn2.h
+    spawngroup.h
+    string_ids.h
+    task_client_state.h
+    task_manager.h
+    tasks.h
+    titles.h
+    trap.h
+    water_map.h
+    water_map_v1.h
+    water_map_v2.h
+    worldserver.h
+    xtargetautohaters.h
+    zone.h
+    zone_event_scheduler.h
+    zone_config.h
+    zonedb.h
+    zonedump.h
+    zone_cli.h
+    zone_reload.h
+    zone_save_state.h
+    zone_cli.cpp)
+
+# lua unity build
+set(lua_sources
+    lua_bot.cpp
+    lua_bit.cpp
+    lua_buff.cpp
+    lua_corpse.cpp
+    lua_client.cpp
+    lua_database.cpp
+    lua_door.cpp
+    lua_encounter.cpp
+    lua_entity.cpp
+    lua_entity_list.cpp
+    lua_expedition.cpp
+    lua_general.cpp
+    lua_group.cpp
+    lua_hate_list.cpp
+    lua_inventory.cpp
+    lua_item.cpp
+    lua_iteminst.cpp
+    lua_merc.cpp
+    lua_mob.cpp
+    lua_mod.cpp
+    lua_npc.cpp
+    lua_object.cpp
+    lua_packet.cpp
+    lua_parser.cpp
+    lua_parser_events.cpp
+    lua_raid.cpp
+    lua_spawn.cpp
+    lua_spell.cpp
+    lua_stat_bonuses.cpp
+    lua_zone.cpp
+)
+
+add_library(lua_zone STATIC ${lua_sources})
+set_target_properties(lua_zone PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 8)
+
+# perl unity build
+set(perl_sources
+    perl_bot.cpp
+    perl_buff.cpp
+    perl_client.cpp
+    perl_database.cpp
+    perl_doors.cpp
+    perl_entity.cpp
+    perl_expedition.cpp
+    perl_groups.cpp
+    perl_hateentry.cpp
+    perl_inventory.cpp
+    perl_merc.cpp
+    perl_mob.cpp
+    perl_npc.cpp
+    perl_object.cpp
+    perl_perlpacket.cpp
+    perl_player_corpse.cpp
+    perl_questitem.cpp
+    perl_questitem_data.cpp
+    perl_raids.cpp
+    perl_spawn.cpp
+    perl_spell.cpp
+    perl_stat_bonuses.cpp
+    perl_zone.cpp
+    perlpacket.cpp
+)
+
+add_library(perl_zone STATIC ${perl_sources})
+set_target_properties(perl_zone PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 8)
+
+# gm commands
+set(gm_command_sources
+    command.cpp
+    bot_command.cpp
+    gm_commands/acceptrules.cpp
+    gm_commands/advnpcspawn.cpp
+    gm_commands/aggrozone.cpp
+    gm_commands/ai.cpp
+    gm_commands/appearance.cpp
+    gm_commands/appearanceeffects.cpp
+    gm_commands/attack.cpp
+    gm_commands/augmentitem.cpp
+    gm_commands/ban.cpp
+    gm_commands/bugs.cpp
+    gm_commands/camerashake.cpp
+    gm_commands/castspell.cpp
+    gm_commands/chat.cpp
+    gm_commands/clearxtargets.cpp
+    gm_commands/copycharacter.cpp
+    gm_commands/corpse.cpp
+    gm_commands/corpsefix.cpp
+    gm_commands/countitem.cpp
+    gm_commands/damage.cpp
+    gm_commands/databuckets.cpp
+    gm_commands/dbspawn2.cpp
+    gm_commands/delacct.cpp
+    gm_commands/delpetition.cpp
+    gm_commands/depop.cpp
+    gm_commands/depopzone.cpp
+    gm_commands/devtools.cpp
+    gm_commands/disablerecipe.cpp
+    gm_commands/disarmtrap.cpp
+    gm_commands/doanim.cpp
+    gm_commands/door.cpp
+    gm_commands/door_manipulation.cpp
+    gm_commands/dye.cpp
+    gm_commands/dz.cpp
+    gm_commands/dzkickplayers.cpp
+    gm_commands/editmassrespawn.cpp
+    gm_commands/emote.cpp
+    gm_commands/emptyinventory.cpp
+    gm_commands/enablerecipe.cpp
+    gm_commands/entityvariable.cpp
+    gm_commands/exptoggle.cpp
+    gm_commands/faction.cpp
+    gm_commands/evolving_items.cpp
+    gm_commands/feature.cpp
+    gm_commands/find.cpp
+    gm_commands/fish.cpp
+    gm_commands/fixmob.cpp
+    gm_commands/flagedit.cpp
+    gm_commands/fleeinfo.cpp
+    gm_commands/forage.cpp
+    gm_commands/gearup.cpp
+    gm_commands/giveitem.cpp
+    gm_commands/givemoney.cpp
+    gm_commands/gmzone.cpp
+    gm_commands/goto.cpp
+    gm_commands/grantaa.cpp
+    gm_commands/grid.cpp
+    gm_commands/guild.cpp
+    gm_commands/hp.cpp
+    gm_commands/illusion_block.cpp
+    gm_commands/instance.cpp
+    gm_commands/interrogateinv.cpp
+    gm_commands/interrupt.cpp
+    gm_commands/invsnapshot.cpp
+    gm_commands/ipban.cpp
+    gm_commands/kick.cpp
+    gm_commands/kill.cpp
+    gm_commands/killallnpcs.cpp
+    gm_commands/list.cpp
+    gm_commands/lootsim.cpp
+    gm_commands/loc.cpp
+    gm_commands/logs.cpp
+    gm_commands/makepet.cpp
+    gm_commands/memspell.cpp
+    gm_commands/merchantshop.cpp
+    gm_commands/modifynpcstat.cpp
+    gm_commands/movechar.cpp
+    gm_commands/movement.cpp
+    gm_commands/myskills.cpp
+    gm_commands/mysql.cpp
+    gm_commands/mystats.cpp
+    gm_commands/npccast.cpp
+    gm_commands/npcedit.cpp
+    gm_commands/npceditmass.cpp
+    gm_commands/npcemote.cpp
+    gm_commands/npcloot.cpp
+    gm_commands/npcsay.cpp
+    gm_commands/npcshout.cpp
+    gm_commands/npcspawn.cpp
+    gm_commands/npctypespawn.cpp
+    gm_commands/nudge.cpp
+    gm_commands/nukebuffs.cpp
+    gm_commands/nukeitem.cpp
+    gm_commands/object.cpp
+    gm_commands/object_manipulation.cpp
+    gm_commands/parcels.cpp
+    gm_commands/path.cpp
+    gm_commands/peqzone.cpp
+    gm_commands/petitems.cpp
+    gm_commands/petname.cpp
+    gm_commands/picklock.cpp
+    gm_commands/profanity.cpp
+    gm_commands/push.cpp
+    gm_commands/raidloot.cpp
+    gm_commands/randomfeatures.cpp
+    gm_commands/refreshgroup.cpp
+    gm_commands/reload.cpp
+    gm_commands/removeitem.cpp
+    gm_commands/repop.cpp
+    gm_commands/resetaa.cpp
+    gm_commands/resetaa_timer.cpp
+    gm_commands/resetdisc_timer.cpp
+    gm_commands/revoke.cpp
+    gm_commands/roambox.cpp
+    gm_commands/rules.cpp
+    gm_commands/save.cpp
+    gm_commands/scale.cpp
+    gm_commands/scribespell.cpp
+    gm_commands/scribespells.cpp
+    gm_commands/sendzonespawns.cpp
+    gm_commands/sensetrap.cpp
+    gm_commands/serverrules.cpp
+    gm_commands/set.cpp
+    gm_commands/show.cpp
+    gm_commands/shutdown.cpp
+    gm_commands/spawn.cpp
+    gm_commands/spawneditmass.cpp
+    gm_commands/spawnfix.cpp
+    gm_commands/faction_association.cpp
+    gm_commands/stun.cpp
+    gm_commands/summon.cpp
+    gm_commands/summonburiedplayercorpse.cpp
+    gm_commands/summonitem.cpp
+    gm_commands/suspend.cpp
+    gm_commands/suspendmulti.cpp
+    gm_commands/takeplatinum.cpp
+    gm_commands/task.cpp
+    gm_commands/traindisc.cpp
+    gm_commands/tune.cpp
+    gm_commands/undye.cpp
+    gm_commands/unmemspell.cpp
+    gm_commands/unmemspells.cpp
+    gm_commands/unscribespell.cpp
+    gm_commands/unscribespells.cpp
+    gm_commands/untraindisc.cpp
+    gm_commands/untraindiscs.cpp
+    gm_commands/wc.cpp
+    gm_commands/worldshutdown.cpp
+    gm_commands/worldwide.cpp
+    gm_commands/wp.cpp
+    gm_commands/wpadd.cpp
+    gm_commands/zone.cpp
+    gm_commands/zonebootup.cpp
+    gm_commands/zoneshutdown.cpp
+    gm_commands/zonevariable.cpp
+    gm_commands/zone_instance.cpp
+    gm_commands/zone_shard.cpp
+    gm_commands/zsave.cpp
+	gm_commands/alttoggle.cpp
+	gm_commands/attackmode.cpp
+	gm_commands/autoskill.cpp
+	gm_commands/award.cpp
+	gm_commands/soulmark.cpp
+	gm_commands/castspellnms.cpp
+	gm_commands/petcmd.cpp
+	gm_commands/toggleimprovedmodels.cpp
+)
+
+add_library(gm_commands_zone STATIC ${gm_command_sources})
+set_target_properties(gm_commands_zone PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 32)
+
+# zone combine sources and headers
+ADD_EXECUTABLE(zone ${zone_sources} ${zone_headers})
+
+# binary output directory
+INSTALL(TARGETS zone RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin)
+
+# precompiled headers
+IF (EQEMU_BUILD_PCH)
+    TARGET_PRECOMPILE_HEADERS(zone PRIVATE ../common/pch/app-pch.h)
+    TARGET_PRECOMPILE_HEADERS(zone PRIVATE ./pch/pch.h)
+ENDIF()
+
+ADD_DEFINITIONS(-DZONE)
+
+# link lua_zone unity build against luabind
+target_link_libraries(lua_zone PRIVATE luabind)
+if (EQEMU_BUILD_STATIC AND LUA_LIBRARY)
+    target_link_libraries(zone PRIVATE ${LUA_LIBRARY})
+endif()
+
+# perl unity build links against perl_zone
+target_link_libraries(perl_zone PRIVATE perlbind)
+if (EQEMU_BUILD_STATIC AND PERL_LIBRARY)
+    target_link_libraries(zone PRIVATE ${PERL_LIBRARY})
+endif()
+
+# link zone against common libraries
+target_link_libraries(zone PRIVATE ${ZONE_LIBS} lua_zone perl_zone gm_commands_zone)
+
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+

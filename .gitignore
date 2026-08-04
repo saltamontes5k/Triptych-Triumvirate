@@ -1,0 +1,21 @@
+# Visual Studio & IDE caches
+.vs/
+*.user
+*.suo
+*.userosv
+*.sln.docstates
+*.VC.db
+*.opendb
+*.ipch
+*.idb
+*.pdb
+
+# Gradle & Build cache outputs
+.gradle/
+buildOutputCleanup/
+build/
+bin/
+out/
+
+# Large vcpkg build archives (>100MB limit on GitHub)
+Release-NMS-Server/vcpkg/vcpkg-export-x64.zip

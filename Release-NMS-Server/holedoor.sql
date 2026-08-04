@@ -1,0 +1,1 @@
+UPDATE `doors` SET `lockpick`=0, `keyitem`=0 WHERE `id`=10599;

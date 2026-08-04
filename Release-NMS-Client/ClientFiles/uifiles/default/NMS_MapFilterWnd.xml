@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<XML ID="EQInterfaceDefinitionLanguage">
+  <Schema xmlns="EverQuestData" xmlns:dt="EverQuestDataTypes" />
+
+
+
+  <Button item="PC_Checkbox">
+    <ScreenID>PC_Checkbox</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>16</X>
+      <Y>16</Y>
+    </Location>
+    <Size>
+      <CX>12</CX>
+      <CY>12</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text />
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <Style_Checkbox>true</Style_Checkbox>
+    <Text />
+    <Template>BDT_Checkbox</Template>
+  </Button>
+  <Label item="PC_Label">
+    <ScreenID>PC_Label</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>32</X>
+      <Y>16</Y>
+    </Location>
+    <Size>
+      <CX>165</CX>
+      <CY>20</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text>Show Players</Text>
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <NoWrap>false</NoWrap>
+    <AlignCenter>false</AlignCenter>
+    <AlignRight>false</AlignRight>
+  </Label>
+  <Button item="NPC_Checkbox">
+    <ScreenID>NPC_Checkbox</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>16</X>
+      <Y>32</Y>
+    </Location>
+    <Size>
+      <CX>12</CX>
+      <CY>12</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text />
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <Style_Checkbox>true</Style_Checkbox>
+    <Text />
+    <Template>BDT_Checkbox</Template>
+  </Button>
+  <Label item="NPC_Label">
+    <ScreenID>NPC_Label</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>32</X>
+      <Y>32</Y>
+    </Location>
+    <Size>
+      <CX>165</CX>
+      <CY>20</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text>Show NPCs</Text>
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <NoWrap>false</NoWrap>
+    <AlignCenter>false</AlignCenter>
+    <AlignRight>false</AlignRight>
+  </Label>
+ 
+  <Button item="Group_Checkbox">
+    <ScreenID>Group_Checkbox</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>16</X>
+      <Y>48</Y>
+    </Location>
+    <Size>
+      <CX>12</CX>
+      <CY>12</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text />
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <Style_Checkbox>true</Style_Checkbox>
+    <Text />
+    <Template>BDT_Checkbox</Template>
+  </Button>
+  <Label item="Group_Label">
+    <ScreenID>Group_Label</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>32</X>
+      <Y>48</Y>
+    </Location>
+    <Size>
+      <CX>165</CX>
+      <CY>20</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text>Show Group</Text>
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <NoWrap>false</NoWrap>
+    <AlignCenter>false</AlignCenter>
+    <AlignRight>false</AlignRight>
+  </Label>
+
+
+
+  <Button item="Pets_Checkbox">
+    <ScreenID>Pets_Checkbox</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>16</X>
+      <Y>64</Y>
+    </Location>
+    <Size>
+      <CX>12</CX>
+      <CY>12</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text />
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <Style_Checkbox>true</Style_Checkbox>
+    <Text />
+    <Template>BDT_Checkbox</Template>
+  </Button>
+  <Label item="Pets_Label">
+    <ScreenID>Pets_Label</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>32</X>
+      <Y>64</Y>
+    </Location>
+    <Size>
+      <CX>165</CX>
+      <CY>20</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text>Show Pets</Text>
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <NoWrap>false</NoWrap>
+    <AlignCenter>false</AlignCenter>
+    <AlignRight>false</AlignRight>
+  </Label>
+
+  <Button item="Corpses_Checkbox">
+    <ScreenID>Corpses_Checkbox</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>16</X>
+      <Y>80</Y>
+    </Location>
+    <Size>
+      <CX>12</CX>
+      <CY>12</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text />
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <Style_Checkbox>true</Style_Checkbox>
+    <Text />
+    <Template>BDT_Checkbox</Template>
+  </Button>
+  <Label item="Corpses_Label">
+    <ScreenID>Corpses_Label</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>32</X>
+      <Y>80</Y>
+    </Location>
+    <Size>
+      <CX>165</CX>
+      <CY>20</CY>
+    </Size>
+    <AutoStretch>false</AutoStretch>
+    <TopAnchorToTop>true</TopAnchorToTop>
+    <LeftAnchorToLeft>true</LeftAnchorToLeft>
+    <BottomAnchorToTop>true</BottomAnchorToTop>
+    <RightAnchorToLeft>true</RightAnchorToLeft>
+    <TopAnchorOffset>0</TopAnchorOffset>
+    <BottomAnchorOffset>0</BottomAnchorOffset>
+    <LeftAnchorOffset>0</LeftAnchorOffset>
+    <RightAnchorOffset>0</RightAnchorOffset>
+    <Text>Show Corpses</Text>
+    <TextColor>
+      <Alpha>255</Alpha>
+      <R>255</R>
+      <G>255</G>
+      <B>255</B>
+    </TextColor>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_HScroll>false</Style_HScroll>
+    <Style_Transparent>false</Style_Transparent>
+    <Style_Border>false</Style_Border>
+    <NoWrap>false</NoWrap>
+    <AlignCenter>false</AlignCenter>
+    <AlignRight>false</AlignRight>
+  </Label> 
+
+  <!--Main
+  Window-->
+  <Screen item="MapFilterWnd">
+    <ScreenID>MapFilterWnd</ScreenID>
+    <Font>3</Font>
+    <RelativePosition>true</RelativePosition>
+    <Text>Map Filters</Text>
+
+    <Location>
+      <X>0</X>
+      <Y>0</Y>
+    </Location>
+    <Size>
+      <CX>128</CX>
+      <CY>128</CY>
+    </Size>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_Border>true</Style_Border>
+    <Style_Transparent>false</Style_Transparent>
+    <DrawTemplate>WDT_Def</DrawTemplate>
+    <Style_Titlebar>true</Style_Titlebar>
+    <Style_Closebox>true</Style_Closebox>
+    <Escapable>true</Escapable>
+    <Style_Minimizebox>false</Style_Minimizebox>
+
+    <Pieces>PC_Checkbox</Pieces>
+    <Pieces>PC_Label</Pieces>
+    <Pieces>NPC_Checkbox</Pieces>
+    <Pieces>NPC_Label</Pieces>  
+    <Pieces>Group_Checkbox</Pieces>
+    <Pieces>Group_Label</Pieces>
+
+    <Pieces>Pets_Checkbox</Pieces>
+    <Pieces>Pets_Label</Pieces>
+    <Pieces>Corpses_Checkbox</Pieces>
+    <Pieces>Corpses_Label</Pieces>
+
+  </Screen>
+  
+</XML>
