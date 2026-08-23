@@ -1,0 +1,4 @@
+# Placeholder directory: anything dropped here stays local, but this file is
+# tracked so the folder itself always exists in a fresh clone.
+*
+!.gitignore

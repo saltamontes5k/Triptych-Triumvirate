@@ -1,0 +1,1 @@
+UPDATE `npc_types` SET `npc_spells_id`= 0 WHERE `id` = 226071;

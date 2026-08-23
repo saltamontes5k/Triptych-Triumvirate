@@ -1,0 +1,1 @@
+UPDATE `doors` SET `pos_y`=726, `pos_x`=-1480, `pos_z`=-1200 WHERE `ID` IN (11289,11290,11297,11298,11299,11300,11301,11302,11303) AND `zone`='potranquility';

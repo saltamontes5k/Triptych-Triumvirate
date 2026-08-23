@@ -1,0 +1,42 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "port": "3306",
+    "db": "peq",
+    "user": "root",
+    "password": "eqemu"
+  },
+  "account": {
+    "auto_create_accounts": true
+  },
+  "worldservers": {
+    "unregistered_allowed": true,
+    "show_player_count": false,
+    "dev_test_servers_list_bottom": false,
+    "special_character_start_list_bottom": false,
+    "reject_duplicate_servers": false
+  },
+  "web_api": {
+    "enabled": true,
+    "port": 6000
+  },
+  "security": {
+    "mode": 14,
+    "allow_password_login": true,
+    "allow_token_login": true
+  },
+  "logging": {
+    "trace": false,
+    "world_trace": false,
+    "dump_packets_in": false,
+    "dump_packets_out": false
+  },
+  "client_configuration": {
+    "titanium_port": 5998,
+    "titanium_opcodes": "login_opcodes.conf",
+    "sod_port": 5999,
+    "sod_opcodes": "login_opcodes_sod.conf",
+    "display_expansions" : true,
+    "max_expansions_mask" : 524287
+  }
+}

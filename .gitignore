@@ -1,0 +1,25 @@
+# Visual Studio & IDE caches
+.vs/
+*.user
+*.suo
+*.userosv
+*.sln.docstates
+*.VC.db
+*.opendb
+*.ipch
+*.idb
+*.pdb
+
+# Gradle & Build cache outputs
+.gradle/
+buildOutputCleanup/
+build/
+bin/
+out/
+
+# Large vcpkg build archives (>100MB limit on GitHub)
+Release-NMS-Server/vcpkg/vcpkg-export-x64.zip
+
+# Raw sanitized DB dump exceeds GitHub's 100MB/file limit.
+# Use the compressed release-peq-sanitized.zip instead.
+Release-NMS-Server/database/release-peq-sanitized.sql

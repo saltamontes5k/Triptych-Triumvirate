@@ -1,0 +1,1 @@
+UPDATE `doors` SET `invert_state`=1, `close_timer_ms`=1, `doorisopen`=0, `keyitem`=-1, `opentype`=100 WHERE `id`=6065;
