@@ -1,7 +1,7 @@
 # NMS Server
 
 A complete, working **multiclass EverQuest server** — a community remake built on
-EQEmu. This repository is a sanitized snapshot of the live NMS server with EQ Ascendant's tomes thrown in, safe to
+EQEmu. This repository is a sanitized snapshot of the live NMS server, safe to
 share or build on.
 
 **This code and all derivative works are the fruit of an educational project by
@@ -28,12 +28,13 @@ baseline.
 
 ## What makes it different 
 
-NEW
 - **Cross-class AA Tome system** — hunt illegible tomes, train AAs from other
-  classes at Bazaar guild master trainers
+  classes at Bazaar guild master trainers; recycle a tome to reshape it into a
+  different class's same-tier tome
 - **Drakkin breath weapons** — racial breath AA line, 13 ranks (lvl 5 → 65) autogrants every 5 lvls
-
-Old
+- **Lost Soul augs** — Diablo-style randomized Lost/Restless/Found Soul
+  augmentations from the `aug_generator`
+- **Badword filter** — profanity/name filters restored (`badword_filter_restore.sql`)
 - **Multiclassing** — a character can take up to three classes at once
 - **Multiple pets** — pet classes control several pets, with a custom pet window
 - **Echo of Memory** — an alternate currency that drops from kills and buys unlocks
@@ -42,14 +43,26 @@ Old
 
 ---
 
+## Credits
+
+- **huggy / sploose** — Hazel buff bot
+- **zerohex** — Purveyor of Armour Glamour
+- **dritjoda** — Lost Soul Diablo-style augmentation system
+- **Straps** — Ascendant tome system plugins and trainers
+
+See **[CHANGELOG.md](CHANGELOG.md)** for the full change list and per-commit
+breakdown vs the upstream [`tunaria/NMS-Release`](https://github.com/tunaria/NMS-Release)
+baseline.
+
 ## Quick start
 
 **1. Get a client.** Not included and cannot be — EverQuest client files are
 Daybreak's. You need the RoF2-era client this server was built against. See
 [the client README](Release-NMS-Client/README.md).
 
-**2. Set up the database.** Import `Release-NMS-Server/database/release-peq-sanitized.sql`
-(or unzip `release-peq-sanitized.zip`) into an empty schema:
+**2. Set up the database.** Unzip
+`Release-NMS-Server/database/release-peq-sanitized.zip` and import the contained
+`release-peq-sanitized.sql` into an empty schema:
 
 ```
 mysql -u root -p -e "CREATE DATABASE peq;"

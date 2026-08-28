@@ -1,2 +1,5 @@
 opcode_handlers_output
 vcxproj_dependencies_output
+generators/aug_generator/output/
+generators/aug_generator/used_names.txt
+generators/aug_generator/__pycache__/

@@ -6,19 +6,34 @@
 # Players can redeem credits for unspent AA points — either bulk (drains lowest tier first)
 # or targeted by specific tier+class. Also handles buyback of old translated tomes
 # from the previous system, refunding platinum and returning the illegible tome.
+# Also handles tome recycling: reshape an illegible tome of any class into a random
+# tome of the same tier for a different class, for the standard deciphering fee.
+
+# ── Tome recycling constants ──
+my %TIER_PLAT_COST = (1 => 100, 2 => 300, 3 => 500);
+my %TIER_NAMES     = (1 => 'Greater', 2 => 'Exalted', 3 => 'Ascendant');
+my %CLASS_NAMES    = (
+    1  => 'Warrior',      2  => 'Cleric',       3  => 'Paladin',
+    4  => 'Ranger',       5  => 'Shadow Knight', 6  => 'Druid',
+    7  => 'Monk',         8  => 'Bard',          9  => 'Rogue',
+    10 => 'Shaman',       11 => 'Necromancer',   12 => 'Wizard',
+    13 => 'Magician',     14 => 'Enchanter',     15 => 'Beastlord',
+    16 => 'Berserker',
+);
 
 sub EVENT_SAY {
     my $char_id = $client->CharacterID();
     my $is_tomeless = quest::get_data("tomeless_" . $char_id) ? 1 : 0;
 
     if ($text =~ /hail/i) {
-        my $credits_link = quest::saylink("my credits", 1, "my credits");
+        my $credits_link  = quest::saylink("my credits", 1, "my credits");
+        my $recycle_link  = quest::saylink("recycle", 1, "recycle");
         my $tomeless_link = quest::saylink("the tomeless", 1, "The Tomeless");
         if ($is_tomeless) {
             my $renounce_link = quest::saylink("renounce", 1, "renounce");
             plugin::Whisper("Greetings, $name. You walk the path of The Tomeless. The old translation system has been replaced with a new [training] system, but that path is closed to you. You may [$renounce_link] your vow for 100,000 platinum, or check [$credits_link] to view your credits.");
         } else {
-            plugin::Whisper("Greetings, $name. I am Haliax Greycloak, a scholar of ancient knowledge. The old translation system has been replaced with a new [training] system. You may also check [$credits_link] to view and redeem your AA training credits. Or, if you seek a greater challenge, ask me about [$tomeless_link].");
+            plugin::Whisper("Greetings, $name. I am Haliax Greycloak, a scholar of ancient knowledge. The old translation system has been replaced with a new [training] system. You may also check [$credits_link] to view and redeem your AA training credits, or ask me to [$recycle_link] an unwanted tome into a new one. Or, if you seek a greater challenge, ask me about [$tomeless_link].");
         }
     }
     elsif ($text =~ /^the tomeless$/i) {
@@ -39,6 +54,7 @@ sub EVENT_SAY {
                 "WHERE caa.char_id = ? AND aa.id > 20000 AND caa.aa_value > 0",
                 undef, $char_id
             );
+            $dbh->disconnect();
             if ($has_20k_aa && $has_20k_aa > 0) {
                 plugin::Whisper("You have already learned cross-class abilities. The path of The Tomeless is closed to you.");
                 return;
@@ -103,6 +119,9 @@ sub EVENT_SAY {
     elsif ($text =~ /buyback/i) {
         plugin::Whisper("Hand me any old translated tomes and I will refund their cost and return the matching illegible tome.");
     }
+    elsif ($text =~ /recycle/i) {
+        plugin::Whisper("Hand me one illegible tome of any class plus the deciphering fee — Greater 100pp, Exalted 300pp, Ascendant 500pp — and I will reshape it into a random tome of the same tier for another class.");
+    }
 }
 
 sub EVENT_POPUPRESPONSE {
@@ -164,6 +183,13 @@ sub EVENT_POPUPRESPONSE {
 }
 
 sub EVENT_ITEM {
+    # --- Tome Recycling: illegible tomes (121571-121618) ---
+    my ($recycle_id) = grep { $_ >= 121571 && $_ <= 121618 } keys %itemcount;
+    if ($recycle_id) {
+        _do_recycle($client, $recycle_id, $platinum, $gold, $silver, $copper);
+        return;
+    }
+
     my $total_bought = 0;
     my $total_refund = 0;
     my $tier_name    = "";
@@ -191,6 +217,7 @@ sub EVENT_ITEM {
 
             unless ($item_name && $illegible_tome_id) {
                 plugin::Whisper("Cannot find mapping for this tome. Please report this issue.");
+                $dbh->disconnect();
                 plugin::return_items(\%itemcount);
                 return;
             }
@@ -201,6 +228,7 @@ sub EVENT_ITEM {
             elsif ($item_name =~ /\(Ascendant\)/i) { $cost = 500; $tier_name = "Ascendant"; }
             else {
                 plugin::Whisper("Cannot determine tier for this tome. Please report this issue.");
+                $dbh->disconnect();
                 plugin::return_items(\%itemcount);
                 return;
             }
@@ -223,6 +251,8 @@ sub EVENT_ITEM {
         plugin::Whisper("I have no use for this. Bring me old translated tomes for buyback, or speak to guild masters about the new training system.");
         plugin::return_items(\%itemcount);
     }
+
+    $dbh->disconnect();
 }
 
 # -------------------------------------------------------
@@ -414,6 +444,97 @@ sub _do_redeem_tier {
     quest::set_data($key, $bal - $take);
     $client->SetAAPoints($client->GetAAPoints() + $take);
     plugin::Whisper("Redeemed $take $slug_to_name{$tier_slug} credit" . ($take > 1 ? "s" : "") . " ($class_names{$class_id}) for $take unspent AA point" . ($take > 1 ? "s" : "") . ". Remaining: " . ($bal - $take) . ".");
+}
+
+# -------------------------------------------------------
+# _do_recycle - reshape an illegible tome (121571-121618) into
+# a random tome of the same tier for a different class
+# Requires exactly one tome + the tier deciphering fee.
+# -------------------------------------------------------
+sub _do_recycle {
+    my ($client, $item_id, $plat_given, $gold_given, $silver_given, $copper_given) = @_;
+    my $char_id = $client->CharacterID();
+
+    if (quest::get_data("tomeless_" . $char_id)) {
+        plugin::Whisper("You walk the path of The Tomeless. The reshaping of tomes is closed to you.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    # Exactly one tome per trade (ignore empty trade-slot "0" keys this fork adds)
+    my @handed = grep { $_ && int($_) > 0 } keys %itemcount;
+    if (@handed != 1 || $itemcount{$item_id} != 1) {
+        plugin::Whisper("I reshape one tome at a time, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    my ($tome_class, $tier) = _get_tome_info($item_id);
+    unless ($tier) {
+        plugin::Whisper("I cannot reshape that item, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    my $fee        = $TIER_PLAT_COST{$tier};
+    my $tier_name  = $TIER_NAMES{$tier};
+    my $class_name = $CLASS_NAMES{$tome_class} || "Unknown";
+
+    if (int($plat_given) != $fee || int($gold_given) != 0 || int($silver_given) != 0 || int($copper_given) != 0) {
+        plugin::Whisper("Reshaping a $tier_name tome requires exactly $fee platinum and no other coin, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    # Exclusion set: the handed-in class + the player's native classes
+    my %excluded;
+    $excluded{$tome_class} = 1;
+    my $native_bm = _get_player_class_bitmask($client);
+    for my $c (1..16) {
+        $excluded{$c} = 1 if $native_bm && ($native_bm & (1 << ($c - 1)));
+    }
+
+    my @candidates = grep { !$excluded{$_} } (1..16);
+    unless (@candidates) {
+        plugin::Whisper("There is no other class toward which I can reshape this tome, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    my $new_class = $candidates[int(rand(@candidates))];
+    my $new_item  = 121571 + ($new_class - 1) * 3 + ($tier - 1);
+    my $new_name  = $CLASS_NAMES{$new_class} || "Unknown";
+
+    if (quest::handin({$item_id => 1, "platinum" => $fee})) {
+        quest::summonitem($new_item);
+        quest::ding();
+        plugin::Whisper("The tome's knowledge is reshaped. You receive an Illegible Tome of $tier_name $new_name Advancement.");
+    } else {
+        plugin::Whisper("I could not complete the reshaping, $name.");
+        plugin::return_items(\%itemcount);
+    }
+}
+
+# -------------------------------------------------------
+# _get_tome_info - map illegible tome item id to (class, tier)
+# base = 121571 + (class - 1) * 3; Greater/Exalted/Ascendant
+# -------------------------------------------------------
+sub _get_tome_info {
+    my ($item_id) = @_;
+    return (0, 0) unless ($item_id >= 121571 && $item_id <= 121618);
+    my $index = $item_id - 121571;
+    return (int($index / 3) + 1, ($index % 3) + 1);
+}
+
+# -------------------------------------------------------
+# _get_player_class_bitmask - player's full multiclass bitmask
+# -------------------------------------------------------
+sub _get_player_class_bitmask {
+    my ($client) = @_;
+    my $bm = $client->GetClassesBitmask();
+    return $bm if $bm;
+    my $pc = $client->GetClass();
+    return ($pc >= 1 && $pc <= 16) ? (1 << ($pc - 1)) : 0;
 }
 
 1;

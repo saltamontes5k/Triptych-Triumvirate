@@ -411,6 +411,8 @@ sub ShowTrainingMenu {
         $nav .= quest::saylink("train $filter_key $nxt", 1, "Next >>") . '  ';
     }
     $client->Message($COLOR_HEADING, $nav) if $nav;
+
+    $dbh->disconnect();
 }
 
 # ============================================================
@@ -448,12 +450,14 @@ sub ShowAADetail {
 
     unless ($aa) {
         $client->Message($COLOR_RED, "I cannot find that ability in my records.");
+        $dbh->disconnect();
         return;
     }
 
     # Validate this AA belongs to this trainer's class
     unless (($aa->{original_classes} & $class_bitmask) > 0) {
         $client->Message($COLOR_RED, "That ability is not part of the $class_name discipline. Seek the appropriate guild master.");
+        $dbh->disconnect();
         return;
     }
 
@@ -623,6 +627,8 @@ sub ShowAADetail {
     }
 
     quest::popup("$aa->{aa_name} - $class_name", $popup, 0, 0, 0);
+
+    $dbh->disconnect();
 }
 
 # ============================================================
@@ -659,12 +665,14 @@ sub ShowBuyConfirmation {
 
     unless ($aa && ($aa->{original_classes} & $class_bitmask) > 0) {
         $client->Message($COLOR_RED, "That ability is not available.");
+        $dbh->disconnect();
         return;
     }
 
     # NMS multiclass: block credit purchases of the player's own classes' AAs
     if (_is_native_class($client, $trainer_class)) {
         $client->Message($COLOR_RED, "You are already a $class_name. Native abilities are earned through experience - seek the guild masters of classes you do not yet know.");
+        $dbh->disconnect();
         return;
     }
 
@@ -682,12 +690,14 @@ sub ShowBuyConfirmation {
 
     if ($current_rank >= $max_rank) {
         $client->Message($COLOR_GRAY, "You have already mastered $aa->{aa_name}.");
+        $dbh->disconnect();
         return;
     }
 
     my $can_buy = _check_can_buy($dbh, $client, $first_rank_id, $current_rank, $tier_balance, 1);
     unless ($can_buy) {
         $client->Message($COLOR_RED, "You cannot purchase $aa->{aa_name} right now. Check your credits, level, and prerequisites.");
+        $dbh->disconnect();
         return;
     }
 
@@ -703,6 +713,8 @@ sub ShowBuyConfirmation {
 
     # popup_id = universal_aa_id, buttons = 1 (Yes/No)
     quest::popup("Confirm: $aa->{aa_name}", $popup, $universal_aa_id, 1, 0);
+
+    $dbh->disconnect();
 }
 
 # ============================================================
@@ -761,18 +773,21 @@ sub HandleTrainRequest {
 
     unless ($aa) {
         $client->Message($COLOR_RED, "I cannot find that ability.");
+        $dbh->disconnect();
         return 0;
     }
 
     # Validate this AA belongs to this trainer's class
     unless (($aa->{original_classes} & $class_bitmask) > 0) {
         $client->Message($COLOR_RED, "That ability is not part of the $class_name discipline.");
+        $dbh->disconnect();
         return 0;
     }
 
     # NMS multiclass: block credit purchases of the player's own classes' AAs
     if (_is_native_class($client, $trainer_class)) {
         $client->Message($COLOR_RED, "You are already a $class_name. Native abilities are earned through experience - seek the guild masters of classes you do not yet know.");
+        $dbh->disconnect();
         return 0;
     }
 
@@ -796,12 +811,14 @@ sub HandleTrainRequest {
 
     if ($current_rank >= $max_rank) {
         $client->Message($COLOR_GRAY, "You have already mastered $aa_name.");
+        $dbh->disconnect();
         return 0;
     }
 
     # Check credit balance
     if ($tier_balance < 1) {
         $client->Message($COLOR_RED, "You need 1 $tier_name Credit but have $tier_balance.");
+        $dbh->disconnect();
         return 0;
     }
 
@@ -811,6 +828,7 @@ sub HandleTrainRequest {
 
     unless ($target_rank_id) {
         $client->Message($COLOR_RED, "An error occurred finding the next rank.");
+        $dbh->disconnect();
         return 0;
     }
 
@@ -823,6 +841,7 @@ sub HandleTrainRequest {
     quest::debug("InsightTrainer: Level check - player=$player_level, required=" . (defined $level_req ? $level_req : "NULL") . ", rank_id=$target_rank_id");
     if ($level_req > 0 && $player_level < $level_req) {
         $client->Message($COLOR_RED, "This rank requires level $level_req. You are level $player_level.");
+        $dbh->disconnect();
         return 0;
     }
 
@@ -863,6 +882,7 @@ sub HandleTrainRequest {
         if ($player_prereq_rank < $p->{points}) {
             $client->Message($COLOR_RED, "You need $p->{points} rank" . ($p->{points} > 1 ? "s" : "") . " of $prereq_name first (you have $player_prereq_rank).");
             $pre_sth->finish();
+            $dbh->disconnect();
             return 0;
         }
     }
@@ -886,10 +906,12 @@ sub HandleTrainRequest {
         $client->Message($COLOR_GREEN, "You have learned $aa_name$rank_msg! [Cross-Class]");
         $client->Message($COLOR_HEADING, "1 $tier_name Credit spent. $tier_name Credits remaining: $new_balance  " . quest::saylink("train", 1, "[Continue Training]"));
         quest::debug("InsightTrainer: Granted $aa_name rank $target_rank_number ($class_name), -1 $tier_name credit, balance=$new_balance");
+        $dbh->disconnect();
         return 1;
     } else {
         $client->Message($COLOR_RED, "Failed to grant this ability. You may not meet a hidden requirement.");
         quest::debug("InsightTrainer: GrantAA FAILED for $aa_name ($class_name)");
+        $dbh->disconnect();
         return 0;
     }
 }

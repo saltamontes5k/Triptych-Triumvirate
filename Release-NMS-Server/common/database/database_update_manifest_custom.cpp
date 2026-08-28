@@ -774,6 +774,57 @@ WHERE log_category_description NOT IN ('Error', 'Warning', 'Crash', 'MySQL Error
 		.content_schema_update = false,
 	},
 
+	// v26: Armour glamour NPC for the Bazaar - companion to weapon glamour Purveyor.
+	// Creates npc_types 1120001110, spawngroup 5003550, spawn2 2141650.
+	// Check: skip if NPC already exists.
+	ManifestEntry{
+		.version = 26,
+		.description = "2026_08_26_bazaar_armour_glamour_npc",
+		.check = "SELECT id FROM npc_types WHERE name = 'Purveyor_of_Armour_Glamour'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+INSERT INTO npc_types (
+	id, name, lastname, level, race, class, bodytype, hp, mana,
+	gender, texture, helmtexture, size, hp_regen_rate, mana_regen_rate,
+	loottable_id, merchant_id, npc_faction_id,
+	mindmg, maxdmg, attack_count, npcspecialattks, aggroradius,
+	attack_speed, STR, STA, DEX, AGI, `_INT`, WIS, CHA,
+	see_invis_undead, qglobal, AC, npc_aggro, spawn_limit,
+	trackable, isbot, exclude, version, scalerate, isquest,
+	face, spells, idfile,
+	spellscale, healscale, exp_mod
+) VALUES (
+	1120001110, 'Purveyor_of_Armour_Glamour', 'Armour Ornaments', 70, 5, 1, 1, 43854, 0,
+	1, 1, 0, 6, 0, 0,
+	0, 0, -1,
+	0, 0, 0, '', 0,
+	0, 75, 75, 75, 75, 80, 75, 75,
+	0, 0, 1, 0, 1,
+	1, 0, 1, 1, 100, 1,
+	28, 11113, 'IT10',
+	100, 100, 100
+);
+
+INSERT INTO spawngroup (id, name, spawn_limit, dist, max_x, min_x, max_y, min_y, delay, mindelay, despawn, despawn_timer, wp_spawns)
+VALUES (5003550, 'bazaar-Purveyor_of_Armour_Glamour000', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0);
+
+INSERT INTO spawnentry (spawngroupID, npcID, chance, condition_value_filter, min_time, max_time, min_expansion, max_expansion)
+VALUES (5003550, 1120001110, 100, 1, 0, 0, -1, -1);
+
+INSERT INTO spawn2 (
+	id, spawngroupID, zone, version, x, y, z, heading,
+	respawntime, variance, pathgrid, path_when_zone_idle,
+	`_condition`, cond_value, animation, min_expansion, max_expansion
+) VALUES (
+	2141650, 5003550, 'bazaar', 0, 149.280000, -592.260000, 3.230000, 321.250000,
+	1200, 0, 0, 0,
+	0, 1, 0, -1, -1
+);
+)",
+		.content_schema_update = false,
+	},
+
 	// Used for testing
 	//	ManifestEntry{
 	//		.version = 9229,
