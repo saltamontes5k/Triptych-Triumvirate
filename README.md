@@ -2,7 +2,7 @@
 
 A complete, working **multiclass EverQuest server** — a community remake built on
 EQEmu. This repository is a sanitized snapshot of the live NMS server, safe to
-share or build on.
+share or build on with some customized tweaks.
 
 **This code and all derivative works are the fruit of an educational project by
 many students and will always be free!**
@@ -10,6 +10,8 @@ many students and will always be free!**
 See **[CHANGELOG.md](CHANGELOG.md)** for everything that changed relative to the
 upstream [`tunaria/NMS-Release`](https://github.com/tunaria/NMS-Release)
 baseline.
+
+I plan to branch this and hopefully modernize the EQEmu/PEQ database snapshot it uses sometime in the future and do other various changes that catch my eye. Next major ones are hopefully a offline bazaar trader/seller system and an Ultimate EQ/Imperium Emu inspired style weapon proc and spell proc lines that are deity quest gated.
 
 ---
 
@@ -33,8 +35,7 @@ baseline.
   different class's same-tier tome
 - **Drakkin breath weapons** — racial breath AA line, 13 ranks (lvl 5 → 65) autogrants every 5 lvls
 - **Lost Soul augs** — Diablo-style randomized Lost/Restless/Found Soul
-  augmentations from the `aug_generator`
-- **Badword filter** — profanity/name filters restored (`badword_filter_restore.sql`)
+  augmentations from the `aug_generator` (NEW)
 - **Multiclassing** — a character can take up to three classes at once
 - **Multiple pets** — pet classes control several pets, with a custom pet window
 - **Echo of Memory** — an alternate currency that drops from kills and buys unlocks
@@ -49,6 +50,7 @@ baseline.
 - **zerohex** — Purveyor of Armour Glamour
 - **dritjoda** — Lost Soul Diablo-style augmentation system
 - **Straps** — Ascendant tome system plugins and trainers
+- Tunaria Team for OG NMS/Project Triune
 
 See **[CHANGELOG.md](CHANGELOG.md)** for the full change list and per-commit
 breakdown vs the upstream [`tunaria/NMS-Release`](https://github.com/tunaria/NMS-Release)
