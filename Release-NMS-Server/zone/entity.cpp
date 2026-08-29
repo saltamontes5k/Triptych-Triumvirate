@@ -676,6 +676,7 @@ void EntityList::AddCorpse(Corpse *corpse, uint32 in_id)
 		corpse->SetID(in_id);
 
 	corpse->CalcCorpseName();
+	RemoveFromAutoXTargets(corpse);
 	corpse_list.emplace(std::pair<uint16, Corpse *>(corpse->GetID(), corpse));
 
 	if (!corpse_timer.Enabled())
