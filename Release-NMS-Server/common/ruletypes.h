@@ -1171,6 +1171,7 @@ RULE_BOOL(Items, SummonItemAllowInvisibleAugments, false, "Enable this to allow 
 RULE_BOOL(Items, AugmentItemAllowInvisibleAugments, false, "Enable this to allow augments to be put in invisible augment slots by players")
 RULE_BOOL(Items, AlwaysReturnHandins, true, "Enable this to always return handins to the player")
 RULE_BOOL(Items, NPCUseRecommendedLevels, false, "Enable to have NPCs scale item stats by recommended levels")
+RULE_STRING(Items, IllusionStorageWhitelistItemIDs, "", "This is a comma delimited list of item ids that are allowed to be stored in the illusion storage in addition to regular illusion items.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Parcel)

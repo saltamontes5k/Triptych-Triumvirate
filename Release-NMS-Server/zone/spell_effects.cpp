@@ -97,6 +97,9 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 		int durat = CalcBuffDuration(caster, this, spell_id, caster_level);
 		if(durat) // negatives are perma buffs
 		{
+			if (caster && durat > 0) {
+				durat = caster->GetActSpellDuration(spell_id, durat);
+			}
 			buffslot = AddBuff(caster, spell_id, durat, caster_level);
 			if(buffslot == -1)	// stacking failure
 				return false;
@@ -1578,8 +1581,12 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						);
 						caster->SendAppearancePacket(AppearanceType::Size, static_cast<uint32>(caster->GetTarget()->GetSize()));
 
-						for (int x = EQ::textures::textureBegin; x <= EQ::textures::LastTintableTexture; x++)
+						for (int x = EQ::textures::textureBegin; x <= EQ::textures::LastTintableTexture; x++) {
 							caster->SendWearChange(x);
+						}
+
+						caster->SendWearChange(EQ::textures::weaponPrimary);
+						caster->SendWearChange(EQ::textures::weaponSecondary);
 				}
 				break;
 			}
@@ -2935,7 +2942,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						float new_ground = GetGroundZ(my_x, my_y);
 
 						if(caster->IsClient())
-							caster->CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), my_x, my_y, new_ground, GetHeading());
+							caster->CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), my_x, my_y, new_ground, caster->CastToClient()->GetHeading());
 						else
 							caster->GMMove(my_x, my_y, new_ground, GetHeading());
 					}
@@ -4633,6 +4640,9 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses, bool suppress, uint32 su
 				for (int x = EQ::textures::textureBegin; x <= EQ::textures::LastTintableTexture; x++) {
 					SendWearChange(x);
 				}
+
+				SendWearChange(EQ::textures::weaponPrimary);
+				SendWearChange(EQ::textures::weaponSecondary);
 
 				break;
 			}
@@ -8213,6 +8223,11 @@ bool Mob::PassCastRestriction(int value)
 			return true;
 			break;
 
+		case IS_HP_ABOVE_99_PCT:
+			if (GetHPRatio() > 95)
+				return true;
+			break;
+
 		case IS_NOT_ON_HORSE:
 			if ((IsClient() && !CastToClient()->GetHorseId()) || IsBot() || IsMerc()) {
 				return true;
@@ -9723,10 +9738,10 @@ void Mob::SendCastRestrictionMessage(int requirement_id, bool target_requirement
 		break;
 	case IS_HP_ABOVE_99_PCT:
 		if (target_requirement) {
-			Message(Chat::Red, fmt::format("{} Your target's HP must be at or above 99 pct of its maximum.", msg).c_str());
+			Message(Chat::Red, fmt::format("{} Your target's HP must be above 95 pct of its maximum.", msg).c_str());
 		}
 		else {
-			Message(Chat::Red, fmt::format("{} This ability requires you to be at or above 99 pct of your maximum HP.", msg).c_str());
+			Message(Chat::Red, fmt::format("{} This ability requires you to be above 95 pct of your maximum HP.", msg).c_str());
 		}
 		break;
 	case IS_MANA_ABOVE_10_PCT:

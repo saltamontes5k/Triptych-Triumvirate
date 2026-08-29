@@ -968,6 +968,25 @@ CREATE TABLE `character_offline_transactions` (
 		.content_schema_update = false,
 	},
 
+	ManifestEntry{
+		.version = 33,
+		.description = "2026_08_29_character_illusions.sql",
+		.check = "SHOW TABLES LIKE 'character_illusions'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+CREATE TABLE `character_illusions` (
+	`id` INT NOT NULL AUTO_INCREMENT,
+	`character_id` INT NOT NULL,
+	`spell_id` INT NOT NULL,
+	`item_id` INT DEFAULT 0,
+	`created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+)",
+		.content_schema_update = false,
+	},
+
 	// Used for testing
 	//	ManifestEntry{
 	//		.version = 9229,
