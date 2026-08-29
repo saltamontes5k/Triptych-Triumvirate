@@ -1,9 +1,26 @@
-#ifndef EQEMU_ACCOUNT_REPOSITORY_H
-#define EQEMU_ACCOUNT_REPOSITORY_H
+/*	EQEmu: EQEmulator
 
-#include "../database.h"
-#include "../strings.h"
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+#pragma once
+
 #include "base/base_account_repository.h"
+
+#include "../../common/database.h"
+#include "../../common/strings.h"
 
 class AccountRepository: public BaseAccountRepository {
 public:
@@ -107,6 +124,43 @@ public:
 
 		return AccountRepository::UpdateOne(db, e);
 	}
-};
 
-#endif //EQEMU_ACCOUNT_REPOSITORY_H
+	static void SetOfflineStatus(Database& db, const uint32 account_id, bool offline_status)
+	{
+		auto account = FindOne(db, account_id);
+		if (!account.id) {
+			return;
+		}
+
+		account.offline = offline_status;
+		UpdateOne(db, account);
+	}
+
+	static void ClearAllOfflineStatus(Database& db)
+	{
+		auto query = fmt::format("UPDATE {} SET `offline` = 0 WHERE `offline` = 1;",
+			TableName()
+		);
+
+		db.QueryDatabase(query);
+	}
+
+	static bool GetAllOfflineStatus(Database& db, const uint32 character_id)
+	{
+		auto query = fmt::format("SELECT a.`offline` "
+			"FROM `account` AS a "
+			"INNER JOIN character_data AS c ON c.account_id = a.id "
+			"WHERE c.id = {}",
+			character_id
+		);
+		auto results = db.QueryDatabase(query);
+		if (!results.Success() || !results.RowCount()) {
+			return false;
+		}
+
+		auto       row    = results.begin();
+		bool const status = static_cast<int16>(Strings::ToInt(row[0]));
+
+		return status;
+	}
+};

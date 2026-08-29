@@ -1,9 +1,26 @@
-#ifndef EQEMU_BUYER_REPOSITORY_H
-#define EQEMU_BUYER_REPOSITORY_H
+/*	EQEmu: EQEmulator
 
-#include "../database.h"
-#include "../strings.h"
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+#pragma once
+
 #include "base/base_buyer_repository.h"
+
+#include "../../common/database.h"
+#include "../../common/strings.h"
 #include "base/base_buyer_trade_items_repository.h"
 #include "base/base_buyer_buy_lines_repository.h"
 
@@ -106,8 +123,20 @@ public:
 				return false;
 			}
 
-			auto buy_lines =
-				BaseBuyerBuyLinesRepository::GetWhere(db, fmt::format("`buyer_id` = {}", buyer.front().id));
+			auto buyer_id = buyer.front().id;
+			auto buy_lines = BaseBuyerBuyLinesRepository::GetWhere(
+				db,
+				fmt::format("`buyer_id` = '{}'", buyer_id)
+			);
+			if (buy_lines.empty()) {
+				LogWarning(
+					"DeleteBuyer found buyer [{}] for character [{}] without buy lines; treating this as stale or inconsistent buyer data and deleting the buyer row only",
+					buyer_id,
+					char_id
+				);
+				DeleteWhere(db, fmt::format("`char_id` = '{}'", char_id));
+				return true;
+			}
 
 			std::vector<std::string> buy_line_ids{};
 			for (auto const &bl: buy_lines) {
@@ -175,6 +204,24 @@ public:
 
 		return true;
 	}
-};
 
-#endif //EQEMU_BUYER_REPOSITORY_H
+	static bool UpdateBuyerEntityID(Database &db, uint32 char_id, uint32 old_entity_id, uint32 new_entity_id)
+	{
+		if (!char_id || !old_entity_id || !new_entity_id) {
+			return false;
+		}
+
+		auto results = GetWhere(db, fmt::format("`char_id` = {} AND `char_entity_id` = {} LIMIT 1;", char_id, old_entity_id));
+
+		if (results.empty()) {
+			return false;
+		}
+
+		for (auto &e: results) {
+			e.char_entity_id = new_entity_id;
+		}
+
+		ReplaceMany(db, results);
+		return true;
+	}
+};

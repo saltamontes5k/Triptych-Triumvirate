@@ -1,3 +1,20 @@
+/*	EQEmu: EQEmulator
+
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
  * DO NOT MODIFY THIS FILE
  *
@@ -6,14 +23,14 @@
  * Any modifications to base repositories are to be made by the generator only
  *
  * @generator ./utils/scripts/generators/repository-generator.pl
- * @docs https://docs.eqemu.io/developer/repositories
+ * @docs https://docs.eqemu.dev/developer/repositories
  */
 
-#ifndef EQEMU_BASE_ACCOUNT_REPOSITORY_H
-#define EQEMU_BASE_ACCOUNT_REPOSITORY_H
+#pragma once
 
 #include "../../database.h"
 #include "../../strings.h"
+
 #include <ctime>
 
 class BaseAccountRepository {
@@ -39,6 +56,7 @@ public:
 		uint8_t     rulesflag;
 		time_t      suspendeduntil;
 		uint32_t    time_creation;
+		uint8_t     offline;
 		std::string ban_reason;
 		std::string suspend_reason;
 		std::string crc_eqgame;
@@ -74,6 +92,7 @@ public:
 			"rulesflag",
 			"suspendeduntil",
 			"time_creation",
+			"offline",
 			"ban_reason",
 			"suspend_reason",
 			"crc_eqgame",
@@ -105,6 +124,7 @@ public:
 			"rulesflag",
 			"UNIX_TIMESTAMP(suspendeduntil)",
 			"time_creation",
+			"offline",
 			"ban_reason",
 			"suspend_reason",
 			"crc_eqgame",
@@ -170,6 +190,7 @@ public:
 		e.rulesflag           = 0;
 		e.suspendeduntil      = 0;
 		e.time_creation       = 0;
+		e.offline             = 0;
 		e.ban_reason          = "";
 		e.suspend_reason      = "";
 		e.crc_eqgame          = "";
@@ -231,11 +252,12 @@ public:
 			e.rulesflag           = row[17] ? static_cast<uint8_t>(strtoul(row[17], nullptr, 10)) : 0;
 			e.suspendeduntil      = strtoll(row[18] ? row[18] : "-1", nullptr, 10);
 			e.time_creation       = row[19] ? static_cast<uint32_t>(strtoul(row[19], nullptr, 10)) : 0;
-			e.ban_reason          = row[20] ? row[20] : "";
-			e.suspend_reason      = row[21] ? row[21] : "";
-			e.crc_eqgame          = row[22] ? row[22] : "";
-			e.crc_skillcaps       = row[23] ? row[23] : "";
-			e.crc_basedata        = row[24] ? row[24] : "";
+			e.offline             = row[20] ? static_cast<uint8_t>(strtoul(row[20], nullptr, 10)) : 0;
+			e.ban_reason          = row[21] ? row[21] : "";
+			e.suspend_reason      = row[22] ? row[22] : "";
+			e.crc_eqgame          = row[23] ? row[23] : "";
+			e.crc_skillcaps       = row[24] ? row[24] : "";
+			e.crc_basedata        = row[25] ? row[25] : "";
 
 			return e;
 		}
@@ -288,11 +310,12 @@ public:
 		v.push_back(columns[17] + " = " + std::to_string(e.rulesflag));
 		v.push_back(columns[18] + " = FROM_UNIXTIME(" + (e.suspendeduntil > 0 ? std::to_string(e.suspendeduntil) : "null") + ")");
 		v.push_back(columns[19] + " = " + std::to_string(e.time_creation));
-		v.push_back(columns[20] + " = '" + Strings::Escape(e.ban_reason) + "'");
-		v.push_back(columns[21] + " = '" + Strings::Escape(e.suspend_reason) + "'");
-		v.push_back(columns[22] + " = '" + Strings::Escape(e.crc_eqgame) + "'");
-		v.push_back(columns[23] + " = '" + Strings::Escape(e.crc_skillcaps) + "'");
-		v.push_back(columns[24] + " = '" + Strings::Escape(e.crc_basedata) + "'");
+		v.push_back(columns[20] + " = " + std::to_string(e.offline));
+		v.push_back(columns[21] + " = '" + Strings::Escape(e.ban_reason) + "'");
+		v.push_back(columns[22] + " = '" + Strings::Escape(e.suspend_reason) + "'");
+		v.push_back(columns[23] + " = '" + Strings::Escape(e.crc_eqgame) + "'");
+		v.push_back(columns[24] + " = '" + Strings::Escape(e.crc_skillcaps) + "'");
+		v.push_back(columns[25] + " = '" + Strings::Escape(e.crc_basedata) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -334,6 +357,7 @@ public:
 		v.push_back(std::to_string(e.rulesflag));
 		v.push_back("FROM_UNIXTIME(" + (e.suspendeduntil > 0 ? std::to_string(e.suspendeduntil) : "null") + ")");
 		v.push_back(std::to_string(e.time_creation));
+		v.push_back(std::to_string(e.offline));
 		v.push_back("'" + Strings::Escape(e.ban_reason) + "'");
 		v.push_back("'" + Strings::Escape(e.suspend_reason) + "'");
 		v.push_back("'" + Strings::Escape(e.crc_eqgame) + "'");
@@ -388,6 +412,7 @@ public:
 			v.push_back(std::to_string(e.rulesflag));
 			v.push_back("FROM_UNIXTIME(" + (e.suspendeduntil > 0 ? std::to_string(e.suspendeduntil) : "null") + ")");
 			v.push_back(std::to_string(e.time_creation));
+			v.push_back(std::to_string(e.offline));
 			v.push_back("'" + Strings::Escape(e.ban_reason) + "'");
 			v.push_back("'" + Strings::Escape(e.suspend_reason) + "'");
 			v.push_back("'" + Strings::Escape(e.crc_eqgame) + "'");
@@ -446,11 +471,12 @@ public:
 			e.rulesflag           = row[17] ? static_cast<uint8_t>(strtoul(row[17], nullptr, 10)) : 0;
 			e.suspendeduntil      = strtoll(row[18] ? row[18] : "-1", nullptr, 10);
 			e.time_creation       = row[19] ? static_cast<uint32_t>(strtoul(row[19], nullptr, 10)) : 0;
-			e.ban_reason          = row[20] ? row[20] : "";
-			e.suspend_reason      = row[21] ? row[21] : "";
-			e.crc_eqgame          = row[22] ? row[22] : "";
-			e.crc_skillcaps       = row[23] ? row[23] : "";
-			e.crc_basedata        = row[24] ? row[24] : "";
+			e.offline             = row[20] ? static_cast<uint8_t>(strtoul(row[20], nullptr, 10)) : 0;
+			e.ban_reason          = row[21] ? row[21] : "";
+			e.suspend_reason      = row[22] ? row[22] : "";
+			e.crc_eqgame          = row[23] ? row[23] : "";
+			e.crc_skillcaps       = row[24] ? row[24] : "";
+			e.crc_basedata        = row[25] ? row[25] : "";
 
 			all_entries.push_back(e);
 		}
@@ -495,11 +521,12 @@ public:
 			e.rulesflag           = row[17] ? static_cast<uint8_t>(strtoul(row[17], nullptr, 10)) : 0;
 			e.suspendeduntil      = strtoll(row[18] ? row[18] : "-1", nullptr, 10);
 			e.time_creation       = row[19] ? static_cast<uint32_t>(strtoul(row[19], nullptr, 10)) : 0;
-			e.ban_reason          = row[20] ? row[20] : "";
-			e.suspend_reason      = row[21] ? row[21] : "";
-			e.crc_eqgame          = row[22] ? row[22] : "";
-			e.crc_skillcaps       = row[23] ? row[23] : "";
-			e.crc_basedata        = row[24] ? row[24] : "";
+			e.offline             = row[20] ? static_cast<uint8_t>(strtoul(row[20], nullptr, 10)) : 0;
+			e.ban_reason          = row[21] ? row[21] : "";
+			e.suspend_reason      = row[22] ? row[22] : "";
+			e.crc_eqgame          = row[23] ? row[23] : "";
+			e.crc_skillcaps       = row[24] ? row[24] : "";
+			e.crc_basedata        = row[25] ? row[25] : "";
 
 			all_entries.push_back(e);
 		}
@@ -594,6 +621,7 @@ public:
 		v.push_back(std::to_string(e.rulesflag));
 		v.push_back("FROM_UNIXTIME(" + (e.suspendeduntil > 0 ? std::to_string(e.suspendeduntil) : "null") + ")");
 		v.push_back(std::to_string(e.time_creation));
+		v.push_back(std::to_string(e.offline));
 		v.push_back("'" + Strings::Escape(e.ban_reason) + "'");
 		v.push_back("'" + Strings::Escape(e.suspend_reason) + "'");
 		v.push_back("'" + Strings::Escape(e.crc_eqgame) + "'");
@@ -641,6 +669,7 @@ public:
 			v.push_back(std::to_string(e.rulesflag));
 			v.push_back("FROM_UNIXTIME(" + (e.suspendeduntil > 0 ? std::to_string(e.suspendeduntil) : "null") + ")");
 			v.push_back(std::to_string(e.time_creation));
+			v.push_back(std::to_string(e.offline));
 			v.push_back("'" + Strings::Escape(e.ban_reason) + "'");
 			v.push_back("'" + Strings::Escape(e.suspend_reason) + "'");
 			v.push_back("'" + Strings::Escape(e.crc_eqgame) + "'");
@@ -663,5 +692,3 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 };
-
-#endif //EQEMU_BASE_ACCOUNT_REPOSITORY_H

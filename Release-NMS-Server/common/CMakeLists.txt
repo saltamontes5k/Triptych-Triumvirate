@@ -186,6 +186,7 @@ SET(repositories
     repositories/base/base_character_leadership_abilities_repository.h
     repositories/base/base_character_material_repository.h
     repositories/base/base_character_memmed_spells_repository.h
+    repositories/base/base_character_offline_transactions_repository.h
     repositories/base/base_character_parcels_repository.h
     repositories/base/base_character_parcels_containers_repository.h
     repositories/base/base_character_peqzone_flags_repository.h
@@ -382,6 +383,7 @@ SET(repositories
     repositories/character_leadership_abilities_repository.h
     repositories/character_material_repository.h
     repositories/character_memmed_spells_repository.h
+    repositories/character_offline_transactions_repository.h
     repositories/character_parcels_repository.h
     repositories/character_parcels_containers_repository.h
     repositories/character_peqzone_flags_repository.h
@@ -438,6 +440,7 @@ SET(repositories
     repositories/instance_list_player_repository.h
     repositories/inventory_repository.h
     repositories/inventory_snapshots_repository.h
+    repositories/item_unique_id_reservations_repository.h
     repositories/ip_exemptions_repository.h
     repositories/items_repository.h
     repositories/items_evolving_details_repository.h
@@ -472,6 +475,7 @@ SET(repositories
     repositories/object_repository.h
     repositories/object_contents_repository.h
     repositories/perl_event_export_settings_repository.h
+    repositories/offline_character_sessions_repository.h
     repositories/petitions_repository.h
     repositories/pets_repository.h
     repositories/pets_beastlord_data_repository.h

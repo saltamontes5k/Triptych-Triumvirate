@@ -6686,7 +6686,7 @@ struct BazaarSearchResultsFromDB_Struct {
 	uint32      count;
 	uint32      trader_id;
 	uint32      item_id;
-	uint32      serial_number;
+	std::string item_unique_id;
 	uint32      charges;
 	uint32      cost;
 	uint32      slot_id;
@@ -6698,7 +6698,6 @@ struct BazaarSearchResultsFromDB_Struct {
 	uint32      item_stat;
 	bool        stackable;
 	std::string item_name;
-	std::string serial_number_RoF;
 	std::string trader_name;
 
 	template<class Archive>
@@ -6708,7 +6707,7 @@ struct BazaarSearchResultsFromDB_Struct {
 			CEREAL_NVP(count),
 			CEREAL_NVP(trader_id),
 			CEREAL_NVP(item_id),
-			CEREAL_NVP(serial_number),
+			CEREAL_NVP(item_unique_id),
 			CEREAL_NVP(charges),
 			CEREAL_NVP(cost),
 			CEREAL_NVP(slot_id),
@@ -6720,7 +6719,6 @@ struct BazaarSearchResultsFromDB_Struct {
 			CEREAL_NVP(item_stat),
 			CEREAL_NVP(stackable),
 			CEREAL_NVP(item_name),
-			CEREAL_NVP(serial_number_RoF),
 			CEREAL_NVP(trader_name)
 		);
 	}

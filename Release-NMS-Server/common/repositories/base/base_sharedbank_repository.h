@@ -1,3 +1,20 @@
+/*	EQEmu: EQEmulator
+
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
  * DO NOT MODIFY THIS FILE
  *
@@ -6,14 +23,14 @@
  * Any modifications to base repositories are to be made by the generator only
  *
  * @generator ./utils/scripts/generators/repository-generator.pl
- * @docs https://docs.eqemu.io/developer/repositories
+ * @docs https://docs.eqemu.dev/developer/repositories
  */
 
-#ifndef EQEMU_BASE_SHAREDBANK_REPOSITORY_H
-#define EQEMU_BASE_SHAREDBANK_REPOSITORY_H
+#pragma once
 
 #include "../../database.h"
 #include "../../strings.h"
+
 #include <ctime>
 
 class BaseSharedbankRepository {
@@ -34,7 +51,7 @@ public:
 		uint32_t    ornament_icon;
 		uint32_t    ornament_idfile;
 		int32_t     ornament_hero_model;
-		uint64_t    guid;
+		std::string item_unique_id;
 	};
 
 	static std::string PrimaryKey()
@@ -60,7 +77,7 @@ public:
 			"ornament_icon",
 			"ornament_idfile",
 			"ornament_hero_model",
-			"guid",
+			"item_unique_id",
 		};
 	}
 
@@ -82,7 +99,7 @@ public:
 			"ornament_icon",
 			"ornament_idfile",
 			"ornament_hero_model",
-			"guid",
+			"item_unique_id",
 		};
 	}
 
@@ -138,7 +155,7 @@ public:
 		e.ornament_icon       = 0;
 		e.ornament_idfile     = 0;
 		e.ornament_hero_model = 0;
-		e.guid                = 0;
+		e.item_unique_id      = "";
 
 		return e;
 	}
@@ -190,7 +207,7 @@ public:
 			e.ornament_icon       = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
 			e.ornament_idfile     = row[13] ? static_cast<uint32_t>(strtoul(row[13], nullptr, 10)) : 0;
 			e.ornament_hero_model = row[14] ? static_cast<int32_t>(atoi(row[14])) : 0;
-			e.guid                = row[15] ? strtoull(row[15], nullptr, 10) : 0;
+			e.item_unique_id      = row[15] ? row[15] : "";
 
 			return e;
 		}
@@ -239,7 +256,7 @@ public:
 		v.push_back(columns[12] + " = " + std::to_string(e.ornament_icon));
 		v.push_back(columns[13] + " = " + std::to_string(e.ornament_idfile));
 		v.push_back(columns[14] + " = " + std::to_string(e.ornament_hero_model));
-		v.push_back(columns[15] + " = " + std::to_string(e.guid));
+		v.push_back(columns[15] + " = '" + Strings::Escape(e.item_unique_id) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -276,7 +293,7 @@ public:
 		v.push_back(std::to_string(e.ornament_icon));
 		v.push_back(std::to_string(e.ornament_idfile));
 		v.push_back(std::to_string(e.ornament_hero_model));
-		v.push_back(std::to_string(e.guid));
+		v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -321,7 +338,7 @@ public:
 			v.push_back(std::to_string(e.ornament_icon));
 			v.push_back(std::to_string(e.ornament_idfile));
 			v.push_back(std::to_string(e.ornament_hero_model));
-			v.push_back(std::to_string(e.guid));
+			v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -370,7 +387,7 @@ public:
 			e.ornament_icon       = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
 			e.ornament_idfile     = row[13] ? static_cast<uint32_t>(strtoul(row[13], nullptr, 10)) : 0;
 			e.ornament_hero_model = row[14] ? static_cast<int32_t>(atoi(row[14])) : 0;
-			e.guid                = row[15] ? strtoull(row[15], nullptr, 10) : 0;
+			e.item_unique_id      = row[15] ? row[15] : "";
 
 			all_entries.push_back(e);
 		}
@@ -410,7 +427,7 @@ public:
 			e.ornament_icon       = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
 			e.ornament_idfile     = row[13] ? static_cast<uint32_t>(strtoul(row[13], nullptr, 10)) : 0;
 			e.ornament_hero_model = row[14] ? static_cast<int32_t>(atoi(row[14])) : 0;
-			e.guid                = row[15] ? strtoull(row[15], nullptr, 10) : 0;
+			e.item_unique_id      = row[15] ? row[15] : "";
 
 			all_entries.push_back(e);
 		}
@@ -500,7 +517,7 @@ public:
 		v.push_back(std::to_string(e.ornament_icon));
 		v.push_back(std::to_string(e.ornament_idfile));
 		v.push_back(std::to_string(e.ornament_hero_model));
-		v.push_back(std::to_string(e.guid));
+		v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -538,7 +555,7 @@ public:
 			v.push_back(std::to_string(e.ornament_icon));
 			v.push_back(std::to_string(e.ornament_idfile));
 			v.push_back(std::to_string(e.ornament_hero_model));
-			v.push_back(std::to_string(e.guid));
+			v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -556,5 +573,3 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 };
-
-#endif //EQEMU_BASE_SHAREDBANK_REPOSITORY_H

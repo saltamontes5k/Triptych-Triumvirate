@@ -1,9 +1,27 @@
-#ifndef EQEMU_DISCOVERED_ITEMS_REPOSITORY_H
-#define EQEMU_DISCOVERED_ITEMS_REPOSITORY_H
+/*	EQEmu: EQEmulator
 
-#include "../database.h"
-#include "../strings.h"
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
+#pragma once
+
 #include "base/base_discovered_items_repository.h"
+
+#include "../../common/database.h"
+#include "../../common/strings.h"
+#include <unordered_set>
 
 class DiscoveredItemsRepository: public BaseDiscoveredItemsRepository {
 public:
@@ -44,7 +62,32 @@ public:
      */
 
 	// Custom extended repository methods here
+	static std::unordered_set<uint32_t> GetAllItemIDs(Database& db)
+	{
+		std::unordered_set<uint32_t> item_ids;
+
+		auto results = db.QueryDatabase(
+			fmt::format(
+				"SELECT `{}` FROM {}",
+				PrimaryKey(),
+				TableName()
+			)
+		);
+
+		if (!results.Success()) {
+			LogWarning("Failed to load discovered item IDs: {}", results.ErrorMessage());
+			return item_ids;
+		}
+
+		item_ids.reserve(results.RowCount());
+
+		for (auto row = results.begin(); row != results.end(); ++row) {
+			if (row[0]) {
+				item_ids.insert(static_cast<uint32_t>(strtoul(row[0], nullptr, 10)));
+			}
+		}
+
+		return item_ids;
+	}
 
 };
-
-#endif //EQEMU_DISCOVERED_ITEMS_REPOSITORY_H

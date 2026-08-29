@@ -39,6 +39,10 @@ class EvolveInfo;			// Stores information about an evolving item family
 
 #include <map>
 #include <cstring>
+#include <random>
+#include <chrono>
+#include <array>
+#include <seed_seq>
 
 // Specifies usage type for item inside EQ::ItemInstance
 enum ItemInstTypes
@@ -394,6 +398,50 @@ namespace EQ
 		std::map<uint8, ItemInstance*>         m_contents {}; // Zero-based index: min=0, max=9
 		std::map<std::string, std::string>     m_custom_data {};
 		mutable std::map<std::string, ::Timer> m_timers {};
+	};
+
+	class UniqueHashGenerator
+	{
+	private:
+		static constexpr char   ALPHANUM[]    = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+		static constexpr size_t ALPHANUM_SIZE = sizeof(ALPHANUM) - 1;
+
+		static std::mt19937_64 &GetRng()
+		{
+			thread_local std::mt19937_64 rng = []() {
+				std::random_device rd;
+				std::array<uint32_t, 8> entropy{};
+
+				for (auto &value : entropy) {
+					value = rd();
+				}
+
+				auto now = static_cast<uint64_t>(
+					std::chrono::steady_clock::now().time_since_epoch().count()
+				);
+				entropy[0] ^= static_cast<uint32_t>(now);
+				entropy[1] ^= static_cast<uint32_t>(now >> 32);
+
+				std::seed_seq seed(entropy.begin(), entropy.end());
+				return std::mt19937_64(seed);
+			}();
+
+			return rng;
+		}
+
+	public:
+		static std::string generate()
+		{
+			auto &rng = GetRng();
+			std::uniform_int_distribution<size_t> dist(0, ALPHANUM_SIZE - 1);
+
+			std::array<char, 16> result;
+			for (int i = 0; i < 16; ++i) {
+				result[i] = ALPHANUM[dist(rng)];
+			}
+
+			return std::string(result.begin(), result.end());
+		}
 	};
 }
 #endif /*COMMON_ITEM_INSTANCE_H*/

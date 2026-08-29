@@ -36,6 +36,10 @@
 #include "../common/repositories/character_languages_repository.h"
 #include "../common/repositories/character_leadership_abilities_repository.h"
 #include "../common/repositories/character_parcels_repository.h"
+#include "../common/repositories/character_parcels_containers_repository.h"
+#include "../common/repositories/item_unique_id_reservations_repository.h"
+#include "../common/repositories/offline_character_sessions_repository.h"
+#include "../common/repositories/sharedbank_repository.h"
 #include "../common/repositories/character_skills_repository.h"
 #include "../common/repositories/data_buckets_repository.h"
 #include "../common/repositories/group_id_repository.h"
@@ -212,7 +216,7 @@ void Database::LoginIP(uint32 account_id, const std::string& login_ip)
 	QueryDatabase(query);
 }
 
-int16 Database::GetAccountStatus(uint32 account_id)
+AccountStatus::StatusRecord Database::GetAccountStatus(uint32 account_id)
 {
 	auto e = AccountRepository::FindOne(*this, account_id);
 
@@ -224,7 +228,11 @@ int16 Database::GetAccountStatus(uint32 account_id)
 		AccountRepository::UpdateOne(*this, e);
 	}
 
-	return e.status;
+	AccountStatus::StatusRecord result{};
+	result.status  = e.status;
+	result.offline = e.offline;
+
+	return result;
 }
 
 uint32 Database::CreateAccount(
@@ -2311,4 +2319,632 @@ uint64_t Database::GetNextTableId(const std::string &table_name)
 	}
 
 	return 1;
+}
+
+namespace {
+std::string ItemUniqueIdMigrationFailureReason(const std::string &item_unique_id)
+{
+	if (item_unique_id.empty()) {
+		return "failed reserving a new item_unique_id";
+	}
+
+	return fmt::format("failed ensuring existing item_unique_id [{}]", item_unique_id);
+}
+
+void LogItemUniqueIdMigrationSkipSummary(const char *table_name, uint32 skipped_count, uint32 total_count)
+{
+	if (!skipped_count) {
+		return;
+	}
+
+	LogWarning(
+		"Skipped {} of {} {} rows while assigning item_unique_id values; review prior errors for row details",
+		skipped_count,
+		total_count,
+		table_name
+	);
+}
+}
+
+bool Database::TryReserveItemUniqueId(const std::string &item_unique_id)
+{
+	return ItemUniqueIdReservationsRepository::Reserve(*this, item_unique_id);
+}
+
+bool Database::ReserveItemUniqueId(const std::string &item_unique_id)
+{
+	return ItemUniqueIdReservationsRepository::EnsureReserved(*this, item_unique_id);
+}
+
+std::string Database::ReserveNewItemUniqueId()
+{
+	return ItemUniqueIdReservationsRepository::ReserveNew(*this);
+}
+
+bool Database::EnsureItemUniqueId(std::string &item_unique_id)
+{
+	if (item_unique_id.empty()) {
+		item_unique_id = ReserveNewItemUniqueId();
+		return !item_unique_id.empty();
+	}
+
+	return ReserveItemUniqueId(item_unique_id);
+}
+
+void Database::ConvertInventoryToNewUniqueId()
+{
+	LogInfo("Converting inventory entries with missing item_unique_id");
+	auto results = InventoryRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+
+	if (results.empty()) {
+		return;
+	}
+
+	TransactionBegin();
+	uint32                                      index      = 0;
+	uint32                                      skipped    = 0;
+	const uint32                                batch_size = 1000;
+	std::vector<InventoryRepository::Inventory> queue{};
+	queue.reserve(batch_size);
+
+	for (auto &r: results) {
+		auto existing_item_unique_id = r.item_unique_id;
+		if (!EnsureItemUniqueId(r.item_unique_id)) {
+			++skipped;
+			LogError(
+				"Skipping inventory row character_id [{}] slot_id [{}] during item_unique_id migration: {}",
+				r.character_id,
+				r.slot_id,
+				ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+			);
+			continue;
+		}
+		queue.push_back(r);
+		index++;
+		if (index >= batch_size) {
+			InventoryRepository::ReplaceMany(*this, queue);
+			index = 0;
+			queue.clear();
+		}
+	}
+
+	if (!queue.empty()) {
+		InventoryRepository::ReplaceMany(*this, queue);
+	}
+
+	TransactionCommit();
+	LogInfo("Converted {} records", results.size());
+	LogItemUniqueIdMigrationSkipSummary("inventory", skipped, static_cast<uint32>(results.size()));
+}
+
+void Database::ConvertTraderToNewUniqueId()
+{
+	LogInfo("Converting trader entries with missing item_unique_id");
+	auto results = TraderRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+
+	if (results.empty()) {
+		return;
+	}
+
+	TransactionBegin();
+	uint32                           index      = 0;
+	uint32                           skipped    = 0;
+	const uint32                     batch_size = 1000;
+	std::vector<TraderRepository::Trader> queue{};
+	queue.reserve(batch_size);
+
+	for (auto &r: results) {
+		auto existing_item_unique_id = r.item_unique_id;
+		if (!EnsureItemUniqueId(r.item_unique_id)) {
+			++skipped;
+			LogError(
+				"Skipping trader row id [{}] character_id [{}] slot_id [{}] during item_unique_id migration: {}",
+				r.id,
+				r.character_id,
+				r.slot_id,
+				ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+			);
+			continue;
+		}
+
+		queue.push_back(r);
+		index++;
+		if (index >= batch_size) {
+			TraderRepository::ReplaceMany(*this, queue);
+			index = 0;
+			queue.clear();
+		}
+	}
+
+	if (!queue.empty()) {
+		TraderRepository::ReplaceMany(*this, queue);
+	}
+
+	TransactionCommit();
+	LogInfo("Converted {} trader records", results.size());
+	LogItemUniqueIdMigrationSkipSummary("trader", skipped, static_cast<uint32>(results.size()));
+}
+
+void Database::ConvertParcelsToNewUniqueId()
+{
+	LogInfo("Converting parcel entries with missing item_unique_id");
+	auto parcels = CharacterParcelsRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+	auto parcel_contents = CharacterParcelsContainersRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+	uint32 skipped_parcels = 0;
+	uint32 skipped_parcel_contents = 0;
+
+	TransactionBegin();
+
+	if (!parcels.empty()) {
+		std::vector<CharacterParcelsRepository::CharacterParcels> queue{};
+		queue.reserve(parcels.size());
+		for (auto &r : parcels) {
+			auto existing_item_unique_id = r.item_unique_id;
+			if (!EnsureItemUniqueId(r.item_unique_id)) {
+				++skipped_parcels;
+				LogError(
+					"Skipping character_parcels row id [{}] char_id [{}] slot_id [{}] during item_unique_id migration: {}",
+					r.id,
+					r.char_id,
+					r.slot_id,
+					ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+				);
+				continue;
+			}
+
+			queue.push_back(r);
+		}
+
+		if (!queue.empty()) {
+			CharacterParcelsRepository::ReplaceMany(*this, queue);
+		}
+	}
+
+	if (!parcel_contents.empty()) {
+		std::vector<CharacterParcelsContainersRepository::CharacterParcelsContainers> queue{};
+		queue.reserve(parcel_contents.size());
+		for (auto &r : parcel_contents) {
+			auto existing_item_unique_id = r.item_unique_id;
+			if (!EnsureItemUniqueId(r.item_unique_id)) {
+				++skipped_parcel_contents;
+				LogError(
+					"Skipping character_parcels_containers row id [{}] parcels_id [{}] slot_id [{}] during item_unique_id migration: {}",
+					r.id,
+					r.parcels_id,
+					r.slot_id,
+					ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+				);
+				continue;
+			}
+
+			queue.push_back(r);
+		}
+
+		if (!queue.empty()) {
+			CharacterParcelsContainersRepository::ReplaceMany(*this, queue);
+		}
+	}
+
+	TransactionCommit();
+	LogInfo(
+		"Converted {} parcel rows and {} parcel container rows",
+		parcels.size(),
+		parcel_contents.size()
+	);
+	LogItemUniqueIdMigrationSkipSummary("character_parcels", skipped_parcels, static_cast<uint32>(parcels.size()));
+	LogItemUniqueIdMigrationSkipSummary(
+		"character_parcels_containers",
+		skipped_parcel_contents,
+		static_cast<uint32>(parcel_contents.size())
+	);
+}
+
+void Database::ConvertInventorySnapshotsToNewUniqueId()
+{
+	LogInfo("Converting inventory snapshots with missing item_unique_id");
+	auto results = InventorySnapshotsRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+
+	if (results.empty()) {
+		return;
+	}
+
+	TransactionBegin();
+	uint32 index = 0;
+	uint32 skipped = 0;
+	const uint32 batch_size = 1000;
+	std::vector<InventorySnapshotsRepository::InventorySnapshots> queue{};
+	queue.reserve(batch_size);
+
+	for (auto &r : results) {
+		auto existing_item_unique_id = r.item_unique_id;
+		if (!EnsureItemUniqueId(r.item_unique_id)) {
+			++skipped;
+			LogError(
+				"Skipping inventory_snapshots row time_index [{}] character_id [{}] slot_id [{}] during item_unique_id migration: {}",
+				r.time_index,
+				r.character_id,
+				r.slot_id,
+				ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+			);
+			continue;
+		}
+
+		queue.push_back(r);
+		index++;
+		if (index >= batch_size) {
+			InventorySnapshotsRepository::ReplaceMany(*this, queue);
+			index = 0;
+			queue.clear();
+		}
+	}
+
+	if (!queue.empty()) {
+		InventorySnapshotsRepository::ReplaceMany(*this, queue);
+	}
+
+	TransactionCommit();
+	LogInfo("Converted {} inventory snapshot rows", results.size());
+	LogItemUniqueIdMigrationSkipSummary("inventory_snapshots", skipped, static_cast<uint32>(results.size()));
+}
+
+void Database::ConvertSharedbankToNewUniqueId()
+{
+	LogInfo("Converting shared bank entries with missing item_unique_id");
+	auto results = SharedbankRepository::GetWhere(*this, "`item_unique_id` IS NULL OR `item_unique_id` = ''");
+
+	if (results.empty()) {
+		return;
+	}
+
+	TransactionBegin();
+	uint32                                      index      = 0;
+	uint32                                      skipped    = 0;
+	const uint32                                batch_size = 1000;
+	std::vector<SharedbankRepository::Sharedbank> queue{};
+	queue.reserve(batch_size);
+
+	for (auto &r: results) {
+		auto existing_item_unique_id = r.item_unique_id;
+		if (!EnsureItemUniqueId(r.item_unique_id)) {
+			++skipped;
+			LogError(
+				"Skipping sharedbank row account_id [{}] slot_id [{}] during item_unique_id migration: {}",
+				r.account_id,
+				r.slot_id,
+				ItemUniqueIdMigrationFailureReason(existing_item_unique_id)
+			);
+			continue;
+		}
+		queue.push_back(r);
+		index++;
+		if (index >= batch_size) {
+			SharedbankRepository::ReplaceMany(*this, queue);
+			index = 0;
+			queue.clear();
+		}
+	}
+
+	if (!queue.empty()) {
+		SharedbankRepository::ReplaceMany(*this, queue);
+	}
+
+	TransactionCommit();
+	LogInfo("Converted {} records", results.size());
+	LogItemUniqueIdMigrationSkipSummary("sharedbank", skipped, static_cast<uint32>(results.size()));
+}
+
+void Database::ClearOfflineTradingState()
+{
+	LogInfo("Clearing offline trading state");
+	ClearTraderDetails();
+	ClearBuyerDetails();
+	OfflineCharacterSessionsRepository::Truncate(*this);
+}
+
+
+static bool DoesColumnExist(Database &db, const std::string &table_name, const std::string &column_name)
+{
+	auto results = db.QueryDatabase(
+		fmt::format(
+			"SHOW COLUMNS FROM `{}` LIKE '{}'",
+			table_name,
+			Strings::Escape(column_name)
+		)
+	);
+
+	return results.Success() && results.RowCount() == 1;
+}
+
+static bool GetSingleCount(Database &db, const std::string &query, uint64 &count)
+{
+	auto results = db.QueryDatabase(query);
+	if (!results.Success() || results.RowCount() == 0) {
+		return false;
+	}
+
+	auto row = results.begin();
+	count = row[0] ? Strings::ToUnsignedBigInt(row[0]) : 0;
+	return true;
+}
+
+static bool ValidateItemUniqueIdMigrationSchema(Database &db, bool verbose)
+{
+	struct ColumnRequirement {
+		std::string table;
+		std::string column;
+	};
+
+	const std::vector<ColumnRequirement> required_columns = {
+		{"inventory", "item_unique_id"},
+		{"sharedbank", "item_unique_id"},
+		{"trader", "item_unique_id"},
+		{"character_parcels", "item_unique_id"},
+		{"character_parcels_containers", "item_unique_id"},
+		{"inventory_snapshots", "item_unique_id"},
+		{"account", "offline"},
+		{"character_offline_transactions", "item_id"},
+	};
+
+	const std::vector<std::string> required_tables = {
+		"character_offline_transactions",
+		"offline_character_sessions",
+		"item_unique_id_reservations",
+	};
+
+	bool success = true;
+
+	for (const auto &table_name : required_tables) {
+		if (db.DoesTableExist(table_name)) {
+			continue;
+		}
+
+		LogError(
+			"Missing required table [{}] for bazaar item unique id migration. Run database updates before continuing.",
+			table_name
+		);
+		success = false;
+	}
+
+	for (const auto &requirement : required_columns) {
+		if (!db.DoesTableExist(requirement.table)) {
+			LogError(
+				"Missing required table [{}] for bazaar item unique id migration. Run database updates before continuing.",
+				requirement.table
+			);
+			success = false;
+			continue;
+		}
+
+		if (DoesColumnExist(db, requirement.table, requirement.column)) {
+			continue;
+		}
+
+		LogError(
+			"Missing required column [{}].[{}] for bazaar item unique id migration. Run database updates before continuing.",
+			requirement.table,
+			requirement.column
+		);
+		success = false;
+	}
+
+	if (verbose && success) {
+		LogInfo("Bazaar item unique id migration schema validation passed");
+	}
+
+	return success;
+}
+
+
+bool Database::PreflightItemUniqueIdMigration(bool verbose)
+{
+	struct CheckTarget {
+		std::string table;
+		bool requires_uniqueness;
+	};
+
+	const std::vector<CheckTarget> targets = {
+		{"inventory", true},
+		{"sharedbank", true},
+		{"trader", true},
+		{"character_parcels", false},
+		{"character_parcels_containers", false},
+		{"inventory_snapshots", false},
+	};
+
+	if (!ValidateItemUniqueIdMigrationSchema(*this, verbose)) {
+		return false;
+	}
+
+	bool success = true;
+	for (const auto &target : targets) {
+		uint64 missing = 0;
+		uint64 duplicates = 0;
+
+		const auto missing_query = fmt::format(
+			"SELECT COUNT(*) FROM {} WHERE item_unique_id IS NULL OR item_unique_id = ''",
+			target.table
+		);
+
+		if (!GetSingleCount(*this, missing_query, missing)) {
+			LogError("Failed running item unique id preflight query [{}]", missing_query);
+			success = false;
+			continue;
+		}
+
+		if (target.requires_uniqueness) {
+			const auto duplicate_query = fmt::format(
+				"SELECT COUNT(*) FROM (SELECT item_unique_id FROM {} WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' "
+				"GROUP BY item_unique_id HAVING COUNT(*) > 1) AS duplicates",
+				target.table
+			);
+
+			if (!GetSingleCount(*this, duplicate_query, duplicates)) {
+				LogError("Failed running item unique id duplicate preflight query [{}]", duplicate_query);
+				success = false;
+				continue;
+			}
+		}
+
+		if (verbose || missing || duplicates) {
+			LogInfo(
+				"Item unique id preflight [{}] missing [{}] duplicate_groups [{}]",
+				target.table,
+				missing,
+				duplicates
+			);
+		}
+
+		success = success && missing == 0 && duplicates == 0;
+	}
+
+	uint64 live_cross_table_duplicates = 0;
+	const auto cross_table_duplicate_query =
+		"SELECT COUNT(*) FROM ("
+		"SELECT item_unique_id FROM ("
+		"SELECT item_unique_id FROM inventory WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' "
+		"UNION ALL "
+		"SELECT item_unique_id FROM sharedbank WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' "
+		"UNION ALL "
+		"SELECT item_unique_id FROM trader WHERE item_unique_id IS NOT NULL AND item_unique_id <> ''"
+		") AS live_ids GROUP BY item_unique_id HAVING COUNT(*) > 1"
+		") AS duplicates";
+
+	if (!GetSingleCount(*this, cross_table_duplicate_query, live_cross_table_duplicates)) {
+		LogError("Failed running cross-table item_unique_id preflight query");
+		success = false;
+	}
+
+	uint64 offline_sessions = 0;
+	if (!GetSingleCount(*this, "SELECT COUNT(*) FROM offline_character_sessions", offline_sessions)) {
+		LogError("Failed counting offline_character_sessions during preflight");
+		success = false;
+	}
+
+	uint64 account_offline = 0;
+	if (!GetSingleCount(*this, "SELECT COUNT(*) FROM account WHERE offline = 1", account_offline)) {
+		LogError("Failed counting offline accounts during preflight");
+		success = false;
+	}
+
+	if (verbose || live_cross_table_duplicates || offline_sessions || account_offline) {
+		LogInfo(
+			"Item unique id preflight live_cross_table_duplicates [{}] offline_sessions [{}] account_offline [{}]",
+			live_cross_table_duplicates,
+			offline_sessions,
+			account_offline
+		);
+	}
+
+	return success &&
+		live_cross_table_duplicates == 0 &&
+		offline_sessions == 0 &&
+		account_offline == 0;
+}
+
+bool Database::MigrateItemUniqueIdData(bool clear_trading_state, bool verbose)
+{
+	if (!ValidateItemUniqueIdMigrationSchema(*this, verbose)) {
+		return false;
+	}
+
+	if (clear_trading_state) {
+		ClearOfflineTradingState();
+	}
+
+	ConvertInventoryToNewUniqueId();
+	ConvertSharedbankToNewUniqueId();
+	ConvertTraderToNewUniqueId();
+	ConvertParcelsToNewUniqueId();
+	ConvertInventorySnapshotsToNewUniqueId();
+
+	ItemUniqueIdReservationsRepository::PopulateFromTable(*this, "inventory", "item_unique_id");
+	ItemUniqueIdReservationsRepository::PopulateFromTable(*this, "sharedbank", "item_unique_id");
+	ItemUniqueIdReservationsRepository::PopulateFromTable(*this, "trader", "item_unique_id");
+
+	return VerifyItemUniqueIdMigration(verbose);
+}
+
+bool Database::VerifyItemUniqueIdMigration(bool verbose)
+{
+	if (!ValidateItemUniqueIdMigrationSchema(*this, verbose)) {
+		return false;
+	}
+
+	uint64 inventory_missing = 0;
+	uint64 sharedbank_missing = 0;
+	uint64 trader_missing = 0;
+	uint64 parcel_missing = 0;
+	uint64 parcel_container_missing = 0;
+	uint64 snapshot_missing = 0;
+	uint64 inventory_duplicates = 0;
+	uint64 sharedbank_duplicates = 0;
+	uint64 trader_duplicates = 0;
+	uint64 live_cross_table_duplicates = 0;
+	uint64 offline_sessions = 0;
+	uint64 account_offline = 0;
+
+	const bool queries_succeeded =
+		GetSingleCount(*this, "SELECT COUNT(*) FROM inventory WHERE item_unique_id IS NULL OR item_unique_id = ''", inventory_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM sharedbank WHERE item_unique_id IS NULL OR item_unique_id = ''", sharedbank_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM trader WHERE item_unique_id IS NULL OR item_unique_id = ''", trader_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM character_parcels WHERE item_unique_id IS NULL OR item_unique_id = ''", parcel_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM character_parcels_containers WHERE item_unique_id IS NULL OR item_unique_id = ''", parcel_container_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM inventory_snapshots WHERE item_unique_id IS NULL OR item_unique_id = ''", snapshot_missing) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM (SELECT item_unique_id FROM inventory WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' GROUP BY item_unique_id HAVING COUNT(*) > 1) AS duplicates", inventory_duplicates) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM (SELECT item_unique_id FROM sharedbank WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' GROUP BY item_unique_id HAVING COUNT(*) > 1) AS duplicates", sharedbank_duplicates) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM (SELECT item_unique_id FROM trader WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' GROUP BY item_unique_id HAVING COUNT(*) > 1) AS duplicates", trader_duplicates) &&
+		GetSingleCount(
+			*this,
+			"SELECT COUNT(*) FROM ("
+			"SELECT item_unique_id FROM ("
+			"SELECT item_unique_id FROM inventory WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' "
+			"UNION ALL "
+			"SELECT item_unique_id FROM sharedbank WHERE item_unique_id IS NOT NULL AND item_unique_id <> '' "
+			"UNION ALL "
+			"SELECT item_unique_id FROM trader WHERE item_unique_id IS NOT NULL AND item_unique_id <> ''"
+			") AS live_ids GROUP BY item_unique_id HAVING COUNT(*) > 1"
+			") AS duplicates",
+			live_cross_table_duplicates
+		) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM offline_character_sessions", offline_sessions) &&
+		GetSingleCount(*this, "SELECT COUNT(*) FROM account WHERE offline = 1", account_offline);
+
+	if (!queries_succeeded) {
+		LogError("Item unique id verification failed to execute one or more validation queries");
+		return false;
+	}
+
+	if (verbose || inventory_missing || sharedbank_missing || trader_missing || parcel_missing || parcel_container_missing || snapshot_missing ||
+		inventory_duplicates || sharedbank_duplicates || trader_duplicates || live_cross_table_duplicates || offline_sessions || account_offline) {
+		LogInfo(
+			"Item unique id verification inventory_missing [{}] sharedbank_missing [{}] trader_missing [{}] "
+			"parcel_missing [{}] parcel_container_missing [{}] snapshot_missing [{}] inventory_duplicates [{}] "
+			"sharedbank_duplicates [{}] trader_duplicates [{}] live_cross_table_duplicates [{}] offline_sessions [{}] account_offline [{}]",
+			inventory_missing,
+			sharedbank_missing,
+			trader_missing,
+			parcel_missing,
+			parcel_container_missing,
+			snapshot_missing,
+			inventory_duplicates,
+			sharedbank_duplicates,
+			trader_duplicates,
+			live_cross_table_duplicates,
+			offline_sessions,
+			account_offline
+		);
+	}
+
+	return inventory_missing == 0 &&
+		sharedbank_missing == 0 &&
+		trader_missing == 0 &&
+		parcel_missing == 0 &&
+		parcel_container_missing == 0 &&
+		snapshot_missing == 0 &&
+		inventory_duplicates == 0 &&
+		sharedbank_duplicates == 0 &&
+		trader_duplicates == 0 &&
+		live_cross_table_duplicates == 0 &&
+		offline_sessions == 0 &&
+		account_offline == 0;
 }

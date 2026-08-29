@@ -1,3 +1,20 @@
+/*	EQEmu: EQEmulator
+
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 /**
  * DO NOT MODIFY THIS FILE
  *
@@ -6,14 +23,14 @@
  * Any modifications to base repositories are to be made by the generator only
  *
  * @generator ./utils/scripts/generators/repository-generator.pl
- * @docs https://docs.eqemu.io/developer/repositories
+ * @docs https://docs.eqemu.dev/developer/repositories
  */
 
-#ifndef EQEMU_BASE_CHARACTER_PARCELS_REPOSITORY_H
-#define EQEMU_BASE_CHARACTER_PARCELS_REPOSITORY_H
+#pragma once
 
 #include "../../database.h"
 #include "../../strings.h"
+
 #include <ctime>
 
 class BaseCharacterParcelsRepository {
@@ -28,8 +45,10 @@ public:
 		uint32_t    aug_slot_4;
 		uint32_t    aug_slot_5;
 		uint32_t    aug_slot_6;
+		std::string item_unique_id;
 		uint32_t    slot_id;
 		uint32_t    quantity;
+		uint32_t    evolve_amount;
 		std::string from_name;
 		std::string note;
 		time_t      sent_date;
@@ -52,8 +71,10 @@ public:
 			"aug_slot_4",
 			"aug_slot_5",
 			"aug_slot_6",
+			"item_unique_id",
 			"slot_id",
 			"quantity",
+			"evolve_amount",
 			"from_name",
 			"note",
 			"sent_date",
@@ -72,8 +93,10 @@ public:
 			"aug_slot_4",
 			"aug_slot_5",
 			"aug_slot_6",
+			"item_unique_id",
 			"slot_id",
 			"quantity",
+			"evolve_amount",
 			"from_name",
 			"note",
 			"UNIX_TIMESTAMP(sent_date)",
@@ -117,20 +140,22 @@ public:
 	{
 		CharacterParcels e{};
 
-		e.id         = 0;
-		e.char_id    = 0;
-		e.item_id    = 0;
-		e.aug_slot_1 = 0;
-		e.aug_slot_2 = 0;
-		e.aug_slot_3 = 0;
-		e.aug_slot_4 = 0;
-		e.aug_slot_5 = 0;
-		e.aug_slot_6 = 0;
-		e.slot_id    = 0;
-		e.quantity   = 0;
-		e.from_name  = "";
-		e.note       = "";
-		e.sent_date  = 0;
+		e.id            = 0;
+		e.char_id       = 0;
+		e.item_id       = 0;
+		e.aug_slot_1    = 0;
+		e.aug_slot_2    = 0;
+		e.aug_slot_3    = 0;
+		e.aug_slot_4    = 0;
+		e.aug_slot_5    = 0;
+		e.aug_slot_6    = 0;
+		e.item_unique_id = "";
+		e.slot_id       = 0;
+		e.quantity      = 0;
+		e.evolve_amount = 0;
+		e.from_name     = "";
+		e.note          = "";
+		e.sent_date     = 0;
 
 		return e;
 	}
@@ -167,20 +192,22 @@ public:
 		if (results.RowCount() == 1) {
 			CharacterParcels e{};
 
-			e.id         = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
-			e.char_id    = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
-			e.item_id    = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.aug_slot_1 = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
-			e.aug_slot_2 = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
-			e.aug_slot_3 = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
-			e.aug_slot_4 = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
-			e.aug_slot_5 = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.aug_slot_6 = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
-			e.slot_id    = row[9] ? static_cast<uint32_t>(strtoul(row[9], nullptr, 10)) : 0;
-			e.quantity   = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
-			e.from_name  = row[11] ? row[11] : "";
-			e.note       = row[12] ? row[12] : "";
-			e.sent_date  = strtoll(row[13] ? row[13] : "-1", nullptr, 10);
+			e.id             = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
+			e.char_id        = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.item_id        = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.aug_slot_1     = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.aug_slot_2     = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
+			e.aug_slot_3     = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
+			e.aug_slot_4     = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
+			e.aug_slot_5     = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
+			e.aug_slot_6     = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
+			e.item_unique_id = row[9] ? row[9] : "";
+			e.slot_id        = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
+			e.quantity       = row[11] ? static_cast<uint32_t>(strtoul(row[11], nullptr, 10)) : 0;
+			e.evolve_amount  = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
+			e.from_name      = row[13] ? row[13] : "";
+			e.note           = row[14] ? row[14] : "";
+			e.sent_date      = strtoll(row[15] ? row[15] : "-1", nullptr, 10);
 
 			return e;
 		}
@@ -222,11 +249,13 @@ public:
 		v.push_back(columns[6] + " = " + std::to_string(e.aug_slot_4));
 		v.push_back(columns[7] + " = " + std::to_string(e.aug_slot_5));
 		v.push_back(columns[8] + " = " + std::to_string(e.aug_slot_6));
-		v.push_back(columns[9] + " = " + std::to_string(e.slot_id));
-		v.push_back(columns[10] + " = " + std::to_string(e.quantity));
-		v.push_back(columns[11] + " = '" + Strings::Escape(e.from_name) + "'");
-		v.push_back(columns[12] + " = '" + Strings::Escape(e.note) + "'");
-		v.push_back(columns[13] + " = FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
+		v.push_back(columns[9] + " = '" + Strings::Escape(e.item_unique_id) + "'");
+		v.push_back(columns[10] + " = " + std::to_string(e.slot_id));
+		v.push_back(columns[11] + " = " + std::to_string(e.quantity));
+		v.push_back(columns[12] + " = " + std::to_string(e.evolve_amount));
+		v.push_back(columns[13] + " = '" + Strings::Escape(e.from_name) + "'");
+		v.push_back(columns[14] + " = '" + Strings::Escape(e.note) + "'");
+		v.push_back(columns[15] + " = FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -257,8 +286,10 @@ public:
 		v.push_back(std::to_string(e.aug_slot_4));
 		v.push_back(std::to_string(e.aug_slot_5));
 		v.push_back(std::to_string(e.aug_slot_6));
+		v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 		v.push_back(std::to_string(e.slot_id));
 		v.push_back(std::to_string(e.quantity));
+		v.push_back(std::to_string(e.evolve_amount));
 		v.push_back("'" + Strings::Escape(e.from_name) + "'");
 		v.push_back("'" + Strings::Escape(e.note) + "'");
 		v.push_back("FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
@@ -300,8 +331,10 @@ public:
 			v.push_back(std::to_string(e.aug_slot_4));
 			v.push_back(std::to_string(e.aug_slot_5));
 			v.push_back(std::to_string(e.aug_slot_6));
+			v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 			v.push_back(std::to_string(e.slot_id));
 			v.push_back(std::to_string(e.quantity));
+			v.push_back(std::to_string(e.evolve_amount));
 			v.push_back("'" + Strings::Escape(e.from_name) + "'");
 			v.push_back("'" + Strings::Escape(e.note) + "'");
 			v.push_back("FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
@@ -338,20 +371,22 @@ public:
 		for (auto row = results.begin(); row != results.end(); ++row) {
 			CharacterParcels e{};
 
-			e.id         = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
-			e.char_id    = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
-			e.item_id    = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.aug_slot_1 = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
-			e.aug_slot_2 = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
-			e.aug_slot_3 = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
-			e.aug_slot_4 = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
-			e.aug_slot_5 = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.aug_slot_6 = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
-			e.slot_id    = row[9] ? static_cast<uint32_t>(strtoul(row[9], nullptr, 10)) : 0;
-			e.quantity   = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
-			e.from_name  = row[11] ? row[11] : "";
-			e.note       = row[12] ? row[12] : "";
-			e.sent_date  = strtoll(row[13] ? row[13] : "-1", nullptr, 10);
+			e.id             = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
+			e.char_id        = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.item_id        = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.aug_slot_1     = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.aug_slot_2     = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
+			e.aug_slot_3     = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
+			e.aug_slot_4     = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
+			e.aug_slot_5     = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
+			e.aug_slot_6     = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
+			e.item_unique_id = row[9] ? row[9] : "";
+			e.slot_id        = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
+			e.quantity       = row[11] ? static_cast<uint32_t>(strtoul(row[11], nullptr, 10)) : 0;
+			e.evolve_amount  = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
+			e.from_name      = row[13] ? row[13] : "";
+			e.note           = row[14] ? row[14] : "";
+			e.sent_date      = strtoll(row[15] ? row[15] : "-1", nullptr, 10);
 
 			all_entries.push_back(e);
 		}
@@ -376,20 +411,22 @@ public:
 		for (auto row = results.begin(); row != results.end(); ++row) {
 			CharacterParcels e{};
 
-			e.id         = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
-			e.char_id    = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
-			e.item_id    = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.aug_slot_1 = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
-			e.aug_slot_2 = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
-			e.aug_slot_3 = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
-			e.aug_slot_4 = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
-			e.aug_slot_5 = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.aug_slot_6 = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
-			e.slot_id    = row[9] ? static_cast<uint32_t>(strtoul(row[9], nullptr, 10)) : 0;
-			e.quantity   = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
-			e.from_name  = row[11] ? row[11] : "";
-			e.note       = row[12] ? row[12] : "";
-			e.sent_date  = strtoll(row[13] ? row[13] : "-1", nullptr, 10);
+			e.id             = row[0] ? static_cast<uint32_t>(strtoul(row[0], nullptr, 10)) : 0;
+			e.char_id        = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.item_id        = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.aug_slot_1     = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.aug_slot_2     = row[4] ? static_cast<uint32_t>(strtoul(row[4], nullptr, 10)) : 0;
+			e.aug_slot_3     = row[5] ? static_cast<uint32_t>(strtoul(row[5], nullptr, 10)) : 0;
+			e.aug_slot_4     = row[6] ? static_cast<uint32_t>(strtoul(row[6], nullptr, 10)) : 0;
+			e.aug_slot_5     = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
+			e.aug_slot_6     = row[8] ? static_cast<uint32_t>(strtoul(row[8], nullptr, 10)) : 0;
+			e.item_unique_id = row[9] ? row[9] : "";
+			e.slot_id        = row[10] ? static_cast<uint32_t>(strtoul(row[10], nullptr, 10)) : 0;
+			e.quantity       = row[11] ? static_cast<uint32_t>(strtoul(row[11], nullptr, 10)) : 0;
+			e.evolve_amount  = row[12] ? static_cast<uint32_t>(strtoul(row[12], nullptr, 10)) : 0;
+			e.from_name      = row[13] ? row[13] : "";
+			e.note           = row[14] ? row[14] : "";
+			e.sent_date      = strtoll(row[15] ? row[15] : "-1", nullptr, 10);
 
 			all_entries.push_back(e);
 		}
@@ -473,8 +510,10 @@ public:
 		v.push_back(std::to_string(e.aug_slot_4));
 		v.push_back(std::to_string(e.aug_slot_5));
 		v.push_back(std::to_string(e.aug_slot_6));
+		v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 		v.push_back(std::to_string(e.slot_id));
 		v.push_back(std::to_string(e.quantity));
+		v.push_back(std::to_string(e.evolve_amount));
 		v.push_back("'" + Strings::Escape(e.from_name) + "'");
 		v.push_back("'" + Strings::Escape(e.note) + "'");
 		v.push_back("FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
@@ -509,8 +548,10 @@ public:
 			v.push_back(std::to_string(e.aug_slot_4));
 			v.push_back(std::to_string(e.aug_slot_5));
 			v.push_back(std::to_string(e.aug_slot_6));
+			v.push_back("'" + Strings::Escape(e.item_unique_id) + "'");
 			v.push_back(std::to_string(e.slot_id));
 			v.push_back(std::to_string(e.quantity));
+			v.push_back(std::to_string(e.evolve_amount));
 			v.push_back("'" + Strings::Escape(e.from_name) + "'");
 			v.push_back("'" + Strings::Escape(e.note) + "'");
 			v.push_back("FROM_UNIXTIME(" + (e.sent_date > 0 ? std::to_string(e.sent_date) : "null") + ")");
@@ -531,5 +572,3 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 };
-
-#endif //EQEMU_BASE_CHARACTER_PARCELS_REPOSITORY_H
