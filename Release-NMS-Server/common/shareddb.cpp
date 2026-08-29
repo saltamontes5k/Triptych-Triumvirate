@@ -440,6 +440,9 @@ bool SharedDatabase::UpdateInventorySlot(uint32 char_id, const EQ::ItemInstance*
 	e.ornament_idfile     = inst->GetOrnamentationIDFile();
 	e.ornament_hero_model = inst->GetOrnamentHeroModel();
 	e.guid                = inst->GetSerialNumber();
+	if (inst->GetUniqueID().empty()) {
+		inst->CreateUniqueID();
+	}
 	e.item_unique_id      = inst->GetUniqueID();
 
 	const int replaced = InventoryRepository::ReplaceOne(*this, e);
@@ -491,6 +494,9 @@ bool SharedDatabase::UpdateSharedBankSlot(uint32 char_id, const EQ::ItemInstance
 	e.ornament_idfile     = inst->GetOrnamentationIDFile();
 	e.ornament_hero_model = inst->GetOrnamentHeroModel();
 	e.guid                = inst->GetSerialNumber();
+	if (inst->GetUniqueID().empty()) {
+		inst->CreateUniqueID();
+	}
 	e.item_unique_id      = inst->GetUniqueID();
 
 	const int replaced = SharedbankRepository::ReplaceOne(*this, e);
@@ -1731,10 +1737,6 @@ EQ::ItemInstance* SharedDatabase::CreateBaseItem(const EQ::ItemData* item, int16
 
 		if (item->CharmFileID != 0 || item->LoreGroup >= 1000) {
 			inst->Initialize(this);
-		}
-
-		if (inst->GetUniqueID().empty()) {
-			inst->CreateUniqueID();
 		}
 	}
 

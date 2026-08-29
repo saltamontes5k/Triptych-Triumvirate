@@ -2342,7 +2342,7 @@ private:
 	bool   trader;
 	uint16 trader_id;
 	uint16 customer_id;
-	bool   m_offline;
+	bool   m_offline{false};
 	std::map<int16, std::tuple<uint32, int32, std::string>> m_trader_merchant_list{};  // itemid, qty, item_unique_id
 	uint32 account_creation;
 	bool first_login;
