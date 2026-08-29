@@ -150,10 +150,13 @@ Drakkin characters now receive their racial **breath weapon** as an AA line.
 
 ## Sanitization notes
 
-- **Player data wiped** — accounts, login accounts, characters (and all related
-  tables: inventory, skills, spells, buffs, corpses, parcels, pets, tasks,
-  tribute, alt currency, etc.), guilds, mail, traders, buyers, data buckets, and
-  `nms_waypoints_character` are empty (structure only).
+- **Player data wiped** — 145 player-data tables are empty (structure only):
+  accounts, login accounts, all characters and character sub-tables (inventory,
+  skills, spells, buffs, corpses, parcels, pets, tasks, tribute, alt currency,
+  timers, zone flags, recipes, titles), guilds, mail, traders, buyers, data
+  buckets, **discovered items**, **chat channels**, friends,
+  groups/raids/expeditions, mercenaries, petitions, player & query-server event
+  logs, admin accounts, and banned/GM IP tables.
 - **World content intact** — items (incl. generated augs), NPCs, spawns, loot,
   spells, zones, quests, merchants, tradeskill recipes, Drakkin breath AAs, the
   Ascendant tome system, and the badword filters.
