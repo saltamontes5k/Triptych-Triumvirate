@@ -15299,7 +15299,31 @@ void Client::Handle_OP_Trader(const EQApplicationPacket *app)
 	//
 	// SoF sends 1 or more unhandled OP_Trader packets of size 96 when a trade has completed.
 	// I don't know what they are for (yet), but it doesn't seem to matter that we ignore them.
+	if (app->size < sizeof(uint32)) {
+		LogWarning(
+			"Short OP_Trader packet for client [{}] account [{}] character [{}] size [{}]",
+			GetCleanName(),
+			AccountID(),
+			CharacterID(),
+			app->size
+		);
+		return;
+	}
+
 	auto action = *(uint32 *)app->pBuffer;
+
+	LogTradingDetail(
+		"Handle_OP_Trader client [{}] account [{}] character [{}] action [{}] size [{}] trader [{}] buyer [{}] zone [{}] instance [{}]",
+		GetCleanName(),
+		AccountID(),
+		CharacterID(),
+		action,
+		app->size,
+		IsTrader(),
+		IsBuyer(),
+		GetZoneID(),
+		GetInstanceID()
+	);
 
 	switch (action) {
 		case TraderOff: {
@@ -15317,10 +15341,10 @@ void Client::Handle_OP_Trader(const EQApplicationPacket *app)
 			TraderStartTrader(app);
 			break;
 		}
-		case PriceUpdate:
-		case ItemMove: {
-			LogTrading("Trader Price Update");
-			TraderPriceUpdate(app);
+		case ItemMove:
+		case PriceUpdate:{
+			LogTrading("Trader item updated - removed, added or price change");
+			TraderUpdateItem(app);
 			break;
 		}
 		case EndTransaction: {
@@ -15338,10 +15362,19 @@ void Client::Handle_OP_Trader(const EQApplicationPacket *app)
 			LogTrading("Show Trader Items");
 			break;
 		}
+		case ReconcileItems: {
+			LogTradingDetail("Reconcile Trader Items");
+			break;
+		}
 		default: {
-			if (app->size != 32 && app->size != 96) {
-				LogErrorDetail("Unknown size for OP_Trader: [{}]\n", app->size);
-			}
+			LogWarning(
+				"Unhandled OP_Trader action [{}] for client [{}] account [{}] character [{}] size [{}]",
+				action,
+				GetCleanName(),
+				AccountID(),
+				CharacterID(),
+				app->size
+			);
 		}
 	}
 }
@@ -15352,40 +15385,48 @@ void Client::Handle_OP_TraderBuy(const EQApplicationPacket *app)
 	//
 	// Client has elected to buy an item from a Trader
 	//
-	auto in     = (TraderBuy_Struct *) app->pBuffer;
 
-	if (RuleB(Bazaar, UseAlternateBazaarSearch) && in->trader_id >= TraderRepository::TRADER_CONVERT_ID) {
-		auto trader = TraderRepository::GetTraderByInstanceAndSerialnumber(
-			database,
-			in->trader_id - TraderRepository::TRADER_CONVERT_ID,
-			in->serial_number
-		);
+	auto in             = (TraderBuy_Struct *) app->pBuffer;
+	auto item_unique_id = std::string(in->item_unique_id);
 
-		if (!trader.trader_id) {
-			LogTrading("Unable to convert trader id for {} and serial number {}.  Trader Buy aborted.",
-				in->trader_id - TraderRepository::TRADER_CONVERT_ID,
-				in->serial_number
-			);
-			return;
-		}
-
-		in->trader_id = trader.trader_id;
-		strn0cpy(in->seller_name, trader.trader_name.c_str(), sizeof(in->seller_name));
+	if (item_unique_id.size() != 16 || !std::all_of(item_unique_id.begin(), item_unique_id.end(), [](unsigned char c) { return std::isalnum(c); })) {
+		LogTrading("Invalid item_unique_id format from client [{}]: [{}]", GetName(), item_unique_id);
+		return;
 	}
 
-	auto trader = entity_list.GetClientByID(in->trader_id);
+	auto trader_details = TraderRepository::GetTraderByItemUniqueNumber(database, item_unique_id);
+	strn0cpy(in->seller_name, trader_details.trader_name.c_str(), sizeof(in->seller_name));
 
 	switch (in->method) {
 		case BazaarByVendor: {
-			if (trader) {
+			const bool is_trader_in_current_zone = (
+				trader_details.entity_id &&
+				trader_details.zone_id == GetZoneID() &&
+				trader_details.zone_instance_id == GetInstanceID()
+			);
+			if (is_trader_in_current_zone) {
+				in->trader_id = trader_details.entity_id;
 				LogTrading("Buy item directly from vendor id <green>[{}] item_id <green>[{}] quantity <green>[{}] "
 						   "serial_number <green>[{}]",
 						   in->trader_id,
 						   in->item_id,
 						   in->quantity,
-						   in->serial_number
+						   in->item_unique_id
 				);
-				BuyTraderItem(in, trader, app);
+				BuyTraderItem(app);
+			}
+			else {
+				LogTrading(
+					"Unable to resolve in-zone trader for vendor purchase item_unique_id <red>[{}] character_id <red>[{}] expected zone/instance <red>[{}]/<red>[{}] but this zone is <red>[{}]/<red>[{}]",
+					in->item_unique_id,
+					trader_details.trader_id,
+					trader_details.zone_id,
+					trader_details.zone_instance_id,
+					GetZoneID(),
+					GetInstanceID()
+				);
+				Message(Chat::Red, "The trader could not be found.");
+				TradeRequestFailed(app);
 			}
 			break;
 		}
@@ -15404,34 +15445,14 @@ void Client::Handle_OP_TraderBuy(const EQApplicationPacket *app)
 				TradeRequestFailed(app);
 				return;
 			}
-
-			if (RuleI(Custom, EnableSeasonalCharacters)) {
-				DataBucketKey db_key = {};
-				db_key.character_id = database.GetCharacterID(in->seller_name);
-				db_key.key = "SeasonalCharacter";
-
-				bool dst_seasonal = (Strings::ToInt(DataBucket::GetData(db_key).value) == RuleI(Custom,EnableSeasonalCharacters));
-				if (dst_seasonal != IsSeasonal()) {
-					SendParcelIconStatus();
-						Message(
-						Chat::Yellow,
-						"You may not purchase from this trader, because they are not a member of the same Season as you are."
-					);
-					in->method     = BazaarByParcel;
-					in->sub_action = Failed;
-					TradeRequestFailed(app);
-					return;
-				}
-			}
-
 			LogTrading("Buy item by parcel delivery <green>[{}] item_id <green>[{}] quantity <green>[{}] "
 					   "serial_number <green>[{}]",
 					   in->trader_id,
 					   in->item_id,
 					   in->quantity,
-					   in->serial_number
+					   in->item_unique_id
 			);
-			BuyTraderItemOutsideBazaar(in, app);
+			BuyTraderItemFromBazaarWindow(app);
 			break;
 		}
 		case BazaarByDirectToInventory: {
@@ -15448,37 +15469,25 @@ void Client::Handle_OP_TraderBuy(const EQApplicationPacket *app)
 				TradeRequestFailed(app);
 				return;
 			}
-
-			if (RuleI(Custom, EnableSeasonalCharacters)) {
-				DataBucketKey db_key = {};
-				db_key.character_id = database.GetCharacterID(in->seller_name);
-				db_key.key = "SeasonalCharacter";
-
-				bool dst_seasonal = (Strings::ToInt(DataBucket::GetData(db_key).value) == RuleI(Custom,EnableSeasonalCharacters));
-				if (dst_seasonal != IsSeasonal()) {
-						SendParcelIconStatus();
-						Message(
-						Chat::Yellow,
-						"You may not purchase from this trader, because they are not a member of the same Season as you are."
-					);
-					in->method     = BazaarByParcel;
-					in->sub_action = Failed;
-					TradeRequestFailed(app);
-					return;
-				}
-			}
-
-
+			auto trader = entity_list.GetClientByCharID(in->trader_id);
 			LogTrading("Buy item by direct inventory delivery <green>[{}] item_id <green>[{}] quantity <green>[{}] "
 					   "serial_number <green>[{}]",
 					   in->trader_id,
 					   in->item_id,
 					   in->quantity,
-					   in->serial_number
+					   in->item_unique_id
 			);
-
-			BuyTraderItemVoucher(in, app);
+			Message(
+				Chat::Yellow,
+				"Direct inventory delivery is not yet implemented.  Please visit the vendor directly or purchase via parcel delivery."
+			);
+			in->method     = BazaarByDirectToInventory;
+			in->sub_action = Failed;
+			TradeRequestFailed(app);
 			break;
+		}
+		default: {
+
 		}
 	}
 }
@@ -15570,7 +15579,22 @@ void Client::Handle_OP_TradeRequestAck(const EQApplicationPacket *app)
 void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 {
 	auto in = (TraderClick_Struct *) app->pBuffer;
-	LogTrading("Handle_OP_TraderShop: TraderClick_Struct TraderID [{}], Code [{}], Unknown008 [{}], Approval [{}]",
+	LogTradingDetail(
+		"Handle_OP_TraderShop client [{}] account [{}] character [{}] code [{}] trader_id [{}] unknown008 [{}] approval [{}] size [{}] trader [{}] buyer [{}] zone [{}] instance [{}]",
+		GetCleanName(),
+		AccountID(),
+		CharacterID(),
+		in->Code,
+		in->TraderID,
+		in->Unknown008,
+		in->Approval,
+		app->size,
+		IsTrader(),
+		IsBuyer(),
+		GetZoneID(),
+		GetInstanceID()
+	);
+	LogTradingDetail("Handle_OP_TraderShop: TraderClick_Struct TraderID [{}], Code [{}], Unknown008 [{}], Approval [{}]",
 			   in->TraderID,
 			   in->Code,
 			   in->Unknown008,
@@ -15579,33 +15603,31 @@ void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 
 	switch (in->Code) {
 		case ClickTrader: {
-			LogTrading("Handle_OP_TraderShop case ClickTrader [{}]", in->Code);
-			auto outapp =
-				std::make_unique<EQApplicationPacket>(OP_TraderShop, static_cast<uint32>(sizeof(TraderClick_Struct))
+			LogTradingDetail("Handle_OP_TraderShop case ClickTrader [{}]", in->Code);
+			auto outapp        = std::make_unique<EQApplicationPacket>(
+				OP_TraderShop,
+				static_cast<uint32>(sizeof(TraderClick_Struct))
 			);
 			auto data          = (TraderClick_Struct *) outapp->pBuffer;
-			auto trader_client = entity_list.GetClientByID(in->TraderID);
+			auto trader = entity_list.GetClientByID(in->TraderID);
 
-			if (trader_client) {
-				if (trader_client->IsSeasonal() != IsSeasonal()) {
-					Message(Chat::Red, "Seasonal characters may only buy from Seasonal traders.");
-					data->Approval = 0;
-				} else {
-					data->Approval = trader_client->WithCustomer(GetID());
-					LogTrading("Client::Handle_OP_TraderShop: Shop Request ([{}]) to ([{}]) with Approval: [{}]",
+			if (trader) {
+				data->Approval = trader->WithCustomer(GetID());
+				LogTradingDetail("Client::Handle_OP_TraderShop: Shop Request ([{}]) to ([{}]) with Approval: [{}]",
 						   GetCleanName(),
-						   trader_client->GetCleanName(),
+						   trader->GetCleanName(),
 						   data->Approval
 				);
-				}
 			}
 			else {
-				LogTrading("Client::Handle_OP_TraderShop: entity_list.GetClientByID(tcs->traderid)"
+				LogTradingDetail("Client::Handle_OP_TraderShop: entity_list.GetClientByID(tcs->traderid)"
 						   " returned a nullptr pointer"
 				);
+				auto outapp = new EQApplicationPacket(OP_ShopEndConfirm);
+				QueuePacket(outapp);
+				safe_delete(outapp);
 				return;
 			}
-
 
 			data->Code       = ClickTrader;
 			data->TraderID   = in->TraderID;
@@ -15613,8 +15635,9 @@ void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 			QueuePacket(outapp.get());
 
 			if (data->Approval) {
-				BulkSendTraderInventory(trader_client->CharacterID());
-				trader_client->Trader_CustomerBrowsing(this);
+				ClearTraderMerchantList();
+				BulkSendTraderInventory(trader->CharacterID());
+				trader->Trader_CustomerBrowsing(this);
 				SetTraderID(in->TraderID);
 				LogTrading("Client::Handle_OP_TraderShop: Trader Inventory Sent to [{}] from [{}]",
 						   GetID(),
@@ -15622,9 +15645,7 @@ void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 				);
 			}
 			else {
-				if (trader_client->IsSeasonal() == IsSeasonal()) {
-					MessageString(Chat::Yellow, TRADER_BUSY);
-				}
+				MessageString(Chat::Yellow, TRADER_BUSY);
 				LogTrading("Client::Handle_OP_TraderShop: Trader Busy");
 			}
 
@@ -15635,7 +15656,7 @@ void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 			SetTraderID(0);
 			if (c) {
 				c->WithCustomer(0);
-				LogTrading("End Transaction - Code [{}]", in->Code);
+				LogTradingDetail("End Transaction - Code [{}]", in->Code);
 			}
 			else {
 				LogTrading("Null Client Pointer for Trader - Code [{}]", in->Code);
@@ -15647,6 +15668,14 @@ void Client::Handle_OP_TraderShop(const EQApplicationPacket *app)
 			break;
 		}
 		default: {
+			LogWarning(
+				"Unhandled OP_TraderShop code [{}] for client [{}] account [{}] character [{}] size [{}]",
+				in->Code,
+				GetCleanName(),
+				AccountID(),
+				CharacterID(),
+				app->size
+			);
 		}
 	}
 }

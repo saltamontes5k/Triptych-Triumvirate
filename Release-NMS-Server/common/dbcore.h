@@ -31,7 +31,7 @@ public:
 	MySQLRequestResult QueryDatabase(const char *query, uint32 querylen, bool retryOnFailureOnce = true);
 	MySQLRequestResult QueryDatabase(const std::string& query, bool retryOnFailureOnce = true);
 	MySQLRequestResult QueryDatabaseMulti(const std::string &query);
-	void TransactionBegin();
+	MySQLRequestResult TransactionBegin();
 	MySQLRequestResult TransactionCommit();
 	void TransactionRollback();
 	std::string Escape(const std::string& s);

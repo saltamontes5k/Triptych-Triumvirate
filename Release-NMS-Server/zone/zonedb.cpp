@@ -307,19 +307,19 @@ void ZoneDatabase::DeleteWorldContainer(uint32 parent_id, uint32 zone_id)
 	);
 }
 
-std::unique_ptr<EQ::ItemInstance> ZoneDatabase::LoadSingleTraderItem(uint32 char_id, int serial_number)
+std::unique_ptr<EQ::ItemInstance> ZoneDatabase::LoadSingleTraderItem(uint32 character_id, const std::string &unique_item_id)
 {
 	auto results = TraderRepository::GetWhere(
 		database,
 		fmt::format(
-			"`char_id` = '{}' AND `item_sn` = '{}' ORDER BY slot_id",
-			char_id,
-			serial_number
+			"`character_id` = {} AND `item_unique_id` = '{}' ORDER BY slot_id",
+			character_id,
+			unique_item_id
 		)
 	);
 
 	if (results.empty()) {
-		LogTrading("Could not find item serial number {} for character id {}", serial_number, char_id);
+		LogTrading("Could not find item serial number {} for character id {}", unique_item_id, character_id);
 		return nullptr;
 	}
 
@@ -341,12 +341,12 @@ std::unique_ptr<EQ::ItemInstance> ZoneDatabase::LoadSingleTraderItem(uint32 char
 		database.CreateItem(
 			item_id,
 			charges,
-			results.at(0).aug_slot_1,
-			results.at(0).aug_slot_2,
-			results.at(0).aug_slot_3,
-			results.at(0).aug_slot_4,
-			results.at(0).aug_slot_5,
-			results.at(0).aug_slot_6
+			results.at(0).augment_one,
+			results.at(0).augment_two,
+			results.at(0).augment_three,
+			results.at(0).augment_four,
+			results.at(0).augment_five,
+			results.at(0).augment_six
 		)
 	);
 	if (!inst) {
@@ -355,8 +355,7 @@ std::unique_ptr<EQ::ItemInstance> ZoneDatabase::LoadSingleTraderItem(uint32 char
 	}
 
 	inst->SetCharges(charges);
-	inst->SetSerialNumber(serial_number);
-	inst->SetMerchantSlot(serial_number);
+	inst->SetUniqueID(unique_item_id);
 	inst->SetPrice(cost);
 
 	if (inst->IsStackable()) {

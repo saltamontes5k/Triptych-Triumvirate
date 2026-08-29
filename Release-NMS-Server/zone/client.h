@@ -323,8 +323,8 @@ public:
 	void ProcessAutoSellBags(Mob* merchant);
 	void DoAutoSellBags(const int type);
 
-	void TraderEndTrader();
-	void TraderPriceUpdate(const EQApplicationPacket *app);
+void TraderEndTrader();
+void TraderUpdateItem(const EQApplicationPacket *app);
 	void SendBazaarDone(uint32 trader_id);
 	void SendBulkBazaarTraders();
 	void SendBulkBazaarBuyers();
@@ -364,7 +364,7 @@ public:
 	void SendTraderPacket(Client* trader, uint32 Unknown72 = 51);
 	void SendBuyerPacket(Client* Buyer);
 	void SendBuyerToBarterWindow(Client* buyer, uint32 action);
-	GetItems_Struct* GetTraderItems();
+	GetBazaarItems_Struct* GetTraderItems();
 	void SendBazaarWelcome();
 	void SendBarterWelcome();
 	void DyeArmor(EQ::TintProfile* dye);
@@ -386,16 +386,17 @@ public:
 	void SendBazaarResults(uint32 trader_id, uint32 in_class, uint32 in_race, uint32 item_stat, uint32 item_slot, uint32 item_type, char item_name[64], uint32 min_price, uint32 max_price);
 	void SendTraderItem(uint32 item_id,uint16 quantity, TraderRepository::Trader &trader);
 	void DoBazaarSearch(BazaarSearchCriteria_Struct search_criteria);
-	uint16 FindTraderItem(int32 SerialNumber,uint16 Quantity);
-	uint32 FindTraderItemSerialNumber(int32 ItemID);
-	EQ::ItemInstance* FindTraderItemBySerialNumber(int32 SerialNumber);
-	void FindAndNukeTraderItem(int32 serial_number, int16 quantity, Client* customer, uint16 trader_slot);
-	void NukeTraderItem(uint16 slot, int16 charges, int16 quantity, Client* customer, uint16 trader_slot, int32 serial_number, int32 item_id = 0);
+uint16 FindTraderItem(std::string &serial_number, uint16 Quantity);
+EQ::ItemInstance *FindTraderItemByUniqueID(std::string &unique_id);
+EQ::ItemInstance *FindTraderItemByUniqueID(const char* unique_id);
+std::vector<EQ::ItemInstance *> FindTraderItemsByUniqueID(const char* unique_id);
+void FindAndNukeTraderItem(std::string &item_unique_id, int16 quantity, Client* customer, uint16 trader_slot);
+void NukeTraderItem(uint16 slot, int16 charges, int16 quantity, Client* customer, uint16 trader_slot, const std::string &serial_number, int32 item_id = 0);
 	void ReturnTraderReq(const EQApplicationPacket* app,int16 traderitemcharges, uint32 itemid = 0);
-	void TradeRequestFailed(const EQApplicationPacket* app);
-	void BuyTraderItem(TraderBuy_Struct* tbs, Client* trader, const EQApplicationPacket* app);
-	void BuyTraderItemOutsideBazaar(TraderBuy_Struct* tbs, const EQApplicationPacket* app);
-	void BuyTraderItemVoucher(TraderBuy_Struct* tbs, const EQApplicationPacket* app);
+void TradeRequestFailed(const EQApplicationPacket* app);
+void TradeRequestFailed(TraderBuy_Struct &in);
+void BuyTraderItem(const EQApplicationPacket* app);
+void BuyTraderItemFromBazaarWindow(const EQApplicationPacket* app);
 	void FinishTrade(
 		Mob *with,
 		bool finalizer = false,
@@ -431,9 +432,20 @@ public:
 	void SendBecomeTraderToWorld(Client *trader, BazaarTraderBarterActions action);
 	void SendBecomeTrader(BazaarTraderBarterActions action, uint32 trader_id);
 
-	bool IsThereACustomer() const { return customer_id ? true : false; }
-	uint32 GetCustomerID() { return customer_id; }
-	void SetCustomerID(uint32 id) { customer_id = id; }
+bool IsThereACustomer() const { return customer_id ? true : false; }
+uint32 GetCustomerID() { return customer_id; }
+void SetCustomerID(uint32 id) { customer_id = id; }
+bool IsOffline() { return m_offline; }
+void SetOffline(bool status) { m_offline = status; }
+void ClearTraderMerchantList() { m_trader_merchant_list.clear(); }
+void AddDataToMerchantList(int16 slot_id, uint32 item_id, int32 quantity, const std::string &item_unique_id);
+int16 GetNextFreeSlotFromMerchantList();
+std::tuple<uint32, int32, std::string> GetDataFromMerchantListByMerchantSlotId(int16 slot_id);
+int16 GetSlotFromMerchantListByItemUniqueId(const std::string &unique_id);
+std::pair<int16, std::tuple<uint32, int32, std::string>> GetDataFromMerchantListByItemUniqueId(const std::string &unique_id);
+std::map<int16, std::tuple<uint32, int32, std::string>>* GetTraderMerchantList() { return &m_trader_merchant_list; }
+bool PutBarterPurchaseItems(uint32 item_id, uint32 quantity);
+bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity = 1);
 
 	void   SetBuyerID(uint32 id) { m_buyer_id = id; }
 	uint32 GetBuyerID() { return m_buyer_id; }
@@ -617,7 +629,7 @@ public:
 
 	void ServerFilter(SetServerFilter_Struct* filter);
 	void BulkSendTraderInventory(uint32 char_id);
-	void SendSingleTraderItem(uint32 char_id, int serial_number);
+	void SendSingleTraderItem(uint32 character_id, const std::string &serial_number);
 	void BulkSendMerchantInventory(int merchant_id, int npcid);
 
 	inline uint8 GetLanguageSkill(uint8 language_id) const { return m_pp.languages[language_id]; }
@@ -2270,6 +2282,8 @@ private:
 	bool   trader;
 	uint16 trader_id;
 	uint16 customer_id;
+	bool   m_offline;
+	std::map<int16, std::tuple<uint32, int32, std::string>> m_trader_merchant_list{};  // itemid, qty, item_unique_id
 	uint32 account_creation;
 	bool first_login;
 	bool ingame;

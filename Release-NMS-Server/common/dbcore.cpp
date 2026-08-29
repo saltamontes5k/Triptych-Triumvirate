@@ -184,9 +184,9 @@ MySQLRequestResult DBcore::QueryDatabase(const char *query, uint32 querylen, boo
 	return requestResult;
 }
 
-void DBcore::TransactionBegin()
+MySQLRequestResult DBcore::TransactionBegin()
 {
-	QueryDatabase("START TRANSACTION");
+	return QueryDatabase("START TRANSACTION");
 }
 
 MySQLRequestResult DBcore::TransactionCommit()

@@ -1672,6 +1672,12 @@ void Client::ActivateAlternateAdvancementAbility(int rank_id, int target_id) {
 
 		target_id = GetSpellImpliedTargetID(rank->spell, target_id);
 
+		// Directional cones fire from the caster's facing and ignore the spell target.
+		// Resolve missing/unresolvable targets to the caster so shared casting checks don't reject them.
+		if (spells[rank->spell].target_type == ST_Directional && !entity_list.GetMob(target_id)) {
+			target_id = GetID();
+		}
+
 		if (RuleB(Custom, MulticlassingEnabled) || (HasClass(Class::Bard) && IsCasting() && spells[rank->spell].cast_time == 0)) {
 			if (!DoCastingChecksOnCaster(rank->spell, EQ::spells::CastingSlot::AltAbility)) {
 				return;

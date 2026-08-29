@@ -308,8 +308,11 @@
 #define DOORS_SUCCESSFUL_PICK		1457	//You successfully picked the lock.
 #define PLAYER_CHARMED				1461	//You lose control of yourself!
 #define TRADER_BUSY					1468	//That Trader is currently with a customer. Please wait until their transaction is finished.
+#define HOW_CAN_YOU_BUY_MORE        1571    //%1 tells you, 'Your inventory appears full!  How can you buy more?'
 #define SENSE_CORPSE_DIRECTION		1563	//You sense a corpse in this direction.
 #define DUPE_LORE_MERCHANT			1573	//%1 tells you, 'You already have the lore item, %2, on your person, on your shroud, in the bank, in a real estate, or as an augment in another item.  You cannot have more than one of a particular lore item at a time.'
+#define DUPLICATE_LORE              7623    //Transaction failed: Duplicate Lore Item!
+#define INSUFFICIENT_FUNDS          7632    //Transaction failed: Insufficient funds!
 #define QUEUED_TELL					2458	//[queued]
 #define QUEUE_TELL_FULL				2459	//[zoing and queue is full]
 #define TRADER_BUSY_TWO             3192    //Sorry, that action cannot be performed while trading.

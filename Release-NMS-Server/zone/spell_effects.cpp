@@ -4104,8 +4104,6 @@ void Mob::BuffProcess()
 
 void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 {
-	int effect, effect_value;
-
 	if (!IsValidSpell(buff.spellid))
 		return;
 
@@ -4143,9 +4141,25 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		if (IsBlankSpellEffect(buff.spellid, i))
 			continue;
 
-		effect = spell.effect_id[i];
-		// I copied the calculation into each case which needed it instead of
-		// doing it every time up here, since most buff effects dont need it
+		int effect = spell.effect_id[i];
+		int effect_value;
+
+		// rabbi - player-only debuff break check with increasing chance per tick
+		if ((IsClient() || IsPetOwnerClient()) && (effect == SE_Charm || effect == SE_Silence || effect == SE_Root || effect == SE_Fear || effect == SE_Mez)) {
+			int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
+			if (effect == SE_Charm && IsPet()) {
+				resist_mod += itembonuses.MR - spellbonuses.MR;
+			}
+			
+			const float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
+			if (resist_check != 100 && !TryFadeEffect(slot)) {
+				BuffFadeBySlot(slot);
+			}
+
+			// rabbi - load bearing crash fix
+			if (!IsValidSpell(buff.spellid))
+				break;
+		}
 
 		switch (effect) {
 		case SE_CurrentHP: {
@@ -4291,48 +4305,14 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Silence: {
-			if (IsClient() || IsPetOwnerClient()) {
-				int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
-				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
-
-				if (resist_check == 100) {
-					break;
-				} else if (!TryFadeEffect(slot)) {
-					BuffFadeBySlot(slot);
-				}
-			}
 			break;
 		}
 
 		case SE_Mez: {
-			if (IsClient() || IsPetOwnerClient()) {
-				int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
-				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
-
-				if (resist_check == 100) {
-					break;
-				} else if (!TryFadeEffect(slot)) {
-					BuffFadeBySlot(slot);
-				}
-			}
 			break;
 		}
 
 		case SE_Charm: {
-			if (IsClient() || IsPetOwnerClient()) {
-				int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
-				if (IsPet()) {
-					resist_mod += itembonuses.MR - spellbonuses.MR;
-				}
-				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
-
-				if (resist_check == 100) {
-					break;
-				} else if (!TryFadeEffect(slot)) {
-					BuffFadeBySlot(slot);
-				}
-			}
-
 			if (!caster || !PassCharismaCheck(caster, buff.spellid)) {
 				BuffFadeByEffect(SE_Charm);
 
@@ -4347,17 +4327,6 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Root: {
-			if (IsClient() || IsPetOwnerClient()) {
-				int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
-				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
-
-				if (resist_check == 100) {
-					break;
-				} else if (!TryFadeEffect(slot)) {
-					BuffFadeBySlot(slot);
-				}
-			}
-
 			/* Root formula derived from extensive personal live parses - Kayen
 			ROOT has a 70% chance to do a resist check to break.
 			*/
@@ -4376,17 +4345,6 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Fear: {
-			if (IsClient() || IsPetOwnerClient()) {
-				int resist_mod = 10 * (buff.ticsinitial - buff.ticsremaining); // 10 resist mod for each tic of this buff endured.
-				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster, true, spells[buff.spellid].resist_difficulty - resist_mod);
-
-				if (resist_check == 100) {
-					break;
-				} else if (!TryFadeEffect(slot)) {
-					BuffFadeBySlot(slot);
-				}
-			}
-
 			if (zone->random.Roll(RuleI(Spells, FearBreakCheckChance))) {
 				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster,0,0,true);
 
@@ -4447,7 +4405,13 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_CastOnFadeEffectNPC:
 		case SE_CastOnFadeEffectAlways: {
 			if (buff.ticsremaining == 0) {
-				SpellFinished(spells[buff.spellid].base_value[i], this, EQ::spells::CastingSlot::Item, 0, -1, spells[spells[buff.spellid].base_value[i]].resist_difficulty);
+				int fade_spell_id = spells[buff.spellid].base_value[i];
+				if (IsValidSpell(fade_spell_id)) {
+					SpellFinished(fade_spell_id, this, EQ::spells::CastingSlot::Item, 0, -1, spells[fade_spell_id].resist_difficulty);
+				} else {
+					LogError("[{}] buff [{}] slot [{}] effect [{}] (CastOnFadeEffect) references invalid fade spell id [{}]",
+						GetCleanName(), buff.spellid, slot, effect, fade_spell_id);
+				}
 			}
 			break;
 		}
@@ -4539,7 +4503,10 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 			// do we need to do anyting here?
 		}
 		}
-		if (!IsValidSpell(buff.spellid)) // if we faded we're no longer valid!
+		
+		// rabbi - if an effect was resisted and caused the buff to go away, we'll crash if we keep trying
+		//         to process effects on that buff
+		if (!IsValidSpell(buff.spellid))
 			break;
 	}
 
