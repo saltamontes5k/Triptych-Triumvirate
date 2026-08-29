@@ -62,6 +62,10 @@ extern EntityList entity_list;
 bool Client::Process() {
 	bool ret = true;
 
+	if (IsOffline()) {
+		return ret;
+	}
+
 	if (Connected() || IsLD()) {
 		// try to send all packets that weren't sent before
 		if (!IsLD() && zoneinpacket_timer.Check()) {

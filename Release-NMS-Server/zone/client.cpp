@@ -529,9 +529,9 @@ Client::Client(EQStreamInterface *ieqs) : Mob(
 	client_data_loaded = false;
 	berserk = false;
 	dead = false;
-	eqs = ieqs;
-	ip = eqs->GetRemoteIP();
-	port = ntohs(eqs->GetRemotePort());
+	eqs = ieqs ? ieqs : nullptr;
+	ip  = eqs ? eqs->GetRemoteIP() : 0;
+	port = eqs ? ntohs(eqs->GetRemotePort()) : 0;
 	client_state = CLIENT_CONNECTING;
 	SetTrader(false);
 	Haste = 0;
