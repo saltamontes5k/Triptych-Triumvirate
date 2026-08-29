@@ -553,6 +553,8 @@ RULE_INT(Spells, DefaultAOEMaxTargets, 0, "Max number of targets that an AOE spe
 RULE_BOOL(Spells, AllowFocusOnSkillDamageSpells, false, "Allow focus effects 185, 459, and 482 to enhance SkillAttack spell effect 193")
 RULE_STRING(Spells, AlwaysStackSpells, "36877,2750,3271,3272,3273,4521,4522,4523,4549,4550,4551,5933,5934,5935,6079,6080,6081,6499,8156,8157,8158,8216,8406,8407,8408,11023,11103,11104,11105,11226,11227,11228,11232,11279,11297,11298,11299,11317,11615,11616,11617,11642,11643,11644,16121,16203,36856,36869,43002", "Comma-Seperated list of spell IDs to always stack with every other spell, except themselves.")
 RULE_BOOL(Spells, AllowSympatheticProcOnDurationSpells, true, "Allow Sympathetic Strike/Heal procs on initial cast of Damage over Time (DoT) and Heal over Time (HoT) spells. Default: True")
+RULE_STRING(Spells, DoppelgangerBuffBacklist, "", "Comma-seperated list of spells to never transfer to Doppelganger")
+RULE_BOOL(Spells, DoppelgangerRetargetOnOwnerAttack, true, "Enable doppelganger retarget when owner attacks")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Combat)
@@ -1300,7 +1302,6 @@ RULE_REAL(Custom, 	ScaleBowMinimumDamageMultiplier,		6.0000000000000, "Divide bo
 RULE_REAL(Custom, 	ScaleBowMinimumDamageDivisor,			4.0000000000000, "Divide hDex by this amount before multiplying by bow multiplier.")
 RULE_INT(Custom, 	CascadeOfDecaySpellId,					38127, "The spell ID for the necro Cascade of Decay AA tap proc.")
 RULE_REAL(Custom, 	CascadeOfDecayTapPercent,				.33, "The percentage of damage for necro Cascade of Decay to tap heal for.")
-RULE_STRING(Custom, DoppelgangerBuffBacklist,				"21773,30736", "Comma-seperated list of spells to never transfer to Doppelganger")
 RULE_INT(Custom, NecroDotCritLevel,							12, "Necromancer inherent dot critical chance begins at this level")
 RULE_INT(Spells, NecroDotCritChance,						7, "Necromancer inherent dot critical percentage chance")
 RULE_BOOL(Custom,	SuppressDispels,						true, "Swaps 'cancel magic' SPA logic with SuppressBuff SPA (527).")

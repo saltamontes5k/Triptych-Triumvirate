@@ -9076,13 +9076,15 @@ void Client::UpdateClientXTarget(Client *c)
 // IT IS NOT SAFE TO CALL THIS IF IT'S NOT INITIAL AGGRO
 void Client::AddAutoXTarget(Mob *m, bool send)
 {
-	if (m->IsBot() || ((m->IsPet() || m->IsTempPet()) && m->IsPetOwnerBot())) {
+	if (!m) {
 		return;
 	}
-
-	// Breaks pvp support
-	if (m->IsCorpse() || m->IsPetOwnerClient() || m->IsClient()) {
-		return ;
+	if (m->IsCorpse() || m->IsBot() || ((m->IsPet() || m->IsTempPet()) && m->IsPetOwnerClient())) {
+		return;
+	}
+	// if player is charmed, don't add to auto xtar
+	if (m->IsClient() && !m->IsCharmed()) {
+		return;
 	}
 
 	m_activeautohatermgr->increment_count(m);
@@ -9120,13 +9122,23 @@ void Client::RemoveXTarget(Mob *m, bool OnlyAutoSlots)
 	}
 
 	m_activeautohatermgr->decrement_count(m);
+
 	// now we may need to clean up our CurrentTargetNPC entries
+	bool found = false;
 	for (int i = 0; i < GetMaxXTargets(); ++i) {
-		if (XTargets[i].Type == CurrentTargetNPC && XTargets[i].ID == m->GetID()) {
-			XTargets[i].Type  = Auto;
-			XTargets[i].ID    = 0;
-			XTargets[i].dirty = true;
+		if (XTargets[i].ID != m->GetID())
+			continue;
+
+		if (OnlyAutoSlots) {
+			if (XTargets[i].Type != Auto)
+				continue;
 		}
+
+		XTargets[i].Type = Auto;
+		XTargets[i].ID = 0;
+		XTargets[i].Name[0] = 0;
+		XTargets[i].dirty = true;
+		found = true;
 	}
 
 	auto r = GetRaid();
@@ -9134,12 +9146,21 @@ void Client::RemoveXTarget(Mob *m, bool OnlyAutoSlots)
 		r->UpdateRaidXTargets();
 	}
 
-	LogXTargets(
-		"Removing [{}] from [{}] ({}) XTargets",
-		m->GetCleanName(),
-		GetCleanName(),
-		GetID()
-	);
+	if (found) {
+		LogXTargets(
+			"Removing [{}] from [{}] ({}) XTargets",
+			m->GetCleanName(),
+			GetCleanName(),
+			GetID()
+		);
+	} else {
+		LogXTargets(
+			"Attempted to remove [{}] from [{}] ({}) XTargets but it was not present",
+			m->GetCleanName(),
+			GetCleanName(),
+			GetID()
+		);
+	}
 }
 
 void Client::UpdateXTargetType(XTargetType Type, Mob *m, const char *Name)
@@ -9199,7 +9220,7 @@ void Client::SendXTargetPacket(uint32 Slot, Mob *m)
 		}
 		else
 		{
-			outapp->WriteUInt8(XTargets[Slot].Type);
+			outapp->WriteUInt8(0);
 		}
 	}
 	outapp->WriteUInt32(XTargets[Slot].ID);
@@ -9372,9 +9393,24 @@ void Client::ProcessXTargetAutoHaters()
 	// there are new NPCs for our empty slots on the manager, but ahhh fuck it.
 	if (!empty_slots.empty() && !GetXTargetAutoMgr()->empty() && XTargetAutoAddHaters) {
 		auto &haters = GetXTargetAutoMgr()->get_list();
+		XTargetAutoHaters *active_mgr = GetXTargetAutoMgr();
+		bool personal_mgr = (active_mgr == &m_autohatermgr);
 		for (auto &e : haters) {
 			auto *mob = entity_list.GetMob(e.spawn_id);
-			if (mob && !IsXTarget(mob) && !mob->IsClient() && !mob->IsPetOwnerClient() && !mob->IsCorpse()) {
+			if (!mob || mob->IsCorpse())
+				continue;
+
+			bool allow = false;
+			if (personal_mgr) {
+				allow = (mob->CheckAggro(this) || mob->IsOnFeignMemory(this));
+			} else {
+				allow = (mob->IsEngaged() || mob->CheckAggro(this) || mob->IsOnFeignMemory(this));
+			}
+
+			if (!allow)
+				continue;
+
+			if (!IsXTarget(mob)) {
 				auto slot = empty_slots.front();
 				empty_slots.pop();
 				XTargets[slot].dirty = true;
