@@ -287,6 +287,11 @@ public:
 	bool PreflightItemUniqueIdMigration(bool verbose = false);
 	bool MigrateItemUniqueIdData(bool clear_trading_state = true, bool verbose = false);
 	bool VerifyItemUniqueIdMigration(bool verbose = false);
+	void ConvertInventoryToNewUniqueId();
+	void ConvertTraderToNewUniqueId();
+	void ConvertParcelsToNewUniqueId();
+	void ConvertInventorySnapshotsToNewUniqueId();
+	void ConvertSharedbankToNewUniqueId();
 	void ClearOfflineTradingState();
 
 private:

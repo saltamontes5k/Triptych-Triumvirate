@@ -42,7 +42,6 @@ class EvolveInfo;			// Stores information about an evolving item family
 #include <random>
 #include <chrono>
 #include <array>
-#include <seed_seq>
 
 // Specifies usage type for item inside EQ::ItemInstance
 enum ItemInstTypes
