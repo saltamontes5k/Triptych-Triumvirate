@@ -3354,11 +3354,11 @@ struct BazaarSearchCriteria_Struct {
 };
 
 struct BazaarInspect_Struct {
-	uint32 action;
-	char   player_name[64];
-	uint32 serial_number;
-	uint32 item_id;
-	uint32 trader_id;
+uint32 action;
+char   player_name[64];
+char   item_unique_id[17];
+uint32 item_id;
+uint32 trader_id;
 };
 
 struct NewBazaarInspect_Struct {
@@ -3445,7 +3445,8 @@ enum BarterBuyerSubActions {
 	Barter_Failure               = 1,
 	Barter_DataOutOfDate         = 4,
 	Barter_SellerDoesNotHaveItem = 6,
-	Barter_SameZone              = 8
+	Barter_SameZone              = 8,
+	Barter_BuyerTransactionRolledBack = 56
 };
 
 enum BuyerBarter {
@@ -3473,20 +3474,16 @@ struct BuyerGeneric_Struct {
 struct BuyerMessaging_Struct {
 	uint32 action;
 	uint32 sub_action;
-	uint32 buyer_char_id;
+	uint32 zone_id;
+	uint32 buyer_id;
 	uint32 buyer_entity_id;
 	char   buyer_name[64];
-	uint32 buyer_zone_id;
-	uint32 buyer_zone_instance_id;
 	uint32 buy_item_id;
 	uint32 buy_item_qty;
 	uint64 buy_item_cost;
 	uint32 buy_item_icon;
-	uint32 seller_char_id;
 	uint32 seller_entity_id;
 	char   seller_name[64];
-	uint32 seller_zone_id;
-	uint32 seller_zone_instance_id;
 	char   item_name[64];
 	uint32 slot;
 	uint32 seller_quantity;
@@ -4003,6 +4000,12 @@ struct ClickTrader_Struct {
 /*648*/	uint32	item_cost[EQ::invtype::BAZAAR_SIZE] {};
 };
 
+struct GetBazaarItems_Struct {
+	uint64      items[EQ::invtype::BAZAAR_SIZE];
+	std::string serial_number[EQ::invtype::BAZAAR_SIZE];
+	uint32      charges[EQ::invtype::BAZAAR_SIZE];
+};
+
 struct GetItems_Struct{
 	uint32	items[EQ::invtype::BAZAAR_SIZE];
 	int32	serial_number[EQ::invtype::BAZAAR_SIZE];
@@ -4041,7 +4044,7 @@ struct TraderBuy_Struct {
 /*084*/ char	seller_name[64];
 /*148*/ char	unknown_148[32];
 /*180*/ char	item_name[64];
-/*244*/ char	serial_number[17];
+/*244*/ char	item_unique_id[17];
 /*261*/ char	unknown_261[3];
 /*264*/ uint32	item_id;
 /*268*/ uint32	price;
@@ -4060,12 +4063,12 @@ struct TraderItemUpdate_Struct{
 };
 
 struct TraderPriceUpdate_Struct {
-/*000*/	uint32	Action;
-/*004*/	uint32	SubAction;
-/*008*/	int32	SerialNumber;
-/*012*/	uint32	Unknown012;
-/*016*/	uint32	NewPrice;
-/*020*/	uint32	Unknown016;
+/*000*/	uint32 action;
+/*002*/	uint32 sub_action;
+/*004*/	char   item_unique_id[17];
+/*021*/	char   unknown_021[3];
+/*024*/	uint32 unknown_024;
+/*028*/	uint32 new_price;
 };
 
 struct MoneyUpdate_Struct{
@@ -4080,6 +4083,7 @@ struct TraderDelItem_Struct{
 	uint32 trader_id;
 	uint32 item_id;
 	uint32 unknown_012;
+	char   item_unique_id[17];
 };
 
 struct TraderClick_Struct{
@@ -6638,6 +6642,68 @@ struct UnderWorld {
 	/* 16 */
 };
 
+struct BazaarTraderDetails {
+	uint64      item_id;
+	std::string unique_id;
+	uint64      cost;
+	uint64      serial_number; // backwards compatibility.  Not used for RoF2 as of March 2025
+
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(item_id),
+			CEREAL_NVP(unique_id),
+			CEREAL_NVP(cost),
+			CEREAL_NVP(serial_number)
+		);
+	}
+};
+
+struct TraderItems_Struct {
+	std::string item_unique_id;
+	uint32      item_id;
+	uint64      item_cost;
+
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(item_unique_id),
+			CEREAL_NVP(item_id),
+			CEREAL_NVP(item_cost)
+		);
+	}
+};
+
+struct TraderClientMessaging_Struct {
+	uint32	action;
+	std::vector<TraderItems_Struct> items;
+
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(action),
+			CEREAL_NVP(items)
+		);
+	}
+};
+
+struct ClickTraderNew_Struct {
+	uint32                           action;
+	std::vector<BazaarTraderDetails> items;
+
+	template<class Archive>
+	void serialize(Archive &archive)
+	{
+		archive(
+			CEREAL_NVP(action),
+			CEREAL_NVP(items)
+		);
+	}
+};
+
 enum BazaarTraderBarterActions {
 	TraderOff                    = 0,
 	TraderOn                     = 1,
@@ -6650,6 +6716,7 @@ enum BazaarTraderBarterActions {
 	CustomerBrowsing             = 13,
 	BazaarInspect                = 18,
 	ItemMove                     = 19,
+ReconcileItems                = 20,
 	TraderAck2                   = 22,
 	AddTraderToBazaarWindow      = 24,
 	RemoveTraderFromBazaarWindow = 25,

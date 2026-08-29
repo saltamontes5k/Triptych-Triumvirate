@@ -308,7 +308,7 @@ namespace RoF2
 		const size_t SAY_LINK_BODY_SIZE = 77;
 		const uint32 MAX_GUILD_ID       = 50000;
 		const uint32 MAX_BAZAAR_TRADERS = 600;
-
+		const uint64 MAX_BAZAAR_TRANSACTION = 2000000000ULL; // 2 million platinum in copper
 	} /*constants*/
 
 	namespace behavior {

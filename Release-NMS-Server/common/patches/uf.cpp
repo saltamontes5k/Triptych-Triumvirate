@@ -3617,7 +3617,6 @@ namespace UF
 
 				IN(action);
 				memcpy(emu->player_name, eq->player_name, sizeof(emu->player_name));
-				IN(serial_number);
 
 				FINISH_DIRECT_DECODE();
 				break;

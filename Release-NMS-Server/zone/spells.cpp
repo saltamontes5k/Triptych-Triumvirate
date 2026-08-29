@@ -199,6 +199,11 @@ uint16 Mob::GetSpellImpliedTargetID(uint16 spell_id, uint16 target_id) {
 			return target_id;
 		}
 
+		// Shortcut directional cones, they fire from the caster's facing and ignore the target
+		if (spells[spell_id].target_type == ST_Directional) {
+			return target_id;
+		}
+
 		// Shortcut rez-like spells, these go to original target
 		if (spells[spell_id].target_type == ST_Corpse ) {
 			return target_id;
@@ -539,7 +544,8 @@ bool Mob::DoCastSpell(uint16 spell_id, uint16 target_id, CastingSlot slot,
 			spell.target_type == ST_Self ||
 			spell.target_type == ST_AECaster ||
 			spell.target_type == ST_Ring ||
-			spell.target_type == ST_Beam
+			spell.target_type == ST_Beam ||
+			spell.target_type == ST_Directional
 		) && target_id == 0
 	) {
 		LogSpells("Spell [{}] auto-targeted the caster. Group? [{}], target type [{}]", spell_id, IsGroupSpell(spell_id), static_cast<int>(spell.target_type));
@@ -934,7 +940,8 @@ bool Mob::DoCastingChecksOnTarget(bool check_on_casting, int32 spell_id, Mob *sp
 		if (spells[spell_id].target_type == ST_AEClientV1 ||
 			spells[spell_id].target_type == ST_AECaster ||
 			spells[spell_id].target_type == ST_Ring ||
-			spells[spell_id].target_type == ST_Beam) {
+			spells[spell_id].target_type == ST_Beam ||
+			spells[spell_id].target_type == ST_Directional) {
 			return true;
 		}
 

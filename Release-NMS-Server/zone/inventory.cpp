@@ -5744,3 +5744,4 @@ bool Client::FindNumberOfFreeInventorySlotsWithSizeCheck(std::vector<BuyerLineTr
 	}
 	return false;
 };
+

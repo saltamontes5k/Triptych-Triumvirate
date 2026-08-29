@@ -4147,7 +4147,7 @@ namespace RoF2
 			}
 			case PriceUpdate: {
 				SETUP_DIRECT_ENCODE(TraderPriceUpdate_Struct, structs::TraderPriceUpdate_Struct);
-				switch (emu->SubAction) {
+				switch (emu->sub_action) {
 					case BazaarPriceChange_AddItem: {
 						auto outapp = std::make_unique<EQApplicationPacket>(
 							OP_Trader,
@@ -4155,7 +4155,7 @@ namespace RoF2
 						);
 
 						auto data        = (structs::TraderStatus_Struct *) outapp->pBuffer;
-						data->action     = emu->Action;
+						data->action     = emu->action;
 						data->sub_action = BazaarPriceChange_AddItem;
 						LogTrading(
 							"(RoF2) PriceUpdate action <green>[{}] AddItem subaction <yellow>[{}]",
@@ -4173,7 +4173,7 @@ namespace RoF2
 						);
 
 						auto data        = (structs::TraderStatus_Struct *) outapp->pBuffer;
-						data->action     = emu->Action;
+						data->action     = emu->action;
 						data->sub_action = BazaarPriceChange_RemoveItem;
 						LogTrading(
 							"(RoF2) PriceUpdate action <green>[{}] RemoveItem subaction <yellow>[{}]",
@@ -4191,7 +4191,7 @@ namespace RoF2
 						);
 
 						auto data        = (structs::TraderStatus_Struct *) outapp->pBuffer;
-						data->action     = emu->Action;
+						data->action     = emu->action;
 						data->sub_action = BazaarPriceChange_UpdatePrice;
 						LogTrading(
 							"(RoF2) PriceUpdate action <green>[{}] UpdatePrice subaction <yellow>[{}]",
@@ -4216,7 +4216,7 @@ namespace RoF2
 					"(RoF2) BuyTraderItem action <green>[{}] item_id <green>[{}] item_sn <green>[{}] buyer <green>[{}]",
 					action,
 					eq->item_id,
-					eq->serial_number,
+					eq->item_unique_id,
 					eq->buyer_name
 				);
 				dest->FastQueuePacket(&in);
@@ -4255,7 +4255,7 @@ namespace RoF2
 		OUT_str(buyer_name);
 		OUT_str(seller_name);
 		OUT_str(item_name);
-		OUT_str(serial_number);
+		OUT_str(item_unique_id);
 
 		FINISH_ENCODE();
 	}
@@ -4320,7 +4320,7 @@ namespace RoF2
 				OUT_str(buyer_name);
 				OUT_str(seller_name);
 				OUT_str(item_name);
-				OUT_str(serial_number);
+				OUT_str(item_unique_id);
 
 				FINISH_ENCODE();
 				break;
@@ -6189,12 +6189,9 @@ namespace RoF2
 				SETUP_DIRECT_DECODE(TraderPriceUpdate_Struct, structs::TraderPriceUpdate_Struct);
 				LogTrading("(RoF2) PriceUpdate action <green>[{}]", action);
 
-				emu->Action       = PriceUpdate;
-				emu->SerialNumber = Strings::ToUnsignedBigInt(eq->serial_number, 0);
-				if (emu->SerialNumber == 0) {
-					LogTrading("(RoF2) Price change with invalid serial number <red>[{}]", eq->serial_number);
-				}
-				emu->NewPrice = eq->new_price;
+				emu->action       = PriceUpdate;
+				strn0cpy(emu->item_unique_id, eq->item_unique_id, sizeof(emu->item_unique_id));
+				emu->new_price = eq->new_price;
 
 				FINISH_DIRECT_DECODE();
 				break;
@@ -6284,21 +6281,12 @@ namespace RoF2
 				IN(item_id);
 				IN(trader_id);
 				emu->action        = BazaarInspect;
-				emu->serial_number = Strings::ToUnsignedInt(eq->serial_number, 0);
-				if (emu->serial_number == 0) {
-					LogTrading(
-						"(RoF2) trader_id = <green>[{}] requested a BazaarInspect with an invalid serial number of <red>[{}]",
-						eq->trader_id,
-						eq->serial_number
-					);
-					FINISH_DIRECT_DECODE();
-					return;
-				}
+				strn0cpy(emu->item_unique_id, eq->item_unique_id, sizeof(emu->item_unique_id));
 
 				LogTrading("(RoF2) BazaarInspect action <green>[{}] item_id <green>[{}] serial_number <green>[{}]",
 						   action,
 						   eq->item_id,
-						   eq->serial_number
+						   eq->item_unique_id
 				);
 				FINISH_DIRECT_DECODE();
 				break;
@@ -6335,7 +6323,7 @@ namespace RoF2
 				IN_str(buyer_name);
 				IN_str(seller_name);
 				IN_str(item_name);
-				IN_str(serial_number);
+				IN_str(item_unique_id);
 
 				FINISH_DIRECT_DECODE();
 				break;

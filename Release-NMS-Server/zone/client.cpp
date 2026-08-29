@@ -15202,3 +15202,35 @@ bool Client::UncompleteTask(int task_id)
 
 	return task_state->UncompleteTask(task_id);
 }
+
+bool Client::RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity)
+{
+	EQ::ItemInstance *item          = nullptr;
+	uint32            removed_count = 0;
+	const auto       &slot_ids      = GetInventorySlots();
+
+	for (const int16& slot_id : slot_ids) {
+		if (removed_count >= quantity) {
+			break;
+		}
+
+		item = GetInv().GetItem(slot_id);
+		if (item && item->GetUniqueID().compare(item_unique_id) == 0) {
+			uint32 charges    = item->IsStackable() ? item->GetCharges() : 0;
+			uint32 stack_size = std::max(charges, static_cast<uint32>(1));
+			if (removed_count + stack_size <= quantity) {
+				DeleteItemInInventory(slot_id, charges, true);
+				removed_count += stack_size;
+			} else {
+				uint32 amount_left = quantity - removed_count;
+				if (amount_left > 0 && stack_size >= amount_left) {
+					DeleteItemInInventory(slot_id, amount_left, true);
+					removed_count += amount_left;
+				}
+			}
+		}
+	}
+
+	return removed_count >= quantity;
+}
+

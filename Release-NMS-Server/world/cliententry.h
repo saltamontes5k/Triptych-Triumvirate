@@ -109,6 +109,9 @@ public:
 	inline void PushToTellQueue(ServerChannelMessage_Struct *scm) { m_tell_queue.push_back(scm); }
 	void ProcessTellQueue();
 
+	void SetOfflineMode(bool status) { m_offline = status; }
+	inline bool IsOfflineMode() const { return m_offline; }
+
 	void SetPendingDzInvite(ServerPacket *pack) { m_dz_invite.reset(pack->Copy()); };
 	std::unique_ptr<ServerPacket> GetPendingDzInvite() { return std::move(m_dz_invite); }
 
@@ -119,6 +122,7 @@ private:
 	uint32       m_ip_address;
 	CLE_Status   m_online;
 	uint8        m_stale;
+	bool         m_offline{false};
 
 	// Login Server stuff
 	char   m_source_loginserver[64]{}; //Loginserver we came from.

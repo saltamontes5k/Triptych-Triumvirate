@@ -141,6 +141,8 @@
 #define ServerOP_TraderMessaging    0x0120
 #define ServerOP_BazaarPurchase     0x0121
 #define ServerOP_BuyerMessaging     0x0122
+#define ServerOP_ReclaimOfflineSessionReq  0xAB04
+#define ServerOP_ReclaimOfflineSessionResp 0xAB05
 
 #define ServerOP_InstanceUpdateTime			0x014F
 #define ServerOP_AdventureRequest			0x0150
@@ -366,6 +368,41 @@ enum {
 	UserToWorldStatusBanned = -2,
 	UserToWorldStatusWorldAtCapacity = -3,
 	UserToWorldStatusAlreadyOnline = -4
+};
+
+enum {
+	BazaarPurchaseFailed                    = 0,
+	BazaarPurchaseSuccess                   = 1,
+	BazaarPurchaseBuyerCompleteSendToSeller = 2,
+	BazaarPurchaseSellerCompleteSendToBuyer = 3,
+	BazaarPurchaseBuyerFailed               = 4,
+	BazaarPurchaseBuyerSuccess              = 5,
+	BazaarPurchaseTraderFailed              = 6
+};
+
+enum : uint8 {
+	OfflineSessionModeNone   = 0,
+	OfflineSessionModeTrader = 1,
+	OfflineSessionModeBuyer  = 2
+};
+
+enum : int8 {
+	OfflineSessionReclaimFailed  = 0,
+	OfflineSessionReclaimSuccess = 1,
+	OfflineSessionReclaimStale   = 2,
+	OfflineSessionReclaimBusy    = 3,
+	OfflineSessionReclaimInvalid = 4
+};
+
+struct OfflineSessionReclaim_Struct {
+	uint32 request_id;
+	uint32 account_id;
+	uint32 character_id;
+	uint32 zone_id;
+	int32  instance_id;
+	uint32 entity_id;
+	uint8  mode;
+	int8   response;
 };
 
 /************ PACKET RELATED STRUCT ************/
@@ -1775,8 +1812,15 @@ struct BazaarPurchaseMessaging_Struct {
 	uint32           item_aug_5;
 	uint32           item_aug_6;
 	uint32           buyer_id;
-	uint32           item_quantity_available;
+	uint32           item_quantity;
+	int16            item_charges;
 	uint32           id;
+	uint32           trader_zone_id;
+	uint32           trader_zone_instance_id;
+	uint32           buyer_zone_id;
+	uint32           buyer_zone_instance_id;
+	uint32           transaction_status;
+	bool             offline_purchase;
 };
 
 

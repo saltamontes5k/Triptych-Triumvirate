@@ -56,6 +56,18 @@ void command_logs(Client *c, const Seperator *sep)
 			start_category_id = Strings::ToUnsignedInt(sep->arg[2]);
 		}
 
+		if (start_category_id == 0 || start_category_id >= Logs::LogCategory::MaxCategoryID) {
+			c->Message(
+				Chat::White,
+				fmt::format(
+					"Invalid start Category ID [{}]. Must be between 1 and {}.",
+					start_category_id,
+					(Logs::LogCategory::MaxCategoryID - 1)
+				).c_str()
+			);
+			return;
+		}
+
 		uint32 max_category_id = (start_category_id + 49);
 
 		c->Message(Chat::White, "------------------------------------------------");
@@ -204,6 +216,18 @@ void command_logs(Client *c, const Seperator *sep)
 
 		auto category_id = Strings::ToUnsignedInt(sep->arg[3]);
 		auto setting     = Strings::ToUnsignedInt(sep->arg[4]);
+
+		if (category_id == 0 || category_id >= Logs::LogCategory::MaxCategoryID) {
+			c->Message(
+				Chat::White,
+				fmt::format(
+					"Invalid Category ID [{}]. Must be between 1 and {}.",
+					category_id,
+					(Logs::LogCategory::MaxCategoryID - 1)
+				).c_str()
+			);
+			return;
+		}
 
 		if (is_console) {
 			EQEmuLogSys::Instance()->log_settings[category_id].log_to_console = setting;

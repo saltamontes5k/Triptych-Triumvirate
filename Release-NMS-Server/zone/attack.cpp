@@ -3039,46 +3039,58 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 			}
 		}
 
-		// Echo of Memory: direct alt-currency award, rolled once per eligible player. Currency is
-		// personal - it never enters the loot tables or the corpse. Gated by con color (the kill has
-		// to be worth something to the roller) and by the same level-range rule as the XP split.
+		// Echo of Memory: direct alt-currency award. One shared roll per kill for the killer's
+		// raid/group; on success every eligible member is awarded together. Currency is personal -
+		// it never enters the loot tables or the corpse. Each member is still gated by con color
+		// (the kill has to be worth something to them) and by the same level-range rule as the XP
+		// split, so passive healers and parked mules are handled consistently.
 		if (killer && killer->IsClient()) {
-			auto TryEOMAward = [this](Client* c, int reference_level) {
+			auto IsEOMEligible = [this](Client* c, int reference_level) {
 				if (!c || !Mob::IsWithinRewardLevelRange(c->GetLevel(), reference_level)) {
-					return;
+					return false;
 				}
 				const uint32 con_color = c->GetLevelCon(GetLevel());
-				if (con_color != ConsiderColor::Red && con_color != ConsiderColor::Yellow && con_color != ConsiderColor::White) {
-					return;
-				}
-				const int eom_drop_chance = RuleI(Custom, EventEOMDropChance);
-				if (eom_drop_chance > 0 && zone->random.Int(0, eom_drop_chance - 1) == 0) {
-					c->CheckItemDiscoverability(46779);
-					c->AddAlternateCurrencyValue(6, 1, true);
-					c->Message(Chat::Green, "You receive 1 Echo of Memory.");
-					c->SendMarqueeMessage(15, "YOU HAVE FOUND AN ECHO OF MEMORY!", 4000);
-				}
+				return con_color == ConsiderColor::Red || con_color == ConsiderColor::Yellow || con_color == ConsiderColor::White;
+			};
+
+			auto AwardEOM = [](Client* c) {
+				c->CheckItemDiscoverability(46779);
+				c->AddAlternateCurrencyValue(6, 1, true);
+				c->Message(Chat::Green, "You receive 1 Echo of Memory.");
+				c->SendMarqueeMessage(15, "YOU HAVE FOUND AN ECHO OF MEMORY!", 4000);
 			};
 
 			Client* kc = killer->CastToClient();
+			std::vector<Client*> eom_members;
+			int reference_level = kc->GetLevel();
+
 			if (Raid* r = entity_list.GetRaidByClient(kc)) {
-				const int raid_top = (int)r->GetHighestLevel();
+				reference_level = (int)r->GetHighestLevel();
 				for (const auto& m : r->members) {
 					if (m.member && m.member->IsClient()) {
-						TryEOMAward(m.member->CastToClient(), raid_top);
+						eom_members.emplace_back(m.member->CastToClient());
 					}
 				}
 			}
 			else if (Group* g = entity_list.GetGroupByClient(kc)) {
-				const int grp_top = (int)g->GetHighestLevel();
+				reference_level = (int)g->GetHighestLevel();
 				for (const auto& mm : g->members) {
 					if (mm && mm->IsClient()) {
-						TryEOMAward(mm->CastToClient(), grp_top);
+						eom_members.emplace_back(mm->CastToClient());
 					}
 				}
 			}
 			else {
-				TryEOMAward(kc, kc->GetLevel());
+				eom_members.emplace_back(kc);
+			}
+
+			const int eom_drop_chance = RuleI(Custom, EventEOMDropChance);
+			if (eom_drop_chance > 0 && zone->random.Int(0, eom_drop_chance - 1) == 0) {
+				for (Client* c : eom_members) {
+					if (IsEOMEligible(c, reference_level)) {
+						AwardEOM(c);
+					}
+				}
 			}
 		}
 

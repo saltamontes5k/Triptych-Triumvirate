@@ -80,6 +80,7 @@ namespace EQ
 
 		// Constructors/Destructor
 		ItemInstance(const ItemData* item = nullptr, int16 charges = 0);
+	ItemInstance(const ItemData *item, const std::string &item_unique_id, int16 charges = 0);
 
 		ItemInstance(SharedDatabase *db, uint32 item_id, int16 charges = 0);
 
@@ -250,8 +251,12 @@ namespace EQ
 		std::string Serialize(int16 slot_id) const { InternalSerializedItem_Struct s; s.slot_id = slot_id; s.inst = (const void*)this; std::string ser; ser.assign((char*)&s, sizeof(InternalSerializedItem_Struct)); return ser; }
 		void Serialize(OutBuffer& ob, int16 slot_id) const { InternalSerializedItem_Struct isi; isi.slot_id = slot_id; isi.inst = (const void*)this; ob.write((const char*)&isi, sizeof(isi)); }
 
-		inline int32 GetSerialNumber() const { return m_SerialNumber; }
-		inline void SetSerialNumber(int32 id) { m_SerialNumber = id; }
+	inline int32 GetSerialNumber() const { return m_SerialNumber; }
+	inline void SetSerialNumber(int32 id) { m_SerialNumber = id; }
+	const std::string &GetUniqueID() const { return m_unique_id; }
+	void               SetUniqueID(std::string sn) { m_unique_id = std::move(sn); }
+	void               CreateUniqueID() const { m_unique_id = GenerateUniqueID(); }
+	static std::string GenerateUniqueID();
 
 		std::map<std::string, ::Timer>& GetTimers() const { return m_timers; }
 		void SetTimer(std::string name, uint32 time);
@@ -381,6 +386,7 @@ namespace EQ
 		bool             m_attuned{false};
 		int32            m_merchantcount{1};//number avaliable on the merchant, -1=unlimited
 		int32            m_SerialNumber{0}; // Unique identifier for this instance of an item. Needed for Bazaar.
+		mutable std::string m_unique_id{};   // unique serial number across all zones/world (offline bazaar)
 		uint32           m_exp{0};
 		int8             m_evolveLvl{0};
 		ItemData *       m_scaledItem{nullptr};
