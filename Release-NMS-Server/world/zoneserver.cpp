@@ -1698,10 +1698,10 @@ void ZoneServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p) {
 			switch (in->action) {
 				case Barter_AddToBarterWindow:
 				case Barter_RemoveFromBarterWindow: {
-					if (in->buyer_char_id <= 0) {
+					if (in->buyer_id <= 0) {
 						LogTrading("World Message <red>[{}] received with invalid buyer_id <red>[{}]",
 								   "ServerOP_BecomeBuyer",
-								   in->buyer_char_id
+								   in->buyer_id
 						);
 						return;
 					}
