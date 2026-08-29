@@ -999,6 +999,10 @@ void Client::TraderStartTrader(const EQApplicationPacket *app)
 			if (item.inst && item.inst->GetUniqueID() == trader_item.unique_id) {
 				return &item;
 			}
+
+			if (item.inst && fmt::format("{:016}", item.inst->GetSerialNumber()) == trader_item.unique_id) {
+				return &item;
+			}
 		}
 
 		return nullptr;

@@ -184,7 +184,8 @@ public:
 		const std::string &custom_data = "",
 		uint32 ornamenticon = 0,
 		uint32 ornamentidfile = 0,
-		uint32 ornament_hero_model = 0
+		uint32 ornament_hero_model = 0,
+		const std::string &item_unique_id = ""
 	);
 	EQ::ItemInstance *CreateBaseItem(const EQ::ItemData *item, int16 charges = 0);
 
