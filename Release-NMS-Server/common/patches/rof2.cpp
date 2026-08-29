@@ -480,7 +480,7 @@ namespace RoF2
 
 				for (auto i: results) {
 					VARSTRUCT_ENCODE_TYPE(uint32, bufptr, i.trader_id);                          //trader ID
-					VARSTRUCT_ENCODE_STRING(bufptr, i.serial_number_RoF.c_str());                //serial
+					VARSTRUCT_ENCODE_STRING(bufptr, i.item_unique_id.c_str());                   //serial
 					VARSTRUCT_ENCODE_TYPE(uint32, bufptr, i.cost);                               //cost
 					VARSTRUCT_ENCODE_TYPE(uint32, bufptr, i.stackable ? i.charges : i.count);    //quantity
 					VARSTRUCT_ENCODE_TYPE(uint32, bufptr, i.item_id);                            //ID

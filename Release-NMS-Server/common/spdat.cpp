@@ -2295,7 +2295,8 @@ bool IsTargetRequiredForSpell(uint16 spell_id)
 		spell.target_type == ST_Self ||
 		spell.target_type == ST_AECaster ||
 		spell.target_type == ST_Ring ||
-		spell.target_type == ST_Beam
+		spell.target_type == ST_Beam ||
+		spell.target_type == ST_Directional
 	) {
 		return false;
 	}
