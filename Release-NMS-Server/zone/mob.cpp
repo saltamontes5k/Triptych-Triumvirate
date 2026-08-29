@@ -3674,10 +3674,6 @@ void Mob::DoAnim(const int animation_id, int animation_speed, bool ackreq, eqFil
 		return;
 	}
 
-	if (IsClient() && CastToClient()->GetAttackMode() == Client::AttackMode::RANGED) {
-		CastToClient()->SetWeaponAppearance();
-	}
-
 	static EQApplicationPacket p(OP_Animation, sizeof(Animation_Struct));
 	auto a = (Animation_Struct*) p.pBuffer;
 	a->spawnid = GetID();

@@ -485,7 +485,7 @@ bool Client::Process() {
 			}
 		}
 
-		if ((auto_attack && GetAttackMode() == AttackMode::MELEE) && auto_attack_target != nullptr && may_use_attacks && attack_timer.Check()) {
+		if (auto_attack && auto_attack_target != nullptr && may_use_attacks && attack_timer.Check()) {
 			//check if change
 			//only check on primary attack.. sorry offhand you gotta wait!
 			if (aa_los_them_mob) {
@@ -568,7 +568,7 @@ bool Client::Process() {
 			}
 		}
 
-		if ((auto_attack && GetAttackMode() == AttackMode::MELEE) && may_use_attacks && auto_attack_target != nullptr
+		if (auto_attack && may_use_attacks && auto_attack_target != nullptr
 			&& CanThisClassDualWield() && attack_dw_timer.Check())
 		{
 			// Range check
@@ -695,12 +695,6 @@ bool Client::Process() {
 				SetWeaponAppearance();
 
 				SendAlternateCurrencyValues();
-
-				for (auto client : entity_list.GetClientList()) {
-					if (client.second->GetAttackMode() == AttackMode::RANGED) {
-						client.second->SetWeaponAppearance();
-					}
-				}
 
 				if (GetPetByID(focused_pet_id)) {
 					auto focused_pet = GetPetByID(focused_pet_id);
