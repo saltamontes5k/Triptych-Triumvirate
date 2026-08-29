@@ -1,8 +1,169 @@
+/*	EQEmu: EQEmulator
+
+	Copyright (C) 2001-2026 EQEmu Development Team
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
+*/
 #include "bazaar.h"
 
-#include "../../common/item_instance.h"
+#include "item_instance.h"
 #include "repositories/trader_repository.h"
+
+#include "strings.h"
+#include <limits>
 #include <memory>
+
+Bazaar::PurchaseQuantityValidation Bazaar::ValidatePurchaseQuantity(
+	uint32 requested_quantity,
+	bool is_stackable,
+	int16 listed_charges
+)
+{
+	const uint32 max_signed_quantity = static_cast<uint32>(std::numeric_limits<int32>::max());
+	if (requested_quantity == 0 || requested_quantity > max_signed_quantity) {
+		return {false, 0};
+	}
+
+	uint32 quantity = requested_quantity;
+	if (!is_stackable) {
+		if (quantity != 1) {
+			return {false, 0};
+		}
+
+		return {true, quantity};
+	}
+
+	if (listed_charges <= 0) {
+		return {false, 0};
+	}
+
+	const uint32 available_quantity = static_cast<uint32>(listed_charges);
+	if (quantity > available_quantity) {
+		quantity = available_quantity;
+	}
+
+	return {true, quantity};
+}
+
+int16 Bazaar::ResolvePurchaseItemCharges(
+	uint32 purchase_quantity,
+	bool is_stackable,
+	int16 max_charges,
+	int16 listed_charges
+)
+{
+	// ItemInstance charges represent stack quantity for stackable items, even
+	// when each item also has a click charge. Only non-stackable charged items
+	// should retain the seller's remaining charges.
+	if (!is_stackable && max_charges > 0) {
+		return listed_charges;
+	}
+
+	return static_cast<int16>(purchase_quantity);
+}
+
+std::vector<std::unique_ptr<EQ::ItemInstance>> Bazaar::CreateBarterPurchaseItems(
+	SharedDatabase &db,
+	const EQ::ItemData *item,
+	uint32 quantity
+)
+{
+	std::vector<std::unique_ptr<EQ::ItemInstance>> items;
+	if (!item || item->MaxCharges > 0 || quantity == 0 || (item->LoreFlag && quantity > 1)) {
+		return items;
+	}
+
+	items.reserve(quantity);
+	for (uint32 i = 0; i < quantity; ++i) {
+		auto inst = std::unique_ptr<EQ::ItemInstance>(db.CreateItem(item, 1));
+		if (!inst) {
+			items.clear();
+			return items;
+		}
+
+		items.emplace_back(std::move(inst));
+	}
+
+	return items;
+}
+
+bool Bazaar::ValidateBarterSellQuantity(uint32 requested_quantity, uint32 listed_quantity)
+{
+	return requested_quantity > 0 && requested_quantity <= listed_quantity;
+}
+
+Bazaar::TransactionValueValidation Bazaar::ValidateBuyLinePrice(
+	uint32 unit_price,
+	uint64 max_transaction_value
+)
+{
+	return ValidateTransactionValue(unit_price, 1, max_transaction_value);
+}
+
+Bazaar::TransactionValueValidation Bazaar::ValidateTransactionValue(
+	uint32 unit_price,
+	uint32 quantity,
+	uint64 max_transaction_value
+)
+{
+	const uint64 total_cost = static_cast<uint64>(unit_price) * static_cast<uint64>(quantity);
+	if (quantity == 0 || total_cost > max_transaction_value) {
+		return {false, 0};
+	}
+
+	return {true, total_cost};
+}
+
+bool Bazaar::ValidatePurchasePrice(uint32 requested_price, uint32 listed_price)
+{
+	return listed_price > 0 && requested_price == listed_price;
+}
+
+void Bazaar::RecordAuditTrail(
+	Database &db,
+	const std::string &seller,
+	const std::string &buyer,
+	uint32 item_id,
+	const std::string &item_name,
+	uint32 quantity,
+	uint64 total_cost,
+	int transaction_type
+)
+{
+	auto query = fmt::format(
+		"INSERT INTO `trader_audit` "
+		"(`time`, `seller`, `buyer`, `item_id`, `itemname`, `quantity`, `totalcost`, `trantype`) "
+		"VALUES (NOW(), '{}', '{}', {}, '{}', {}, {}, {})",
+		Strings::Escape(seller),
+		Strings::Escape(buyer),
+		item_id,
+		Strings::Escape(item_name),
+		quantity,
+		total_cost,
+		transaction_type
+	);
+
+	auto results = db.QueryDatabase(query);
+	if (!results.Success()) {
+		LogTrading("Audit write error: {} : {}", query, results.ErrorMessage());
+	}
+}
+
+uint32 Bazaar::ResolvePurchaseFailureSubAction(uint32 sub_action)
+{
+	return sub_action == Success ? Failed : sub_action;
+}
 
 std::vector<BazaarSearchResultsFromDB_Struct>
 Bazaar::GetSearchResults(
@@ -13,6 +174,8 @@ Bazaar::GetSearchResults(
 	int32 char_zone_instance_id
 )
 {
+	(void) content_db;
+
 	LogTrading(
 		"Searching for items with search criteria - item_name [{}] min_cost [{}] max_cost [{}] min_level [{}] "
 		"max_level [{}] max_results [{}] prestige [{}] augment [{}] trader_entity_id [{}] trader_id [{}] "
@@ -187,11 +350,11 @@ Bazaar::GetSearchResults(
 				);
 			}
 			else {
-				search_criteria_trader.append(fmt::format(" AND trader.char_id = {}", search.trader_id));
+				search_criteria_trader.append(fmt::format(" AND trader.character_id = {}", search.trader_id));
 			}
 		}
 		else {
-			search_criteria_trader.append(fmt::format(" AND trader.char_id = {}", search.trader_id));
+			search_criteria_trader.append(fmt::format(" AND trader.character_id = {}", search.trader_id));
 		}
 	}
 
@@ -205,7 +368,7 @@ Bazaar::GetSearchResults(
 	if (search.slot != std::numeric_limits<uint32>::max()) {
 		if (item_slot_searches_new.contains(search.slot)) {
 			where_criteria_items.append(
-				fmt::format(" AND items.slots & {0} != 0", item_slot_searches_new[search.slot]));
+				fmt::format(" AND items.slots & {0} = {0}", item_slot_searches_new[search.slot]));
 		}
 	}
 
@@ -220,11 +383,11 @@ Bazaar::GetSearchResults(
 
 	if (search.race != std::numeric_limits<uint32>::max()) {
 		where_criteria_items.append(
-			fmt::format(" AND items.races & {0} != 0", GetPlayerRaceBit(GetRaceIDFromPlayerRaceValue(search.race))));
+			fmt::format(" AND items.races & {0} = {0}", GetPlayerRaceBit(GetRaceIDFromPlayerRaceValue(search.race))));
 	}
 
 	if (search._class != std::numeric_limits<uint32>::max()) {
-		where_criteria_items.append(fmt::format(" AND items.classes & {0} != 0", GetPlayerClassBit(search._class)));
+		where_criteria_items.append(fmt::format(" AND items.classes & {0} = {0}", GetPlayerClassBit(search._class)));
 	}
 
 	if (search.item_stat != std::numeric_limits<uint32>::max()) {
@@ -232,8 +395,7 @@ Bazaar::GetSearchResults(
 			field_criteria_items = fmt::format("{}", item_stat_searches_new[search.item_stat].query_string);
 			if (item_stat_searches_new[search.item_stat].skill_type) {
 				where_criteria_items.append(
-					fmt::format(" AND items.skillmodtype = {} AND items.skillmodvalue > 0",
-						item_stat_searches_new[search.item_stat].skill_type));
+					fmt::format(" AND items.skillmodtype = {} ", item_stat_searches_new[search.item_stat].skill_type));
 			}
 			else {
 				where_criteria_items.append(
@@ -262,64 +424,40 @@ Bazaar::GetSearchResults(
 		where_criteria_items.append(fmt::format(" AND items.reclevel <= {}", search.max_level));
 	}
 
-	if (search.prestige == -1) {
-		where_criteria_items.append(" AND items.name LIKE 'Glamour - %'");
-	}
-
-	if (search.prestige == -2) {
-		where_criteria_items.append(" AND items.name NOT LIKE 'Glamour - %'");
-	}
-
 	std::vector<BazaarSearchResultsFromDB_Struct> all_entries;
-	std::vector<std::string>                      trader_items_ids{};
 
-	auto const trader_results = TraderRepository::GetBazaarTraderDetails(db, search_criteria_trader);
-	if (trader_results.empty()) {
-		LogTradingDetail("Bazaar - No traders found in bazaar search.");
-		return all_entries;
-	}
-
-	for (auto const &i: trader_results) {
-		trader_items_ids.push_back(std::to_string(i.trader.item_id));
-	}
-
-	auto const item_results = ItemsRepository::GetItemsForBazaarSearch(
-		content_db,
-		trader_items_ids,
-		std::string(search.item_name),
+	auto const trader_results = TraderRepository::GetBazaarTraderDetails(
+		db,
+		search_criteria_trader,
+		search.item_name,
 		field_criteria_items,
 		where_criteria_items,
 		search.max_results
 	);
 
-	if (item_results.empty()) {
-		LogTradingDetail("Bazaar - No items found in bazaar search.");
+	if (trader_results.empty()) {
+		LogTradingDetail("Bazaar - No traders found in bazaar search.");
 		return all_entries;
 	}
 
 	all_entries.reserve(trader_results.size());
 
-	for (auto const& t:trader_results) {
-		if (!item_results.contains(t.trader.item_id)) {
-			continue;
-		}
-
+	for (auto const &t: trader_results) {
 		BazaarSearchResultsFromDB_Struct r{};
 		r.count                   = 1;
-		r.trader_id               = t.trader.char_id;
-		r.serial_number           = t.trader.item_sn;
+		r.trader_id               = t.trader.character_id;
+		r.item_unique_id          = t.trader.item_unique_id;
 		r.cost                    = t.trader.item_cost;
 		r.slot_id                 = t.trader.slot_id;
 		r.charges                 = t.trader.item_charges;
-		r.stackable               = item_results.at(t.trader.item_id).stackable;
-		r.icon_id                 = item_results.at(t.trader.item_id).icon;
+		r.stackable               = t.stackable;
+		r.icon_id                 = t.icon;
 		r.trader_zone_id          = t.trader.char_zone_id;
 		r.trader_zone_instance_id = t.trader.char_zone_instance_id;
 		r.trader_entity_id        = t.trader.char_entity_id;
-		r.serial_number_RoF       = fmt::format("{:016}\0", t.trader.item_sn);
-		r.item_name               = fmt::format("{:.63}\0", item_results.at(t.trader.item_id).name);
+		r.item_name               = fmt::format("{:.63}\0", t.name);
 		r.trader_name             = fmt::format("{:.63}\0", t.trader_name);
-		r.item_stat               = item_results.at(t.trader.item_id).stats;
+		r.item_stat               = t.stats;
 
 		if (RuleB(Bazaar, UseAlternateBazaarSearch)) {
 			if (convert ||
@@ -327,14 +465,10 @@ Bazaar::GetSearchResults(
 				(char_zone_id == Zones::BAZAAR && r.trader_zone_instance_id != char_zone_instance_id)
 				) {
 				r.trader_id = TraderRepository::TRADER_CONVERT_ID + r.trader_zone_instance_id;
-				}
+			}
 		}
 
 		all_entries.push_back(r);
-	}
-
-	if (all_entries.size() > search.max_results) {
-		all_entries.resize(search.max_results);
 	}
 
 	LogTrading("Returning [{}] items from search results", all_entries.size());

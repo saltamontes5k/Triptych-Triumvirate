@@ -46,7 +46,7 @@ void LoginServer::ProcessUsertoWorldReqLeg(uint16_t opcode, EQ::Net::Packet &p)
 
 	UsertoWorldRequestLegacy *utwr = (UsertoWorldRequestLegacy *) p.Data();
 	uint32                   id    = database.GetAccountIDFromLSID("eqemu", utwr->lsaccountid);
-	int16                           status = database.GetAccountStatus(id);
+	int16                           status = database.GetAccountStatus(id).status;
 
 	LogDebug(
 		"id [{}] status [{}] account_id [{}] world_id [{}] from_id [{}] to_id [{}] ip [{}]",
@@ -124,14 +124,19 @@ void LoginServer::ProcessUsertoWorldReq(uint16_t opcode, EQ::Net::Packet &p)
 	const WorldConfig *Config = WorldConfig::get();
 	LogNetcode("Received ServerPacket from LS OpCode {:#04x}", opcode);
 
-	UsertoWorldRequest *utwr = (UsertoWorldRequest *) p.Data();
-	uint32             id    = database.GetAccountIDFromLSID(utwr->login, utwr->lsaccountid);
-	int16                     status = database.GetAccountStatus(id);
+	UsertoWorldRequest *utwr          = (UsertoWorldRequest *) p.Data();
+	uint32              id            = database.GetAccountIDFromLSID(utwr->login, utwr->lsaccountid);
+	auto                status_record = database.GetAccountStatus(id);
+	auto                client        = ClientList::Instance()->FindCLEByAccountID(id);
+
+	if (client) {
+		client->SetOfflineMode(status_record.offline);
+	}
 
 	LogDebug(
 		"id [{}] status [{}] account_id [{}] world_id [{}] from_id [{}] to_id [{}] ip [{}]",
 		id,
-		status,
+		status_record.status,
 		utwr->lsaccountid,
 		utwr->worldid,
 		utwr->FromID,
@@ -153,7 +158,7 @@ void LoginServer::ProcessUsertoWorldReq(uint16_t opcode, EQ::Net::Packet &p)
 	utwrs->response = UserToWorldStatusSuccess;
 
 	if (Config->Locked == true) {
-		if (status < (RuleI(GM, MinStatusToBypassLockedServer))) {
+		if (status_record.status < (RuleI(GM, MinStatusToBypassLockedServer))) {
 			LogDebug(
 				"Server locked and status is not high enough for account_id [{0}]",
 				utwr->lsaccountid
@@ -165,21 +170,21 @@ void LoginServer::ProcessUsertoWorldReq(uint16_t opcode, EQ::Net::Packet &p)
 	}
 
 	int32 x = Config->MaxClients;
-	if ((int32) numplayers >= x && x != -1 && x != 255 && status < (RuleI(GM, MinStatusToBypassLockedServer))) {
+	if ((int32) numplayers >= x && x != -1 && x != 255 && status_record.status < (RuleI(GM, MinStatusToBypassLockedServer))) {
 		LogDebug("World at capacity account_id [{0}]", utwr->lsaccountid);
 		utwrs->response = UserToWorldStatusWorldAtCapacity;
 		SendPacket(&outpack);
 		return;
 	}
 
-	if (status == -1) {
+	if (status_record.status == -1) {
 		LogDebug("User suspended account_id [{0}]", utwr->lsaccountid);
 		utwrs->response = UserToWorldStatusSuspended;
 		SendPacket(&outpack);
 		return;
 	}
 
-	if (status == -2) {
+	if (status_record.status == -2) {
 		LogDebug("User banned account_id [{0}]", utwr->lsaccountid);
 		utwrs->response = UserToWorldStatusBanned;
 		SendPacket(&outpack);

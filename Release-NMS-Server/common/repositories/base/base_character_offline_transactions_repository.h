@@ -1,20 +1,3 @@
-/*	EQEmu: EQEmulator
-
-	Copyright (C) 2001-2026 EQEmu Development Team
-
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation; either version 3 of the License, or
-	(at your option) any later version.
-
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-	GNU General Public License for more details.
-
-	You should have received a copy of the GNU General Public License
-	along with this program. If not, see <http://www.gnu.org/licenses/>.
-*/
 /**
  * DO NOT MODIFY THIS FILE
  *
@@ -23,28 +6,27 @@
  * Any modifications to base repositories are to be made by the generator only
  *
  * @generator ./utils/scripts/generators/repository-generator.pl
- * @docs https://docs.eqemu.dev/developer/repositories
+ * @docs https://docs.eqemu.io/developer/repositories
  */
 
-#pragma once
+#ifndef EQEMU_BASE_CHARACTER_OFFLINE_TRANSACTIONS_REPOSITORY_H
+#define EQEMU_BASE_CHARACTER_OFFLINE_TRANSACTIONS_REPOSITORY_H
 
 #include "../../database.h"
 #include "../../strings.h"
-
 #include <ctime>
 
-class BaseBuyerBuyLinesRepository {
+class BaseCharacterOfflineTransactionsRepository {
 public:
-	struct BuyerBuyLines {
+	struct CharacterOfflineTransactions {
 		uint64_t    id;
-		uint64_t    buyer_id;
-		uint32_t    char_id;
-		int32_t     buy_slot_id;
-		int32_t     item_id;
-		int32_t     item_qty;
-		int32_t     item_price;
-		uint32_t    item_icon;
+		uint32_t    character_id;
+		uint32_t    type;
+		uint32_t    item_id;
 		std::string item_name;
+		int32_t     quantity;
+		uint64_t    price;
+		std::string buyer_name;
 	};
 
 	static std::string PrimaryKey()
@@ -56,14 +38,13 @@ public:
 	{
 		return {
 			"id",
-			"buyer_id",
-			"char_id",
-			"buy_slot_id",
+			"character_id",
+			"type",
 			"item_id",
-			"item_qty",
-			"item_price",
-			"item_icon",
 			"item_name",
+			"quantity",
+			"price",
+			"buyer_name",
 		};
 	}
 
@@ -71,14 +52,13 @@ public:
 	{
 		return {
 			"id",
-			"buyer_id",
-			"char_id",
-			"buy_slot_id",
+			"character_id",
+			"type",
 			"item_id",
-			"item_qty",
-			"item_price",
-			"item_icon",
 			"item_name",
+			"quantity",
+			"price",
+			"buyer_name",
 		};
 	}
 
@@ -94,7 +74,7 @@ public:
 
 	static std::string TableName()
 	{
-		return std::string("buyer_buy_lines");
+		return std::string("character_offline_transactions");
 	}
 
 	static std::string BaseSelect()
@@ -115,40 +95,39 @@ public:
 		);
 	}
 
-	static BuyerBuyLines NewEntity()
+	static CharacterOfflineTransactions NewEntity()
 	{
-		BuyerBuyLines e{};
+		CharacterOfflineTransactions e{};
 
-		e.id          = 0;
-		e.buyer_id    = 0;
-		e.char_id     = 0;
-		e.buy_slot_id = 0;
-		e.item_id     = 0;
-		e.item_qty    = 0;
-		e.item_price  = 0;
-		e.item_icon   = 0;
-		e.item_name   = "";
+		e.id           = 0;
+		e.character_id = 0;
+		e.type         = 0;
+		e.item_id      = 0;
+		e.item_name    = "";
+		e.quantity     = 0;
+		e.price        = 0;
+		e.buyer_name   = "";
 
 		return e;
 	}
 
-	static BuyerBuyLines GetBuyerBuyLines(
-		const std::vector<BuyerBuyLines> &buyer_buy_liness,
-		int buyer_buy_lines_id
+	static CharacterOfflineTransactions GetCharacterOfflineTransactions(
+		const std::vector<CharacterOfflineTransactions> &character_offline_transactionss,
+		int character_offline_transactions_id
 	)
 	{
-		for (auto &buyer_buy_lines : buyer_buy_liness) {
-			if (buyer_buy_lines.id == buyer_buy_lines_id) {
-				return buyer_buy_lines;
+		for (auto &character_offline_transactions : character_offline_transactionss) {
+			if (character_offline_transactions.id == character_offline_transactions_id) {
+				return character_offline_transactions;
 			}
 		}
 
 		return NewEntity();
 	}
 
-	static BuyerBuyLines FindOne(
+	static CharacterOfflineTransactions FindOne(
 		Database& db,
-		int buyer_buy_lines_id
+		int character_offline_transactions_id
 	)
 	{
 		auto results = db.QueryDatabase(
@@ -156,23 +135,22 @@ public:
 				"{} WHERE {} = {} LIMIT 1",
 				BaseSelect(),
 				PrimaryKey(),
-				buyer_buy_lines_id
+				character_offline_transactions_id
 			)
 		);
 
 		auto row = results.begin();
 		if (results.RowCount() == 1) {
-			BuyerBuyLines e{};
+			CharacterOfflineTransactions e{};
 
-			e.id          = row[0] ? strtoull(row[0], nullptr, 10) : 0;
-			e.buyer_id    = row[1] ? strtoull(row[1], nullptr, 10) : 0;
-			e.char_id     = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.buy_slot_id = row[3] ? static_cast<int32_t>(atoi(row[3])) : 0;
-			e.item_id     = row[4] ? static_cast<int32_t>(atoi(row[4])) : 0;
-			e.item_qty    = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
-			e.item_price  = row[6] ? static_cast<int32_t>(atoi(row[6])) : 0;
-			e.item_icon   = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.item_name   = row[8] ? row[8] : "";
+			e.id           = row[0] ? strtoull(row[0], nullptr, 10) : 0;
+			e.character_id = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.type         = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.item_id      = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.item_name    = row[4] ? row[4] : "";
+			e.quantity     = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
+			e.price        = row[6] ? strtoull(row[6], nullptr, 10) : 0;
+			e.buyer_name   = row[7] ? row[7] : "";
 
 			return e;
 		}
@@ -182,7 +160,7 @@ public:
 
 	static int DeleteOne(
 		Database& db,
-		int buyer_buy_lines_id
+		int character_offline_transactions_id
 	)
 	{
 		auto results = db.QueryDatabase(
@@ -190,7 +168,7 @@ public:
 				"DELETE FROM {} WHERE {} = {}",
 				TableName(),
 				PrimaryKey(),
-				buyer_buy_lines_id
+				character_offline_transactions_id
 			)
 		);
 
@@ -199,21 +177,20 @@ public:
 
 	static int UpdateOne(
 		Database& db,
-		const BuyerBuyLines &e
+		const CharacterOfflineTransactions &e
 	)
 	{
 		std::vector<std::string> v;
 
 		auto columns = Columns();
 
-		v.push_back(columns[1] + " = " + std::to_string(e.buyer_id));
-		v.push_back(columns[2] + " = " + std::to_string(e.char_id));
-		v.push_back(columns[3] + " = " + std::to_string(e.buy_slot_id));
-		v.push_back(columns[4] + " = " + std::to_string(e.item_id));
-		v.push_back(columns[5] + " = " + std::to_string(e.item_qty));
-		v.push_back(columns[6] + " = " + std::to_string(e.item_price));
-		v.push_back(columns[7] + " = " + std::to_string(e.item_icon));
-		v.push_back(columns[8] + " = '" + Strings::Escape(e.item_name) + "'");
+		v.push_back(columns[1] + " = " + std::to_string(e.character_id));
+		v.push_back(columns[2] + " = " + std::to_string(e.type));
+		v.push_back(columns[3] + " = " + std::to_string(e.item_id));
+		v.push_back(columns[4] + " = '" + Strings::Escape(e.item_name) + "'");
+		v.push_back(columns[5] + " = " + std::to_string(e.quantity));
+		v.push_back(columns[6] + " = " + std::to_string(e.price));
+		v.push_back(columns[7] + " = '" + Strings::Escape(e.buyer_name) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -228,22 +205,21 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 
-	static BuyerBuyLines InsertOne(
+	static CharacterOfflineTransactions InsertOne(
 		Database& db,
-		BuyerBuyLines e
+		CharacterOfflineTransactions e
 	)
 	{
 		std::vector<std::string> v;
 
 		v.push_back(std::to_string(e.id));
-		v.push_back(std::to_string(e.buyer_id));
-		v.push_back(std::to_string(e.char_id));
-		v.push_back(std::to_string(e.buy_slot_id));
+		v.push_back(std::to_string(e.character_id));
+		v.push_back(std::to_string(e.type));
 		v.push_back(std::to_string(e.item_id));
-		v.push_back(std::to_string(e.item_qty));
-		v.push_back(std::to_string(e.item_price));
-		v.push_back(std::to_string(e.item_icon));
 		v.push_back("'" + Strings::Escape(e.item_name) + "'");
+		v.push_back(std::to_string(e.quantity));
+		v.push_back(std::to_string(e.price));
+		v.push_back("'" + Strings::Escape(e.buyer_name) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -265,7 +241,7 @@ public:
 
 	static int InsertMany(
 		Database& db,
-		const std::vector<BuyerBuyLines> &entries
+		const std::vector<CharacterOfflineTransactions> &entries
 	)
 	{
 		std::vector<std::string> insert_chunks;
@@ -274,14 +250,13 @@ public:
 			std::vector<std::string> v;
 
 			v.push_back(std::to_string(e.id));
-			v.push_back(std::to_string(e.buyer_id));
-			v.push_back(std::to_string(e.char_id));
-			v.push_back(std::to_string(e.buy_slot_id));
+			v.push_back(std::to_string(e.character_id));
+			v.push_back(std::to_string(e.type));
 			v.push_back(std::to_string(e.item_id));
-			v.push_back(std::to_string(e.item_qty));
-			v.push_back(std::to_string(e.item_price));
-			v.push_back(std::to_string(e.item_icon));
 			v.push_back("'" + Strings::Escape(e.item_name) + "'");
+			v.push_back(std::to_string(e.quantity));
+			v.push_back(std::to_string(e.price));
+			v.push_back("'" + Strings::Escape(e.buyer_name) + "'");
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -299,9 +274,9 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 
-	static std::vector<BuyerBuyLines> All(Database& db)
+	static std::vector<CharacterOfflineTransactions> All(Database& db)
 	{
-		std::vector<BuyerBuyLines> all_entries;
+		std::vector<CharacterOfflineTransactions> all_entries;
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -313,17 +288,16 @@ public:
 		all_entries.reserve(results.RowCount());
 
 		for (auto row = results.begin(); row != results.end(); ++row) {
-			BuyerBuyLines e{};
+			CharacterOfflineTransactions e{};
 
-			e.id          = row[0] ? strtoull(row[0], nullptr, 10) : 0;
-			e.buyer_id    = row[1] ? strtoull(row[1], nullptr, 10) : 0;
-			e.char_id     = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.buy_slot_id = row[3] ? static_cast<int32_t>(atoi(row[3])) : 0;
-			e.item_id     = row[4] ? static_cast<int32_t>(atoi(row[4])) : 0;
-			e.item_qty    = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
-			e.item_price  = row[6] ? static_cast<int32_t>(atoi(row[6])) : 0;
-			e.item_icon   = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.item_name   = row[8] ? row[8] : "";
+			e.id           = row[0] ? strtoull(row[0], nullptr, 10) : 0;
+			e.character_id = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.type         = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.item_id      = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.item_name    = row[4] ? row[4] : "";
+			e.quantity     = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
+			e.price        = row[6] ? strtoull(row[6], nullptr, 10) : 0;
+			e.buyer_name   = row[7] ? row[7] : "";
 
 			all_entries.push_back(e);
 		}
@@ -331,9 +305,9 @@ public:
 		return all_entries;
 	}
 
-	static std::vector<BuyerBuyLines> GetWhere(Database& db, const std::string &where_filter)
+	static std::vector<CharacterOfflineTransactions> GetWhere(Database& db, const std::string &where_filter)
 	{
-		std::vector<BuyerBuyLines> all_entries;
+		std::vector<CharacterOfflineTransactions> all_entries;
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -346,17 +320,16 @@ public:
 		all_entries.reserve(results.RowCount());
 
 		for (auto row = results.begin(); row != results.end(); ++row) {
-			BuyerBuyLines e{};
+			CharacterOfflineTransactions e{};
 
-			e.id          = row[0] ? strtoull(row[0], nullptr, 10) : 0;
-			e.buyer_id    = row[1] ? strtoull(row[1], nullptr, 10) : 0;
-			e.char_id     = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
-			e.buy_slot_id = row[3] ? static_cast<int32_t>(atoi(row[3])) : 0;
-			e.item_id     = row[4] ? static_cast<int32_t>(atoi(row[4])) : 0;
-			e.item_qty    = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
-			e.item_price  = row[6] ? static_cast<int32_t>(atoi(row[6])) : 0;
-			e.item_icon   = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 0;
-			e.item_name   = row[8] ? row[8] : "";
+			e.id           = row[0] ? strtoull(row[0], nullptr, 10) : 0;
+			e.character_id = row[1] ? static_cast<uint32_t>(strtoul(row[1], nullptr, 10)) : 0;
+			e.type         = row[2] ? static_cast<uint32_t>(strtoul(row[2], nullptr, 10)) : 0;
+			e.item_id      = row[3] ? static_cast<uint32_t>(strtoul(row[3], nullptr, 10)) : 0;
+			e.item_name    = row[4] ? row[4] : "";
+			e.quantity     = row[5] ? static_cast<int32_t>(atoi(row[5])) : 0;
+			e.price        = row[6] ? strtoull(row[6], nullptr, 10) : 0;
+			e.buyer_name   = row[7] ? row[7] : "";
 
 			all_entries.push_back(e);
 		}
@@ -426,20 +399,19 @@ public:
 
 	static int ReplaceOne(
 		Database& db,
-		const BuyerBuyLines &e
+		const CharacterOfflineTransactions &e
 	)
 	{
 		std::vector<std::string> v;
 
 		v.push_back(std::to_string(e.id));
-		v.push_back(std::to_string(e.buyer_id));
-		v.push_back(std::to_string(e.char_id));
-		v.push_back(std::to_string(e.buy_slot_id));
+		v.push_back(std::to_string(e.character_id));
+		v.push_back(std::to_string(e.type));
 		v.push_back(std::to_string(e.item_id));
-		v.push_back(std::to_string(e.item_qty));
-		v.push_back(std::to_string(e.item_price));
-		v.push_back(std::to_string(e.item_icon));
 		v.push_back("'" + Strings::Escape(e.item_name) + "'");
+		v.push_back(std::to_string(e.quantity));
+		v.push_back(std::to_string(e.price));
+		v.push_back("'" + Strings::Escape(e.buyer_name) + "'");
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -454,7 +426,7 @@ public:
 
 	static int ReplaceMany(
 		Database& db,
-		const std::vector<BuyerBuyLines> &entries
+		const std::vector<CharacterOfflineTransactions> &entries
 	)
 	{
 		std::vector<std::string> insert_chunks;
@@ -463,14 +435,13 @@ public:
 			std::vector<std::string> v;
 
 			v.push_back(std::to_string(e.id));
-			v.push_back(std::to_string(e.buyer_id));
-			v.push_back(std::to_string(e.char_id));
-			v.push_back(std::to_string(e.buy_slot_id));
+			v.push_back(std::to_string(e.character_id));
+			v.push_back(std::to_string(e.type));
 			v.push_back(std::to_string(e.item_id));
-			v.push_back(std::to_string(e.item_qty));
-			v.push_back(std::to_string(e.item_price));
-			v.push_back(std::to_string(e.item_icon));
 			v.push_back("'" + Strings::Escape(e.item_name) + "'");
+			v.push_back(std::to_string(e.quantity));
+			v.push_back(std::to_string(e.price));
+			v.push_back("'" + Strings::Escape(e.buyer_name) + "'");
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -488,3 +459,5 @@ public:
 		return (results.Success() ? results.RowsAffected() : 0);
 	}
 };
+
+#endif //EQEMU_BASE_CHARACTER_OFFLINE_TRANSACTIONS_REPOSITORY_H

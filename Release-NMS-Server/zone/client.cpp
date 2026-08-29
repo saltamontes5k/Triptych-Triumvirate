@@ -3147,7 +3147,7 @@ void Client::FriendsWho(char *FriendsString) {
 void Client::UpdateAdmin(bool from_database) {
 	int16 tmp = admin;
 	if (from_database) {
-		admin = database.GetAccountStatus(account_id);
+		admin = database.GetAccountStatus(account_id).status;
 	}
 
 	if (tmp == admin && from_database) {
