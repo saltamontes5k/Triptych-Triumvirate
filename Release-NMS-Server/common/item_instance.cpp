@@ -109,10 +109,7 @@ EQ::ItemInstance::ItemInstance(const ItemData *item, const std::string &item_uni
 
 std::string EQ::ItemInstance::GenerateUniqueID()
 {
-	std::string unique_hash = UniqueHashGenerator::generate();
-
-	LogInventoryDetail("Generated an item serial number {}", unique_hash);
-	return unique_hash;
+	return UniqueHashGenerator::generate();
 }
 
 EQ::ItemInstance::ItemInstance(SharedDatabase *db, uint32 item_id, int16 charges) {
