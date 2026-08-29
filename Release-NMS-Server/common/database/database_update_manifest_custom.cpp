@@ -774,6 +774,200 @@ WHERE log_category_description NOT IN ('Error', 'Warning', 'Crash', 'MySQL Error
 		.content_schema_update = false,
 	},
 
+	// v26: Armour glamour NPC for the Bazaar - companion to weapon glamour Purveyor.
+	// Creates npc_types 1120001110, spawngroup 5003550, spawn2 2141650.
+	// Check: skip if NPC already exists.
+	ManifestEntry{
+		.version = 26,
+		.description = "2026_08_26_bazaar_armour_glamour_npc",
+		.check = "SELECT id FROM npc_types WHERE name = 'Purveyor_of_Armour_Glamour'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+INSERT INTO npc_types (
+	id, name, lastname, level, race, class, bodytype, hp, mana,
+	gender, texture, helmtexture, size, hp_regen_rate, mana_regen_rate,
+	loottable_id, merchant_id, npc_faction_id,
+	mindmg, maxdmg, attack_count, npcspecialattks, aggroradius,
+	attack_speed, STR, STA, DEX, AGI, `_INT`, WIS, CHA,
+	see_invis_undead, qglobal, AC, npc_aggro, spawn_limit,
+	trackable, isbot, exclude, version, scalerate, isquest,
+	face, spells, idfile,
+	spellscale, healscale, exp_mod
+) VALUES (
+	1120001110, 'Purveyor_of_Armour_Glamour', 'Armour Ornaments', 70, 5, 1, 1, 43854, 0,
+	1, 1, 0, 6, 0, 0,
+	0, 0, -1,
+	0, 0, 0, '', 0,
+	0, 75, 75, 75, 75, 80, 75, 75,
+	0, 0, 1, 0, 1,
+	1, 0, 1, 1, 100, 1,
+	28, 11113, 'IT10',
+	100, 100, 100
+);
+
+INSERT INTO spawngroup (id, name, spawn_limit, dist, max_x, min_x, max_y, min_y, delay, mindelay, despawn, despawn_timer, wp_spawns)
+VALUES (5003550, 'bazaar-Purveyor_of_Armour_Glamour000', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0);
+
+INSERT INTO spawnentry (spawngroupID, npcID, chance, condition_value_filter, min_time, max_time, min_expansion, max_expansion)
+VALUES (5003550, 1120001110, 100, 1, 0, 0, -1, -1);
+
+INSERT INTO spawn2 (
+	id, spawngroupID, zone, version, x, y, z, heading,
+	respawntime, variance, pathgrid, path_when_zone_idle,
+	`_condition`, cond_value, animation, min_expansion, max_expansion
+) VALUES (
+	2141650, 5003550, 'bazaar', 0, 149.280000, -592.260000, 3.230000, 321.250000,
+	1200, 0, 0, 0,
+	0, 1, 0, -1, -1
+);
+)",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// Offline Bazaar (offline trader / buyer / barter) - ported from the
+	// chadw/EQEmu fork. item_unique_id provides a globally-unique item
+	// instance identifier so offline transactions can be reconciled.
+	// ------------------------------------------------------------------
+
+	ManifestEntry{
+		.version = 27,
+		.description = "2026_08_29_account_offline_flag.sql",
+		.check = "SHOW COLUMNS FROM `account` LIKE 'offline'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `account`
+	ADD COLUMN `offline` TINYINT(1) UNSIGNED NOT NULL DEFAULT 0 AFTER `time_creation`;
+)",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 28,
+		.description = "2026_08_29_trader_offline_schema.sql",
+		.check = "SHOW COLUMNS FROM `trader` LIKE 'character_id'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `trader`
+	DROP KEY `idx_trader_char`,
+	DROP KEY `idx_trader_item_sn`,
+	CHANGE COLUMN `char_id` `character_id` int(11) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_1` `augment_one` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_2` `augment_two` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_3` `augment_three` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_4` `augment_four` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_5` `augment_five` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `aug_slot_6` `augment_six` int(10) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `item_sn` `item_unique_id` varchar(64) NULL DEFAULT NULL,
+	ADD KEY `idx_trader_char` (`character_id`,`char_zone_id`,`char_zone_instance_id`),
+	ADD KEY `idx_trader_item_unique_id` (`item_unique_id`);
+)",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 29,
+		.description = "2026_08_29_inventory_sharedbank_item_unique_id.sql",
+		.check = "SHOW COLUMNS FROM `inventory` LIKE 'item_unique_id'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `inventory`
+	ADD COLUMN `item_unique_id` varchar(64) NULL DEFAULT NULL AFTER `guid`;
+
+ALTER TABLE `sharedbank`
+	ADD COLUMN `item_unique_id` varchar(64) NULL DEFAULT NULL AFTER `guid`;
+)",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 30,
+		.description = "2026_08_29_parcels_item_unique_id.sql",
+		.check = "SHOW COLUMNS FROM `character_parcels` LIKE 'item_unique_id'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `character_parcels`
+	ADD COLUMN `item_unique_id` varchar(64) NULL DEFAULT NULL AFTER `aug_slot_6`,
+	ADD COLUMN `evolve_amount` int(10) UNSIGNED NOT NULL DEFAULT 0 AFTER `quantity`;
+
+ALTER TABLE `character_parcels_containers`
+	ADD COLUMN `item_unique_id` varchar(64) NULL DEFAULT NULL AFTER `item_id`,
+	ADD COLUMN `evolve_amount` int(10) UNSIGNED NOT NULL DEFAULT 0 AFTER `quantity`;
+)",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 31,
+		.description = "2026_08_29_inventory_snapshots_item_unique_id.sql",
+		.check = "SHOW COLUMNS FROM `inventory_snapshots` LIKE 'item_unique_id'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `inventory_snapshots`
+	CHANGE COLUMN `charid` `character_id` int(11) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `slotid` `slot_id` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `itemid` `item_id` int(11) UNSIGNED DEFAULT 0,
+	CHANGE COLUMN `augslot1` `augment_one` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `augslot2` `augment_two` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `augslot3` `augment_three` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `augslot4` `augment_four` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `augslot5` `augment_five` mediumint(7) UNSIGNED DEFAULT 0,
+	CHANGE COLUMN `augslot6` `augment_six` mediumint(7) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `ornamenticon` `ornament_icon` int(11) UNSIGNED NOT NULL DEFAULT 0,
+	CHANGE COLUMN `ornamentidfile` `ornament_idfile` int(11) UNSIGNED NOT NULL DEFAULT 0,
+	ADD COLUMN `item_unique_id` varchar(64) NULL DEFAULT NULL;
+)",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 32,
+		.description = "2026_08_29_offline_bazaar_tables.sql",
+		.check = "SHOW TABLES LIKE 'item_unique_id_reservations'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+CREATE TABLE `item_unique_id_reservations` (
+	`item_unique_id` varchar(64) NOT NULL,
+	`reserved_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`item_unique_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+CREATE TABLE `offline_character_sessions` (
+	`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	`account_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`character_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`mode` varchar(32) NOT NULL DEFAULT '',
+	`zone_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`instance_id` int(11) NOT NULL DEFAULT 0,
+	`entity_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`started_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`),
+	UNIQUE KEY `account_id` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+CREATE TABLE `character_offline_transactions` (
+	`id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+	`character_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`type` int(10) unsigned NOT NULL DEFAULT 0,
+	`item_id` int(10) unsigned NOT NULL DEFAULT 0,
+	`item_name` varchar(64) NOT NULL DEFAULT '',
+	`quantity` int(11) NOT NULL DEFAULT 0,
+	`price` bigint(20) unsigned NOT NULL DEFAULT 0,
+	`buyer_name` varchar(64) NOT NULL DEFAULT '',
+	PRIMARY KEY (`id`),
+	KEY `idx_offline_transactions_character` (`character_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+)",
+		.content_schema_update = false,
+	},
+
 	// Used for testing
 	//	ManifestEntry{
 	//		.version = 9229,
