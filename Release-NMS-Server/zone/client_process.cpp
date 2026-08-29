@@ -182,14 +182,12 @@ bool Client::Process() {
 				guild_mgr.SendGuildMemberUpdateToWorld(GetName(), GuildID(), 0, time(nullptr));
 			}
 
-			if (IsTrader()) {
-				TraderRepository::DeleteWhere(database, fmt::format("`char_id` = '{}'", CharacterID()));
+			if (IsTrader() && !IsOffline()) {
+				TraderEndTrader();
+			}
 
-				SendBecomeTraderToWorld(this, TraderOff);
-				SendTraderMode(TraderOff);
-
-				WithCustomer(0);
-				SetTrader(false);
+			if (IsBuyer() && !IsOffline()) {
+				ToggleBuyerMode(false);
 			}
 
 			SetDynamicZoneMemberStatus(DynamicZoneMemberStatus::Offline);
@@ -221,14 +219,12 @@ bool Client::Process() {
 				guild_mgr.SendGuildMemberUpdateToWorld(GetName(), GuildID(), 0, time(nullptr));
 			}
 
-			if (IsTrader()) {
-				TraderRepository::DeleteWhere(database, fmt::format("`char_id` = '{}'", CharacterID()));
+			if (IsTrader() && !IsOffline()) {
+				TraderEndTrader();
+			}
 
-				SendBecomeTraderToWorld(this, TraderOff);
-				SendTraderMode(TraderOff);
-
-				WithCustomer(0);
-				SetTrader(false);
+			if (IsBuyer() && !IsOffline()) {
+				ToggleBuyerMode(false);
 			}
 
 			if (GetMerc())
@@ -821,6 +817,10 @@ bool Client::Process() {
 	}
 
 	if (client_state == DISCONNECTED) {
+		if (IsOffline()) {
+			return false;
+		}
+
 		OnDisconnect(true);
 		std::cout << "Client disconnected (cs=d): " << GetName() << std::endl;
 		RecordPlayerEventLog(PlayerEvent::POSSIBLE_HACK, PlayerEvent::PossibleHackEvent{.message = "/MQInstantCamp: Possible instant camp disconnect"});
@@ -847,14 +847,12 @@ bool Client::Process() {
 				guild_mgr.SendGuildMemberUpdateToWorld(GetName(), GuildID(), 0, time(nullptr));
 			}
 
-			if (IsTrader()) {
-				TraderRepository::DeleteWhere(database, fmt::format("`char_id` = '{}'", CharacterID()));
+			if (IsTrader() && !IsOffline()) {
+				TraderEndTrader();
+			}
 
-				SendBecomeTraderToWorld(this, TraderOff);
-				SendTraderMode(TraderOff);
-
-				WithCustomer(0);
-				SetTrader(false);
+			if (IsBuyer() && !IsOffline()) {
+				ToggleBuyerMode(false);
 			}
 
 			return false;
@@ -884,6 +882,10 @@ bool Client::Process() {
 
 	if (client_state != CLIENT_LINKDEAD && (client_state == CLIENT_ERROR || client_state == DISCONNECTED || client_state == CLIENT_KICKED || !eqs->CheckState(ESTABLISHED)))
 	{
+		if (IsOffline()) {
+			return false;
+		}
+
 		//client logged out or errored out
 		//ResetTrade();
 		if (client_state != CLIENT_KICKED && !bZoning && !instalog) {

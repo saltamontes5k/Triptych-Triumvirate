@@ -1,0 +1,578 @@
+C:\Program Files\MariaDB 12.3\bin\mariadbd.exe, Version: 12.3.2-MariaDB (MariaDB Server). started with:
+TCP Port: 3306, Named Pipe: MySQL
+Time		    Id Command	Argument
+260822 14:33:08	  6902 Query	SHOW VARIABLES WHERE Variable_name IN ('general_log','general_log_file','log_output')
+		  6902 Quit	
+260822 14:37:01	  6903 Connect	root@localhost on  using SSL/TLS
+		  6903 Query	SELECT 1
+		  6903 Quit	
+260822 14:47:10	  6904 Connect	eqemu@localhost on peq using TCP/IP
+		  6904 Query	SET NAMES utf8mb4
+		  6904 Query	SELECT VERSION()
+		  6905 Connect	eqemu@localhost on peq using TCP/IP
+		  6905 Query	SET NAMES utf8mb4
+		  6905 Query	SELECT VERSION()
+		  6905 Query	SELECT * FROM `spire_settings`
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_users` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_users' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_users` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_users' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_users` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_users' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_analytic_events' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_analytic_events' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_analytic_events` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_analytic_events' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_analytic_events' AND index_name = 'event_name_ip_address'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_analytic_events' AND index_name = 'event_name'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_analytic_event_counts' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_analytic_event_counts' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_analytic_event_counts` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_analytic_event_counts' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_analytic_event_counts' AND index_name = 'event_name'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_analytic_event_counts' AND index_name = 'event_name_key'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_users` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_users' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_event_log` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND index_name = 'server_database_connection_id_event'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND index_name = 'server_database_connection_id'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_resource_permissions' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_event_log` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND index_name = 'server_database_connection_id_event'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_user_event_log' AND index_name = 'server_database_connection_id'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_users' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_users` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_users' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_server_database_connections` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_server_database_connections' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_user_server_resource_permissions' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_user_server_resource_permissions` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_user_server_resource_permissions' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_crash_reports' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_crash_reports' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_crash_reports` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_crash_reports' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_crash_reports' AND index_name = 'version'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_crash_reports' AND index_name = 'fingerprint'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_settings' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = ? AND table_type = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.tables WHERE table_schema = 'peq' AND table_name = 'spire_settings' AND table_type = 'BASE TABLE'
+		  6905 Close stmt	
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_settings` LIMIT 1
+		  6905 Prepare	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ORDINAL_POSITION
+		  6905 Execute	SELECT column_name, column_default, is_nullable = 'YES', data_type, character_maximum_length, column_type, column_key, extra, column_comment, numeric_precision, numeric_scale , datetime_precision FROM information_schema.columns WHERE table_schema = 'peq' AND table_name = 'spire_settings' ORDER BY ORDINAL_POSITION
+		  6905 Close stmt	
+		  6905 Query	ALTER TABLE `spire_settings` MODIFY COLUMN `setting` varchar(190)
+		  6905 Query	SELECT DATABASE()
+		  6905 Prepare	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE ? ORDER BY SCHEMA_NAME=? DESC,SCHEMA_NAME limit 1
+		  6905 Execute	SELECT SCHEMA_NAME from Information_schema.SCHEMATA where SCHEMA_NAME LIKE 'peq%' ORDER BY SCHEMA_NAME='peq' DESC,SCHEMA_NAME limit 1
+		  6905 Close stmt	
+		  6905 Prepare	SELECT count(*) FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?
+		  6905 Execute	SELECT count(*) FROM information_schema.statistics WHERE table_schema = 'peq' AND table_name = 'spire_settings' AND index_name = 'idx_spire_settings_setting'
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `spire_settings`
+		  6905 Query	SELECT * FROM `spire_users` WHERE is_admin = 1 AND `spire_users`.`deleted` IS NULL ORDER BY `spire_users`.`id` LIMIT 1
+		  6905 Query	SELECT * FROM `spire_server_database_connections` ORDER BY `spire_server_database_connections`.`id` LIMIT 1
+		  6905 Prepare	UPDATE `spire_server_database_connections` SET `name`=?,`db_host`=?,`db_port`=?,`db_name`=?,`db_username`=?,`db_password`=?,`content_db_host`=?,`content_db_port`=?,`content_db_name`=?,`content_db_username`=?,`content_db_password`=?,`logs_db_host`=?,`logs_db_port`=?,`logs_db_name`=?,`logs_db_username`=?,`logs_db_password`=?,`discord_webhook_url`=?,`created_from_ip`=?,`created_by`=?,`created_at`=?,`updated_at`=?,`deleted_at`=? WHERE `id` = ?
+		  6905 Execute	UPDATE `spire_server_database_connections` SET `name`='Triptych Triumvate',`db_host`='127.0.0.1',`db_port`='3306',`db_name`='peq',`db_username`='root',`db_password`='8ee9ceeb97f8284b74bf06b3c93f72a4be42b390db2dfa0291a7d3558d8b5fcb',`content_db_host`='',`content_db_port`='',`content_db_name`='',`content_db_username`='',`content_db_password`='',`logs_db_host`='127.0.0.1',`logs_db_port`='3306',`logs_db_name`='peq',`logs_db_username`='root',`logs_db_password`='0db0cbf9615204f963d6b861a4ce39171c813fb3a14da3df5eae2ba8a8846f5a',`discord_webhook_url`='https://discord.com/api/webhooks/1379978273743835197/R225jR7FUrttSFVyMXoZC_6vx9ApX6h_CzDt0QvMcoMESqDvTbyr1qpZXgojEMXweyUF',`created_from_ip`='127.0.0.1',`created_by`=1,`created_at`='2025-01-29 15:30:47.758',`updated_at`='2026-08-22 14:47:10.544',`deleted_at`=NULL WHERE `id` = 1
+		  6905 Close stmt	
+		  6905 Query	SELECT * FROM `zone`
+260822 14:47:11	  6905 Prepare	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = ?
+		  6905 Execute	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = 0
+		  6905 Close stmt	
+260822 14:47:12	  6905 Prepare	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = ?
+		  6905 Execute	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = 0
+		  6905 Close stmt	
+260822 14:47:23	  6905 Query	SELECT
+		  TABLE_NAME,
+		  COLUMN_NAME,
+		  DATA_TYPE,
+		  COLUMN_KEY,
+		  ORDINAL_POSITION,
+		  IS_NULLABLE,
+		  COLUMN_TYPE,
+		  COLUMN_DEFAULT
+		FROM
+		  INFORMATION_SCHEMA.COLUMNS
+		WHERE
+		  TABLE_NAME = 'spells_new'
+		  AND TABLE_SCHEMA = 'peq'
+		ORDER BY ORDINAL_POSITION
+		  6906 Connect	eqemu@localhost on peq using TCP/IP
+		  6906 Query	SET NAMES utf8mb4
+		  6906 Prepare	SELECT * FROM `db_str` WHERE type = ? LIMIT 1000
+		  6906 Execute	SELECT * FROM `db_str` WHERE type = '6' LIMIT 1000
+		  6906 Close stmt	
+260822 14:47:29	  6906 Prepare	SELECT * FROM `spells_new` WHERE name like ? LIMIT 100
+		  6905 Prepare	SELECT * FROM `spells_new` WHERE name like ? LIMIT 100
+		  6905 Execute	SELECT * FROM `spells_new` WHERE name like '%breath of o%' LIMIT 100
+		  6906 Execute	SELECT * FROM `spells_new` WHERE name like '%breath of o%' LIMIT 100
+		  6906 Close stmt	
+		  6905 Close stmt	
+260822 14:47:34	  6905 Prepare	SELECT * FROM `db_str` WHERE type = ? LIMIT 100000
+		  6905 Execute	SELECT * FROM `db_str` WHERE type = '5' LIMIT 100000
+		  6906 Prepare	SELECT * FROM `spells_new` WHERE id = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6906 Execute	SELECT * FROM `spells_new` WHERE id = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6906 Close stmt	
+		  6905 Close stmt	
+260822 14:48:34	  6905 Prepare	SELECT * FROM `spells_new` WHERE id = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Execute	SELECT * FROM `spells_new` WHERE id = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Close stmt	
+		  6905 Prepare	UPDATE `spells_new` SET `spell_category`=? WHERE id = ? AND `id` = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Execute	UPDATE `spells_new` SET `spell_category`=999 WHERE id = 11142 AND `id` = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Close stmt	
+260822 14:49:24	  6905 Prepare	SELECT * FROM `spells_new` WHERE id = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Execute	SELECT * FROM `spells_new` WHERE id = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Close stmt	
+		  6905 Prepare	UPDATE `spells_new` SET `npc_no_los`=?,`targettype`=? WHERE id = ? AND `id` = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Execute	UPDATE `spells_new` SET `npc_no_los`=1,`targettype`=44 WHERE id = 11142 AND `id` = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Close stmt	
+260822 14:49:54	  6905 Prepare	SELECT * FROM `spells_new` WHERE id = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Execute	SELECT * FROM `spells_new` WHERE id = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6905 Close stmt	
+260822 14:50:10	  6904 Quit	
+		  6905 Quit	
+260822 14:50:17	  6906 Query	SELECT id FROM spells_new ORDER BY id
+		  6907 Connect	eqemu@localhost on peq using TCP/IP
+		  6907 Query	SET NAMES utf8mb4
+		  6907 Query	select id, name from spells_new where name like '%placeholder%' or name like '% reserved%' order by id
+260822 14:50:23	  6906 Quit	
+260822 14:53:17	  6907 Quit	
+260822 14:55:09	  6908 Connect	eqemu@localhost on  using SSL/TLS
+		  6908 Query	SELECT DATABASE()
+		  6908 Init DB	peq
+		  6908 Query	SELECT id,name,targettype,npc_no_los,spell_category FROM spells_new WHERE id=11142
+		  6908 Query	SHOW DATABASES
+		  6908 Quit	
+260822 15:11:11	  6909 Connect	eqemu@localhost on peq using TCP/IP
+		  6910 Connect	eqemu@localhost on peq using TCP/IP
+		  6910 Query	SET NAMES utf8mb4
+		  6909 Query	SET NAMES utf8mb4
+		  6910 Prepare	SELECT * FROM `db_str` WHERE type = ? LIMIT 100000
+		  6909 Prepare	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = ?
+		  6910 Execute	SELECT * FROM `db_str` WHERE type = '5' LIMIT 100000
+		  6909 Execute	SELECT * FROM `spire_user_server_database_connections` WHERE user_id = 0
+		  6909 Close stmt	
+		  6909 Prepare	SELECT * FROM `spells_new` WHERE id = ? ORDER BY `spells_new`.`id` LIMIT 1
+		  6909 Execute	SELECT * FROM `spells_new` WHERE id = 11142 ORDER BY `spells_new`.`id` LIMIT 1
+		  6909 Close stmt	
+		  6910 Close stmt	
+		  6910 Prepare	SELECT * FROM `db_str` WHERE type = ? AND id = ? LIMIT 1000
+		  6910 Execute	SELECT * FROM `db_str` WHERE type = '6' AND id = '11142' LIMIT 1000
+		  6910 Close stmt	
+260822 15:13:15	  6911 Connect	root@localhost on  using SSL/TLS
+		  6911 Query	SET GLOBAL general_log='OFF'
