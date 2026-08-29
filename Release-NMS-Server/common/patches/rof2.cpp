@@ -4115,26 +4115,41 @@ namespace RoF2
 				break;
 			}
 			case ListTraderItems: {
-				ENCODE_LENGTH_EXACT(Trader_Struct);
-				SETUP_DIRECT_ENCODE(Trader_Struct, structs::ClickTrader_Struct);
 				LogTrading("(RoF2)  action <green>[{}]", action);
 
-				eq->action = structs::RoF2BazaarTraderBuyerActions::ListTraderItems;
-				std::transform(
-					std::begin(emu->items),
-					std::end(emu->items),
-					std::begin(eq->items),
-					[&](const uint32 x) {
-						return x;
-					}
-				);
-				std::copy_n(
-					std::begin(emu->item_cost),
-					EQ::invtype::BAZAAR_SIZE,
-					std::begin(eq->item_cost)
-				);
+				EQApplicationPacket *in = *p;
+				*p                      = nullptr;
 
-				FINISH_ENCODE();
+				TraderClientMessaging_Struct tcm{};
+				EQ::Util::MemoryStreamReader ss(reinterpret_cast<char *>(in->pBuffer), in->size);
+				cereal::BinaryInputArchive   ar(ss);
+				{
+					ar(tcm);
+				}
+
+				auto buffer = new char[4404]{}; // 4404 is the fixed size of the packet for 200 item limit of RoF2
+				auto pos    = buffer;
+
+				auto pos_unique_id = buffer + 4;
+				auto pos_cost      = buffer + 3604;
+				VARSTRUCT_ENCODE_TYPE(uint32, pos, structs::RoF2BazaarTraderBuyerActions::ListTraderItems);
+				for (auto const &t: tcm.items) {
+					strn0cpy(pos_unique_id, t.item_unique_id.data(), t.item_unique_id.length() + 1);
+					*(uint32 *) pos_cost = t.item_cost;
+					pos_unique_id += 18;
+					pos_cost      += 4;
+				}
+
+				for (int i = tcm.items.size(); i < EQ::invtype::BAZAAR_SIZE; i++) {
+					strn0cpy(pos_unique_id, "0000000000000000", 18);
+					pos_unique_id += 18;
+				}
+
+				safe_delete_array(in->pBuffer);
+				in->pBuffer = reinterpret_cast<unsigned char *>(buffer);
+				in->size    = 4404;
+
+				dest->FastQueuePacket(&in);
 				break;
 			}
 			case TraderAck2: {
@@ -6147,26 +6162,53 @@ namespace RoF2
 
 	DECODE(OP_Trader)
 	{
+		if (__packet->size < sizeof(uint32)) {
+			LogWarning("(RoF2) Short OP_Trader size [{}]", __packet->size);
+			__packet->SetOpcode(OP_Unknown);
+			return;
+		}
+
 		auto action = *(uint32 *)__packet->pBuffer;
+
+		LogTradingDetail(
+			"(RoF2) DECODE(OP_Trader) action [{}] size [{}]",
+			action,
+			__packet->size
+		);
 
 		switch (action) {
 			case structs::RoF2BazaarTraderBuyerActions::BeginTraderMode: {
 				DECODE_LENGTH_EXACT(structs::BeginTrader_Struct);
-				SETUP_DIRECT_DECODE(ClickTrader_Struct, structs::BeginTrader_Struct);
-				LogTrading("(RoF2) BeginTraderMode action <green>[{}]", action);
 
-				emu->action = TraderOn;
-				std::copy_n(eq->item_cost, RoF2::invtype::BAZAAR_SIZE, emu->item_cost);
-				std::transform(
-					std::begin(eq->items),
-					std::end(eq->items),
-					std::begin(emu->serial_number),
-					[&](const structs::TraderItemSerial_Struct x) {
-						return Strings::ToUnsignedBigInt(x.serial_number,0);
+				unsigned char *eq_buffer = __packet->pBuffer;
+				auto           eq        = (RoF2::structs::BeginTrader_Struct *) eq_buffer;
+
+				ClickTraderNew_Struct out{};
+				out.action = TraderOn;
+				for (auto i = 0; i < RoF2::invtype::BAZAAR_SIZE; i++) {
+					if (eq->item_cost[i] == 0) {
+						continue;
 					}
-				);
 
-				FINISH_DIRECT_DECODE();
+					BazaarTraderDetails btd{};
+					btd.unique_id     = eq->item_unique_ids[i].item_unique_id;
+					btd.cost          = eq->item_cost[i];
+					btd.serial_number = i;
+					out.items.push_back(btd);
+				}
+
+				std::stringstream           ss{};
+				cereal::BinaryOutputArchive ar(ss);
+				{
+					ar(out);
+				}
+
+				__packet->size    = static_cast<uint32>(ss.str().length());
+				__packet->pBuffer = new unsigned char[__packet->size]{};
+				memcpy(__packet->pBuffer, ss.str().data(), __packet->size);
+				safe_delete_array(eq_buffer);
+
+				LogTrading("(RoF2) BeginTraderMode action <green>[{}]", action);
 				break;
 			}
 			case structs::RoF2BazaarTraderBuyerActions::EndTraderMode: {
@@ -6184,6 +6226,10 @@ namespace RoF2
 				LogTrading("(RoF2) ListTraderItems action <green>[{}]", action);
 				break;
 			}
+			case structs::RoF2BazaarTraderBuyerActions::ReconcileItems: {
+				LogTradingDetail("(RoF2) ReconcileItems action <green>[{}] size [{}]", action, __packet->size);
+				break;
+			}
 			case structs::RoF2BazaarTraderBuyerActions::PriceUpdate: {
 				DECODE_LENGTH_EXACT(structs::TraderPriceUpdate_Struct);
 				SETUP_DIRECT_DECODE(TraderPriceUpdate_Struct, structs::TraderPriceUpdate_Struct);
@@ -6197,7 +6243,11 @@ namespace RoF2
 				break;
 			}
 			default: {
-				LogTrading("(RoF2) Unhandled action <red>[{}]", action);
+				LogWarning(
+					"(RoF2) Unhandled OP_Trader action [{}] size [{}]",
+					action,
+					__packet->size
+				);
 			}
 		}
 	}
