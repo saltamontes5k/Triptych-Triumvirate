@@ -3554,18 +3554,20 @@ struct	WhoAllPlayerPart4 {
 };
 
 struct TraderItemSerial_Struct {
-	char	serial_number[17];
+	char	item_unique_id[17];
 	uint8	unknown_018;
 
-	void operator=(uint32 a) {
-		auto _tmp = fmt::format("{:016}", a);
-		strn0cpy(this->serial_number, _tmp.c_str(), sizeof(this->serial_number));
+	TraderItemSerial_Struct& operator=(const char* a) {
+		strn0cpy(this->item_unique_id, a, sizeof(this->item_unique_id));
+		unknown_018 = 0;
+
+		return *this;
 	}
 };
 
 struct BeginTrader_Struct {
 /*0000*/    uint32                  action;
-/*0004*/    TraderItemSerial_Struct items[200];
+/*0004*/    TraderItemSerial_Struct item_unique_ids[200];
 /*3604*/    uint32                  item_cost[200];
 /*4404*/
 };
