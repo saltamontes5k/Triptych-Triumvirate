@@ -373,6 +373,7 @@ set(gm_command_sources
     gm_commands/guild.cpp
     gm_commands/hp.cpp
     gm_commands/illusion_block.cpp
+    gm_commands/illusion_storage.cpp
     gm_commands/instance.cpp
     gm_commands/interrogateinv.cpp
     gm_commands/interrupt.cpp

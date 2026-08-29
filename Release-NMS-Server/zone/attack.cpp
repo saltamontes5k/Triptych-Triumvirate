@@ -6664,36 +6664,23 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 	uint32 buff_max = GetMaxTotalSlots();
 	if (type == SE_Rune) {
 		for (uint32 slot = 0; slot < buff_max; slot++) {
-			bool active_rune = slot == spellbonuses.MeleeRune[SBIndex::RUNE_BUFFSLOT] && spellbonuses.MeleeRune[SBIndex::RUNE_AMOUNT];
-			bool bard_rune = IsBardSong(buffs[slot].spellid);
-
-			if ((active_rune || bard_rune) && buffs[slot].melee_rune && IsValidSpell(buffs[slot].spellid)) {
+			if (slot == spellbonuses.MeleeRune[SBIndex::RUNE_BUFFSLOT] && spellbonuses.MeleeRune[SBIndex::RUNE_AMOUNT] && buffs[slot].melee_rune && IsValidSpell(buffs[slot].spellid)) {
 				int melee_rune_left = buffs[slot].melee_rune;
 
-				if (bard_rune) {
-					damage -= melee_rune_left;
-				} else {
-					LogCombat("Melee Rune - Slot [{}] SpellID [{}] Remaining [{}] Damage [{}]", slot, buffs[slot].spellid, melee_rune_left, damage);
+				if (melee_rune_left > damage)
+				{
+					melee_rune_left -= damage;
+					buffs[slot].melee_rune = melee_rune_left;
 
-					if (melee_rune_left > damage)
-					{
-						melee_rune_left -= damage;
-						buffs[slot].melee_rune = melee_rune_left;
+					return -6;
+				}
+				else
+				{
+					if (melee_rune_left > 0)
+						damage -= melee_rune_left;
 
-						return -6;
-					}
-					else
-					{
-
-						if (melee_rune_left > 0) {
-							damage -= melee_rune_left;
-						}
-
-						if (!TryFadeEffect(slot))
-						{
-							BuffFadeBySlot(slot);
-						}
-					}
+					if (!TryFadeEffect(slot))
+						BuffFadeBySlot(slot);
 				}
 			}
 		}
@@ -6701,36 +6688,22 @@ int32 Mob::RuneAbsorb(int64 damage, uint16 type)
 
 	else {
 		for (uint32 slot = 0; slot < buff_max; slot++) {
-			bool active_rune = slot == spellbonuses.AbsorbMagicAtt[SBIndex::RUNE_BUFFSLOT] && spellbonuses.AbsorbMagicAtt[SBIndex::RUNE_AMOUNT];
-			bool bard_rune = IsBardSong(buffs[slot].spellid);
-
-			if ((active_rune || bard_rune) && buffs[slot].magic_rune && IsValidSpell(buffs[slot].spellid)) {
+			if (slot == spellbonuses.AbsorbMagicAtt[SBIndex::RUNE_BUFFSLOT] && spellbonuses.AbsorbMagicAtt[SBIndex::RUNE_AMOUNT] && buffs[slot].magic_rune && IsValidSpell(buffs[slot].spellid)) {
 				int magic_rune_left = buffs[slot].magic_rune;
+				if (magic_rune_left > damage)
+				{
+					magic_rune_left -= damage;
+					buffs[slot].magic_rune = magic_rune_left;
 
-				if (bard_rune) {
-					damage -= magic_rune_left;
-				} else {
-					LogCombat("Magic Rune - Slot [{}] SpellID [{}] Remaining [{}] Damage [{}]", slot, buffs[slot].spellid, magic_rune_left, damage);
+					return 0;
+				}
+				else
+				{
+					if (magic_rune_left > 0)
+						damage -= magic_rune_left;
 
-					if (magic_rune_left > damage)
-					{
-						magic_rune_left -= damage;
-						buffs[slot].magic_rune = magic_rune_left;
-
-						return 0;
-					}
-					else
-					{
-						if (magic_rune_left > 0)
-						{
-							damage -= magic_rune_left;
-						}
-
-						if (!TryFadeEffect(slot))
-						{
-							BuffFadeBySlot(slot);
-						}
-					}
+					if (!TryFadeEffect(slot))
+						BuffFadeBySlot(slot);
 				}
 			}
 		}

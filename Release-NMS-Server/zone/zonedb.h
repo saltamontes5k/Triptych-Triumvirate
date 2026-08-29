@@ -2,6 +2,7 @@
 #define ZONEDB_H_
 
 #include <unordered_set>
+#include <tuple>
 
 #include "../common/shareddb.h"
 #include "../common/eq_packet_structs.h"
@@ -675,6 +676,10 @@ public:
 
 	static void SaveCharacterBinds(Client *c);
 	static void SaveCharacterTribute(Client* c);
+
+	bool SaveCharacterIllusion(uint32 character_id, uint32 spell_id, uint32 item_id, uint32 &out_illusion_id);
+	bool DeleteCharacterIllusion(uint32 character_id, uint32 illusion_id);
+	bool LoadCharacterIllusions(uint32 character_id, std::vector<std::tuple<uint32,uint32,uint32>> &into);
 protected:
 	void ZDBInitVars();
 
