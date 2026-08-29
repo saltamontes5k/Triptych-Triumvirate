@@ -12694,13 +12694,8 @@ void Client::RemoveItem(uint32 item_id, uint32 quantity)
 
 void Client::SetWeaponAppearance()
 {
-	if (GetAttackMode() == AttackMode::RANGED && m_inv.GetItem(EQ::invslot::slotRange) && m_inv.GetItem(EQ::invslot::slotRange)->GetItemType() == EQ::item::ItemTypeBow) {
-		SendTextureWC(EQ::textures::TextureSlot::weaponPrimary, 0);
-		SendTextureWC(EQ::textures::TextureSlot::weaponSecondary, GetWeaponMaterial(m_inv.GetItem(EQ::invslot::slotRange)));
-	} else {
-		SendTextureWC(EQ::textures::TextureSlot::weaponPrimary, GetWeaponMaterial(m_inv.GetItem(EQ::invslot::slotPrimary)));
-		SendTextureWC(EQ::textures::TextureSlot::weaponSecondary, GetWeaponMaterial(m_inv.GetItem(EQ::invslot::slotSecondary)));
-	}
+	SendTextureWC(EQ::textures::TextureSlot::weaponPrimary, GetWeaponMaterial(m_inv.GetItem(EQ::invslot::slotPrimary)));
+	SendTextureWC(EQ::textures::TextureSlot::weaponSecondary, GetWeaponMaterial(m_inv.GetItem(EQ::invslot::slotSecondary)));
 }
 
 const Client::AttackMode Client::GetAttackMode()
