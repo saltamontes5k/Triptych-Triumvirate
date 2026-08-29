@@ -43,6 +43,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../common/data_verification.h"
 #include "../common/rdtsc.h"
 #include "../common/data_bucket.h"
+#include "../common/repositories/offline_character_sessions_repository.h"
 #include "dynamic_zone.h"
 #include "event_codes.h"
 #include "guild_mgr.h"
@@ -327,6 +328,8 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_MoveCoin] = &Client::Handle_OP_MoveCoin;
 	ConnectedOpcodes[OP_MoveItem] = &Client::Handle_OP_MoveItem;
 	ConnectedOpcodes[OP_MoveMultipleItems] = &Client::Handle_OP_MoveMultipleItems;
+	ConnectedOpcodes[OP_BarterOfflineMode] = &Client::Handle_OP_Offline;
+	ConnectedOpcodes[OP_Offline] = &Client::Handle_OP_Offline;
 	ConnectedOpcodes[OP_OpenContainer] = &Client::Handle_OP_OpenContainer;
 	ConnectedOpcodes[OP_OpenGuildTributeMaster] = &Client::Handle_OP_OpenGuildTributeMaster;
 	ConnectedOpcodes[OP_OpenInventory] = &Client::Handle_OP_OpenInventory;
@@ -17388,3 +17391,183 @@ void Client::SyncWorldPositionsToClient(bool ignore_idle)
 		m_is_idle = false;
 	}
 }
+
+void Client::Handle_OP_Offline(const EQApplicationPacket *app)
+{
+	const auto mode = IsBuyer() ? std::string("buyer") : std::string("trader");
+
+	LogTrading(
+		"Handling OP_Offline for client [{}] account [{}] character [{}] mode [{}] zone [{}] instance [{}] entity [{}] customer [{}] trader [{}] buyer [{}]",
+		GetCleanName(),
+		AccountID(),
+		CharacterID(),
+		mode,
+		GetZoneID(),
+		GetInstanceID(),
+		GetID(),
+		IsThereACustomer(),
+		IsTrader(),
+		IsBuyer()
+	);
+
+	if (IsThereACustomer()) {
+		auto customer = entity_list.GetClientByID(GetCustomerID());
+		if (customer) {
+			LogTrading(
+				"Ending active customer session for client [{}] before offline {} activation. customer_entity_id [{}]",
+				GetCleanName(),
+				mode,
+				customer->GetID()
+			);
+			auto end_session = new EQApplicationPacket(OP_ShopEnd);
+			customer->FastQueuePacket(&end_session);
+		}
+	}
+
+	EQStreamInterface *eqsi           = nullptr;
+	auto               offline_client = new Client(eqsi);
+
+	database.LoadCharacterData(CharacterID(), &offline_client->GetPP(), &offline_client->GetEPP());
+	offline_client->Clone(*this);
+	offline_client->GetInv().SetGMInventory(true);
+	offline_client->SetPosition(GetX(), GetY(), GetZ());
+	offline_client->SetHeading(GetHeading());
+	offline_client->SetSpawned();
+	offline_client->SetBecomeNPC(false);
+	offline_client->SetOffline(true);
+	entity_list.AddClient(offline_client);
+
+	bool       session_ready      = true;
+	const auto previous_entity_id = GetID();
+	const auto next_entity_id     = offline_client->GetID();
+
+	LogTrading(
+		"Prepared offline {} clone for client [{}] account [{}] character [{}]. previous_entity_id [{}] next_entity_id [{}]",
+		mode,
+		GetCleanName(),
+		AccountID(),
+		CharacterID(),
+		previous_entity_id,
+		next_entity_id
+	);
+
+	database.TransactionBegin();
+
+	if (IsBuyer()) {
+		offline_client->SetBuyerID(offline_client->CharacterID());
+		session_ready = BuyerRepository::UpdateBuyerEntityID(database, CharacterID(), previous_entity_id, next_entity_id);
+		LogTrading(
+			"Offline buyer entity handoff for client [{}] character [{}] previous_entity_id [{}] next_entity_id [{}] success [{}]",
+			GetCleanName(),
+			CharacterID(),
+			previous_entity_id,
+			next_entity_id,
+			session_ready
+		);
+	}
+	else {
+		offline_client->SetTrader(true);
+		session_ready = TraderRepository::UpdateEntityId(database, CharacterID(), previous_entity_id, next_entity_id);
+		LogTrading(
+			"Offline trader entity handoff for client [{}] character [{}] previous_entity_id [{}] next_entity_id [{}] success [{}]",
+			GetCleanName(),
+			CharacterID(),
+			previous_entity_id,
+			next_entity_id,
+			session_ready
+		);
+	}
+
+	if (session_ready) {
+		session_ready = OfflineCharacterSessionsRepository::Upsert(
+			database,
+			AccountID(),
+			CharacterID(),
+			mode,
+			GetZoneID(),
+			GetInstanceID(),
+			next_entity_id
+		);
+		LogTrading(
+			"Offline session upsert for client [{}] account [{}] character [{}] mode [{}] zone [{}] instance [{}] entity [{}] success [{}]",
+			GetCleanName(),
+			AccountID(),
+			CharacterID(),
+			mode,
+			GetZoneID(),
+			GetInstanceID(),
+			next_entity_id,
+			session_ready
+		);
+	}
+
+	if (session_ready) {
+		AccountRepository::SetOfflineStatus(database, AccountID(), true);
+		LogTrading(
+			"Marked account [{}] offline in transaction for client [{}] prior to offline {} commit",
+			AccountID(),
+			GetCleanName(),
+			mode
+		);
+		auto commit_result = database.TransactionCommit();
+		session_ready = commit_result.Success();
+		if (!session_ready) {
+			LogError(
+				"Failed committing offline {} activation for character [{}] account [{}]: ({}) {}",
+				mode,
+				CharacterID(),
+				AccountID(),
+				commit_result.ErrorNumber(),
+				commit_result.ErrorMessage()
+			);
+		}
+	}
+
+	if (!session_ready) {
+		LogError(
+			"Aborting offline {} activation for client [{}] account [{}] character [{}]; rolling back transaction and removing offline clone entity [{}]",
+			mode,
+			GetCleanName(),
+			AccountID(),
+			CharacterID(),
+			offline_client->GetID()
+		);
+		database.TransactionRollback();
+		entity_list.RemoveMob(offline_client->CastToMob()->GetID());
+		return;
+	}
+
+	LogTrading(
+		"Offline {} activation committed for client [{}] account [{}] character [{}]. live_entity_id [{}] offline_entity_id [{}]",
+		mode,
+		GetCleanName(),
+		AccountID(),
+		CharacterID(),
+		GetID(),
+		offline_client->GetID()
+	);
+
+	SetOffline(true);
+
+	auto outapp = new EQApplicationPacket();
+	CreateDespawnPacket(outapp, false);
+	entity_list.QueueClients(this, outapp, true);
+	safe_delete(outapp);
+	OnDisconnect(true);
+
+	outapp = new EQApplicationPacket();
+	offline_client->CreateSpawnPacket(outapp);
+	entity_list.QueueClients(this, outapp, true);
+	safe_delete(outapp);
+	offline_client->BroadcastPositionUpdate();
+
+	offline_client->UpdateWho(3);
+	LogTrading(
+		"Completed offline {} activation for client [{}] account [{}] character [{}]",
+		mode,
+		GetCleanName(),
+		AccountID(),
+		CharacterID()
+	);
+}
+

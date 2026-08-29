@@ -1,2 +1,4 @@
 opcode_handlers_output
 vcxproj_dependencies_output
+aug_generator/output/
+aug_generator/used_names.txt
