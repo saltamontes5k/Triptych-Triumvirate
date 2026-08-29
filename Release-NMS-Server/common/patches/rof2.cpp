@@ -6483,8 +6483,13 @@ namespace RoF2
 
 		RoF2::structs::ItemSerializationHeader hdr;
 
-		//sprintf(hdr.unknown000, "06e0002Y1W00");
-		strn0cpy(hdr.unknown000, fmt::format("{:016}\0", inst->GetSerialNumber()).c_str(),sizeof(hdr.unknown000));
+				//sprintf(hdr.unknown000, "06e0002Y1W00");
+				if (inst->GetUniqueID().empty()) {
+					strn0cpy(hdr.unknown000, fmt::format("{:016}\0", inst->GetSerialNumber()).c_str(), sizeof(hdr.unknown000));
+				} else {
+					strn0cpy(hdr.unknown000, inst->GetUniqueID().c_str(), sizeof(hdr.unknown000));
+					hdr.unknown000[16] = '\0';
+				}
 
 		hdr.stacksize = 1;
 

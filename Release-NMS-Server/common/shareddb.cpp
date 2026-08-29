@@ -440,6 +440,7 @@ bool SharedDatabase::UpdateInventorySlot(uint32 char_id, const EQ::ItemInstance*
 	e.ornament_idfile     = inst->GetOrnamentationIDFile();
 	e.ornament_hero_model = inst->GetOrnamentHeroModel();
 	e.guid                = inst->GetSerialNumber();
+	e.item_unique_id      = inst->GetUniqueID();
 
 	const int replaced = InventoryRepository::ReplaceOne(*this, e);
 
@@ -490,6 +491,7 @@ bool SharedDatabase::UpdateSharedBankSlot(uint32 char_id, const EQ::ItemInstance
 	e.ornament_idfile     = inst->GetOrnamentationIDFile();
 	e.ornament_hero_model = inst->GetOrnamentHeroModel();
 	e.guid                = inst->GetSerialNumber();
+	e.item_unique_id      = inst->GetUniqueID();
 
 	const int replaced = SharedbankRepository::ReplaceOne(*this, e);
 
@@ -745,6 +747,10 @@ bool SharedDatabase::GetSharedBank(uint32 id, EQ::InventoryProfile *inv, bool is
 			continue;
 		}
 
+		if (!e.item_unique_id.empty()) {
+			inst->SetUniqueID(e.item_unique_id);
+		}
+
 		if (item->IsClassCommon()) {
 			for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
 				if (augment_ids[i]) {
@@ -885,6 +891,10 @@ bool SharedDatabase::GetInventory(Client *c)
 		auto* inst = CreateBaseItem(item, charges);
 		if (!inst) {
 			continue;
+		}
+
+		if (!row.item_unique_id.empty()) {
+			inst->SetUniqueID(row.item_unique_id);
 		}
 
 		if (!row.custom_data.empty()) {
@@ -1664,7 +1674,8 @@ EQ::ItemInstance* SharedDatabase::CreateItem(
 	const std::string& custom_data,
 	uint32 ornamenticon,
 	uint32 ornamentidfile,
-	uint32 ornament_hero_model
+	uint32 ornament_hero_model,
+	const std::string& item_unique_id
 ) {
 	EQ::ItemInstance* inst = nullptr;
 	if (item) {
@@ -1687,6 +1698,9 @@ EQ::ItemInstance* SharedDatabase::CreateItem(
 		inst->SetOrnamentIcon(ornamenticon);
 		inst->SetOrnamentationIDFile(ornamentidfile);
 		inst->SetOrnamentHeroModel(ornament_hero_model);
+		if (!item_unique_id.empty()) {
+			inst->SetUniqueID(item_unique_id);
+		}
 		//RunGenerateCallback(inst);
 	}
 
@@ -1717,6 +1731,10 @@ EQ::ItemInstance* SharedDatabase::CreateBaseItem(const EQ::ItemData* item, int16
 
 		if (item->CharmFileID != 0 || item->LoreGroup >= 1000) {
 			inst->Initialize(this);
+		}
+
+		if (inst->GetUniqueID().empty()) {
+			inst->CreateUniqueID();
 		}
 	}
 
