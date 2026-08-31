@@ -1,0 +1,130 @@
+{
+    "server": {
+        "world": {
+            "shortname": "Triptych",
+            "longname": "Triptych Triumvirate",
+            "address": "127.0.0.1",
+            "localaddress": "127.0.0.1",
+            "maxclients": 1000,
+            "key": "CHANGE_ME",
+            "loginserver": {
+                "host": "127.0.0.1",
+                "port": "5998",
+                "account": "login",
+                "password": "CHANGE_ME",
+                "legacy": 0
+            },
+            "loginserver1": {
+                "host": "127.0.0.1",
+                "port": "5998",
+                "account": "login",
+                "password": "CHANGE_ME",
+                "legacy": "0"
+            },
+            "tcp": {
+                "ip": "127.0.0.1",
+                "port": "9001"
+            },
+            "telnet": {
+                "ip": "127.0.0.1",
+                "port": "9002",
+                "enabled": "true"
+            },
+            "http": {
+                "enabled": false,
+                "port": "9080",
+                "mimefile": "mime.types"
+            },
+            "locked": false
+        },
+        "database": {
+            "host": "127.0.0.1",
+            "username": "eqemu",
+            "password": "CHANGE_ME",
+            "db": "peq",
+            "port": "3306"
+        },
+        "content_database": {
+            "host": "",
+            "username": "",
+            "password": "",
+            "db": "",
+            "port": "3306"
+        },
+        "qsdatabase": {
+            "host": "127.0.0.1",
+            "username": "eqemu",
+            "password": "CHANGE_ME",
+            "db": "peq",
+            "port": "3306"
+        },
+        "queryserver": {
+            "host": "127.0.0.1",
+            "port": "9003"
+        },
+        "zones": {
+            "defaultstatus": "0",
+            "ports": {
+                "low": "7000",
+                "high": "7300"
+            }
+        },
+        "files": {
+            "spells": "spells_us.txt",
+            "opcodes": "opcodes.conf",
+            "mail_opcodes": "mail_opcodes.conf",
+            "plugin.pl": "plugin.pl"
+        },
+        "directories": {
+            "maps": "maps",
+            "quests": "quests",
+            "plugins": "quests/plugins",
+            "lua_modules": "quests/lua_modules",
+            "patches": ".",
+            "opcodes": ".",
+            "shared_memory": "shared/",
+            "logs": "logs"
+        },
+        "launcher": {
+            "exe": "zone.exe",
+            "logprefix": "logs/zone-",
+            "logsuffix": ".log",
+            "timers": {
+                "restart": 5000,
+                "reterminate": 10000,
+                "initial": 30000,
+                "interval": 2000
+            }
+        },
+        "ucs": {
+            "host": "127.0.0.1",
+            "port": "7778"
+        },
+        "auto_database_updates": true,
+        "disable_config_checks": true
+    },
+    "web-admin": {
+        "version": "1.0.0",
+        "application": {
+            "admin": {}
+        },
+        "launcher": {
+            "runSharedMemory": true,
+            "runLoginserver": false,
+            "runQueryServ": false,
+            "runUcs": true,
+            "isRunning": false,
+            "minZoneProcesses": 10,
+            "staticZones": "",
+            "updateOpcodesOnStart": true,
+            "deleteLogFilesOlderThanDays": 7
+        },
+        "quests": {
+            "hotReload": true
+        }
+    },
+    "spire": {
+        "encryption_key": "CHANGE_ME",
+        "launcher_start": false
+    }
+}

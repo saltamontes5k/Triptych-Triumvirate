@@ -1,5 +1,27 @@
-# Visual Studio & IDE caches
+# --- Secrets / local configs (never commit) ---
+Release-NMS-Server/eqemu_config.json
+Release-NMS-Server/eqemu_config.json.bak-pre-spire
+Release-NMS-Server/login.json
+opencode.json
+
+# --- Server build / runtime ---
+Release-NMS-Server/Build/
+Release-NMS-Server/vcpkg/
+Release-NMS-Server/perl/
+Release-NMS-Server/logs/
+Release-NMS-Server/shared_memory/
+Release-NMS-Server/spire.exe
+Release-NMS-Server/release-peq.sql
+
+# --- Maps (not tracked - source separately) ---
+maps/
+
+# --- Player / private data ---
+backups/
+
+# --- IDE / editor ---
 .vs/
+.vscode/
 *.user
 *.suo
 *.userosv
@@ -9,13 +31,19 @@
 *.ipch
 *.idb
 *.pdb
+.idea/
 
-# Gradle & Build cache outputs
-.gradle/
-buildOutputCleanup/
-build/
-bin/
-out/
+# --- Build outputs (client add-on) ---
+Release-NMS-Client/eqgame_dll/Release/
+Release-NMS-Client/eqgame_dll/Intermediate/
+Release-NMS-Client/eqgame_dll/msvc/
 
-# Large vcpkg build archives (>100MB limit on GitHub)
-Release-NMS-Server/vcpkg/vcpkg-export-x64.zip
+# --- Node / MCP ---
+everquest1-mcp/node_modules/
+everquest1-mcp/dist/
+everquest1-mcp/.git/
+
+# --- OS cruft ---
+Thumbs.db
+.DS_Store
+desktop.ini

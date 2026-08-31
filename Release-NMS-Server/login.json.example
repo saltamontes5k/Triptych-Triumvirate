@@ -1,0 +1,35 @@
+{
+    "database": {
+        "host": "127.0.0.1",
+        "user": "eqemu",
+        "password": "CHANGE_ME",
+        "db": "peq",
+        "port": 3306
+    },
+    "worldservers": {
+        "reject_duplicate_servers": false,
+        "show_player_count": true,
+        "unregistered_allowed": true,
+        "dev_test_servers_list_bottom": false,
+        "special_character_start_list_bottom": false
+    },
+    "client_configuration": {
+        "display_expansions": false,
+        "max_expansions_mask": 67108863
+    },
+    "account": {
+        "auto_create_accounts": true
+    },
+    "general": {
+        "eqemu_loginserver_address": "127.0.0.1:5999",
+        "default_loginserver_name": "NMS-Server"
+    },
+    "security": {
+        "mode": 14,
+        "allow_token_login": false
+    },
+    "web_api": {
+        "enabled": true,
+        "port": 6000
+    }
+}
