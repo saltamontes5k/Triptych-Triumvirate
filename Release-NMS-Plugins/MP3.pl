@@ -27,5 +27,6 @@ sub U_MP3{
 			}
 		}
 		else{ $client->Message(15, "Not time to play again... " . ($qglobals->{$client->GetIP() . "_soundplay"} - time()) . " seconds left..."); }
-	}		
+	}
+	$connect->disconnect();
 }

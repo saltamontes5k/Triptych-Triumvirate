@@ -5627,6 +5627,8 @@ void Client::SummonItemIntoInventory(
 		return;
 	}
 
+	CheckItemDiscoverability(item_id);
+
 	const bool  is_arrow = inst->GetItem()->ItemType == EQ::item::ItemTypeArrow;
 	const int16 slot_id  = m_inv.FindFreeSlot(
 		inst->IsClassBag(),
