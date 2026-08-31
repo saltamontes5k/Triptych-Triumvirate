@@ -122,9 +122,5 @@
         "quests": {
             "hotReload": true
         }
-    },
-    "spire": {
-        "encryption_key": "CHANGE_ME",
-        "launcher_start": false
     }
 }

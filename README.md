@@ -53,7 +53,7 @@ into an empty schema. It contains **no player data** — it is a fresh world.
 (`world.exe`, `zone.exe`, `ucs.exe`, `queryserv.exe`, `loginserver.exe`, `eqlaunch.exe` and
 `shared_memory.exe`, plus their DLLs and opcode/patch configs). Copy
 `eqemu_config.json.example` and `login.json.example` to their real names and set your DB
-credentials, then start `world.exe` (or use the included `start-servers.bat` / `spire.bat`).
+credentials, then start `world.exe` (or use the included `start-servers.bat`).
 
 Prefer to build from source instead? See **Building** below.
 
