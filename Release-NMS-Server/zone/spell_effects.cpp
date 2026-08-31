@@ -28,6 +28,7 @@
 
 #include "bot.h"
 #include "pets.h"
+#include "zonedb.h"
 #include "quest_parser_collection.h"
 #include "lua_parser.h"
 #include "string_ids.h"
@@ -11101,6 +11102,27 @@ void Mob::ApplySpellEffectIllusion(int32 spell_id, Mob *caster, int buffslot, in
 	}
 	// Racial Illusions
 	else {
+		// Beastlord Warder Form (Bestial Alignment): mirror the beastlord pet chart
+		// (pets_beastlord_data) for each recipient's own race. Falls back to the
+		// generic wolf illusion below if the race has no valid chart entry.
+		if (spell_id == 30738 || spell_id == 16443) {
+			auto warder = content_db.GetBeastlordPetData(this->GetBaseRace());
+			bool valid  = (warder.race_id != Race::Wolf || this->GetBaseRace() == Race::Wolf);
+			if (valid) {
+				SendIllusionPacket(
+					AppearanceStruct{
+						.face           = static_cast<uint8>(warder.face),
+						.gender_id      = static_cast<uint8>(warder.gender),
+						.helmet_texture = static_cast<uint8>(warder.helm_texture),
+						.race_id        = static_cast<uint16>(warder.race_id),
+						.size           = this->GetBaseSize() * warder.size_modifier,
+						.texture        = static_cast<uint8>(warder.texture),
+					}
+				);
+				return;
+			}
+		}
+
 		auto gender_id = (
 			max > 0 &&
 			(

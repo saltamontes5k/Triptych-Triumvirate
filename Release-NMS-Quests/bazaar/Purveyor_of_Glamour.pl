@@ -7,6 +7,7 @@ sub EVENT_ITEM {
 		if ($random_result) {
 			plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
 			$client->SummonItem($random_result);
+			$dbh->disconnect();
 			return;
 		}
 	}
@@ -36,6 +37,7 @@ sub EVENT_ITEM {
             if (defined $random_result) {
                 plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
                 $client->SummonItem($random_result);
+                $dbh->disconnect();
                 return; # Skip the rest of the processing
             } else {
                 plugin::Whisper("How strange. I seem to have misplaced my crafting tools. Please try again later.");
@@ -64,6 +66,7 @@ sub EVENT_ITEM {
         }
     }  
    
+    $dbh->disconnect();
     plugin::return_items(\%itemcount);
 }
 
@@ -214,6 +217,7 @@ sub get_random_glamour {
     }
 
     # Return the fetched ID
+    $dbh->disconnect();
     return $id;
 }
 
@@ -249,5 +253,6 @@ sub get_random_armor {
     }
 
     # Return the fetched ID
+    $dbh->disconnect();
     return $id;
 }

@@ -174,6 +174,25 @@ sub EVENT_SPAWN {
             plugin::ScaleInstanceNPC($npc, $expedition->GetMemberCount());
         }
     }
+
+    # ------------------------------------------------------------------
+    # Cross-Class AA Training - Illegible Tome global drops
+    # Level-banded rare tomes (3 tiers). Named/rare mobs drop boosted.
+    # ------------------------------------------------------------------
+    if (!$npc->IsPet()) {
+        my @TomeTier1 = (121571,121574,121577,121580,121583,121586,121589,121592,121595,121598,121601,121604,121607,121610,121613,121616);
+        my @TomeTier2 = (121572,121575,121578,121581,121584,121587,121590,121593,121596,121599,121602,121605,121608,121611,121614,121617);
+        my @TomeTier3 = (121573,121576,121579,121582,121585,121588,121591,121594,121597,121600,121603,121606,121609,121612,121615,121618);
+        my $mlvl = $npc->GetLevel();
+        if    ($mlvl <= 10) { plugin::AddLoot(1,165,@TomeTier1); plugin::AddLoot(1,175,@TomeTier2); plugin::AddLoot(1,185,@TomeTier3); }
+        elsif ($mlvl <= 20) { plugin::AddLoot(1,155,@TomeTier1); plugin::AddLoot(1,165,@TomeTier2); plugin::AddLoot(1,175,@TomeTier3); }
+        elsif ($mlvl <= 30) { plugin::AddLoot(1,150,@TomeTier1); plugin::AddLoot(1,155,@TomeTier2); plugin::AddLoot(1,160,@TomeTier3); }
+        elsif ($mlvl <= 40) { plugin::AddLoot(1,150,@TomeTier1); plugin::AddLoot(1,145,@TomeTier2); plugin::AddLoot(1,140,@TomeTier3); }
+        else                { plugin::AddLoot(1,145,@TomeTier1); plugin::AddLoot(1,140,@TomeTier2); plugin::AddLoot(1,135,@TomeTier3); }
+        if ($npc->IsRareSpawn()) {
+            plugin::AddLoot(1, 3, @TomeTier1, @TomeTier2, @TomeTier3);
+        }
+    }
 }
 
 sub EVENT_DAMAGE_GIVEN 

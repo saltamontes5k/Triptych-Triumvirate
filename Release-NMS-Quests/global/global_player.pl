@@ -25,6 +25,9 @@ sub EVENT_ENTERZONE {
 
 	plugin::CommonCharacterUpdate($client);
 
+    # Catch-up grant for existing Drakkin characters (and re-verifies on every zone).
+    plugin::GrantDrakkinBreathWeapon($client);
+
 	if (!plugin::is_eligible_for_zone($client, $zonesn)) {
 		$client->Message(4, "Your vision blurs. You lose conciousness and wake up in a familiar place.");
 		$client->MovePC(151, 185, -835, 4, 390); # Bazaar Safe Location.
@@ -178,7 +181,9 @@ sub EVENT_LEVEL_UP {
     if ($client->GetGM()) {
         return;
     }
-    
+
+    plugin::GrantDrakkinBreathWeapon($client);
+
     my $new_level = $client->GetLevel();
     my $char_max_level = $client->GetBucket("CharMaxLevel");
     
@@ -554,6 +559,14 @@ sub EVENT_CAST_BEGIN {
 }
 
 sub EVENT_SAY {
+    # Cross-Class AA Training - view all tome credit balances
+    if ($text =~ /^#myaacredits$/i) {
+        if (defined &plugin::ShowAllAACredits) {
+            plugin::ShowAllAACredits($client);
+        }
+        return;
+    }
+
     if ($client->GetGM()) {
         if ($text=~/#awardtitle\s*(.*)/i) {
             $client->Message(13, "Disregard the command not recognized error.");

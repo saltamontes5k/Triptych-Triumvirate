@@ -666,6 +666,56 @@ sub UpdateCharMaxLevel
     }
 }
 
+sub GrantDrakkinBreathWeapon {
+    my $client = shift;
+    return unless $client;
+
+    if ($client->GetRace() != $DRAKKIN) {
+        return;
+    }
+
+    # Drakkin-only racial breath weapons, granted as an AA line.
+    # Each heritage (color) has its own AA with a 13-rank progression:
+    #   rank 1 at lvl 5, rank 2 at lvl 10, ... rank 13 at lvl 65.
+    # Heritage ID -> AA id (client heritage order per playercustomization.txt
+    # and the EQEmulator Drakkin bloodline numbering):
+    #   0 Atathus   (Red)    -> 590
+    #   1 Draton'ra (Black)  -> 591
+    #   2 Osh'vir   (Blue)   -> 592
+    #   3 Venesh    (Green)  -> 593
+    #   4 Mysaphar  (White)  -> 594
+    #   5 Keikolin  (Gold)   -> 595
+    my %breath_aa = (
+        0 => 590,
+        1 => 591,
+        2 => 592,
+        3 => 593,
+        4 => 594,
+        5 => 595,
+    );
+
+    my $heritage = $client->GetDrakkinHeritage();
+    my $aa_id    = $breath_aa{$heritage};
+
+    # Unknown/out-of-range heritage - default to Venesh so the character still
+    # gets a breath weapon rather than silently missing out.
+    if (!$aa_id) {
+        $aa_id = 593;
+    }
+
+    # Number of ranks earned: rank n is granted at level 5 + 5*(n-1).
+    # e.g. lvl 5 -> 1 rank, lvl 10 -> 2 ranks, ..., lvl 65 -> 13 ranks.
+    my $level = $client->GetLevel();
+    my $ranks = int($level / 5);
+    if ($ranks > 13) {
+        $ranks = 13; # cap at rank 13 (level 65)
+    }
+
+    if ($ranks > 0) {
+        $client->GrantAlternateAdvancementAbility($aa_id, $ranks, 1);
+    }
+}
+
 sub ConvertFlags {
     my $client = shift;
     

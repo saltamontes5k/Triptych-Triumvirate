@@ -14,6 +14,8 @@ sub GetRatLocation
 		$currentlocation = $row2[0];
 	}
 
+	$dbh->disconnect();
+
 	return $currentlocation;
 }
 
@@ -127,6 +129,8 @@ sub GetItemName
 		$itemname = $row2[0];
 	}
 
+	$dbh->disconnect();
+
 	return $itemname;
 }
 
@@ -148,6 +152,8 @@ sub GetRandomApperance
 		$newrace = 75;
 	}
 
+	$dbh->disconnect();
+
 	return $newrace;
 }
 
@@ -163,6 +169,8 @@ sub FindBestGender
 	while ( my @row2 = $query->fetchrow_array( ) )  {
 		$newgender = $row2[0];
 	}
+
+	$dbh->disconnect();
 
 	return $newgender;
 }
@@ -180,6 +188,8 @@ sub FindBestSize
 		$newsize = $row2[0];
 	}
 
+	$dbh->disconnect();
+
 	return $newsize;
 }
 
@@ -195,6 +205,8 @@ sub GetCurrentTrigger
 	while ( my @row2 = $query->fetchrow_array( ) )  {
 		$npcid = $row2[0];
 	}
+
+	$dbh->disconnect();
 
 	return $npcid;
 }

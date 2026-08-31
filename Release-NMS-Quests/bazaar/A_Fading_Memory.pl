@@ -55,6 +55,20 @@ sub RewardItems {
         32768 => { items => [2005003, 2013514], cash => 3 }, # Berserker, 3 silver
     );
 
+    # Class starting spell scrolls / books (from the starting_items table - what a fresh
+    # character is given after chargen). Each class gets its own scrolls; classes without
+    # a starting scroll (e.g. Bard) are skipped.
+    my %classScrolls = (
+        2     => [15202, 15200], # Cleric: Courage, Minor Healing
+        32    => [15026, 15200], # Druid: Skin like Wood, Minor Healing
+        512   => [15093, 15200], # Shaman: Burst of Flame, Minor Healing
+        1024  => [9989, 15343],  # Necromancer: Lifetap, Siphon Strength
+        2048  => [9988, 15288],  # Wizard: Shock of Frost, Minor Shielding
+        4096  => [15093, 15288], # Magician: Burst of Flame, Minor Shielding
+        8192  => [15041, 15288], # Enchanter: Weaken, Minor Shielding
+        32768 => [59892],        # Berserker: Tome of Corroded Axe
+    );
+
     my $playerClassBitmask = $client->GetClassesBitmask();
     my $rewardedClassesBitmask = $client->GetBucket('newbieRewardBits') || 0;
     my $rewardGiven = 0;
@@ -69,6 +83,15 @@ sub RewardItems {
             foreach my $item (@{$classRewards{$classBitmask}->{items}}) {
                 if ($item == 2008500 || !plugin::check_hasitem_exact($client, $item)) { # Check if the player already has the item
                     $client->SummonFixedItem($item);
+                }
+            }
+
+            # Grant the class's starting spell scroll(s) if it has any
+            if ($classScrolls{$classBitmask}) {
+                foreach my $scroll (@{$classScrolls{$classBitmask}}) {
+                    if (!plugin::check_hasitem_exact($client, $scroll)) {
+                        $client->SummonFixedItem($scroll);
+                    }
                 }
             }
             
