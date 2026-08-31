@@ -3,9 +3,24 @@
 A complete, working **multiclass EverQuest server** (EQEmu-based, RoF2 client), released as a
 LAN-oriented community server. Everything in this repo is tuned for play on a local network.
 
-> **LAN only.** This release is intended for private/local-network play.
+> **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+
+## This update's changes (8/30)
+
+- **spell_effects** fixes (chadw)
+- **Leap** movement fix (chadw)
+- **#illusion** storage (new `character_illusions` table) (chadw)
+- **Target restriction** 99 → 95 (chadw)
+- **XTarget** fixes (partial, chadw's EQEmu repo)
+- **Offline bazaar** (valorith/nekkola, chadw's EQEmu repo)
+- **Mount glamour merchant** and **languages**
+- **Tome trainers** moved to bazaar backrooms
+- **Bestial alignment AA racial fix** (idunknown)
+- **Godmode rune bug** fix, particularly on pets (Doraj & Kree)
+- **2H damage / #attack** fix and the **permanent glowing hand** bug (hawk & animal)
+- Item **discoverability on summon** (not entirely working yet)
 
 ## What is in here
 
@@ -113,21 +128,10 @@ sudo apt install build-essential cmake ninja-build git \
 
 ---
 
-## This update's changes
-
-- **spell_effects** fixes (chadw)
-- **Leap** movement fix
-- **#illusion** storage (new `character_illusions` table)
-- **Target restriction** 99 → 95
-- **XTarget** fixes (partial, chadw's EQEmu repo)
-- **Offline bazaar** (valorith/nekkola, chadw's EQEmu repo)
-- **Mount glamour merchant** and **languages**
-- **Tome trainers** moved to bazaar backrooms
-- **Bestial alignment AA racial fix** (idunknown)
-- **Godmode rune bug** fix, particularly on pets (Doraj & Kree)
-- **2H damage / #attack** fix and the **permanent glowing hand** bug (hawk & animal)
-- Item **discoverability on summon**
-
+## Future Plans
+- More modernization to match more current versions of EQEMU
+- Various changes that catch eye
+- Deity quest gated weapon and spell procs
 ---
 
 ## Requirements
