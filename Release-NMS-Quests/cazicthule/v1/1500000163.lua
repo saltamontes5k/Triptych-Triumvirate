@@ -1,0 +1,1 @@
+-- v1-only override: suppress base by-name quest for this imported npc.
