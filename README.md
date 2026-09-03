@@ -10,7 +10,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 ## This update's changes (9/3)
 
 - **Ranks extended** (AA rank data in the release DB) — added but need work
-- **Cazic Thule (Quarm) revamp** + **Veeshan's Peak 2.0** expeditions — added but need work
+- **Cazic Thule (Quarm) revamp ** + **Veeshan's Peak 2.0** expeditions — added but need work
   (content sets ship in the DB; reference SQL in `Release-NMS-Server/utils/sql/`)
 
 ### Earlier (8/30)
@@ -145,6 +145,25 @@ sudo apt install build-essential cmake ninja-build git \
 - Various changes that catch eye
 - Deity quest gated weapon and spell procs
 ---
+
+## Credits
+
+ Tunaria Team — OG NMS / Project Triune
+ Straps — Ascendant tome system plugins and trainers 
+ Devs of Quarm server — Cazic-Thule revamp
+ chadw — spell_effects fixes
+ chadw — Leap movement fix
+ chadw — #illusion storage (new character_illusions table)
+ chadw — Target restriction 99 → 95
+ chadw — XTarget fixes (partial)
+ huggy / sploose — Hazel buff bot
+ zerohex — Purveyor of Armour Glamour
+ dritjoda — Lost Soul Diablo-style augmentation system
+ Palpinator87 — gambling script for the halfling
+ valorith / nekkola — Offline bazaar (from chadw's EQEmu repo)
+ idunknown — Bestial alignment AA racial fix
+ Doraj / Kree — Godmode rune bug fix, particularly on pets
+ hawk & animal — 2H damage / #attack fix and the permanent glowing hand bug
 
 ## Requirements
 
