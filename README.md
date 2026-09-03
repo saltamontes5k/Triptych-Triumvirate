@@ -7,7 +7,13 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 ---
 
-## This update's changes (8/30)
+## This update's changes (9/3)
+
+- **Ranks extended** (AA rank data in the release DB) — added but need work
+- **Cazic Thule (Quarm) revamp** + **Veeshan's Peak 2.0** expeditions — added but need work
+  (content sets ship in the DB; reference SQL in `Release-NMS-Server/utils/sql/`)
+
+### Earlier (8/30)
 
 - **spell_effects** fixes (chadw)
 - **Leap** movement fix (chadw)
@@ -75,10 +81,16 @@ Prefer to build from source instead? See **Building** below.
 **5. Install quests and plugins.** Copy `Release-NMS-Quests/` into your server's `quests/` folder
 and `Release-NMS-Plugins/` into `quests/plugins/`.
 
-**6. Client data files.** Fresh `spells_us.txt`, `dbstr_us.txt`, `SkillCaps.txt` and
-`BaseData.txt` are already exported in `Release-NMS-Server/export/` — copy them into your client
-(and its `Resources\` folder). If you change the DB, re-run `export_client_files` to regenerate
-them.
+**6. Client data files.** `spells_us.txt`, `dbstr_us.txt`, `SkillCaps.txt` and `BaseData.txt`
+are generated from the server DB and are **not shipped** in this repo. With the database
+imported and `eqemu_config.json` in place, run:
+
+```
+export-client-files.bat <your-EQ-client-folder>
+```
+
+It runs the exporter and copies all four files into your client folder and its `Resources\`
+folder. Re-run any time you change spells, skills or item text in the database.
 
 **7. Install the client add-on.** Copy `Release-NMS-Client/ClientFiles/` over your client.
 See [the client README](Release-NMS-Client/README.md) — it also covers the known art gaps.

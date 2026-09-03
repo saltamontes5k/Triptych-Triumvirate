@@ -76,17 +76,18 @@ data has to be in them or spells, discs, skill caps and item text will not match
 - `BaseData.txt`
 
 The server ships a tool for exactly this. With your database imported and `eqemu_config.json`
-pointed at it, run from the server folder:
+pointed at it, run from the **repo root**:
 
 ```
-export_client_files
+export-client-files.bat <your-EQ-client-folder>
 ```
 
-It writes all four into `export/`. Copy them into your client folder — and note the client keeps a
-**second copy of each in `Resources\`**, so update both locations or the client may load stale data.
+It runs `Release-NMS-Server\bin\Release\export_client_files.exe` (which writes all four into
+`export/`) and copies them into your client folder — and note the client keeps a
+**second copy of each in `Resources\`**, so the script updates both locations or the client may
+load stale data.
 
-You can also export them from **Spire** if you prefer a UI. Re-export any time you change spells,
-skills or item text in the database.
+Re-export any time you change spells, skills or item text in the database.
 
 > The multiclass spell export happens automatically when the `Custom:MulticlassingEnabled` rule is
 > true (the default).

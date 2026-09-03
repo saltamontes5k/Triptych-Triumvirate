@@ -13,6 +13,9 @@ Release-NMS-Server/shared_memory/
 Release-NMS-Server/spire.exe
 Release-NMS-Server/release-peq.sql
 
+# --- DB-derived client data (regenerated via export-client-files.bat) ---
+Release-NMS-Server/export/
+
 # --- Maps (not tracked - source separately) ---
 maps/
 
