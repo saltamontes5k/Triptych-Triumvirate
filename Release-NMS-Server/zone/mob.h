@@ -215,6 +215,8 @@ public:
 	// Bot attack flag
 	Timer bot_attack_flag_timer;
 
+	int32_t innate_summon_timer_override = 0;
+
 	//Somewhat sorted: needs documenting!
 
 	//Attack

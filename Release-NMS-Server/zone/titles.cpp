@@ -3,6 +3,11 @@
 #include "../common/misc_functions.h"
 #include "../common/repositories/player_titlesets_repository.h"
 
+#include <map>
+#include <set>
+#include <string>
+#include <unordered_map>
+
 #include "client.h"
 #include "mob.h"
 
@@ -28,9 +33,170 @@ bool TitleManager::LoadTitles()
 		titles.push_back(e);
 	}
 
+	LoadEpicItemCache();
+
 	LogInfo("Loaded [{}] Title{}", Strings::Commify(l.size()), l.size() != 1 ? "s" : "");
 
 	return true;
+}
+
+void TitleManager::LoadEpicItemCache()
+{
+	epic_item_ids_by_title_set.clear();
+	epic_title_set_by_item_id.clear();
+
+	// Gather item-gated titles that carry a title_set (epics and similar).
+	// Map title_set -> its canonical item id + the class the title is for.
+	std::map<int32, int32> title_set_item_id;
+	std::map<int32, int32> title_set_class;
+	std::set<int32> canonical_item_ids;
+
+	for (const auto& t : titles) {
+		if (t.title_set <= 0 || t.item_id < 1) {
+			continue;
+		}
+
+		if (title_set_item_id.find(t.title_set) == title_set_item_id.end()) {
+			title_set_item_id[t.title_set] = t.item_id;
+			title_set_class[t.title_set]   = t.class_;
+		}
+
+		canonical_item_ids.insert(t.item_id);
+	}
+
+	if (canonical_item_ids.empty()) {
+		return;
+	}
+
+	// Resolve the canonical item names so we can match every tier/family form.
+	std::vector<std::string> id_list;
+	for (const auto& id : canonical_item_ids) {
+		id_list.emplace_back(std::to_string(id));
+	}
+
+	auto id_results = database.QueryDatabase(
+		fmt::format(
+			"SELECT id, Name FROM items WHERE id IN ({})",
+			Strings::Implode(", ", id_list)
+		)
+	);
+
+	std::map<int32, std::string> item_root_name;
+	for (auto row = id_results.begin(); row != id_results.end(); ++row) {
+		int32 id = row[0] ? atoi(row[0]) : -1;
+		if (id > 0 && row[1]) {
+			item_root_name[id] = row[1];
+		}
+	}
+
+	// Build the recognized root names per title_set, plus a root -> title_set
+	// reverse lookup used to classify items returned by the name query.
+	std::map<int32, std::set<std::string>> root_names_by_title_set;
+	std::map<std::string, uint32> title_set_by_root;
+	std::set<std::string> all_roots;
+
+	for (const auto& [title_set, item_id] : title_set_item_id) {
+		auto name_it = item_root_name.find(item_id);
+		if (name_it == item_root_name.end()) {
+			continue;
+		}
+
+		const std::string root = name_it->second;
+
+		root_names_by_title_set[title_set].insert(root);
+		title_set_by_root[root] = title_set;
+		all_roots.insert(root);
+
+		// The warrior epic 1.0 can also be represented by the Blade of Tactics
+		// and Blade of Strategy pair, so recognize those forms as well.
+		if (title_set_class[title_set] == Class::Warrior) {
+			root_names_by_title_set[title_set].insert("Blade of Tactics");
+			root_names_by_title_set[title_set].insert("Blade of Strategy");
+			title_set_by_root["Blade of Tactics"]  = title_set;
+			title_set_by_root["Blade of Strategy"] = title_set;
+			all_roots.insert("Blade of Tactics");
+			all_roots.insert("Blade of Strategy");
+		}
+	}
+
+	if (all_roots.empty()) {
+		return;
+	}
+
+	// Fetch every item that is one of the recognized epics in base,
+	// Enchanted, or Legendary form.
+	std::vector<std::string> clauses;
+	for (const auto& root : all_roots) {
+		const std::string escaped = Strings::Escape(root);
+		clauses.emplace_back(
+			fmt::format(
+				"(Name = '{}' OR Name = '{} (Enchanted)' OR Name = '{} (Legendary)')",
+				escaped, escaped, escaped
+			)
+		);
+	}
+
+	auto item_results = database.QueryDatabase(
+		fmt::format(
+			"SELECT id, Name, classes FROM items WHERE {}",
+			Strings::Implode(" OR ", clauses)
+		)
+	);
+
+	const std::vector<std::string> tier_suffixes = {" (Enchanted)", " (Legendary)"};
+
+	for (auto row = item_results.begin(); row != item_results.end(); ++row) {
+		if (!row[0] || !row[1] || !row[2]) {
+			continue;
+		}
+
+		const uint32 item_id = static_cast<uint32>(strtoul(row[0], nullptr, 10));
+		const int32  classes = atoi(row[2]);
+		if (!item_id || classes <= 0) {
+			continue;
+		}
+
+		// Strip the tier suffix to recover the root name.
+		std::string name       = row[1];
+		std::string root_name  = name;
+		for (const auto& suffix : tier_suffixes) {
+			if (name.size() > suffix.size() &&
+				name.compare(name.size() - suffix.size(), suffix.size(), suffix) == 0) {
+				root_name.erase(name.size() - suffix.size());
+				break;
+			}
+		}
+
+		auto root_it = title_set_by_root.find(root_name);
+		if (root_it == title_set_by_root.end()) {
+			continue;
+		}
+
+		const uint32 title_set = root_it->second;
+		const int32  class_    = title_set_class[title_set];
+
+		// Only recognize items restricted to exactly this epic's class.
+		// This excludes all-class duplicates (e.g. item 1683 'Celestial Fists').
+		if (class_ < Class::Warrior || class_ > Class::Berserker) {
+			continue;
+		}
+
+		const int32 expected_classes = (1 << (class_ - 1));
+		if (classes != expected_classes) {
+			continue;
+		}
+
+		epic_item_ids_by_title_set[title_set].emplace_back(item_id);
+		epic_title_set_by_item_id[item_id] = title_set;
+	}
+
+	LogInfo(
+		"Built epic item title cache for [{}] item{} across [{}] title set{}",
+		epic_title_set_by_item_id.size(),
+		epic_title_set_by_item_id.size() != 1 ? "s" : "",
+		epic_item_ids_by_title_set.size(),
+		epic_item_ids_by_title_set.size() != 1 ? "s" : ""
+	);
 }
 
 EQApplicationPacket* TitleManager::MakeTitlesPacket(Client* c)
@@ -169,8 +335,36 @@ std::vector<TitlesRepository::Titles> TitleManager::GetEligibleTitles(Client* c)
 			}
 		}
 
-		if (t.item_id >= 1 && c->GetInv().HasItem(t.item_id) == INVALID_INDEX) {
-			continue;
+		if (t.item_id >= 1) {
+			bool has_item = false;
+
+			if (t.title_set > 0) {
+				// Epic/item-set titles: match any recognized form of the item
+				// (base, Enchanted, Legendary, alternate families, warrior pair).
+				auto cache_it = epic_item_ids_by_title_set.find(static_cast<uint32>(t.title_set));
+				if (cache_it != epic_item_ids_by_title_set.end()) {
+					for (const auto& epic_item_id : cache_it->second) {
+						if (c->GetInv().HasItem(epic_item_id) != INVALID_INDEX) {
+							has_item = true;
+							break;
+						}
+					}
+				}
+			}
+
+			// Fall back to the classic base/upgraded id check when the title has
+			// no title_set or no cache entry (upgraded ids preserve the base id
+			// in their low six digits).
+			if (!has_item) {
+				const bool has_base  = c->GetInv().HasItem(t.item_id) != INVALID_INDEX;
+				const bool has_rank1 = c->GetInv().HasItem(t.item_id + 1000000) != INVALID_INDEX;
+				const bool has_rank2 = c->GetInv().HasItem(t.item_id + 2000000) != INVALID_INDEX;
+				has_item             = has_base || has_rank1 || has_rank2;
+			}
+
+			if (!has_item) {
+				continue;
+			}
 		}
 
 		if (
@@ -211,6 +405,53 @@ std::vector<TitlesRepository::Titles> TitleManager::GetEligibleTitles(Client* c)
 	}
 
 	return eligible_titles;
+}
+
+void TitleManager::CheckAndGrantTitle(Client* c, uint32 item_id)
+{
+	if (!c) {
+		return;
+	}
+
+	// Item id -> title_set was populated by LoadEpicItemCache() and covers every
+	// recognized form of each epic (base, Enchanted, Legendary, alternate
+	// families, and the warrior Blade of Tactics/Strategy pair).
+	auto cache_it = epic_title_set_by_item_id.find(item_id);
+	if (cache_it == epic_title_set_by_item_id.end()) {
+		return;
+	}
+
+	const uint32 title_set = cache_it->second;
+
+	if (c->CheckTitle(title_set)) {
+		return;
+	}
+
+	for (const auto& t : titles) {
+		if (t.title_set != static_cast<int32>(title_set)) {
+			continue;
+		}
+
+		if (t.gender >= Gender::Male && c->GetBaseGender() != t.gender) {
+			continue;
+		}
+
+		if (t.class_ >= Class::None && !c->HasClass(t.class_)) {
+			continue;
+		}
+
+		c->EnableTitle(title_set);
+		if (!t.prefix.empty()) {
+			c->SetAATitle(t.prefix);
+		}
+		if (!t.suffix.empty()) {
+			c->SetTitleSuffix(t.suffix);
+		}
+
+		// Grant once per item form; the gender-variant row for the same
+		// title_set (e.g. SK Pain Lord/Pain Mistress) is resolved above.
+		return;
+	}
 }
 
 bool TitleManager::IsNewAATitleAvailable(int aa_points, int class_id)

@@ -6,7 +6,12 @@ local mmcc = {
   zonein     = { x=-424.0, y=-108.0, z=1.25, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Kroggl says, 'You not ready, friend. Wayfarers only let de brave who toppled de elemental gods into dem catacombs.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Kroggl says, 'Me gots big jobs to do for de Wayfarers. Vampires really bad tings but dey gots lots of stuffs we want to see. Me gets to go with adventurers to see. You go too if you gots a strong head. Spooky dere. Really spooky.  If you can rally de call of your friend perhaps you can help wit a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

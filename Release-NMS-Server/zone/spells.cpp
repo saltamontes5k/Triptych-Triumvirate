@@ -1696,12 +1696,16 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 	else // not bard, check movement
 	{
 		// if has been attacked, or moved while casting
-		// check for regain concentration
+		// check for regain concentration.
+		// When Custom:AllowAttackWhileCasting is on, clients/bots may move
+		// freely while casting (like a bard); only NPCs are still penalized
+		// for drifting from their casting location.
+		const bool moved_while_casting = (GetX() != GetSpellX() || GetY() != GetSpellY());
+		const bool movement_forgiven   = IsOfClientBot() && RuleB(Custom, AllowAttackWhileCasting);
 		if
 		(
 			(attacked_count > 0  && !(RuleB(Custom, DontInterruptHealsByMelee) && IsAnyHealSpell(spell_id)))||
-			GetX() != GetSpellX() ||
-			GetY() != GetSpellY()
+			(!movement_forgiven && moved_while_casting)
 		)
 		{
 			// modify the chance based on how many times they were hit
@@ -1729,7 +1733,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 
 			// as you get farther from your casting location,
 			// it gets squarely harder to regain concentration
-			if((GetX() != GetSpellX() || GetY() != GetSpellY()) && channelchance < 100)
+			if(!movement_forgiven && moved_while_casting && channelchance < 100)
 			{
 				d_x = std::abs(std::abs(GetX()) - std::abs(GetSpellX()));
 				d_y = std::abs(std::abs(GetY()) - std::abs(GetSpellY()));
@@ -5554,15 +5558,19 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	// slow and haste spells
 	if(GetSpecialAbility(SpecialAbility::SlowImmunity) && IsEffectInSpell(spell_id, SE_AttackSpeed))
 	{
-		LogSpells("We are immune to Slow spells");
-		caster->MessageString(Chat::Red, IMMUNE_ATKSPEED);
-		int32 aggro = caster->CheckAggroAmount(spell_id, this);
-		if(aggro > 0) {
-			AddToHateList(caster, aggro);
+		if (IsBeneficialSpell(spell_id)) {
+			// allow beneficial spells
 		} else {
-			AddToHateList(caster, 1,0,true,false,false,spell_id);
+			LogSpells("We are immune to Slow spells");
+			caster->MessageString(Chat::Red, IMMUNE_ATKSPEED);
+			int32 aggro = caster->CheckAggroAmount(spell_id, this);
+			if(aggro > 0) {
+				AddToHateList(caster, aggro);
+			} else {
+				AddToHateList(caster, 1,0,true,false,false,spell_id);
+			}
+			return true;
 		}
-		return true;
 	}
 
 	// client vs client fear
@@ -5679,15 +5687,19 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 	)
 	{
 		if(GetSpecialAbility(SpecialAbility::SnareImmunity)) {
-			LogSpells("We are immune to Snare spells");
-			caster->MessageString(Chat::Red, IMMUNE_MOVEMENT);
-			int32 aggro = caster->CheckAggroAmount(spell_id, this);
-			if(aggro > 0) {
-				AddToHateList(caster, aggro);
+			if (IsBeneficialSpell(spell_id)) {
+				// allow beneficial spells
 			} else {
-				AddToHateList(caster, 1,0,true,false,false,spell_id);
+				LogSpells("We are immune to Snare spells");
+				caster->MessageString(Chat::Red, IMMUNE_MOVEMENT);
+				int32 aggro = caster->CheckAggroAmount(spell_id, this);
+				if(aggro > 0) {
+					AddToHateList(caster, aggro);
+				} else {
+					AddToHateList(caster, 1,0,true,false,false,spell_id);
+				}
+				return true;
 			}
-			return true;
 		}
 	}
 

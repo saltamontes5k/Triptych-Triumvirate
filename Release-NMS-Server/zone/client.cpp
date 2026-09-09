@@ -9079,7 +9079,7 @@ void Client::AddAutoXTarget(Mob *m, bool send)
 	if (!m) {
 		return;
 	}
-	if (m->IsCorpse() || m->IsBot() || ((m->IsPet() || m->IsTempPet()) && m->IsPetOwnerClient())) {
+	if (m->IsCorpse() || m->IsBot() || ((m->IsPet() || m->IsTempPet()) && (m->IsPetOwnerClient() || m->IsPetOwnerBot()))) {
 		return;
 	}
 	// if player is charmed, don't add to auto xtar
@@ -9398,6 +9398,8 @@ void Client::ProcessXTargetAutoHaters()
 		for (auto &e : haters) {
 			auto *mob = entity_list.GetMob(e.spawn_id);
 			if (!mob || mob->IsCorpse())
+				continue;
+			if ((mob->IsPet() || mob->IsTempPet()) && (mob->IsPetOwnerClient() || mob->IsPetOwnerBot()))
 				continue;
 
 			bool allow = false;

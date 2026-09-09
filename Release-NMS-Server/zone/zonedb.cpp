@@ -1760,6 +1760,7 @@ const NPCType *ZoneDatabase::LoadNPCTypesData(uint32 npc_type_id, bool bulk_load
 		t->is_parcel_merchant = n.is_parcel_merchant ? true : false;
 		t->greed              = n.greed;
 		t->m_npc_tint_id      = n.npc_tint_id;
+		t->summon_timer_override = n.summon_timer_override != 0;
 
 		if (!n.special_abilities.empty()) {
 			strn0cpy(t->special_abilities, n.special_abilities.c_str(), 512);
@@ -1936,6 +1937,7 @@ const NPCType *ZoneDatabase::LoadNPCTypesData(uint32 npc_type_id, bool bulk_load
 		t->faction_amount         = n.faction_amount;
 		t->keeps_sold_items       = n.keeps_sold_items;
 		t->multiquest_enabled     = n.multiquest_enabled != 0;
+		t->summon_timer_override  = n.summon_timer_override != 0;
 
 		// If NPC with duplicate NPC id already in table,
 		// free item we attempted to add.

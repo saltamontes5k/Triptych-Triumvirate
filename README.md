@@ -7,11 +7,25 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 ---
 
-## This update's changes (9/3)
+### This update's changes (9/9)
 
-- **Ranks extended** (AA rank data in the release DB) — added but need work
-- **Cazic Thule (Quarm) revamp ** + **Veeshan's Peak 2.0** expeditions — added but need work
-  (content sets ship in the DB; reference SQL in `Release-NMS-Server/utils/sql/`)
+- **Melee while casting/moving** — balance patch; toggleable via `Custom:AllowAttackWhileCasting` (default **false**)
+- **Bow AA ↔ thrown AA** — bow AA now affects thrown AA and vice-versa
+- **Brother Hayn** spawns in Karana (Kree)
+- **Test of Think** fix
+- **Epic 1.0 title** fix
+- **Tome AA** reflects reality with multiclass consideration; untrain / untrain all / recycle / downgrade
+- **Scaffold progression** up to SoF; blueprint for DoN / LDoN / GoD
+- **Inventory overflow fix** (chadw)
+- **Mail-key bug** (chadw)
+- **Kick math calcs include base skill** (chadw)
+- **Allow beneficial spells vs slow/snare immunity** (chadw)
+- **Summon timer override per NPC** (chadw)
+- **Loot message shows quantity** (chadw)
+- **Hero forge on char select fixes** (chadw)
+- **Movement delta fixes** (chadw)
+- **dinput8 MQ2 crash fixes** (riker)
+- **dinput8 crash patch + NMS_WaypointsWnd.xml fix** (Rockin-Vik)
 
 ### Earlier (8/30)
 
@@ -148,22 +162,20 @@ sudo apt install build-essential cmake ninja-build git \
 
 ## Credits
 
- Tunaria Team — OG NMS / Project Triune
- Straps — Ascendant tome system plugins and trainers 
- Devs of Quarm server — Cazic-Thule revamp
- chadw — spell_effects fixes
- chadw — Leap movement fix
- chadw — #illusion storage (new character_illusions table)
- chadw — Target restriction 99 → 95
- chadw — XTarget fixes (partial)
- huggy / sploose — Hazel buff bot
- zerohex — Purveyor of Armour Glamour
- dritjoda — Lost Soul Diablo-style augmentation system
- Palpinator87 — gambling script for the halfling
- valorith / nekkola — Offline bazaar (from chadw's EQEmu repo)
- idunknown — Bestial alignment AA racial fix
- Doraj / Kree — Godmode rune bug fix, particularly on pets
- hawk & animal — 2H damage / #attack fix and the permanent glowing hand bug
+  Tunaria Team — OG NMS / Project Triune
+  Straps — Ascendant tome system plugins and trainers
+  Devs of Quarm server — Cazic-Thule revamp
+  chadw — spell_effects fixes, Leap movement fix, #illusion storage, Target restriction 99→95, XTarget fixes, offline bazaar, inventory overflow, mail-key bug, kick math calcs, beneficial spells vs slow/snare immunity, summon timer override per NPC, loot message quantity, hero forge char select, movement delta fixes
+  huggy / sploose — Hazel buff bot
+  zerohex — Purveyor of Armour Glamour
+  dritjoda — Lost Soul Diablo-style augmentation system
+  Palpinator87 — gambling script for the halfling
+  valorith / nekkola — offline bazaar
+  idunknown — bestial alignment AA racial fix
+  Doraj / Kree — godmode rune bug fix, Brother Hayn Karana spawn
+  hawk & animal — 2H damage / #attack fix, permanent glowing hand bug
+  riker — dinput8 MQ2 crash fixes
+  Rockin-Vik — dinput8 crash patch + NMS_WaypointsWnd.xml fix
 
 ## Requirements
 

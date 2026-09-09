@@ -26,14 +26,16 @@ sub EVENT_SAY {
     my $is_tomeless = quest::get_data("tomeless_" . $char_id) ? 1 : 0;
 
     if ($text =~ /hail/i) {
-        my $credits_link  = quest::saylink("my credits", 1, "my credits");
-        my $recycle_link  = quest::saylink("recycle", 1, "recycle");
-        my $tomeless_link = quest::saylink("the tomeless", 1, "The Tomeless");
+        my $credits_link   = quest::saylink("my credits", 1, "my credits");
+        my $recycle_link   = quest::saylink("recycle", 1, "recycle");
+        my $downgrade_link = quest::saylink("downgrade", 1, "downgrade");
+        my $untrain_link   = quest::saylink("untrain all", 1, "untrain all");
+        my $tomeless_link  = quest::saylink("the tomeless", 1, "The Tomeless");
         if ($is_tomeless) {
             my $renounce_link = quest::saylink("renounce", 1, "renounce");
             plugin::Whisper("Greetings, $name. You walk the path of The Tomeless. The old translation system has been replaced with a new [training] system, but that path is closed to you. You may [$renounce_link] your vow for 100,000 platinum, or check [$credits_link] to view your credits.");
         } else {
-            plugin::Whisper("Greetings, $name. I am Haliax Greycloak, a scholar of ancient knowledge. The old translation system has been replaced with a new [training] system. You may also check [$credits_link] to view and redeem your AA training credits, or ask me to [$recycle_link] an unwanted tome into a new one. Or, if you seek a greater challenge, ask me about [$tomeless_link].");
+            plugin::Whisper("Greetings, $name. I am Haliax Greycloak, a scholar of ancient knowledge. The old translation system has been replaced with a new [training] system. You may also check [$credits_link] to view and redeem your AA training credits, ask me to [$recycle_link] an unwanted tome into a new one, [$downgrade_link] a tome to a lower tier, or [$untrain_link] every cross-class ability you have trained. Or, if you seek a greater challenge, ask me about [$tomeless_link].");
         }
     }
     elsif ($text =~ /^the tomeless$/i) {
@@ -122,6 +124,12 @@ sub EVENT_SAY {
     elsif ($text =~ /recycle/i) {
         plugin::Whisper("Hand me one illegible tome of any class plus the deciphering fee — Greater 100pp, Exalted 300pp, Ascendant 500pp — and I will reshape it into a random tome of the same tier for another class.");
     }
+    elsif ($text =~ /downgrade/i) {
+        plugin::Whisper("Hand me one illegible Exalted or Ascendant tome plus exactly 2,500 platinum and I will reduce it one tier, keeping its class — Ascendant to Exalted, or Exalted to Greater.");
+    }
+    elsif ($text =~ /untrain all/i) {
+        _show_untrain_all($client);
+    }
 }
 
 sub EVENT_POPUPRESPONSE {
@@ -180,13 +188,22 @@ sub EVENT_POPUPRESPONSE {
         plugin::Whisper("Your vow has been released, $name. The path of tomes is open to you once more.");
         $client->Message(15, "You have renounced The Tomeless for 100,000 platinum. Your Tomeless titles have been revoked. The training system is available again.");
     }
+    # Popup 9902 = Untrain All cross-class abilities
+    elsif ($popupid == 9902) {
+        _do_untrain_all($client);
+    }
 }
 
 sub EVENT_ITEM {
-    # --- Tome Recycling: illegible tomes (121571-121618) ---
+    # --- Tome Recycling / Downgrade: illegible tomes (121571-121618) ---
     my ($recycle_id) = grep { $_ >= 121571 && $_ <= 121618 } keys %itemcount;
     if ($recycle_id) {
-        _do_recycle($client, $recycle_id, $platinum, $gold, $silver, $copper);
+        # Exactly 2,500pp = downgrade (one tier down); otherwise recycle fee (100/300/500)
+        if (int($platinum) == 2500 && !int($gold) && !int($silver) && !int($copper)) {
+            _do_downgrade($client, $recycle_id, $platinum, $gold, $silver, $copper);
+        } else {
+            _do_recycle($client, $recycle_id, $platinum, $gold, $silver, $copper);
+        }
         return;
     }
 
@@ -516,6 +533,62 @@ sub _do_recycle {
 }
 
 # -------------------------------------------------------
+# _do_downgrade - reduce an illegible tome one tier (same class)
+# Ascendant -> Exalted, Exalted -> Greater. Fee: 2,500pp exact.
+# -------------------------------------------------------
+sub _do_downgrade {
+    my ($client, $item_id, $plat_given, $gold_given, $silver_given, $copper_given) = @_;
+    my $char_id = $client->CharacterID();
+
+    if (quest::get_data("tomeless_" . $char_id)) {
+        plugin::Whisper("You walk the path of The Tomeless. The distillation of tomes is closed to you.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    # Exactly one tome per trade (ignore empty trade-slot "0" keys this fork adds)
+    my @handed = grep { $_ && int($_) > 0 } keys %itemcount;
+    if (@handed != 1 || $itemcount{$item_id} != 1) {
+        plugin::Whisper("I distil one tome at a time, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    my ($tome_class, $tier) = _get_tome_info($item_id);
+    unless ($tier) {
+        plugin::Whisper("I cannot distil that item, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    if ($tier <= 1) {
+        plugin::Whisper("A Greater tome is already the lowest tier and cannot be reduced further, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    if (int($plat_given) != 2500 || int($gold_given) != 0 || int($silver_given) != 0 || int($copper_given) != 0) {
+        plugin::Whisper("Distilling this tome requires exactly 2,500 platinum and no other coin, $name.");
+        plugin::return_items(\%itemcount);
+        return;
+    }
+
+    my $new_tier   = $tier - 1;
+    my $new_item   = 121571 + ($tome_class - 1) * 3 + ($new_tier - 1);
+    my $tier_name  = $TIER_NAMES{$new_tier};
+    my $class_name = $CLASS_NAMES{$tome_class} || "Unknown";
+
+    if (quest::handin({$item_id => 1, "platinum" => 2500})) {
+        quest::summonitem($new_item);
+        quest::ding();
+        plugin::Whisper("The tome's knowledge has been distilled. You receive an Illegible Tome of $tier_name $class_name Advancement.");
+    } else {
+        plugin::Whisper("I could not complete the distillation, $name.");
+        plugin::return_items(\%itemcount);
+    }
+}
+
+# -------------------------------------------------------
 # _get_tome_info - map illegible tome item id to (class, tier)
 # base = 121571 + (class - 1) * 3; Greater/Exalted/Ascendant
 # -------------------------------------------------------
@@ -535,6 +608,183 @@ sub _get_player_class_bitmask {
     return $bm if $bm;
     my $pc = $client->GetClass();
     return ($pc >= 1 && $pc <= 16) ? (1 << ($pc - 1)) : 0;
+}
+
+# -------------------------------------------------------
+# Boosted enc-standard cross-tome Dire Charms.
+# first_rank_id => [canonical trainer class, tier]
+# (Enc-standard Dire Charms granted via druid/necro tomes)
+# -------------------------------------------------------
+my %BOOSTED_DC = (
+    42332 => [6,  1],   # Dire Charm (Animal)
+    42333 => [11, 1],   # Dire Charm (Undead)
+);
+
+# -------------------------------------------------------
+# _canonical_class - lowest set class bit (1-16) or 0
+# -------------------------------------------------------
+sub _canonical_class {
+    my ($bitmask) = @_;
+    for my $c (1..16) {
+        return $c if $bitmask & (1 << ($c - 1));
+    }
+    return 0;
+}
+
+# -------------------------------------------------------
+# _get_owned_cross_class - list of owned cross-class lines.
+# Returns rows: { ability_id, first_rank_id, name, tier,
+#                 trainer_class, value }
+# Universal lines get their canonical class from original_classes;
+# boosted Dire Charms use the explicit mapping.
+# -------------------------------------------------------
+sub _get_owned_cross_class {
+    my ($client) = @_;
+    my $char_id = $client->CharacterID();
+    my $dbh = plugin::LoadMysql();
+    return () unless $dbh;
+
+    my @rows;
+
+    my $sth = $dbh->prepare(
+        "SELECT aa.id AS ability_id, aa.first_rank_id, aa.name, " .
+        "acm.tier, acm.original_classes, caa.aa_value " .
+        "FROM character_alternate_abilities caa " .
+        "JOIN aa_ability aa ON aa.first_rank_id = caa.aa_id " .
+        "JOIN aa_custom_mapping acm ON acm.universal_aa_id = aa.id " .
+        "WHERE caa.id = ? AND caa.aa_value > 0"
+    );
+    if ($sth && $sth->execute($char_id)) {
+        while (my $r = $sth->fetchrow_hashref()) {
+            my $tc = _canonical_class($r->{original_classes});
+            next unless $tc;
+            push @rows, {
+                ability_id    => $r->{ability_id},
+                first_rank_id => $r->{first_rank_id},
+                name          => $r->{name},
+                tier          => $r->{tier},
+                trainer_class => $tc,
+                value         => $r->{aa_value},
+            };
+        }
+    }
+    $sth->finish() if $sth;
+
+    for my $first_rank (keys %BOOSTED_DC) {
+        my ($v) = $dbh->selectrow_array(
+            "SELECT aa_value FROM character_alternate_abilities WHERE id = ? AND aa_id = ? AND aa_value > 0",
+            undef, $char_id, $first_rank
+        );
+        if ($v) {
+            my ($ability_id) = $dbh->selectrow_array(
+                "SELECT id FROM aa_ability WHERE first_rank_id = ?", undef, $first_rank
+            );
+            my ($name) = $dbh->selectrow_array(
+                "SELECT name FROM aa_ability WHERE first_rank_id = ?", undef, $first_rank
+            );
+            my ($tc, $tier) = @{$BOOSTED_DC{$first_rank}};
+            push @rows, {
+                ability_id    => $ability_id || 0,
+                first_rank_id => $first_rank,
+                name          => $name || "Dire Charm",
+                tier          => $tier,
+                trainer_class => $tc,
+                value         => $v,
+            };
+        }
+    }
+
+    $dbh->disconnect();
+    return @rows;
+}
+
+# -------------------------------------------------------
+# _show_untrain_all - confirm popup before wiping every
+# cross-class ability the player owns.
+# -------------------------------------------------------
+sub _show_untrain_all {
+    my ($client) = @_;
+    my $char_id = $client->CharacterID();
+
+    if (quest::get_data("tomeless_" . $char_id)) {
+        plugin::Whisper("You walk the path of The Tomeless. The untraining of tomes is closed to you.");
+        return;
+    }
+
+    my @rows = _get_owned_cross_class($client);
+    unless (@rows) {
+        plugin::Whisper("You have no cross-class abilities trained. There is nothing to untrain.");
+        return;
+    }
+
+    my $total_ranks = 0;
+    my %by_tier;
+    for my $r (@rows) {
+        $total_ranks += $r->{value};
+        $by_tier{$r->{tier}} += $r->{value};
+    }
+    my $lines = scalar @rows;
+
+    my %tier_names = (1 => 'Greater', 2 => 'Exalted', 3 => 'Ascendant');
+
+    my $popup = "<c \"#FFD700\">Untrain All Cross-Class Abilities</c><br><br>";
+    $popup .= "This will completely remove all cross-class abilities you have trained:<br>";
+    $popup .= "<c \"#FFFFFF\">$lines ability line" . ($lines > 1 ? "s" : "") . ", $total_ranks rank" . ($total_ranks > 1 ? "s" : "") . "</c><br><br>";
+    $popup .= "<c \"#00FF00\">Refund:</c><br>";
+    for my $t (1..3) {
+        next unless $by_tier{$t};
+        $popup .= "- <c \"#00FF00\">$by_tier{$t}</c> $tier_names{$t} Credit" . ($by_tier{$t} > 1 ? "s" : "") . "<br>";
+    }
+    $popup .= "<br><c \"#AAAAAA\">Credits are returned to the class guild of each ability" .
+              " (shared abilities return to their primary class). You will be sent to East Commonlands" .
+              " so everything fully clears.</c><br><br>";
+    $popup .= "<c \"#FF4444\">This cannot be undone. Your AA slots will be freed.</c><br><br>";
+    $popup .= "<c \"#FFFFFF\">Are you certain?</c>";
+
+    quest::popup("Untrain All", $popup, 9902, 1, 0);
+}
+
+# -------------------------------------------------------
+# _do_untrain_all - wipe every cross-class ability and
+# refund credits to the canonical class bucket per line.
+# -------------------------------------------------------
+sub _do_untrain_all {
+    my ($client) = @_;
+    my $char_id = $client->CharacterID();
+
+    if (quest::get_data("tomeless_" . $char_id)) {
+        plugin::Whisper("You walk the path of The Tomeless. The untraining of tomes is closed to you.");
+        return;
+    }
+
+    my @rows = _get_owned_cross_class($client);
+    unless (@rows) {
+        plugin::Whisper("You have no cross-class abilities trained. There is nothing to untrain.");
+        return;
+    }
+
+    my %tier_names = (1 => 'Greater', 2 => 'Exalted', 3 => 'Ascendant');
+    my (%by_tier, $total_ranks);
+    for my $r (@rows) {
+        my $ability_id = $r->{ability_id};
+        next unless $ability_id;
+
+        $client->ResetAlternateAdvancementRank($ability_id);
+
+        plugin::AddCredits($client, $r->{tier}, $r->{trainer_class}, $r->{value});
+        $by_tier{$r->{tier}} += $r->{value};
+        $total_ranks += $r->{value};
+    }
+
+    quest::ding();
+    my $plural = $total_ranks > 1 ? "s" : "";
+    plugin::Whisper("It is done. I have untrained $total_ranks rank$plural of cross-class knowledge.");
+    for my $t (1..3) {
+        next unless $by_tier{$t};
+        plugin::Whisper("$by_tier{$t} $tier_names{$t} Credit" . ($by_tier{$t} > 1 ? "s" : "") . " returned to your guild accounts.");
+    }
+    $client->Message(15, "Sending you to East Commonlands so everything fully clears.");
+    quest::movepc(22, -1485, 9.2, -51);
 }
 
 1;

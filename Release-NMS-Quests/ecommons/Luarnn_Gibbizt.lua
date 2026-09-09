@@ -8,7 +8,12 @@ local rujd = {
   -- safereturn = { zone="southro", x=-1, y=-221, z=134, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Luarnn Gibbizt says, 'The Wayfarers will open these hills only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Luarnn Gibbizt says, 'Thinking of venturing into the Rujarkian Hills? I admire that kind of spirit. Coincidentally, we're looking for a few brave souls to help us with an interesting task -- if you don't mind danger.  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

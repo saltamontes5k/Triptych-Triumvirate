@@ -283,6 +283,7 @@ public:
 	inline bool	IsMerchantOpen() { return merchant_open; }
 	inline uint8 GetGreedPercent() { return NPCTypedata->greed; }
 	inline bool GetParcelMerchant() { return NPCTypedata->is_parcel_merchant; }
+	inline bool GetSummonTimerOverride() const { return NPCTypedata->summon_timer_override; }
 	void	Depop(bool start_spawn_timer = false);
 	void	Stun(int duration);
 	void	UnStun();
@@ -610,6 +611,9 @@ public:
 	inline bool IsSkipAutoScale() const { return m_skip_auto_scale; }
 
 	void ScaleNPC(uint8 npc_level, bool always_scale = false, bool override_special_abilities = false);
+
+	uint32 GetNPCTintIndex() { return m_npc_tint_id; }
+	void SetNPCTintIndex(uint32 index);
 
 	void RecalculateSkills();
 	void ReloadSpells();

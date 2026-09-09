@@ -8,7 +8,12 @@ local guke = {
   -- safereturn = { zone="innothuleb", x=540, y=961, z=15.125, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Ruwakka says, 'You be not ready, friend. De Wayfarers only send de brave who have toppled de elemental gods into de deepest Guk.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Ruwakka says, 'Me helping de adventurers of de Wayfarers Brotherhood.  Me in charge of recruiting brave fighters for de strange stuff going on in de land of de froggies.  If you rally de call of your friends we needs help wit dis serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

@@ -118,6 +118,19 @@ sub _set_credit_balance {
 }
 
 # ============================================================
+# AddCredits - Public wrapper to add credits to a tier+class bucket
+# ============================================================
+sub AddCredits {
+    my ($client, $tier, $trainer_class, $amount) = @_;
+    return unless $client && $trainer_class;
+    $amount = int($amount || 0);
+    return if $amount <= 0;
+    my $cur = GetCreditBalance($client, $tier, $trainer_class);
+    _set_credit_balance($client, $tier, $trainer_class, $cur + $amount);
+    return $cur + $amount;
+}
+
+# ============================================================
 # GetAllBalances - Return hash of all 3 credit balances for a class
 # ============================================================
 sub GetAllBalances {
@@ -632,6 +645,53 @@ sub ShowAADetail {
 }
 
 # ============================================================
+# AA id of the boosted enc-standard cross-tome Dire Charms
+# (druid/necro tome Dire Charm granted to an Enchanter)
+# ============================================================
+my %ENC_DC_BOOST_GRANT = (20317 => [31110, 42332], 20318 => [31111, 42333]);
+
+# ============================================================
+# _effective_grant_aa - which AA ability an effective purchase grants
+# Returns (ability_id, first_rank_id, has_native)
+# ============================================================
+sub _effective_grant_aa {
+    my ($client, $aa, $player_bitmask) = @_;
+    my $has_native = _has_native_access($aa, $player_bitmask);
+    my $ability_id = $has_native ? $aa->{original_aa_id} : $aa->{universal_aa_id};
+    my $first_rank = $has_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
+    if (!$has_native && ($player_bitmask & _class_bitmask(14)) && $ENC_DC_BOOST_GRANT{$aa->{universal_aa_id}}) {
+        ($ability_id, $first_rank) = @{$ENC_DC_BOOST_GRANT{$aa->{universal_aa_id}}};
+    }
+    return ($ability_id, $first_rank, $has_native);
+}
+
+# ============================================================
+# _duplicate_line_or_cap - pre-purchase guard. Returns 0 if OK,
+# else a reason string. Checks:
+#   - buying a NEW line whose name the player already owns elsewhere
+#   - adding a NEW line at/over the ~240 internal AA-array cap
+# ============================================================
+sub _duplicate_line_or_cap {
+    my ($dbh, $client, $granted_ability_id, $is_new_line) = @_;
+    my $char_id = $client->CharacterID();
+    my ($gname) = $dbh->selectrow_array("SELECT name FROM aa_ability WHERE id = ?", undef, $granted_ability_id);
+    if ($gname) {
+        my ($dup) = $dbh->selectrow_array(
+            "SELECT COUNT(*) FROM character_alternate_abilities caa " .
+            "JOIN aa_ability a2 ON a2.first_rank_id = caa.aa_id " .
+            "WHERE caa.id = ? AND caa.aa_value > 0 AND a2.name = ? AND a2.id <> ?",
+            undef, $char_id, $gname, $granted_ability_id
+        );
+        return "You already possess $gname as another AA line. Training it again would create a duplicate that counts twice toward your AA cap." if $dup;
+    }
+    if ($is_new_line) {
+        my $owned = GetUniqueAACount($client);
+        return "You have reached the ~240 AA-line limit ($owned). Untrain an ability to make room before training new ones." if $owned >= 240;
+    }
+    return 0;
+}
+
+# ============================================================
 # ShowBuyConfirmation - Yes/No popup to confirm AA purchase
 # popup_id = universal_aa_id (used in EVENT_POPUPRESPONSE)
 # ============================================================
@@ -648,7 +708,7 @@ sub ShowBuyConfirmation {
     my $class_bitmask = _class_bitmask($trainer_class);
 
     my $sth = $dbh->prepare(
-        "SELECT acm.universal_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
+        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
         "oa.classes AS original_ability_classes " .
@@ -682,14 +742,21 @@ sub ShowBuyConfirmation {
 
     # Native class players use original rank chain; cross-class use universal
     my $player_bitmask = _get_player_bitmask($client);
-    my $has_native = _has_native_access($aa, $player_bitmask);
-    my $first_rank_id = $has_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
+    my ($aa_id_to_grant, $first_rank_id) = _effective_grant_aa($client, $aa, $player_bitmask);
 
     my $current_rank = $client->GetAALevel($first_rank_id);
     my $max_rank = _count_ranks($dbh, $first_rank_id);
 
     if ($current_rank >= $max_rank) {
         $client->Message($COLOR_GRAY, "You have already mastered $aa->{aa_name}.");
+        $dbh->disconnect();
+        return;
+    }
+
+    # --- duplicate AA line / AA-cap guard ---
+    my $guard = _duplicate_line_or_cap($dbh, $client, $aa_id_to_grant, $current_rank == 0);
+    if ($guard) {
+        $client->Message($COLOR_RED, $guard);
         $dbh->disconnect();
         return;
     }
@@ -727,6 +794,12 @@ sub HandlePopupResponse {
     # popup_id is the universal_aa_id from ShowBuyConfirmation
     # Only process if it looks like a valid AA ID (> 0)
     return 0 unless $popup_id && $popup_id > 0;
+
+    # Untrain confirmations use 100000 + universal_aa_id
+    if ($popup_id >= 100000) {
+        DoUntrain($client, $popup_id - 100000, $trainer_class);
+        return 1;
+    }
 
     HandleTrainRequest($client, $popup_id, $trainer_class);
     return 1;
@@ -792,16 +865,17 @@ sub HandleTrainRequest {
     }
 
     my $player_bitmask = _get_player_bitmask($client);
-    my $has_native = _has_native_access($aa, $player_bitmask);
+    my ($aa_id_to_grant, $first_rank_id, $has_native) = _effective_grant_aa($client, $aa, $player_bitmask);
 
     my $tier = $aa->{tier};
     my $tier_name = $TIER_NAMES{$tier};
     my $tier_balance = GetCreditBalance($client, $tier, $trainer_class);
     my $aa_name = $aa->{aa_name};
 
-    # Native class players get their original AA; cross-class players get universal
-    my $aa_id_to_grant = $has_native ? $aa->{original_aa_id}    : $aa->{universal_aa_id};
-    my $first_rank_id  = $has_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
+    # Enchanters who train the druid/necro cross-class Dire Charm get the enc-standard version
+    if (!$has_native && ($player_bitmask & _class_bitmask(14)) && $ENC_DC_BOOST_GRANT{$aa->{universal_aa_id}}) {
+        $client->Message($COLOR_GREEN, "As an Enchanter, your Dire Charm is raised to the Enchanter standard.");
+    }
 
     quest::debug("InsightTrainer: Buying $aa_name ($class_name) - " . ($has_native ? "native" : "cross-class") . ", grant_aa=$aa_id_to_grant, first_rank=$first_rank_id");
 
@@ -811,6 +885,14 @@ sub HandleTrainRequest {
 
     if ($current_rank >= $max_rank) {
         $client->Message($COLOR_GRAY, "You have already mastered $aa_name.");
+        $dbh->disconnect();
+        return 0;
+    }
+
+    # --- duplicate AA line / AA-cap guard ---
+    my $guard = _duplicate_line_or_cap($dbh, $client, $aa_id_to_grant, $current_rank == 0);
+    if ($guard) {
+        $client->Message($COLOR_RED, $guard);
         $dbh->disconnect();
         return 0;
     }
@@ -931,7 +1013,7 @@ sub HandleSay {
             $client->Message($COLOR_RED, "You walk the path of The Tomeless. The training system is closed to you. Speak to Haliax Greycloak if you wish to renounce your vow.");
             return 1;
         }
-        if ($text =~ /^(train|buyaa|aainfo|balance)/i) {
+        if ($text =~ /^(train|buyaa|aainfo|balance|untrain)/i) {
             $client->Message($COLOR_RED, "The Tomeless do not seek cross-class knowledge.");
             return 1;
         }
@@ -941,16 +1023,16 @@ sub HandleSay {
         my %bal = GetAllBalances($client, $trainer_class);
         my $unique_aa_count = GetUniqueAACount($client);
         my $aa_limit_color = '#00FF00';
-        if ($unique_aa_count >= 300) {
+        if ($unique_aa_count >= 225) {
             $aa_limit_color = '#FF4444';
-        } elsif ($unique_aa_count >= 275) {
+        } elsif ($unique_aa_count >= 200) {
             $aa_limit_color = '#FFFF00';
         }
         
         my $popup = "<c \"#00FFFF\">$class_name AA Training</c><br><br>";
         $popup .= "<c \"#FFFF00\">AA Limit Notice:</c><br>";
-        $popup .= "The RoF2 client can only safely track about <c \"#FFFFFF\">300 unique AA lines</c> per character.<br>";
-        $popup .= "You currently have <c \"$aa_limit_color\">$unique_aa_count / 300</c> unique AA lines.<br>";
+        $popup .= "The server can only safely track about <c \"#FFFFFF\">240 unique AA lines</c> per character before the client breaks.<br>";
+        $popup .= "You currently have <c \"$aa_limit_color\">$unique_aa_count / 240</c> unique AA lines.<br>";
         $popup .= "We are consolidating duplicate and overlapping AA lines to make room while preserving their value.<br><br>";
         $popup .= "<c \"#FFFF00\">How It Works:</c><br>";
         $popup .= "1. Bring me <c \"#FFD700\">illegible $class_name tomes</c> + platinum<br>";
@@ -967,7 +1049,7 @@ sub HandleSay {
         $popup .= "<c \"#AAAAAA\">Each credit buys one rank of its tier. Native class abilities use your original AA — cross-class abilities use the universal version.</c>";
         
         quest::popup("$class_name Training", $popup, 0, 0, 0);
-        $client->Message($COLOR_HEADING, "Browse: " . quest::saylink("train t1 0", 1, "[Greater]") . "   " . quest::saylink("train t2 0", 1, "[Exalted]") . "   " . quest::saylink("train t3 0", 1, "[Ascendant]"));
+        $client->Message($COLOR_HEADING, "Browse: " . quest::saylink("train t1 0", 1, "[Greater]") . "   " . quest::saylink("train t2 0", 1, "[Exalted]") . "   " . quest::saylink("train t3 0", 1, "[Ascendant]") . "    " . quest::saylink("untrain", 1, "[Untrain]") . "    " . quest::saylink("balance", 1, "[Credits]"));
         return 1;
     }
 
@@ -997,6 +1079,18 @@ sub HandleSay {
     # buyaa <uid> — show confirmation popup
     if ($text =~ /^buyaa\s+(\d+)$/i) {
         ShowBuyConfirmation($client, int($1), $trainer_class);
+        return 1;
+    }
+
+    # untrain — list this class's cross-class AAs the player owns
+    if ($text =~ /^untrain$/i) {
+        ShowUntrainMenu($client, $trainer_class);
+        return 1;
+    }
+
+    # untrain <ability_id> — show confirmation popup
+    if ($text =~ /^untrain\s+(\d+)$/i) {
+        ShowUntrainConfirm($client, int($1), $trainer_class);
         return 1;
     }
 
@@ -1106,6 +1200,263 @@ sub _get_nth_rank_id {
         $current = $next;
     }
     return $current;
+}
+
+# ============================================================
+# ShowUntrainMenu - list this trainer's cross-class AAs the player owns
+# ============================================================
+# Boosted enc-standard cross-tome Dire Charms (granted only to Enchanters when they
+# train the druid/necro Dire Charm). Not in aa_custom_mapping, so the untrain flow
+# must recognize them explicitly. id => [display name, trainer_class, tier, first_rank]
+my %BOOSTED_DC_UNTRAIN = (
+    31110 => ['Dire Charm (Animal)', 6,  1, 42332],  # from the druid tome
+    31111 => ['Dire Charm (Undead)', 11, 1, 42333],  # from the necro tome
+);
+
+sub ShowUntrainMenu {
+    my ($client, $trainer_class) = @_;
+    my $char_id = $client->CharacterID();
+    my $class_name = $CLASS_NAMES{$trainer_class} || "Unknown";
+    my $class_bitmask = _class_bitmask($trainer_class);
+    my $total  = GetUniqueAACount($client);
+    my $limit  = 240;
+    my $count_color = $total >= 225 ? $COLOR_RED : ($total >= 200 ? $COLOR_GOLD : $COLOR_HEADING);
+
+    my $dbh = plugin::LoadMysql();
+    unless ($dbh) {
+        $client->Message($COLOR_RED, "The training records are unavailable.");
+        return;
+    }
+
+    my $rows = $dbh->selectall_arrayref(
+        "SELECT acm.universal_aa_id, acm.aa_name, acm.tier, caa.aa_value " .
+        "FROM character_alternate_abilities caa " .
+        "JOIN aa_ability ua ON ua.first_rank_id = caa.aa_id " .
+        "JOIN aa_custom_mapping acm ON acm.universal_aa_id = ua.id " .
+        "WHERE caa.id = ? AND caa.aa_value > 0 AND (acm.original_classes & ?) > 0 " .
+        "ORDER BY acm.aa_name",
+        undef, $char_id, $class_bitmask
+    );
+
+    # Boosted enc-standard cross-tome Dire Charms the player may own here
+    my @boost_rows;
+    for my $bid (keys %BOOSTED_DC_UNTRAIN) {
+        my ($bname, $bclass, $btier, $bfirst) = @{$BOOSTED_DC_UNTRAIN{$bid}};
+        next unless $bclass == $trainer_class;
+        my ($v) = $dbh->selectrow_array(
+            "SELECT aa_value FROM character_alternate_abilities WHERE id = ? AND aa_id = ? AND aa_value > 0",
+            undef, $char_id, $bfirst
+        );
+        push @boost_rows, [$bid, $bname, $btier, $v] if $v;
+    }
+    $dbh->disconnect();
+
+    $client->Message($count_color, "AA Lines: $total / $limit - Untraining frees an AA slot.");
+    unless (($rows && @$rows) || @boost_rows) {
+        $client->Message($COLOR_GRAY, "You have no $class_name cross-class abilities to untrain here.");
+        return;
+    }
+
+    for my $r (@$rows) {
+        my ($aa_id, $name, $tier, $val) = @$r;
+        my $tier_name = $TIER_NAMES{$tier};
+        my $plural    = $val > 1 ? "s" : "";
+        $client->Message($COLOR_WHITE, "  $tier_name $name ($val rank$plural) " . quest::saylink("untrain $aa_id", 1, "[Untrain]"));
+    }
+    for my $b (@boost_rows) {
+        my ($aa_id, $name, $tier, $val) = @$b;
+        my $tier_name = $TIER_NAMES{$tier};
+        my $plural    = $val > 1 ? "s" : "";
+        $client->Message($COLOR_WHITE, "  $tier_name $name ($val rank$plural) " . quest::saylink("untrain $aa_id", 1, "[Untrain]"));
+    }
+    $client->Message($COLOR_GRAY, "Click [Untrain] next to an ability to confirm. You will be sent to East Commonlands.");
+}
+
+# ============================================================
+# ShowUntrainConfirm - confirmation popup for untraining an AA
+# ============================================================
+sub ShowUntrainConfirm {
+    my ($client, $ability_id, $trainer_class) = @_;
+    my $char_id = $client->CharacterID();
+    my $class_name = $CLASS_NAMES{$trainer_class} || "Unknown";
+
+    my $dbh = plugin::LoadMysql();
+    unless ($dbh) { return; }
+
+    # Boosted enc-standard cross-tome Dire Charm?
+    if (my $bi = $BOOSTED_DC_UNTRAIN{$ability_id}) {
+        my ($bname, $bclass, $btier, $bfirst) = @$bi;
+        if ($bclass != $trainer_class) {
+            $dbh->disconnect();
+            $client->Message($COLOR_RED, "That ability is untrained at its own guild master.");
+            return;
+        }
+        my ($v) = $dbh->selectrow_array(
+            "SELECT aa_value FROM character_alternate_abilities WHERE id = ? AND aa_id = ? AND aa_value > 0",
+            undef, $char_id, $bfirst
+        );
+        $dbh->disconnect();
+        unless ($v) {
+            $client->Message($COLOR_RED, "You do not own that cross-class ability.");
+            return;
+        }
+        my $tier_name = $TIER_NAMES{$btier};
+        my $popup_text;
+        if ($v > 1) {
+            my $left = $v - 1;
+            $popup_text =
+                "<c \"#FFD700\">Untrain $bname</c><br><br>" .
+                "<c \"#CCCCCC\">Untrain 1 of your $v ranks of $tier_name $bname?</c><br>" .
+                "<c \"#00FF00\">Refund: 1 $tier_name credit to $class_name</c><br>" .
+                "<c \"#AAAAAA\">You will retain $left rank" . ($left > 1 ? "s" : "") . " of $bname.</c><br>" .
+                "<c \"#FF4444\">You will be sent to East Commonlands so the change fully clears.</c><br><br>" .
+                "<c \"#FFFFFF\">Are you certain?</c>";
+        } else {
+            $popup_text =
+                "<c \"#FFD700\">Untrain $bname</c><br><br>" .
+                "<c \"#CCCCCC\">Remove your only rank of $tier_name $bname?</c><br>" .
+                "<c \"#00FF00\">Refund: 1 $tier_name credit to $class_name</c><br>" .
+                "<c \"#FF4444\">You will be sent to East Commonlands so the ability fully clears.</c><br><br>" .
+                "<c \"#FFFFFF\">Are you certain?</c>";
+        }
+        quest::popup("Untrain Ability", $popup_text, 100000 + $ability_id, 1, 0);
+        return;
+    }
+
+    my $row = $dbh->selectrow_hashref(
+        "SELECT acm.aa_name, acm.tier, caa.aa_value " .
+        "FROM character_alternate_abilities caa " .
+        "JOIN aa_ability ua ON ua.first_rank_id = caa.aa_id " .
+        "JOIN aa_custom_mapping acm ON acm.universal_aa_id = ua.id " .
+        "WHERE caa.id = ? AND acm.universal_aa_id = ? AND caa.aa_value > 0",
+        undef, $char_id, $ability_id
+    );
+    $dbh->disconnect();
+
+    unless ($row) {
+        $client->Message($COLOR_RED, "You do not own that cross-class ability.");
+        return;
+    }
+    my $tier_name = $TIER_NAMES{$row->{tier}};
+    my $val       = $row->{aa_value};
+    my $popup_text;
+    if ($val > 1) {
+        my $left = $val - 1;
+        $popup_text =
+            "<c \"#FFD700\">Untrain $row->{aa_name}</c><br><br>" .
+            "<c \"#CCCCCC\">Untrain 1 of your $val ranks of $tier_name $row->{aa_name}?</c><br>" .
+            "<c \"#00FF00\">Refund: 1 $tier_name credit to $class_name</c><br>" .
+            "<c \"#AAAAAA\">You will retain $left rank" . ($left > 1 ? "s" : "") . " of $row->{aa_name}.</c><br>" .
+            "<c \"#FF4444\">You will be sent to East Commonlands so the change fully clears.</c><br><br>" .
+            "<c \"#FFFFFF\">Are you certain?</c>";
+    } else {
+        $popup_text =
+            "<c \"#FFD700\">Untrain $row->{aa_name}</c><br><br>" .
+            "<c \"#CCCCCC\">Remove your only rank of $tier_name $row->{aa_name}?</c><br>" .
+            "<c \"#00FF00\">Refund: 1 $tier_name credit to $class_name</c><br>" .
+            "<c \"#FF4444\">You will be sent to East Commonlands so the ability fully clears.</c><br><br>" .
+            "<c \"#FFFFFF\">Are you certain?</c>";
+    }
+    quest::popup("Untrain Ability", $popup_text, 100000 + $ability_id, 1, 0);
+}
+
+# ============================================================
+# DoUntrain - remove a single rank of a cross-class AA,
+# refund 1 credit, send to E. Commonlands. When the last rank
+# is removed the whole line is cleared.
+# ============================================================
+sub DoUntrain {
+    my ($client, $ability_id, $trainer_class) = @_;
+    my $char_id = $client->CharacterID();
+    my $class_name = $CLASS_NAMES{$trainer_class} || "Unknown";
+
+    if (quest::get_data("tomeless_" . $char_id)) {
+        $client->Message($COLOR_RED, "You walk the path of The Tomeless. Untraining is closed to you.");
+        return;
+    }
+
+    my $dbh = plugin::LoadMysql();
+    unless ($dbh) {
+        $client->Message($COLOR_RED, "The training records are unavailable.");
+        return;
+    }
+
+    # Boosted enc-standard cross-tome Dire Charm?
+    if (my $bi = $BOOSTED_DC_UNTRAIN{$ability_id}) {
+        my ($bname, $bclass, $btier, $bfirst) = @$bi;
+        if ($bclass != $trainer_class) {
+            $dbh->disconnect();
+            $client->Message($COLOR_RED, "That ability is not part of the $class_name discipline. Untrain it at its own guild master.");
+            return;
+        }
+        my ($v) = $dbh->selectrow_array(
+            "SELECT aa_value FROM character_alternate_abilities WHERE id = ? AND aa_id = ? AND aa_value > 0",
+            undef, $char_id, $bfirst
+        );
+        $dbh->disconnect();
+        unless ($v) {
+            $client->Message($COLOR_RED, "You do not own that cross-class ability, or it cannot be untrained.");
+            return;
+        }
+
+        my $tier      = $btier;
+        my $tier_name = $TIER_NAMES{$tier};
+
+        # Remove a single rank (or the whole line if it was the last one)
+        my $remaining = $client->DecrementAlternateAdvancementRank($ability_id);
+
+        my $cur = GetCreditBalance($client, $tier, $trainer_class);
+        _set_credit_balance($client, $tier, $trainer_class, $cur + 1);
+
+        if ($remaining > 0) {
+            $client->Message($COLOR_GREEN, "You have untrained 1 rank of $bname. $remaining rank" . ($remaining > 1 ? "s remain" : " remains") . ". 1 $tier_name credit returned to $class_name. (Total: " . ($cur + 1) . ")");
+        } else {
+            $client->Message($COLOR_GREEN, "You have untrained the last rank of $bname and cleared the ability. 1 $tier_name credit returned to $class_name. (Total: " . ($cur + 1) . ")");
+        }
+        $client->Message($COLOR_HEADING, "Sending you to East Commonlands so the change fully clears.");
+        quest::movepc(22, -1485, 9.2, -51);
+        return;
+    }
+
+    my $class_bitmask = _class_bitmask($trainer_class);
+    my $row = $dbh->selectrow_hashref(
+        "SELECT acm.aa_name, acm.tier, acm.original_classes, caa.aa_value " .
+        "FROM character_alternate_abilities caa " .
+        "JOIN aa_ability ua ON ua.first_rank_id = caa.aa_id " .
+        "JOIN aa_custom_mapping acm ON acm.universal_aa_id = ua.id " .
+        "WHERE caa.id = ? AND acm.universal_aa_id = ? AND caa.aa_value > 0",
+        undef, $char_id, $ability_id
+    );
+    unless ($row) {
+        $dbh->disconnect();
+        $client->Message($COLOR_RED, "You do not own that cross-class ability, or it cannot be untrained.");
+        return;
+    }
+    unless (($row->{original_classes} & $class_bitmask) > 0) {
+        $dbh->disconnect();
+        $client->Message($COLOR_RED, "That ability is not part of the $class_name discipline. Untrain it at its own guild master.");
+        return;
+    }
+
+    my $tier      = $row->{tier};
+    my $tier_name = $TIER_NAMES{$tier};
+    my $aa_name   = $row->{aa_name};
+    $dbh->disconnect();
+
+    # Remove a single rank (server state + DB). No AA-point refund involved.
+    my $remaining = $client->DecrementAlternateAdvancementRank($ability_id);
+
+    # Refund 1 credit to the (tier, trainer_class) bucket
+    my $cur = GetCreditBalance($client, $tier, $trainer_class);
+    _set_credit_balance($client, $tier, $trainer_class, $cur + 1);
+
+    if ($remaining > 0) {
+        $client->Message($COLOR_GREEN, "You have untrained 1 rank of $aa_name. $remaining rank" . ($remaining > 1 ? "s remain" : " remains") . ". 1 $tier_name credit returned to $class_name. (Total: " . ($cur + 1) . ")");
+    } else {
+        $client->Message($COLOR_GREEN, "You have untrained the last rank of $aa_name and cleared the ability. 1 $tier_name credit returned to $class_name. (Total: " . ($cur + 1) . ")");
+    }
+    $client->Message($COLOR_HEADING, "Sending you to East Commonlands so the change fully clears.");
+    quest::movepc(22, -1485, 9.2, -51);
 }
 
 return 1;

@@ -6040,6 +6040,40 @@ bool Perl__handin(perl::reference handin_ref)
 	return quest_manager.handin(handin_map);
 }
 
+perl::array Perl__get_paused_timers(Mob* m)
+{
+	perl::array a;
+
+	const auto& l = quest_manager.GetPausedTimers(m);
+
+	if (!l.empty()) {
+		a.reserve(l.size());
+
+		for (const auto& v : l) {
+			a.push_back(v);
+		}
+	}
+
+	return a;
+}
+
+perl::array Perl__get_timers(Mob* m)
+{
+	perl::array a;
+
+	const auto& l = quest_manager.GetTimers(m);
+
+	if (!l.empty()) {
+		a.reserve(l.size());
+
+		for (const auto& v: l) {
+			a.push_back(v);
+		}
+	}
+
+	return a;
+}
+
 void perl_register_quest()
 {
 	perl::interpreter perl(PERL_GET_THX);
@@ -6750,6 +6784,8 @@ void perl_register_quest()
 	package.add("getspellstat", (int(*)(uint32, std::string))&Perl__getspellstat);
 	package.add("getspellstat", (int(*)(uint32, std::string, uint8))&Perl__getspellstat);
 	package.add("getskillname", &Perl__getskillname);
+	package.add("get_timers", &Perl__get_timers);
+	package.add("get_paused_timers", &Perl__get_paused_timers);
 	package.add("getlevel", &Perl__getlevel);
 	package.add("getplayerburiedcorpsecount", &Perl__getplayerburiedcorpsecount);
 	package.add("getplayercorpsecount", &Perl__getplayercorpsecount);

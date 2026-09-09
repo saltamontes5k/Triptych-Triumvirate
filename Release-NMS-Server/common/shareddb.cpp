@@ -261,19 +261,19 @@ uint32 SharedDatabase::GetTotalTimeEntitledOnAccount(uint32 AccountID) {
 	return EntitledTime;
 }
 
-void SharedDatabase::SetMailKey(int CharID, int IPAddress, int MailKey)
+void SharedDatabase::SetMailKey(uint32 CharID, uint32 IPAddress, uint32 MailKey)
 {
 	char mail_key[17];
 
 	if (RuleB(Chat, EnableMailKeyIPVerification) == true) {
-		sprintf(mail_key, "%08X%08X", IPAddress, MailKey);
+		snprintf(mail_key, sizeof(mail_key), "%08X%08X", IPAddress, MailKey);
 	}
 	else {
-		sprintf(mail_key, "%08X", MailKey);
+		snprintf(mail_key, sizeof(mail_key), "%08X", MailKey);
 	}
 
 	const std::string query = StringFormat(
-		"UPDATE character_data SET mailkey = '%s' WHERE id = '%i'",
+		"UPDATE character_data SET mailkey = '%s' WHERE id = '%u'",
 		mail_key, CharID
 	);
 

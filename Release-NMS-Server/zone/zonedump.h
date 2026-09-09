@@ -158,6 +158,7 @@ struct NPCType
 	uint8			greed;
 	bool            multiquest_enabled;
 	uint32          m_npc_tint_id;
+	bool            summon_timer_override;
 };
 
 #pragma pack()

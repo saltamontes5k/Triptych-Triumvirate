@@ -238,6 +238,7 @@ NPC::NPC(const NPCType *npc_type_data, Spawn2 *in_respawn, const glm::vec4 &posi
 	heroic_strikethrough = npc_type_data->heroic_strikethrough;
 	keeps_sold_items     = npc_type_data->keeps_sold_items;
 	m_multiquest_enabled = npc_type_data->multiquest_enabled;
+	innate_summon_timer_override = npc_type_data->summon_timer_override;
 
 	// used for when switch back to charm
 	default_ac               = npc_type_data->AC;
@@ -6494,4 +6495,17 @@ void NPC::ResetMultiQuest() {
 	}
 
 	m_hand_in = {};
+}
+
+void NPC::SetNPCTintIndex(uint32 index)
+{
+	auto outapp = new EQApplicationPacket(OP_SpawnAppearance, sizeof(SpawnAppearance_Struct));
+	auto* s = (SpawnAppearance_Struct*) outapp->pBuffer;
+
+	s->spawn_id  = GetID();
+	s->type      = AppearanceType::NPCTintIndex;
+	s->parameter = index;
+
+	entity_list.QueueClients(this, outapp);
+	safe_delete(outapp);
 }

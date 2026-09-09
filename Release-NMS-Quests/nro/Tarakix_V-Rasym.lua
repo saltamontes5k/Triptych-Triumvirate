@@ -8,14 +8,18 @@ local taka = {
   -- safereturn = { zone="northro", x=-1252, y=5548, z=28.25, h=0 }
 }
 
--- not implemented
--- function event_say(e)
---   if e.message:findi("hail") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Tarakix V`Rasyrn glares at you, as if sizing you up. 'Well, are you going to stand there and gawk at me like a severed fishhead, or do you possess some minor semblance of skill and intellect?  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
---   elseif e.message:findi("problem") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Tarakix V`Rasyrn says, 'Well then, 'friend'.  We have recently discovered that the sand elves within Takish-Hiz are planning to perform a ritual ceremony soon.  We will need a raid of foolish... Er, brave adventurers to head into the depths of the sandy caves to investigate and bring a halt to the ceremony, if possible.  Be on your guard, for there are sure to be many guards and other insidious traps in place to stop you.  Are you [" .. eq.say_link("interested") .. "]?'")
---   elseif e.message:findi("interested") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, ("Tarakix V`Rasyrn says, 'Good luck, %s.  You will need it.'"):format(e.other:GetCleanName()))
---     e.other:CreateExpedition(taka)
---   end
--- end
+local prog = require("nms_progression")
+
+function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Tarakix V`Rasyrn glares at you. 'You are not ready. Prove yourself against the elemental gods of the planes before the Wayfarers trust you here.'") then
+    return
+  end
+  if e.message:findi("hail") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Tarakix V`Rasyrn glares at you, as if sizing you up. 'Well, are you going to stand there and gawk at me like a severed fishhead, or do you possess some minor semblance of skill and intellect?  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
+  elseif e.message:findi("problem") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Tarakix V`Rasyrn says, 'Well then, 'friend'.  We have recently discovered that the sand elves within Takish-Hiz are planning to perform a ritual ceremony soon.  We will need a raid of foolish... Er, brave adventurers to head into the depths of the sandy caves to investigate and bring a halt to the ceremony, if possible.  Be on your guard, for there are sure to be many guards and other insidious traps in place to stop you.  Are you [" .. eq.say_link("interested") .. "]?'")
+  elseif e.message:findi("interested") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, ("Tarakix V`Rasyrn says, 'Good luck, %s.  You will need it.'"):format(e.other:GetCleanName()))
+    e.other:CreateExpedition(taka)
+  end
+end

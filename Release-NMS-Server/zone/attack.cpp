@@ -235,7 +235,7 @@ int Mob::GetTotalToHit(EQ::skills::SkillType skill, int chance_mod)
 		aabonuses.HitChanceEffect[skill] +
 		spellbonuses.HitChanceEffect[skill];
 
-	if (skill == EQ::skills::SkillArchery) {
+	if (skill == EQ::skills::SkillArchery || skill == EQ::skills::SkillThrowing) {
 		hit_bonus += spellbonuses.increase_archery + aabonuses.increase_archery + itembonuses.increase_archery;
 		hit_bonus -= hit_bonus * RuleR(Combat, ArcheryHitPenalty);
 	}
@@ -5703,7 +5703,7 @@ int Mob::GetBaseCriticalHitChance(EQ::skills::SkillType skill) {
 
     if ((HasClass(Class::Warrior) || HasClass(Class::Berserker)) && GetLevel() >= 12) {
         innate_crit = true;
-    } else if (HasClass(Class::Ranger) && GetLevel() >= 12 && skill == EQ::skills::SkillArchery) {
+    } else if (HasClass(Class::Ranger) && GetLevel() >= 12 && (skill == EQ::skills::SkillArchery || skill == EQ::skills::SkillThrowing)) {
         innate_crit = true;
     } else if (HasClass(Class::Rogue) && GetLevel() >= 12 && skill == EQ::skills::SkillThrowing) {
         innate_crit = true;
@@ -6738,7 +6738,7 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 	if (hit.damage_done < 1)
 		hit.damage_done = 1;
 
-	if (hit.skill == EQ::skills::SkillArchery) {
+	if (hit.skill == EQ::skills::SkillArchery || hit.skill == EQ::skills::SkillThrowing) {
 		int bonus = aabonuses.ArcheryDamageModifier + itembonuses.ArcheryDamageModifier + spellbonuses.ArcheryDamageModifier;
 		int headshot = TryHeadShot(defender, hit.skill);
 		if (headshot > 0) {
@@ -6751,24 +6751,27 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			}
 		}
 
-		//Scale Factor for Archery Damage Tuning
-		hit.damage_done *= RuleR(Combat, ArcheryBaseDamageBonus);
+		if (hit.skill == EQ::skills::SkillArchery) {
+			//Scale Factor for Archery Damage Tuning
+			hit.damage_done *= RuleR(Combat, ArcheryBaseDamageBonus);
 
-		if (IsClient())
-		{
-			int min = (std::max(static_cast<int>(GetHeroicDEX() / RuleR(Custom, ScaleBowMinimumDamageDivisor)), 1) * (hit.base_damage / RuleR(Custom, ScaleBowMinimumDamageMultiplier)));
-			if (hit.damage_done < min)
+			if (IsClient())
 			{
-				LogDebug("hit clamped to [{}] from [{}]", min, hit.damage_done);
-				hit.damage_done = min;
-			}
+				int min = (std::max(static_cast<int>(GetHeroicDEX() / RuleR(Custom, ScaleBowMinimumDamageDivisor)), 1) * (hit.base_damage / RuleR(Custom, ScaleBowMinimumDamageMultiplier)));
+				if (hit.damage_done < min)
+				{
+					LogDebug("hit clamped to [{}] from [{}]", min, hit.damage_done);
+					hit.damage_done = min;
+				}
 
-			if (hit.damage_done > 0 && RuleR(Custom, ScaleBowByHDex)) {
-				float bonus = HeroicDexScale(GetHeroicDEX());
-				hit.damage_done += hit.damage_done * (RuleR(Custom, ScaleBowByHDex) * bonus);
+				if (hit.damage_done > 0 && RuleR(Custom, ScaleBowByHDex)) {
+					float bonus = HeroicDexScale(GetHeroicDEX());
+					hit.damage_done += hit.damage_done * (RuleR(Custom, ScaleBowByHDex) * bonus);
+				}
+				hit.damage_done = DoDamageCaps(hit.damage_done);
 			}
-			hit.damage_done = DoDamageCaps(hit.damage_done);
 		}
+
 		hit.damage_done += hit.damage_done * bonus / 100;
 	}
 

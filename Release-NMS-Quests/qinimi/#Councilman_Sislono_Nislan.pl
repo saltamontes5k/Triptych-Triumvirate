@@ -47,22 +47,22 @@ sub EVENT_SAY {
           for ($count = 0; $count < $raid->RaidCount(); $count++) {
             push (@player_list, $raid->GetMember($count)->GetName());
           }
-          foreach $player (@player_list) {
-            $pc = $entity_list->GetClientByName($player);
-            if ($pc)
-            {
-              $pc->MovePC(281,-521,36,-8,332); # Zone: qinimi
-            }
-           }
-          $event_started = 1;
-          quest::spawn2(281127,0,0,0,0,0,188); #Trigger_Qinimi_2
-          quest::emote("pulls out a small stone and closes it in his hand.");
-          quest::say("Please be careful. What you are about to see may shock you at first, but don't let yourself be distracted for too long. These beings are merciless and once they have discovered your presence, they will stop at nothing to add your corpse to the others in the area.");
-          quest::signalwith(281127,0,30); #starts event
         }
         else {
-          $client->Message(15,"Maybe you should consider joining a raid first.");
+          push (@player_list, $client->GetName());
         }
+        foreach $player (@player_list) {
+          $pc = $entity_list->GetClientByName($player);
+          if ($pc)
+          {
+            $pc->MovePC(281,-521,36,-8,332); # Zone: qinimi
+          }
+         }
+        $event_started = 1;
+        quest::spawn2(281127,0,0,0,0,0,188); #Trigger_Qinimi_2
+        quest::emote("pulls out a small stone and closes it in his hand.");
+        quest::say("Please be careful. What you are about to see may shock you at first, but don't let yourself be distracted for too long. These beings are merciless and once they have discovered your presence, they will stop at nothing to add your corpse to the others in the area.");
+        quest::signalwith(281127,0,30); #starts event
       }
       else {
         $client->Message(15,"Mystical forces prevent you from entering at this time.");

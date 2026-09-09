@@ -5,6 +5,10 @@
 # items: 41000, 40999
 
 sub EVENT_SAY {
+  if (!$client->GetGM() && !plugin::is_stage_complete($client, 'DoN')) {
+    $npc->Say("The Wayfarers will open these adventures to you once the elemental gods of the planes have fallen.");
+    return;
+  }
   if ($ulevel >= 15) {
     if (defined($qglobals{Wayfarer}) && ($qglobals{Wayfarer} == 1)) { #PC has spoken to home town Wayfarer recruiter but not received Adventurer's Stone
       if ($text=~/hail/i) {

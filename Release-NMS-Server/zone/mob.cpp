@@ -5004,7 +5004,7 @@ bool Mob::HateSummon() {
 		return false;
 
 	int summon_level = GetSpecialAbility(SpecialAbility::Summon);
-	int times_summoned;
+	int times_summoned = 0;
 
 	if(summon_level == 1 || summon_level == 2) {
 		if(!GetTarget()) {
@@ -5024,7 +5024,10 @@ bool Mob::HateSummon() {
 
 	// now validate the timer
 	int summon_timer_duration = GetSpecialAbilityParam(SpecialAbility::Summon, 0);
-	summon_timer_duration = summon_timer_duration > RuleI(NPC, NPCSummonTimer) ? summon_timer_duration : RuleI(NPC, NPCSummonTimer);
+	bool npc_override = IsNPC() && CastToNPC()->GetSummonTimerOverride();
+	if (!npc_override) {
+		summon_timer_duration = summon_timer_duration > RuleI(NPC, NPCSummonTimer) ? summon_timer_duration : RuleI(NPC, NPCSummonTimer);
+	}
 	Timer *timer = GetSpecialAbilityTimer(SpecialAbility::Summon);
 	if (!timer)
 	{
@@ -5053,7 +5056,7 @@ bool Mob::HateSummon() {
 	if(target)
 	{
 
-		if (RuleI(Combat, SummonImmunitySeconds) && target->IsClient()) {
+		if (!npc_override && RuleI(Combat, SummonImmunitySeconds) && target->IsClient()) {
 			auto si_timer = target->CastToClient()->GetSummonImmunityTimer();
 			if (si_timer->GetDuration() && !si_timer->Check(false)) {
 				return false;

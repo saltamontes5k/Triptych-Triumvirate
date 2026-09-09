@@ -115,7 +115,7 @@ public:
 	uint32 GetTotalTimeEntitledOnAccount(uint32 AccountID);
 	bool SetGMInvul(uint32 account_id, bool gminvul);
 	bool SetGMFlymode(uint32 account_id, uint8 flymode);
-	void SetMailKey(int CharID, int IPAddress, int MailKey);
+	void SetMailKey(uint32 CharID, uint32 IPAddress, uint32 MailKey);
 	struct MailKeys {
 		std::string mail_key;
 		std::string mail_key_full;

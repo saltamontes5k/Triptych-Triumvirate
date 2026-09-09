@@ -17,6 +17,31 @@ end
 function Tunat_Second_Death(e)
 	eq.signal(298223, 298055); -- NPC: zone_status
 	eq.signal(298223,2); -- Unlock Doors
+
+	-- NMS progression: Tunat`Muram is the Omens of War prerequisite (and counts toward the
+	-- Buried Sea gate). Spawn the memory NPC the raid hails for the flag (global/26000.pl);
+	-- the hail itself enforces the instance rule.
+	-- The flag name is a literal, not GetCleanName(): this encounter renames the boss with
+	-- TempName() during its phases, and CleanMobName() drops the spaces from a temp name, which
+	-- would yield "tunat`muramcuuvauax" and never match the OoW prerequisite.
+	local memory_id = 26000; -- progression flag NPC, see quests/global/26000.pl
+	local memory_npc = eq.spawn2(memory_id, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());
+	if memory_npc ~= nil then
+		memory_npc:SetEntityVariable("Flag-Name", "tunat`muram cuu vauax");
+		memory_npc:SetEntityVariable("Stage-Name", "OoW");
+		-- Second grant for the Buried Sea gate (TBS also requires the Dyn'Leth Ashengate raid).
+		local tbs_npc = eq.spawn2(memory_id, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());
+		if tbs_npc ~= nil then
+			tbs_npc:SetEntityVariable("Flag-Name", "tunat`muram cuu vauax");
+			tbs_npc:SetEntityVariable("Stage-Name", "TBS");
+		end
+		-- Third grant for the Depths of Darkhollow gate (DoD unlocks on the same Tunat kill).
+		local dod_npc = eq.spawn2(memory_id, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());
+		if dod_npc ~= nil then
+			dod_npc:SetEntityVariable("Flag-Name", "tunat`muram cuu vauax");
+			dod_npc:SetEntityVariable("Stage-Name", "DoD");
+		end
+	end
 end
 
 function Tunat_Second_HP(e)

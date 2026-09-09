@@ -336,6 +336,7 @@ void TraderUpdateItem(const EQApplicationPacket *app);
 	void TraderStartTrader(const EQApplicationPacket *app);
 //	void TraderPriceUpdate(const EQApplicationPacket *app);
 	uint8 WithCustomer(uint16 NewCustomer);
+	std::vector<uint32> GetKeyRing() { return keyring; }
 	void KeyRingLoad();
 	bool KeyRingAdd(uint32 item_id);
 	bool KeyRingCheck(uint32 item_id);
@@ -2080,6 +2081,7 @@ public:
 	bool UseTogglePassiveHotkey(const AA::Rank &rank);
 	void TogglePurchaseAlternativeAdvancementRank(int rank_id);
 	void ResetAlternateAdvancementRank(uint32 aa_id);
+	uint32_t DecrementAlternateAdvancementRank(uint32_t aa_id);
 	bool IsEffectinAlternateAdvancementRankEffects(const AA::Rank &rank, int effect_id);
 
 	void TripInterrogateInvState() { interrogateinv_flag = true; }

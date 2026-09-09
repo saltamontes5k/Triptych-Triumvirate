@@ -3141,6 +3141,36 @@ void Lua_Mob::StopAllTimers() {
 	quest_manager.stopalltimers(self);
 }
 
+luabind::object Lua_Mob::GetPausedTimers(lua_State* L) {
+	auto t = luabind::newtable(L);
+	if (d_) {
+		auto self = reinterpret_cast<NativeType*>(d_);
+		auto l = quest_manager.GetPausedTimers(self);
+		int i = 1;
+		for (const auto& v : l) {
+			t[i] = v;
+			i++;
+		}
+	}
+
+	return t;
+}
+
+luabind::object Lua_Mob::GetTimers(lua_State* L) {
+	auto t = luabind::newtable(L);
+	if (d_) {
+		auto self = reinterpret_cast<NativeType*>(d_);
+		auto l = quest_manager.GetTimers(self);
+		int i = 1;
+		for (const auto& v : l) {
+			t[i] = v;
+			i++;
+		}
+	}
+
+	return t;
+}
+
 void Lua_Mob::StopTimer(const char* timer_name) {
 	Lua_Safe_Call_Void();
 	quest_manager.stoptimer(timer_name, self);
@@ -3899,6 +3929,8 @@ luabind::scope lua_register_mob() {
 	.def("GetTarget", &Lua_Mob::GetTarget)
 	.def("GetTexture", &Lua_Mob::GetTexture)
 	.def("GetTimerDurationMS", &Lua_Mob::GetTimerDurationMS)
+	.def("GetPausedTimers", &Lua_Mob::GetPausedTimers)
+	.def("GetTimers", &Lua_Mob::GetTimers)
 	.def("GetUltimateOwner", &Lua_Mob::GetUltimateOwner)
 	.def("GetWIS", &Lua_Mob::GetWIS)
 	.def("GetWalkspeed", &Lua_Mob::GetWalkspeed)

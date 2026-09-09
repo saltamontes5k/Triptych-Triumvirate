@@ -164,21 +164,116 @@ my %atlas = (
     'broodlands'     => 'DoN',
     'thundercrest'   => 'DoN',
     'delveb'         => 'DoN',
+
+    'illsalin'       => 'DoD',
+    'illsalina'      => 'DoD',
+    'illsalinb'      => 'DoD',
+    'illsalinc'      => 'DoD',
+    'dreadspire'     => 'DoD',
+    'drachnidhive'   => 'DoD',
+    'drachnidhivea'  => 'DoD',
+    'drachnidhiveb'  => 'DoD',
+    'drachnidhivec'  => 'DoD',
+    'westkorlach'    => 'DoD',
+    'westkorlacha'   => 'DoD',
+    'westkorlachb'   => 'DoD',
+    'westkorlachc'   => 'DoD',
+    'eastkorlach'    => 'DoD',
+    'eastkorlacha'   => 'DoD',
+    'shadowspine'    => 'DoD',
+    'corathus'       => 'DoD',
+    'corathusa'      => 'DoD',
+    'corathusb'      => 'DoD',
+    'nektulosa'      => 'DoD',
+
+    'arcstone'       => 'PoR',
+    'relic'          => 'PoR',
+    'skylance'       => 'PoR',
+    'devastation'    => 'PoR',
+    'devastationa'   => 'PoR',
+    'rage'           => 'PoR',
+    'ragea'          => 'PoR',
+    'takishruins'    => 'PoR',
+    'takishruinsa'   => 'PoR',
+    'elddar'         => 'PoR',
+    'elddara'        => 'PoR',
+    'theater'        => 'PoR',
+    'theatera'       => 'PoR',
+
+    'crescent'       => 'TSS',
+    'moors'          => 'TSS',
+    'stonehive'      => 'TSS',
+    'mesa'           => 'TSS',
+    'roost'          => 'TSS',
+    'steppes'        => 'TSS',
+    'icefall'        => 'TSS',
+    'valdeholm'      => 'TSS',
+    'frostcrypt'     => 'TSS',
+    'sunderock'      => 'TSS',
+    'vergalid'       => 'TSS',
+    'direwind'       => 'TSS',
+    'ashengate'      => 'TSS',
+
+    'kattacastrum'   => 'TBS',
+    'thalassius'     => 'TBS',
+    'zhisza'         => 'TBS',
+    'silyssar'       => 'TBS',
+    'solteris'       => 'TBS',
+    'barren'         => 'TBS',
+    'buriedsea'      => 'TBS',
+    'jardelshook'    => 'TBS',
+    'monkeyrock'     => 'TBS',
+    'suncrest'       => 'TBS',
+    'deadbone'       => 'TBS',
+    'blacksail'      => 'TBS',
+    'maidensgrave'   => 'TBS',
+    'redfeather'     => 'TBS',
+    'shipmvp'        => 'TBS',
+    'shipmvu'        => 'TBS',
+    'shippvu'        => 'TBS',
+    'shipuvu'        => 'TBS',
+    'shipmvm'        => 'TBS',
+
+    'mechanotus'     => 'SoF',
+    'mansion'        => 'SoF',
+    'steamfactory'   => 'SoF',
+    'shipworkshop'   => 'SoF',
+    'gyrospireb'     => 'SoF',
+    'gyrospirez'     => 'SoF',
+    'dragonscale'    => 'SoF',
+    'lopingplains'   => 'SoF',
+    'hillsofshade'   => 'SoF',
+    'bloodmoon'      => 'SoF',
+    'crystallos'     => 'SoF',
+    'guardian'       => 'SoF',
+    'cryptofshade'   => 'SoF',
+    'dragonscaleb'   => 'SoF',
 );
 
 # Global hash of valid stages
-my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN FNagafen);
+my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN DoD PoR TSS TBS SoF FNagafen);
 my %VALID_STAGES = map { $_ => 1 } @STAGES;
+
+# Stages open on NMS (multiclass) servers. Anything not listed here is time-locked
+# regardless of kill flags; unlocking a new expansion is a one-line change here.
+# Stages listed here still require their kill prerequisites (see %STAGE_PREREQUISITES)
+# to be earned per-account before the stage's zones are eligible.
+my %NMS_UNLOCKED_STAGES = map { $_ => 1 } qw(RoK SoV SoL PoP GoD OoW DoN DoD PoR TSS TBS SoF);
 
 # Global hash of stage prerequisites
 my %STAGE_PREREQUISITES = (
-    'RoK' => ['Lord Nagafen', 'Lady Vox'],  
+    'RoK' => ['Lord Nagafen', 'Lady Vox'],
     'SoV' => ['Trakanon', 'Gorenaire', 'Severilous', 'Talendor'],
     'SoL' => ['Klandicar', 'Zlandicar', 'Wuoshi', 'Dozekar the Cursed', 'Kelorek`Dar'],
     'PoP' => ['Thought Horror Overfiend', 'The Insanity Crawler', 'Grieg Veneficus', 'Xerkizh the Creator', 'Emperor Ssraeshza'],
     'GoD' => ['Saryrn'],
-    'OoW' => ['Disabled'],
-    'DoN' => ['Disabled'],
+    'OoW' => ['Tunat`Muram Cuu Vauax'],   # final boss of Tacvi (GoD); flag NPC is spawned by tacvi/encounters/tmcv.lua
+    'DoN' => ['Xegony', 'Fennin Ro the Tyrant of Fire', 'Coirnav the Avatar of Water', 'Rathe Council', 'Agnarr the Storm Lord'],
+    'DoD' => ['Tunat`Muram Cuu Vauax'],   # Depths of Darkhollow unlocks on the GoD end boss (same kill that opens OoW)
+    'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish'],   # all six MPG chamber Masters + Anguish clear
+    'TSS' => ['Deathknell'],              # Deathknell, Tower of Dissonance clear
+    'TBS' => ['Tunat`Muram Cuu Vauax', 'Dyn`Leth'],   # GoD end boss + Ashengate Dyn'Leth raid
+    'SoF' => ['Dyn`Leth'],                # Ashengate Dyn'Leth raid (not Crystallos; that is SoF endgame)
     'FNagafen' => ['Quarm'],
     # ... and so on for each stage
 );
@@ -201,6 +296,11 @@ my %STAGE_DESCRIPTIONS = (
     'GoD' => "Gates of Discord",
     'OoW' => "Omens of War",
     'DoN' => "Dragons of Norrath",
+    'DoD' => "Depths of Darkhollow",
+    'PoR' => "Prophecy of Ro",
+    'TSS' => "The Serpent's Spine",
+    'TBS' => "The Buried Sea",
+    'SoF' => "Secrets of Faydwer",
     'FNagafen' => "Fabled Nagafen's Lair",
 );
 
@@ -350,6 +450,21 @@ sub SetSubflag {
     elsif ($stage eq 'DoN') {
         plugin::BlueText("You recall the ancient dragons, and grow fearful at the prospect of them stirring once more.");
     }
+    elsif ($stage eq 'DoD') {
+        plugin::BlueText("The dark hollow echoes with the skittering of the forgotten; the priestess waits beneath the reef.");
+    }
+    elsif ($stage eq 'PoR') {
+        plugin::BlueText("You feel the radiance of the Burning Prince upon your brow, and the ruins of a fallen empire call to you.");
+    }
+    elsif ($stage eq 'TSS') {
+        plugin::BlueText("The bones of the mountains stir; the Circle of the Crystalwing watches over their chosen.");
+    }
+    elsif ($stage eq 'TBS') {
+        plugin::BlueText("The tide rises to swallow the shore, and the depths churn with the fury of Ro.");
+    }
+    elsif ($stage eq 'SoF') {
+        plugin::BlueText("The gears of Mechanotus turn, and the sleeping wyrm beneath Crystallos stirs in its dreaming.");
+    }
 
     # Check if the objective value has changed
     if ((!exists $account_progress{$objective} || $account_progress{$objective} != $value)) {
@@ -475,24 +590,10 @@ sub is_time_locked {
     my $stage = shift;
     my $client = plugin::val('client');
 
-    if (plugin::IsNMS()) {  
-        if ($stage eq 'RoK') {       
-            return 0;
-        }
-
-        if ($stage eq 'SoV') {       
-            return 0;
-        }
-
-        if ($stage eq 'SoL') {       
-            return 0;
-        }
-
-        if ($stage eq 'PoP')  {
-            return 0;
-        }
-
-        return 1;
+    if (plugin::IsNMS()) {
+        # NMS (multiclass) servers unlock stages via %NMS_UNLOCKED_STAGES; anything not
+        # listed there is time-locked regardless of kill flags.
+        return $NMS_UNLOCKED_STAGES{$stage} ? 0 : 1;
     }
 
     if ($stage eq 'RoK') {       
@@ -629,6 +730,17 @@ sub UpdateCharMaxLevel
         $CharMaxLevel = $client->GetBucket("CharMaxLevel") || 50;
     }
 
+    # Level cap raises per progression stage (max-reached). Stages not listed here
+    # (GoD/DoN -> 65, DoD/PoR/TBS -> 70/75 via the raise points) simply don't raise the cap.
+    # Order matters only for clarity; the last satisfied stage in ascending-cap order wins.
+    my @CAP_RAISES = (
+        ['RoK', 60],
+        ['PoP', 65],
+        ['OoW', 70],
+        ['TSS', 75],
+        ['SoF', 80],
+    );
+
     if (plugin::IsSeasonal($client)) {
         $CharMaxLevel = 51;
 
@@ -636,25 +748,19 @@ sub UpdateCharMaxLevel
             $CharMaxLevel = $client->GetBucket("CharMaxLevel") || 50;
         }
 
-        if (is_stage_complete($client, 'RoK') && !is_time_locked('RoK')) {
-            $CharMaxLevel = 60;
+        foreach my $raise (@CAP_RAISES) {
+            my ($stage, $cap) = @$raise;
+            if (is_stage_complete($client, $stage) && !is_time_locked($stage)) {
+                $CharMaxLevel = $cap;
+            }
         }
-        if (is_stage_complete($client, 'PoP')&& !is_time_locked('PoP')) {
-            $CharMaxLevel = 65;
-        } 
-        if (is_stage_complete($client, 'GoD')&& !is_time_locked('GoD')) {
-            $CharMaxLevel = 70;
-        } 
     } else {
-        if (is_stage_complete($client, 'RoK')) {
-            $CharMaxLevel = 60;
+        foreach my $raise (@CAP_RAISES) {
+            my ($stage, $cap) = @$raise;
+            if (is_stage_complete($client, $stage)) {
+                $CharMaxLevel = $cap;
+            }
         }
-        if (is_stage_complete($client, 'PoP')) {
-            $CharMaxLevel = 65;
-        } 
-        if (is_stage_complete($client, 'GoD')) {
-            $CharMaxLevel = 70;
-        } 
     }
 
     my $old_max = $client->GetBucket("CharMaxLevel");

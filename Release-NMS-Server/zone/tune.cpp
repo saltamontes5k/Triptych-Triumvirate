@@ -1343,7 +1343,7 @@ int64 Mob::TuneGetTotalToHit(EQ::skills::SkillType skill, int chance_mod, int ac
 		aabonuses.HitChanceEffect[skill] +
 		spellbonuses.HitChanceEffect[skill];
 
-	if (skill == EQ::skills::SkillArchery) {
+	if (skill == EQ::skills::SkillArchery || skill == EQ::skills::SkillThrowing) {
 		hit_bonus += spellbonuses.increase_archery + aabonuses.increase_archery + itembonuses.increase_archery;
 		hit_bonus -= hit_bonus * RuleR(Combat, ArcheryHitPenalty);
 	}
@@ -1484,7 +1484,7 @@ void Mob::TuneCommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraA
 	if (hit.damage_done < 1)
 		hit.damage_done = 1;
 
-	if (hit.skill == EQ::skills::SkillArchery) {
+	if (hit.skill == EQ::skills::SkillArchery || hit.skill == EQ::skills::SkillThrowing) {
 		int bonus = aabonuses.ArcheryDamageModifier + itembonuses.ArcheryDamageModifier + spellbonuses.ArcheryDamageModifier;
 		hit.damage_done += hit.damage_done * bonus / 100;
 		int headshot = TryHeadShot(defender, hit.skill);

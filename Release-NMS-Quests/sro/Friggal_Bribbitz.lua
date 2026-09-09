@@ -8,7 +8,12 @@ local gukg = {
   -- safereturn = { zone="innothuleb", x=540, y=961, z=15.125, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Friggal Bribbitz says, 'The Wayfarers will open these dungeons only to those who have toppled the elemental gods of the planes, friend.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Friggal Bribbitz says, 'With the help of the Wayfarer's Brotherhood and adventurers like you, we hope to stop the Witnesses of Hate from completing their dark rituals and cursing all those who have entered Deepest Guk.  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

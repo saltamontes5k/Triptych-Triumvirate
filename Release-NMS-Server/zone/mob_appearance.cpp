@@ -346,8 +346,8 @@ uint32 Mob::GetHerosForgeModel(uint8 material_slot) const
 					if (augment) {
 						auto item         = augment->GetItem();
 						heros_forge_model = item->HerosForgeModel;
-					} else if (inst->GetOrnamentHeroModel()) {
-						heros_forge_model = inst->GetOrnamentHeroModel();
+					} else if (inst->GetOrnamentHeroModel(material_slot)) {
+						heros_forge_model = inst->GetOrnamentHeroModel(material_slot);
 					}
 				}
 			}

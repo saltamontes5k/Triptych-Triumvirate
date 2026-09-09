@@ -1473,6 +1473,11 @@ void Perl_Client_ResetAlternateAdvancementRank(Client* self, int aa_id) // @cate
 	return self->ResetAlternateAdvancementRank(aa_id);
 }
 
+uint32_t Perl_Client_DecrementAlternateAdvancementRank(Client* self, int aa_id) // @categories Alternative Advancement
+{
+	return self->DecrementAlternateAdvancementRank(aa_id);
+}
+
 uint32_t Perl_Client_GetAALevel(Client* self, uint32 aa_skill_id) // @categories Alternative Advancement, Experience and Level
 {
 	return self->GetAA(aa_skill_id);
@@ -3582,6 +3587,18 @@ bool Perl_Client_UncompleteTask(Client* self, int task_id)
 	return self->UncompleteTask(task_id);
 }
 
+perl::array Perl_Client_GetKeyRing(Client* self)
+{
+	perl::array result;
+	const auto& v = self->GetKeyRing();
+
+	for (int i = 0; i < v.size(); ++i) {
+		result.push_back(v[i]);
+	}
+
+	return result;
+}
+
 void perl_register_client()
 {
 	perl::interpreter perl(PERL_GET_THX);
@@ -3823,6 +3840,7 @@ void perl_register_client()
 	package.add("GetInvulnerableEnvironmentDamage", &Perl_Client_GetInvulnerableEnvironmentDamage);
 	package.add("GetItemAt", &Perl_Client_GetItemAt);
 	package.add("GetItemCooldown", &Perl_Client_GetItemCooldown);
+	package.add("GetKeyRing", &Perl_Client_GetKeyRing);
 	package.add("GetItemIDAt", &Perl_Client_GetItemIDAt);
 	package.add("GetItemInInventory", &Perl_Client_GetItemInInventory);
 	package.add("GetLDoNLosses", &Perl_Client_GetLDoNLosses);
@@ -4011,6 +4029,7 @@ void perl_register_client()
 	package.add("ResetAllDisciplineTimers", &Perl_Client_ResetAllDisciplineTimers);
 	package.add("ResetAllCastbarCooldowns", &Perl_Client_ResetAllCastbarCooldowns);
 	package.add("ResetAlternateAdvancementRank", &Perl_Client_ResetAlternateAdvancementRank);
+	package.add("DecrementAlternateAdvancementRank", &Perl_Client_DecrementAlternateAdvancementRank);
 	package.add("ResetCastbarCooldownBySlot", &Perl_Client_ResetCastbarCooldownBySlot);
 	package.add("ResetCastbarCooldownBySpellID", &Perl_Client_ResetCastbarCooldownBySpellID);
 	package.add("ResetDisciplineTimer", &Perl_Client_ResetDisciplineTimer);

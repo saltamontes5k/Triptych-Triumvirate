@@ -2469,6 +2469,40 @@ void Client::ResetAlternateAdvancementRank(uint32 aa_id) {
 	}
 }
 
+uint32_t Client::DecrementAlternateAdvancementRank(uint32_t aa_id) {
+
+	/*
+		Removes a single rank from an AA line (baseline = 0 ranks).
+		When the last rank is removed the line is fully cleared.
+		Returns the new rank count (0 = line cleared), 0 if not found.
+	*/
+
+	for(auto iter = aa_ranks.begin(); iter != aa_ranks.end(); ++iter) {
+
+		AA::Ability *ability = zone->GetAlternateAdvancementAbility(iter->first);
+
+		if(ability && aa_id == ability->id) {
+			uint32_t cur = iter->second.first;
+
+			if(cur <= 1) {
+				RemoveExpendedAA(ability->first_rank_id);
+				aa_ranks.erase(iter);
+			} else {
+				iter->second.first = cur - 1;
+			}
+
+			SaveAA();
+			SendAlternateAdvancementTable();
+			SendAlternateAdvancementPoints();
+			SendAlternateAdvancementStats();
+
+			return cur > 1 ? cur - 1 : 0;
+		}
+	}
+
+	return 0;
+}
+
 void Client::TogglePurchaseAlternativeAdvancementRank(int rank_id){
 
 	/*

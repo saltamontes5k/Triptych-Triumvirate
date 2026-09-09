@@ -1,74 +1,46 @@
 @echo off
-setlocal
-title Triptych - Export Client Data Files
-echo ==============================================
-echo   Export client data files into your EQ client
-echo ==============================================
-echo.
+REM export-client-files.bat — generates the 4 DB-derived client data files
+REM and copies them into <client>\ and <client>\Resources\
+REM Usage: export-client-files.bat ^<your-EQ-client-folder^>
 
-rem ---- Locate the server folder (repo root\Release-NMS-Server) ----
-set "SERVER=%~dp0Release-NMS-Server"
-if not exist "%SERVER%\bin\Release\export_client_files.exe" (
-    echo ERROR: Could not find %SERVER%\bin\Release\export_client_files.exe
-    echo Make sure you have built the server (or shipped binaries are present).
-    pause
+setlocal enabledelayedexpansion
+
+if "%~1"=="" (
+    echo Usage: export-client-files.bat ^<EQ-client-folder^>
     exit /b 1
 )
 
-rem ---- Require eqemu_config.json (copy from .example if missing) ----
-if not exist "%SERVER%\eqemu_config.json" (
-    echo ERROR: %SERVER%\eqemu_config.json not found.
-    echo Copy eqemu_config.json.example to eqemu_config.json and set your DB credentials first.
-    pause
+set "CLIENT=%~1"
+set "EXE=Release-NMS-Server\Build\bin\Release\export_client_files.exe"
+set "EXPORT=Release-NMS-Server\Build\bin\Release\export"
+
+if not exist "!EXE!" (
+    echo ERROR: !EXE! not found. Build the server first.
     exit /b 1
 )
 
-rem ---- Run the exporter (writes Release-NMS-Server\export\*.txt) ----
-echo  Running export_client_files ... 
-pushd "%SERVER%"
-call "%SERVER%\bin\Release\export_client_files.exe"
-if errorlevel 1 (
-    echo ERROR: export_client_files failed. Check the database connection.
-    popd
-    pause
+echo Running export_client_files.exe...
+"!EXE!"
+
+if not exist "!EXPORT!" (
+    echo ERROR: export folder not created.
     exit /b 1
 )
-popd
 
-set "EXPORT=%SERVER%\export"
 for %%F in (spells_us.txt dbstr_us.txt SkillCaps.txt BaseData.txt) do (
-    if not exist "%EXPORT%\%%F" (
-        echo ERROR: %EXPORT%\%%F was not generated.
-        pause
-        exit /b 1
+    if exist "!EXPORT!\%%F" (
+        copy /Y "!EXPORT!\%%F" "!CLIENT!\%%F" >nul
+        if exist "!CLIENT%\Resources\%%F" (
+            copy /Y "!EXPORT!\%%F" "!CLIENT%\Resources\%%F" >nul
+        ) else (
+            mkdir "!CLIENT%\Resources" 2>nul
+            copy /Y "!EXPORT!\%%F" "!CLIENT%\Resources\%%F" >nul
+        )
+        echo Copied %%F
+    ) else (
+        echo WARNING: !EXPORT!\%%F not found
     )
 )
 
-rem ---- Pick the EQ client folder ----
-set "CLIENT=%~1"
-if "%CLIENT%"=="" (
-    set /p "CLIENT=Enter the path to your EverQuest client folder: "
-)
-if not exist "%CLIENT%" (
-    echo ERROR: Client folder not found: %CLIENT%
-    pause
-    exit /b 1
-)
-
-rem ---- Copy into client root + Resources\ ----
-for %%F in (spells_us.txt dbstr_us.txt SkillCaps.txt BaseData.txt) do (
-    copy /Y "%EXPORT%\%%F" "%CLIENT%\%%F" >nul
-    if exist "%CLIENT%\Resources\" copy /Y "%EXPORT%\%%F" "%CLIENT%\Resources\%%F" >nul
-)
-
-echo.
-echo ==============================================
-echo   Done. Copied to %CLIENT%\ (and Resources\)
-echo     spells_us.txt
-echo     dbstr_us.txt
-echo     SkillCaps.txt
-echo     BaseData.txt
-echo   Re-run any time you change spells/skills/item text in the DB.
-echo ==============================================
-echo.
+echo Done.
 endlocal
