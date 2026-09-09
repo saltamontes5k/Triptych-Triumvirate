@@ -1,4 +1,4 @@
--- items: 20983, 20963, 20981, 20982, 11675, 20980, 20979, 20956, 11674, 20976, 20977, 20978, 11673
+-- items: 20983, 20963, 20981, 20982, 11675, 20980, 20979, 20956, 11674, 20976, 20977, 20978, 20949, 11673
 function event_spawn(e)
 	eq.set_timer("depop",300000);
 end
@@ -9,7 +9,7 @@ function event_say(e)
 	elseif(e.message:findi("ready")) then
 		e.self:Say("Ok, " .. e.other:GetName() .. ".  Ogog got some hard things for you.  You do bash, smash, or think test?");
 	elseif(e.message:findi("think")) then 
-		e.self:Say("think");
+		e.self:Say("Ogog think you can do this one maybe. Ogog no know, though. You bring Ogog efreeti belt, pegasus statue, a spiroc wind totem, and a wind tablet. Ogog say good luck!");
 	elseif(e.message:findi("smash")) then
 		e.self:Say("Ogog smash good. . . Ogog no think you can smash good.  But Ogog let you try.  You get Ogog Djinni War Blade, some virulent wasp poison, and a mottled spiroc feather.  Ogog say you good warrior if you do this!");
 	elseif(e.message:findi("bash")) then
@@ -29,7 +29,7 @@ function event_trade(e)
 		e.other:AddEXP(100000);
 		e.self:Say("Yuz do good! Take dis!");
 		eq.depop();
-	elseif(item_lib.check_turn_in(e.trade, {item1 = 20976, item2 = 20977, item3 = 20978})) then -- warrior test of think using efreeti belt, pegasus statuette, spiroc wind totem, wind tablet
+	elseif(item_lib.check_turn_in(e.trade, {item1 = 20976, item2 = 20977, item3 = 20978, item4 = 20949})) then -- warrior test of think using efreeti belt, pegasus statuette, spiroc wind totem, wind tablet
 		e.other:SummonItem(11673); -- belt of the four winds
 		e.other:AddEXP(100000);
 		e.self:Say("Yuz do good! Take dis!");

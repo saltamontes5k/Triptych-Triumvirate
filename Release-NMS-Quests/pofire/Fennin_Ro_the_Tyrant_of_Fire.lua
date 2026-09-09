@@ -3,6 +3,14 @@ function event_death_complete(e)
 	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- Only flag in non-respawning dz
 		eq.spawn2(217058, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading()) -- Essence_of_Fire
 	end
+
+	-- NMS progression: Fennin Ro is one of the five elemental gods gating Dragons of Norrath
+	-- (and LDoN). Spawn the memory NPC (global/26000.pl); hailing it grants the DoN subflag.
+	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
+	if memory_npc ~= nil then
+		memory_npc:SetEntityVariable("Flag-Name", "fennin ro the tyrant of fire")
+		memory_npc:SetEntityVariable("Stage-Name", "DoN")
+	end
 end
 
 function event_killed_merit(e)

@@ -22,6 +22,7 @@
 #include "../common/strings.h"
 #include "quest_parser_collection.h"
 #include "worldserver.h"
+#include "titles.h"
 #include "zonedb.h"
 #include "../common/events/player_event_logs.h"
 #include "bot.h"
@@ -834,6 +835,10 @@ bool Client::SummonItem(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2,
 	) {
 		DiscoverItem(item_id);
 	}
+
+	// Auto-grant epic 1.0 titles when the qualifying item is received
+	// (covers quest rewards, SummonFixedItem, GM #giveitem, loot, trades).
+	title_manager.CheckAndGrantTitle(this, item_id);
 
 	return true;
 }
@@ -5695,7 +5700,8 @@ bool Client::PutItemInInventoryWithStacking(EQ::ItemInstance *inst)
 			return true;
 		}
 	}
-	if (free_id != INVALID_INDEX) {
+	if (free_id != INVALID_INDEX &&
+		!EQ::ValueWithin(free_id, EQ::invslot::EQUIPMENT_BEGIN, EQ::invslot::EQUIPMENT_END)) {
 		if (PutItemInInventory(free_id, *inst, true)) {
 			return true;
 		}

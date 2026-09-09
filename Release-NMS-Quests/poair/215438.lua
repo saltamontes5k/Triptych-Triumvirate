@@ -19,5 +19,14 @@ function event_say(e)
 		else
 			e.self:Say("It looks like we've already spoken.")
 		end
+
+		-- NMS progression: Xegony is one of the five elemental gods gating Dragons of Norrath
+		-- (and LDoN). This essence is hailed after the Xegony encounter; spawn the memory NPC
+		-- (global/26000.pl) so the killer can claim the DoN subflag.
+		local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
+		if memory_npc ~= nil then
+			memory_npc:SetEntityVariable("Flag-Name", "xegony")
+			memory_npc:SetEntityVariable("Stage-Name", "DoN")
+		end
 	end
 end

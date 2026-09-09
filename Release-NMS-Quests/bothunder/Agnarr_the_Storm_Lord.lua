@@ -50,6 +50,14 @@ function event_death_complete(e)
 		eq.unique_spawn(209114, 0, 0, e.self:GetX(), e.self:GetY(),  e.self:GetZ(),  e.self:GetHeading()) --planar projection
 		eq.unique_spawn(209108, 0, 0, -469, -1754, 2351.2, 395.2) -- Karana upstairs
 	end
+
+	-- NMS progression: Agnarr is one of the five elemental gods gating Dragons of Norrath
+	-- (and LDoN). Spawn the memory NPC (global/26000.pl); hailing it grants the DoN subflag.
+	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
+	if memory_npc ~= nil then
+		memory_npc:SetEntityVariable("Flag-Name", "agnarr the storm lord")
+		memory_npc:SetEntityVariable("Stage-Name", "DoN")
+	end
 end
 
 function event_killed_merit(e)

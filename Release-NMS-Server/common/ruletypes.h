@@ -1286,6 +1286,7 @@ RULE_BOOL(Custom,   PlayerDispelCures, 						true, "Enable to treat player-cast 
 RULE_BOOL(Custom, 	DisablePetGroupSpells,					false, "Enable to force group spells to be forced to 'self' spells when cast by pets")
 RULE_BOOL(Custom,   ConditionalPetRampageImmunity, 			true, "Enable to make pets which are not taunting immune to rampage")
 RULE_BOOL(Custom, 	DontInterruptHealsByMelee, 				true, "Enable to prevent direct heal spells from being interrupted by melee attacks")
+RULE_BOOL(Custom, 	AllowAttackWhileCasting,				false, "Allow players to move and continue all attacks (melee, ranged, auto-skills) while casting a spell.")
 RULE_BOOL(Custom,	AlternateMobFDBehavior,					true, "Enable to cause mob FD effects to randomly pick a new target")
 RULE_BOOL(Custom,   EnableAccountAltCurrency, 				true, "Enable account-based alternate currency.")
 RULE_INT(Custom,  	AAConsumeBaseValue, 					50, "Base value for AA consumption")

@@ -427,6 +427,69 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
         plugin::transform_item($client, $item_id, $slot_id, \%CYCLE_ITEM_MAP, 1);    	
     }
 
+    # =====================================================================
+    #  THJ Easter Egg event:  Crack the Egg (spell 36882)
+    #    - 24131 Easter Egg          -> hatch on click if mature, else crack
+    #    - 24154 Fully Incubated Egg -> crack for the rare table
+    #  Incubation % is stored on the item's "Exp" custom data (set by exp.cpp).
+    #  Rewards summon via single-arg SummonFixedItem (no slot) to avoid
+    #  SummonApocItem re-tiering under RuleB(Custom, DoItemUpgrades).
+    # =====================================================================
+    if ($spell_id == 36882) {
+        my $HATCH_AT = 100;
+
+        # plain egg -> common filler table (weighted: repeats = higher weight)
+        my @plain_rewards = (
+            24138, 24138, 24138,            # Assorted Jellybeans  (heavy filler)
+            24132, 24132,                   # Easter Basket (100% WR bag)
+            24139, 24140,                   # Bunnystaff / Bunnybow glamours
+            24141, 24142, 24143, 24144,     # Eggstaff glamours
+            24145, 24146, 24147, 24148, 24149 # Rabbit petamorph wands
+        );
+        # fully-incubated -> rare table (mount weighted low)
+        my @full_rewards = (
+            24138, 24138, 24138,            # filler (still some jellybeans)
+            24132, 24132,                   # free basket still attainable
+            24153,                          # War Bunny's Bridle (mount - RARE)
+            24133,                          # Polished Egg of Rage       (aug)
+            24134,                          # Egg of Armored Protection  (aug)
+            24135,                          # Egg of Abominable Rituals  (aug)
+            24136,                          # Frozen Egg of Stamina      (aug)
+            24137                           # Flawless Egg of Deftness   (aug)
+        );
+
+        my $egg_base = $item_id % 1000000;
+        my $is_mature = ($egg_base == 24154);
+
+        my $name = $client->GetCleanName();
+
+        # ---- egg is mature -> hatch it, then crack for a rare reward ----
+        if ($egg_base == 24131) {
+            my $exp = 0 + ($item ? $item->GetCustomData("Exp") : 0);
+            if ($exp >= $HATCH_AT) {
+                my %hatch_map = ( 24131 => 24154 );
+                plugin::transform_item($client, $item_id, $slot_id, \%hatch_map, 0);
+                $client->Message(15, "Your egg has fully incubated! Crack it for a rare reward.");
+                my $hatch_name = quest::getitemname(24154);
+                plugin::WorldAnnounce("$name has incubated a fully-grown $hatch_name!");
+                return;
+            }
+        }
+
+        # ---- otherwise crack the egg for a reward ----
+        my @table = $is_mature ? @full_rewards : @plain_rewards;
+        my $reward = $table[int(rand(scalar @table))];
+
+        $client->SummonFixedItem($reward);
+
+        # consume the clicked egg so it can't be re-cracked forever
+        $client->DeleteItemInInventory($slot_id, 0, 1, 1);
+
+        my $reward_name = quest::getitemname($reward);
+        $client->Message(15, "You crack the egg and find: $reward_name.");
+        return;
+    }
+
     if ($spell_id == 36936) {
         @task_ids = ();
 	my @spell_map = ([128, 78, 4872],

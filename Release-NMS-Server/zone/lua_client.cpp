@@ -1470,6 +1470,11 @@ void Lua_Client::ResetAlternateAdvancementRank(int aa_id) {
 	self->ResetAlternateAdvancementRank(aa_id);
 }
 
+int Lua_Client::DecrementAlternateAdvancementRank(int aa_id) {
+	Lua_Safe_Call_Int();
+	return self->DecrementAlternateAdvancementRank(aa_id);
+}
+
 void Lua_Client::MarkSingleCompassLoc(float in_x, float in_y, float in_z) {
 	Lua_Safe_Call_Void();
 	self->MarkSingleCompassLoc(in_x, in_y, in_z);
@@ -3757,6 +3762,22 @@ void Lua_Client::EnableTitleSet(uint32 title_set) {
 	self->EnableTitle(title_set);
 }
 
+luabind::object Lua_Client::GetKeyRing(lua_State* L)
+{
+	auto lua_table = luabind::newtable(L);
+
+	if (d_) {
+		auto self  = reinterpret_cast<NativeType *>(d_);
+		int  index = 1;
+		for (const uint32& item_id: self->GetKeyRing()) {
+			lua_table[index] = item_id;
+			index++;
+		}
+	}
+
+	return lua_table;
+}
+
 luabind::scope lua_register_client() {
 	return luabind::class_<Lua_Client, Lua_Mob>("Client")
 	.def(luabind::constructor<>())
@@ -3993,6 +4014,7 @@ luabind::scope lua_register_client() {
 	.def("GetInvulnerableEnvironmentDamage", (bool(Lua_Client::*)(void))&Lua_Client::GetInvulnerableEnvironmentDamage)
 	.def("GetItemIDAt", (int(Lua_Client::*)(int))&Lua_Client::GetItemIDAt)
 	.def("GetItemCooldown", (uint32(Lua_Client::*)(uint32))&Lua_Client::GetItemCooldown)
+	.def("GetKeyRing", (luabind::object(Lua_Client::*)(lua_State* L))&Lua_Client::GetKeyRing)
 	.def("GetLDoNLosses", (int(Lua_Client::*)(void))&Lua_Client::GetLDoNLosses)
 	.def("GetLDoNLossesTheme", (int(Lua_Client::*)(int))&Lua_Client::GetLDoNLossesTheme)
 	.def("GetLDoNPointsTheme", (int(Lua_Client::*)(int))&Lua_Client::GetLDoNPointsTheme)
@@ -4183,6 +4205,7 @@ luabind::scope lua_register_client() {
 	.def("ResetAllDisciplineTimers", (void(Lua_Client::*)(void))&Lua_Client::ResetAllDisciplineTimers)
 	.def("ResetAllCastbarCooldowns", (void(Lua_Client::*)(void))&Lua_Client::ResetAllCastbarCooldowns)
 	.def("ResetAlternateAdvancementRank", &Lua_Client::ResetAlternateAdvancementRank)
+	.def("DecrementAlternateAdvancementRank", &Lua_Client::DecrementAlternateAdvancementRank)
 	.def("ResetCastbarCooldownBySlot", (void(Lua_Client::*)(int))&Lua_Client::ResetCastbarCooldownBySlot)
 	.def("ResetCastbarCooldownBySpellID", (void(Lua_Client::*)(uint32))&Lua_Client::ResetCastbarCooldownBySpellID)
 	.def("ResetDisciplineTimer", (void(Lua_Client::*)(uint32))&Lua_Client::ResetDisciplineTimer)

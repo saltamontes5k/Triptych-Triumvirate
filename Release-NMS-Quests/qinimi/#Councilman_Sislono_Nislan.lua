@@ -12,7 +12,10 @@ function event_say(e)
 	local qglobals = eq.get_qglobals(e.self, e.other);
 	local instance_id = eq.get_zone_instance_id();
 	local raid = e.other:GetRaid();
-	local raid_id = raid:GetID();
+	local raid_id = 0;
+	if (raid.valid) then
+		raid_id = raid:GetID();
+	end
 	local event_up_1 = eq.get_entity_list():GetMobByNpcTypeID(mass_of_stones[1]);
 	local event_up_2 = eq.get_entity_list():GetMobByNpcTypeID(mass_of_stones[2]);
 	local event_up_3 = eq.get_entity_list():GetMobByNpcTypeID(mass_of_stones[3]);
@@ -60,7 +63,7 @@ function event_say(e)
       thunder_dome_id = 2
       raid_id_by_thunder_dome[2] = raid_id;
 
-			if thunder_dome_id > 0 and thunder_dome_id < 4 and raid_id_by_thunder_dome[thunder_dome_id] == raid:GetID() then
+			if thunder_dome_id > 0 and thunder_dome_id < 4 and raid_id_by_thunder_dome[thunder_dome_id] == raid_id then
 				local instance_id = eq.get_zone_instance_id();
 				local event_group = e.other:GetGroup();
 				if (event_group ~= nil and event_group.valid) then

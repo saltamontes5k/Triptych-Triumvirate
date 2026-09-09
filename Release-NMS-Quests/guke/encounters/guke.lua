@@ -9,6 +9,7 @@
 --#Gimdk`s_chest (249234)
 --The_First_Witness (249083)
 local event_started=false;
+local favor_awarded      = false
 local exec_position=1;
 local exec_chest=false;
 
@@ -363,6 +364,15 @@ function First_Death(e)
 		local dz = eq.get_expedition()
 		if dz.valid then
 			dz:AddReplayLockout(eq.seconds("4d12h"))
+			    if not favor_awarded then
+			      favor_awarded = true
+			      local __cl = eq.get_entity_list():GetClientList()
+			      if __cl then
+			        for _, __c in __cl.entries do
+			          __c:UpdateLDoNPoints(1, 5)
+			        end
+			      end
+			    end
 		end
 	end
 end

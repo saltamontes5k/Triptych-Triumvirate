@@ -9,7 +9,12 @@ local rujg = {
   -- safereturn = { zone="southro", x=-1, y=-221, z=134, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Chaenz Abella says, 'The Wayfarers will open these hills only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, ("Chaenz Abella gleams at you eagerly. 'Greetings, %s! Such hustle and bustle about, it's amazing how far the Wayfarer's Brotherhood has come in such a short time! I've been charged with welcoming new recruits while Morden is off exploring. In the meantime, I've got to focus on my duties. As always we could use stalwart lads and lasses to help us with our adventuring!  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'"):format(e.other:GetCleanName()))
   elseif e.message:findi("problem") then

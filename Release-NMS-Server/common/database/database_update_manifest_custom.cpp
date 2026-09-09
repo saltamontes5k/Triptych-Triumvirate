@@ -987,6 +987,18 @@ CREATE TABLE `character_illusions` (
 		.content_schema_update = false,
 	},
 
+	ManifestEntry{
+		.version = 34,
+		.description = "2026_09_08_npc_types_summon_timer_override",
+		.check = "SHOW COLUMNS FROM `npc_types` LIKE 'summon_timer_override'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `npc_types` ADD COLUMN `summon_timer_override` TINYINT(3) UNSIGNED NOT NULL DEFAULT 0;
+)",
+		.content_schema_update = false,
+	},
+
 	// Used for testing
 	//	ManifestEntry{
 	//		.version = 9229,

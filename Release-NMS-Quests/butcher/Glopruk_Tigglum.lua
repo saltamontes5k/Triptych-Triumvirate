@@ -6,14 +6,18 @@ local mmcf = {
   zonein     = { x=-184, y=399, z=-12, h=0 }
 }
 
--- not implemented
--- function event_say(e)
---   if e.message:findi("hail") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'Me hate dem vampires over in doze dark catacombs. They do have some of de shiny tings though. Me seen lots of dem come through here.  I mean shiny tings, not vampires.  My new friends have lots of work to do. If youz can rally de call of your friend perhaps youz can help us wit a serious [" .. eq.say_link("problem") .. "].'")
---   elseif e.message:findi("problem") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'One of de rogues heard dat Valdoon Kel'Novar, a Trueborn, was on his way to de rocky summoning place to make an army of gargoyles to do de Trueborn's biddin'. If he make dat stony army, de Trueborn can rule over de rest of Mayong Mistmoore's Progeny. We can't let dat happen, see? You gonna need lots of help. Are youz [" .. eq.say_link("interested") .. "]?'")
---   elseif e.message:findi("interested") then
---     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'Bring back de shiny tings for me!'")
---     e.other:CreateExpedition(mmcf)
---   end
--- end
+local prog = require("nms_progression")
+
+function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Glopruk Tigglum says, 'You not ready, friend. Wayfarers only let de brave who toppled de elemental gods into dem catacombs.'") then
+    return
+  end
+  if e.message:findi("hail") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'Me hate dem vampires over in doze dark catacombs. They do have some of de shiny tings though. Me seen lots of dem come through here.  I mean shiny tings, not vampires.  My new friends have lots of work to do. If youz can rally de call of your friend perhaps youz can help us wit a serious [" .. eq.say_link("problem") .. "].'")
+  elseif e.message:findi("problem") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'One of de rogues heard dat Valdoon Kel'Novar, a Trueborn, was on his way to de rocky summoning place to make an army of gargoyles to do de Trueborn's biddin'. If he make dat stony army, de Trueborn can rule over de rest of Mayong Mistmoore's Progeny. We can't let dat happen, see? You gonna need lots of help. Are youz [" .. eq.say_link("interested") .. "]?'")
+  elseif e.message:findi("interested") then
+    eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Glopruk Tigglum says, 'Bring back de shiny tings for me!'")
+    e.other:CreateExpedition(mmcf)
+  end
+end

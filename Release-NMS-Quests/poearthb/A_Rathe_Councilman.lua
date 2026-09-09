@@ -27,4 +27,17 @@ end
 function event_death_complete(e)
 	--eq.signal(1120001052,1); -- seedling
 	eq.signal(222012,1); -- #rathe_controller
+
+	-- NMS progression: The Rathe Council is the earth god gating Dragons of Norrath (and LDoN).
+	-- When the last councilman falls, spawn the memory NPC (global/26000.pl); hailing it grants
+	-- the DoN subflag. The controller is #-disabled in this tree, so detect completion directly.
+	local m1 = eq.get_entity_list():IsMobSpawnedByNpcTypeID(222008);
+	local m2 = eq.get_entity_list():IsMobSpawnedByNpcTypeID(222013);
+	if (not m1 and not m2) then
+		local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
+		if memory_npc ~= nil then
+			memory_npc:SetEntityVariable("Flag-Name", "rathe council")
+			memory_npc:SetEntityVariable("Stage-Name", "DoN")
+		end
+	end
 end

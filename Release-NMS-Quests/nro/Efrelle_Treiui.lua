@@ -10,7 +10,12 @@ local takc = {
   -- safereturn = { zone="northro", x=-1252, y=5548, z=28.25, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  if not prog.gate_stage(e.other, "DoN", "Efrelle Treiui says, 'The Wayfarers will open these ruins only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Efrelle Treiui says, 'To have seen shades of my former ancestors in the broken city of Takish-Hiz has brought a darkness to my heart that I've never known. If I knew a way to restore the sand elves to their former beauty I would. For now though, there is much to learn from them. You look to be well-versed in the ways of the sand elves and Takish-Hiz.  If you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

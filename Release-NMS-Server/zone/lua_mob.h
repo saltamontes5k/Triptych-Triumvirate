@@ -562,6 +562,8 @@ public:
 	void StopAllTimers();
 	void StopTimer(const char* timer_name);
 	luabind::object GetBuffSpellIDs(lua_State* L);
+	luabind::object GetPausedTimers(lua_State* L);
+	luabind::object GetTimers(lua_State* L);
 	bool HasSpellEffect(int effect_id);
 	Lua_Mob_List GetCloseMobList();
 	Lua_Mob_List GetCloseMobList(float distance);

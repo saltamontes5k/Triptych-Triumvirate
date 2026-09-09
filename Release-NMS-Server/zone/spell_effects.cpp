@@ -807,13 +807,22 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					Mob *my_pet = GetPet();
 					if(my_pet)
 					{
-						my_pet->Kill();
+						if (my_pet->GetPetType() == petCharmed) {
+							my_pet->Kill();
+						} else {
+							my_pet->SetPetOrder(SPO_Sit);
+							my_pet->WipeHateList();
+						}
 					}
 
 					CastToNPC()->SetPetSpellID(spell_id);
 
 					caster->AddPet(this);
 					SetOwnerID(caster->GetID());
+
+					if (caster->IsClient()) {
+						caster->CastToClient()->RemoveXTarget(this, true);
+					}
 					SetPetOrder(SPO_Follow);
 					SetAppearance(eaStanding);
 					// Client has saved previous pet sit/stand - make all new pets

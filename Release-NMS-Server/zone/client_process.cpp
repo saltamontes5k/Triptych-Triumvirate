@@ -364,7 +364,8 @@ bool Client::Process() {
 		*/
 		if (AutoAttackEnabled() || AutoFireEnabled()) {
 			if (!IsAIControlled() && !dead
-				&& !(spellend_timer.Enabled() && casting_spell_id && !IsBardSong(casting_spell_id))
+				&& (RuleB(Custom, AllowAttackWhileCasting)
+					|| !(spellend_timer.Enabled() && casting_spell_id && !IsBardSong(casting_spell_id)))
 				&& !IsStunned() && !IsFeared() && !IsMezzed() && GetAppearance() != eaDead && !IsMeleeDisabled()
 				)
 				may_use_attacks = true;
