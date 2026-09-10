@@ -586,6 +586,174 @@ void Heartbeat()
 bool isFtmPluginInit = false;
 bool addedTestText = false;
 extern IDirect3DDevice9* g_pDevice;
+
+// -----------------------------------------------------------------------
+// NMS: MacroQuest coexistence -- drain leaked gCXStrAccess recursion levels.
+//
+// MQ 3.x (eqlib) aliases the client's CXStr critical section:
+//     gCXStrMutex = (CMutexSync*)CXStr__gCXStrAccess   // eqgame + 0x15D35E4
+// This DLL embeds its own MQ2 core and can leave that same critical section
+// locked (leaked recursion levels). When a separately-injected MacroQuest is
+// present it then faults inside CXMLDataManager::GetXMLData while walking
+// CXStr-backed data. At each pulse, if we own the section, release the leaked
+// levels. Mirrors the closed-source build's "gCXStrAccess drain".
+// -----------------------------------------------------------------------
+#define NMS_CXSTR_GXSTRACCESS_REL (0x15D35E4 - 0x400000)
+
+static bool s_mqDetected = false;
+static bool s_mqDrainLogged = false;
+static int  s_mqDrainLogCount = 0;
+
+static bool NMS_IsMacroQuestLoaded()
+{
+	static const char* kMods[] = { "MacroQuest.dll", "MQ2Main.dll", "MQ2Mainx86.dll", "eqlib.dll" };
+	for (const char* m : kMods)
+	{
+		if (GetModuleHandleA(m))
+			return true;
+	}
+
+	if (FindWindowA("__MacroQuestTray", nullptr))
+		return true;
+
+	return false;
+}
+
+static void NMS_LockDiagLog(const char* text)
+{
+	// Use an absolute path next to eqgame.exe: the process CWD can change.
+	static char s_path[MAX_PATH] = {0};
+	if (s_path[0] == 0)
+	{
+		char exePath[MAX_PATH] = {0};
+		GetModuleFileNameA(NULL, exePath, MAX_PATH);
+		char* lastSlash = strrchr(exePath, '\\');
+		if (lastSlash)
+			*(lastSlash + 1) = '\0';
+		else
+			exePath[0] = '\0';
+
+		sprintf_s(s_path, sizeof(s_path), "%sNMS_lockdiag.log", exePath);
+	}
+
+	FILE* f = nullptr;
+	if (fopen_s(&f, s_path, "a") == 0 && f)
+	{
+		fputs(text, f);
+		fclose(f);
+	}
+}
+
+// -----------------------------------------------------------------------
+// NMS: MacroQuest /who integration
+//
+// The embedded MQ2 build's /who is a pass-through to the client's /who
+// (SuperWho -> cmdWho), which the WhoMulticlass mod already renders with the
+// full multiclass list. A separately-injected MacroQuest registers its OWN
+// /who (its exported SuperWho), which only prints the spawn's single class.
+// Detour MacroQuest's exported SuperWho so /who uses the client path and
+// shows the full multiclass list. Fail-safe: if the export is not found we
+// do nothing and leave MacroQuest's own /who untouched.
+// -----------------------------------------------------------------------
+typedef VOID(__cdecl* NMS_SuperWho_t)(PSPAWNINFO, PCHAR);
+DETOUR_TRAMPOLINE_EMPTY(VOID __cdecl NMS_MQSuperWho_Trampoline(PSPAWNINFO, PCHAR));
+
+static VOID __cdecl NMS_MQSuperWho_Detour(PSPAWNINFO pChar, PCHAR szLine)
+{
+	if (cmdWho)
+	{
+		cmdWho(pChar, szLine);
+		return;
+	}
+
+	NMS_MQSuperWho_Trampoline(pChar, szLine);
+}
+
+static bool s_mqWhoHooked = false;
+
+static void NMS_TryHookMacroQuestWho()
+{
+	if (s_mqWhoHooked)
+		return;
+
+	HMODULE hMQ = GetModuleHandleA("MQ2Main.dll");
+	if (!hMQ)
+		hMQ = GetModuleHandleA("MQ2Mainx86.dll");
+	if (!hMQ)
+		return;
+
+	NMS_SuperWho_t pSuperWho = (NMS_SuperWho_t)GetProcAddress(hMQ, "SuperWho");
+	if (!pSuperWho)
+		pSuperWho = (NMS_SuperWho_t)GetProcAddress(hMQ, MAKEINTRESOURCEA(603));
+	if (!pSuperWho)
+		return;
+
+	EzDetour((DWORD)pSuperWho, NMS_MQSuperWho_Detour, NMS_MQSuperWho_Trampoline);
+	s_mqWhoHooked = true;
+	NMS_LockDiagLog("MacroQuest SuperWho detour installed -> /who routed to client who\n");
+}
+
+void NMS_DrainCXStrAccess()
+{
+	// Diagnostic: prove the pulse runs and report what MacroQuest modules are
+	// visible on the very first call. Harmless if the file cannot be opened.
+	static bool s_firstCallLogged = false;
+	if (!s_firstCallLogged)
+	{
+		s_firstCallLogged = true;
+		char b[256];
+		sprintf_s(b, sizeof(b),
+			"NMS drain first call: MQ=%d MQ2Main=%p eqlib=%p MacroQuest=%p MQ2Mainx86=%p tray=%p\n",
+			NMS_IsMacroQuestLoaded() ? 1 : 0,
+			GetModuleHandleA("MQ2Main.dll"), GetModuleHandleA("eqlib.dll"),
+			GetModuleHandleA("MacroQuest.dll"), GetModuleHandleA("MQ2Mainx86.dll"),
+			FindWindowA("__MacroQuestTray", nullptr));
+		NMS_LockDiagLog(b);
+	}
+
+	if (!s_mqDetected)
+	{
+		if (!NMS_IsMacroQuestLoaded())
+			return;
+
+		s_mqDetected = true;
+	}
+
+	NMS_TryHookMacroQuestWho();
+
+	if (!s_mqDrainLogged)
+	{
+		s_mqDrainLogged = true;
+		NMS_LockDiagLog("MacroQuest detected - gCXStrAccess drain ENABLED for this session\n");
+	}
+
+	CRITICAL_SECTION* pCS = (CRITICAL_SECTION*)(baseAddress + NMS_CXSTR_GXSTRACCESS_REL);
+	if (IsBadReadPtr(pCS, sizeof(CRITICAL_SECTION)))
+		return;
+
+	DWORD tid = GetCurrentThreadId();
+	if (pCS->OwningThread != (HANDLE)(ULONG_PTR)tid)
+		return;
+
+	int drained = 0;
+	while (pCS->RecursionCount > 0
+		&& pCS->OwningThread == (HANDLE)(ULONG_PTR)tid
+		&& drained < 512)
+	{
+		LeaveCriticalSection(pCS);
+		++drained;
+	}
+
+	if (drained > 0 && s_mqDrainLogCount < 5)
+	{
+		++s_mqDrainLogCount;
+		char szBuf[160];
+		sprintf_s(szBuf, sizeof(szBuf),
+			"DRAINED %d leaked gCXStrAccess level(s) at pulse entry\n", drained);
+		NMS_LockDiagLog(szBuf);
+	}
+}
+
 #ifndef ISXEQ_LEGACY
 // *************************************************************************** 
 // Function:    ProcessGameEvents 
@@ -594,6 +762,8 @@ extern IDirect3DDevice9* g_pDevice;
 BOOL Trampoline_ProcessGameEvents(VOID); 
 BOOL Detour_ProcessGameEvents(VOID) 
 { 
+	NMS_DrainCXStrAccess();
+
 	if(!isFtmPluginInit)
 		InitializeFloatingTextPlugin();
 

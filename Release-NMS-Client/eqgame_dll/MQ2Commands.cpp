@@ -833,7 +833,7 @@ VOID Filter(PSPAWNINFO pChar, PCHAR szLine)
             }
         }
         SyntaxError("Usage: /filter mq [on|off]");
-    } else if (!stricmp("edgedata",szArg)) {
+    } else if (!stricmp("edgedata",szArg) || !stricmp("mq2data",szArg)) {
         if (szRest[0]==0) {
             sprintf(szCmd,"Filtering of MQ2Data Errors is set to: %s",szUseChat[gFilterMQ2DataErrors]);
             WriteChatColor(szCmd,USERCOLOR_DEFAULT);

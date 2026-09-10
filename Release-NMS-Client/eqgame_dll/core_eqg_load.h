@@ -92,6 +92,10 @@ DETOUR_TRAMPOLINE_EMPTY(static uintptr_t __cdecl Graphics_FileOpen_Trampoline(co
 
 void InjectEQGOrderLoading() {
 	SimpleLog("Injecting EQG Order Loading. eqGraphicsAddress: 0x%X, baseAddress: 0x%X", eqGraphicsAddress, baseAddress);
+	if (!eqGraphicsAddress) {
+		SimpleLog("EQGraphicsDX9.dll not loaded yet; skipping EQG order loading");
+		return;
+	}
 	EzDetour(eqGraphicsAddress + (DWORD)0xBE140, Graphics_FileLoad, Graphics_FileLoad_Trampoline);
 	EzDetour(eqGraphicsAddress + (DWORD)0x66230, Graphics_EQGLoad, Graphics_EQGLoad_Trampoline);
 	EzDetour(baseAddress + (DWORD)0x121BFC, Graphics_FileOpen, Graphics_FileOpen_Trampoline);

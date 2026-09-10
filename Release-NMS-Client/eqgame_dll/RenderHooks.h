@@ -15,6 +15,10 @@ extern HMODULE g_d3d9Module;
 // Address of the Reset() function
 extern DWORD g_resetDeviceAddress;
 
+// NMS: MacroQuest coexistence -- drains leaked gCXStrAccess recursion levels.
+// Runs every rendered frame (all game states, including character select).
+extern void NMS_DrainCXStrAccess();
+
 template <typename T>
 void InstallDetour(DWORD address, const T& detour, const T& trampoline, PCHAR name);
 
@@ -80,6 +84,10 @@ public:
 	HRESULT WINAPI EndScene_Trampoline();
 	HRESULT WINAPI EndScene_Detour()
 	{
+		// Drain leaked gCXStrAccess locks every frame so a separately-injected
+		// MacroQuest cannot fault inside CXMLDataManager::GetXMLData.
+		NMS_DrainCXStrAccess();
+
 		if (GetThisDevice() != g_pDevice)
 		{
 			return EndScene_Trampoline();

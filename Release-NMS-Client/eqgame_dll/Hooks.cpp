@@ -21,7 +21,6 @@
 using namespace EQClasses;
 
 extern bool isToggleSpellBookOnScribeEnabled;
-extern bool isMQ2GetItemTextYieldEnabled;
 extern uint32_t g_cauth_bitmask;
 // NMS: true ONLY during a synchronous scribe trampoline call (set/cleared by
 // NMS_BeginScribeSpoof / NMS_EndScribeSpoof). While true, GetSpellLevelNeeded
@@ -93,83 +92,6 @@ void InstallDetour(DWORD address, const T& detour, const T& trampoline, PCHAR na
 	};
 
 	InstallHook(hookInfo);
-}
-
-// -----------------------------------------------------------------------
-// NMS: MQ2 coexistence helpers.
-//
-// A separately-injected MacroQuest (e.g. MQ Emu's RoF2 build) also attaches
-// to some of the same client functions. Both sides use the legacy MS Detours
-// API, which overwrites the target prologue with an absolute JMP (E9 rel32).
-// If we leave our detour in place, MQ2's own detour on the same address fails
-// and MQ2 crashes while it loads. So before installing we check whether MQ2
-// is already present (or someone already owns the address) and skip; and when
-// we do install, a short-lived watcher gives the address back to MQ2 the
-// moment it shows up.
-// -----------------------------------------------------------------------
-static bool IsAddressDetoured(DWORD address)
-{
-	// Detours replaces a target prologue with an absolute JMP (0xE9 rel32).
-	return *(unsigned char*)address == 0xE9;
-}
-
-static bool IsMQ2Loaded()
-{
-	// MQ2 / EQEmu MQ2 core, and MQ Emu's injectable/loader shims.
-	if (GetModuleHandleA("MQ2Main.dll")) return true;
-	if (GetModuleHandleA("mmo.dll")) return true;
-	if (GetModuleHandleA("MQ2Loader.dll")) return true;
-
-	// Fully-initialized MQ2 tray window.
-	if (FindWindowA("__MacroQuestTray", NULL)) return true;
-
-	// MQ2 shared memory file mapping exists while MQ2 is resident.
-	HANDLE hMapping = OpenFileMappingA(FILE_MAP_READ, FALSE, "__MQ2Shmem");
-	if (hMapping) {
-		CloseHandle(hMapping);
-		return true;
-	}
-
-	return false;
-}
-
-static bool g_mq2YieldWatcherRunning = false;
-
-static DWORD WINAPI MQ2YieldWatcherThread(LPVOID lpParam)
-{
-	DWORD address = (DWORD)(DWORD_PTR)lpParam;
-
-	// MQ2 is usually injected right after the client boots. Poll for a short
-	// window; if it shows up, give GetItemText back so MQ2's own detour of the
-	// same address can succeed instead of crashing its load.
-	int polls = 0;
-	while (polls < 150) // ~15 seconds at 100ms
-	{
-		Sleep(100);
-		++polls;
-		if (IsMQ2Loaded())
-		{
-			RemoveDetour(address);
-			break;
-		}
-	}
-
-	g_mq2YieldWatcherRunning = false;
-	return 0;
-}
-
-static void StartMQ2YieldWatcher(DWORD address)
-{
-	if (g_mq2YieldWatcherRunning)
-		return;
-
-	g_mq2YieldWatcherRunning = true;
-	HANDLE hThread = CreateThread(NULL, 0, MQ2YieldWatcherThread,
-		(LPVOID)(DWORD_PTR)address, 0, NULL);
-	if (hThread)
-		CloseHandle(hThread);
-	else
-		g_mq2YieldWatcherRunning = false;
 }
 
 DETOUR_TRAMPOLINE_EMPTY(void RenderHooks::ZoneRender_Injection_Trampoline());
@@ -2103,30 +2025,11 @@ bool InstallD3D9Hooks()
 					- 0x400000
 					+ baseAddress;
 
-				if (isMQ2GetItemTextYieldEnabled &&
-					(IsMQ2Loaded() || IsAddressDetoured(getItemTextAddr)))
-				{
-					// A separately-injected MQ2 is present or already owns this
-					// address. Skip our detour so MQ2 does not crash on load.
-					DebugSpew(
-						"NMS: skipping CListWnd::GetItemText detour "
-						"(MQ2 present or address already detoured)");
-				}
-				else
-				{
-					InstallDetour(
-						getItemTextAddr,
-						(GetItemText_t)CListWnd__GetItemText_Detour,
-						(GetItemText_t)CListWnd__GetItemText_Trampoline,
-						"CListWnd::GetItemText");
-
-					if (isMQ2GetItemTextYieldEnabled) {
-						// MQ2 is not here yet but may be injected shortly after
-						// boot. Give the address back if/when it shows up so
-						// MQ2's own detour succeeds.
-						StartMQ2YieldWatcher(getItemTextAddr);
-					}
-				}
+				InstallDetour(
+					getItemTextAddr,
+					(GetItemText_t)CListWnd__GetItemText_Detour,
+					(GetItemText_t)CListWnd__GetItemText_Trampoline,
+					"CListWnd::GetItemText");
 
 
 				// -------------------------------
