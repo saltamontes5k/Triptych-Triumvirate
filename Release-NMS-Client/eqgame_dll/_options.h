@@ -49,13 +49,6 @@ bool isFoodDrinkSpamDisabled = false;
 // isMQ2PreventionEnabled if set to true will do basic prevention of mq2 by randomizing the version string, primitive anticheat
 bool isMQ2PreventionEnabled = false;
 
-// isMQ2GetItemTextYieldEnabled if set to true, the CListWnd::GetItemText detour
-// will skip itself when a separately-injected MacroQuest (e.g. MQ Emu's RoF2 build)
-// is present or already owns the address, and will hand the address back to MQ2 if
-// it is injected after this DLL boots. Leaving this on lets both coexist; turning it
-// off restores the old always-hook behavior.
-bool isMQ2GetItemTextYieldEnabled = true;
-
 // isSpellDataCRCEnabled if set to true will send spell data to the server as a CRC check, needs a server side modification not yet supported by eqemu master
 bool isSpellDataCRCEnabled = false;
 

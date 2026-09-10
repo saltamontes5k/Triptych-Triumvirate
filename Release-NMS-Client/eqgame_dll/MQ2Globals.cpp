@@ -33,15 +33,15 @@ DWORD eqMainAddress = 0;
 
 bool InitOffsets()
 {
+    // Use the already-loaded modules. Do NOT LoadLibrary from DllMain: taking the
+    // loader lock here (while eqgame is still loading) corrupted client state and
+    // crashed MQ2ChatWnd at character select. Both DLLs are resident by the time
+    // the client loads dinput8.dll.
     if (!eqGraphicsAddress) {
-        // no EQGraphicsDx9.dll loaded yet
-        HMODULE hLibrary = LoadLibrary("EQGraphicsDX9.dll");
-        eqGraphicsAddress = (uintptr_t)hLibrary;
+        eqGraphicsAddress = (uintptr_t)GetModuleHandleA("EQGraphicsDX9.dll");
     }
     if (!eqMainAddress) {
-        // no eqgame.exe loaded yet
-        HMODULE hLibrary = LoadLibrary("eqmain.dll");
-        eqMainAddress = (uintptr_t)hLibrary;
+        eqMainAddress = (uintptr_t)GetModuleHandleA("eqmain.dll");
     }
     if (!baseAddress)
         return false;

@@ -212,7 +212,24 @@ VOID FatalError(PCHAR szFormat, ...)
 
 }
 
-VOID MQ2DataError(PCHAR szFormat, ...) {}
+VOID MQ2DataError(PCHAR szFormat, ...)
+{
+    CHAR szBuffer[MAX_STRING] = {0};
+    va_list vaList;
+    va_start(vaList, szFormat);
+    vsprintf_s(szBuffer, sizeof(szBuffer), szFormat, vaList);
+    va_end(vaList);
+
+    // Always record the last error so the MQ2DataError data type is populated.
+    strcpy_s(gszLastMQ2DataError, sizeof(gszLastMQ2DataError), szBuffer);
+
+    // gFilterMQ2DataErrors is set by "/filter mq2data on" (index 1 = on); when
+    // filtering is enabled the message is suppressed instead of spamming chat.
+    if (gFilterMQ2DataErrors)
+        return;
+
+    WriteChatColor(szBuffer, USERCOLOR_DEFAULT);
+}
 #endif
 
 #ifndef ISXEQ_LEGACY
@@ -3518,8 +3535,8 @@ case '.':
     Arg[j][k] = Buffer[i];
     k++;
     break;
-case ' ':
-case '²':
+case 'ï¿½':
+case 'ï¿½':
     //              GracefullyEndBadMacro(((PCHARINFO)pCharData)->pSpawn,gMacroBlock, "Calculate encountered a unparsed variable '%s'",&(Buffer[i]));
     return false;
 default:
@@ -4518,7 +4535,7 @@ PCHAR FormatSearchSpawn(PCHAR Buffer, PSEARCHSPAWN pSearchSpawn)
         strcat(Buffer,szTemp);
     }
     if (pSearchSpawn->ZRadius<10000.0f) {
-        sprintf(szTemp," Z:±%1.2f",pSearchSpawn->ZRadius);
+        sprintf(szTemp," Z:ï¿½%1.2f",pSearchSpawn->ZRadius);
         strcat(Buffer,szTemp);
     }
     if (pSearchSpawn->Radius>0.0f) {

@@ -23,6 +23,8 @@ GNU General Public License for more details.
 #include "waypoint_window.h"
 #include "pet_window.h"
 
+extern void NMS_DrainCXStrAccess();
+
 char *OurCaption = "Edge is loading...";
 
 // NMS: Tear down every window we built from a SIDL template.
@@ -63,6 +65,7 @@ public:
     VOID CleanUI_Trampoline(VOID);
     VOID CleanUI_Detour(VOID)
     {
+        NMS_DrainCXStrAccess();
         NMS_DestroyCustomWindows();
         DebugTry(CleanUI_Trampoline());
     }
@@ -70,6 +73,7 @@ public:
     VOID ReloadUI_Trampoline(BOOL);
     VOID ReloadUI_Detour(BOOL UseINI)
     {
+        NMS_DrainCXStrAccess();
         NMS_DestroyCustomWindows();
         DebugTry(ReloadUI_Trampoline(UseINI));
     }

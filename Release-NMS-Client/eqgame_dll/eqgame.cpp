@@ -1271,39 +1271,35 @@ DETOUR_TRAMPOLINE_EMPTY(char *__fastcall GetClassDesc_Trampoline(void *thisPtr,
 
 static char *__fastcall GetClassDesc_Detour(void *thisPtr, void *edx,
                                             int classId) {
+  char* result = nullptr;
   if (classId >= 1000) {
     uint32_t mask = classId - 1000;
     if (BuildClassAbbrFromMask(mask, s_classDescBuffer,
                                sizeof(s_classDescBuffer))) {
-      return s_classDescBuffer;
+      result = s_classDescBuffer;
+    } else {
+      result = GetClassDesc_Trampoline(thisPtr, edx, 1);
     }
-    return GetClassDesc_Trampoline(thisPtr, edx, 1);
-  }
-
-  if (classId <= 0 || classId > 450) {
-    return GetClassDesc_Trampoline(thisPtr, edx, 1);
-  }
-
-  // NMS: Check if this is a multiclass override (200+)
-  if (classId >= 200 && classId < 450) {
+  } else if (classId <= 0 || classId > 450) {
+    result = GetClassDesc_Trampoline(thisPtr, edx, 1);
+  } else if (classId >= 200 && classId < 450) {
     uint32_t slot = classId - 200;
     uint32_t mask = g_CharSelectInfo[slot].Classes;
     if (mask != 0 && BuildClassAbbrFromMask(mask, s_classDescBuffer,
                                             sizeof(s_classDescBuffer))) {
-      return s_classDescBuffer;
+      result = s_classDescBuffer;
+    } else {
+      uint32_t origClass = g_CharSelectInfo[slot].OriginalClass;
+      if (origClass > 0 && origClass <= 16) {
+        result = GetClassDesc_Trampoline(thisPtr, edx, origClass);
+      } else {
+        result = GetClassDesc_Trampoline(thisPtr, edx, 1); // Warrior
+      }
     }
-
-    // Fall back to original single class description to prevent out-of-bounds crash
-    uint32_t origClass = g_CharSelectInfo[slot].OriginalClass;
-    if (origClass > 0 && origClass <= 16) {
-      return GetClassDesc_Trampoline(thisPtr, edx, origClass);
-    }
-    
-    // Defensive safe fallback
-    return GetClassDesc_Trampoline(thisPtr, edx, 1); // Warrior
+  } else {
+    result = GetClassDesc_Trampoline(thisPtr, edx, classId);
   }
-
-  return GetClassDesc_Trampoline(thisPtr, edx, classId);
+  return result;
 }
 
 void PatchSaveBypass() {}

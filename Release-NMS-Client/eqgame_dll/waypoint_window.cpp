@@ -63,8 +63,9 @@ WaypointsWnd::WaypointsWnd() : CCustomWnd("WaypointsWnd") {
     m_categories[4] = "Velious";
     m_categories[5] = "Luclin";
     m_categories[6] = "The Planes";
-    m_categories[7] = "Discord";
-    m_categories[8] = "Special";
+    m_categories[7] = "Taelosia";
+    m_categories[8] = "Discord";
+    m_categories[9] = "Special";
     
     // WriteChatf("[Waypoints] WaypointsWnd created.");
 }
