@@ -1653,6 +1653,16 @@ void Perl_Client_OpenLFGuildWindow(Client* self) // @categories Script Utility, 
 	self->OpenLFGuildWindow();
 }
 
+void Perl_Client_OpenShroudWindow(Client* self, Mob* npc) // @categories Script Utility
+{
+	self->OpenShroudWindow(npc);
+}
+
+void Perl_Client_RemoveShroud(Client* self) // @categories Script Utility
+{
+	self->RemoveShroud();
+}
+
 void Perl_Client_NotifyNewTitlesAvailable(Client* self) // @categories Account and Character
 {
 	self->NotifyNewTitlesAvailable();
@@ -3990,6 +4000,8 @@ void perl_register_client()
 	package.add("NukeItem", (uint32_t(*)(Client*, uint32))&Perl_Client_NukeItem);
 	package.add("NukeItem", (uint32_t(*)(Client*, uint32, uint8))&Perl_Client_NukeItem);
 	package.add("OpenLFGuildWindow", &Perl_Client_OpenLFGuildWindow);
+	package.add("OpenShroudWindow", &Perl_Client_OpenShroudWindow);
+	package.add("RemoveShroud", &Perl_Client_RemoveShroud);
 	package.add("PlayMP3", &Perl_Client_PlayMP3);
 	package.add("Popup2", (void(*)(Client*, const char*, const char*))&Perl_Client_Popup2);
 	package.add("Popup2", (void(*)(Client*, const char*, const char*, uint32))&Perl_Client_Popup2);

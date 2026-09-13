@@ -2,7 +2,6 @@
 
 local egg_count	= 0;
 local hp_event	= 0;
-local __turnin_awarded	= false;
 
 function Volkara_Spawn(e)
 	hp_event		= 80;
@@ -71,23 +70,11 @@ function Egg_Timer(e)
 	end
 end
 
-local function __award_turnin(e)
-	if __turnin_awarded then return end
-	__turnin_awarded = true
-	local __cl = eq.get_entity_list():GetClientList()
-	if __cl then
-		for _, __c in __cl.entries do
-			__c:SummonItem(57206)
-		end
-	end
-end
-
 function event_encounter_load(e)
 	eq.register_npc_event(Event.timer,			341063, Volkara_Timer);
 	eq.register_npc_event(Event.hp,				341063, Volkara_HP);
 	eq.register_npc_event(Event.combat,			341063, Volkara_Combat);
 	eq.register_npc_event(Event.spawn,			341063, Volkara_Spawn);
-	eq.register_npc_event(Event.death_complete,	341063, __award_turnin);
 
 	eq.register_npc_event(Event.spawn,			341064, Egg_Spawn);
 	eq.register_npc_event(Event.timer,			341064, Egg_Timer);

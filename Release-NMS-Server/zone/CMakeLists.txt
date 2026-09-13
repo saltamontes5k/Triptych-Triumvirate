@@ -90,6 +90,7 @@ SET(zone_sources
     sidecar_api/sidecar_api.cpp
     sidecar_api/loot_simulator_controller.cpp
     shared_task_zone_messaging.cpp
+    shroud.cpp
     spawn2.cpp
     spawn2.h
     spawngroup.cpp

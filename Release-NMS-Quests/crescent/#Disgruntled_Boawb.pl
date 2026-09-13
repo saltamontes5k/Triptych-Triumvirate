@@ -12,6 +12,9 @@ sub EVENT_SAY {
     #You have been assigned the task 'Oh Brother!'
     quest::say("May Atathus' flames enlighten you! You have done me a great favor!");
     quest::summonitem(85092); #Atathus` Elixir of Life
+    if (!quest::istaskactive(600248) && !quest::istaskcompleted(600248)) {
+      quest::assigntask(600248); # Oh Brother!
+    }
   }
 }
 

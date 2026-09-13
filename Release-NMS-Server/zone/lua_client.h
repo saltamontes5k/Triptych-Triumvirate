@@ -398,6 +398,8 @@ public:
 	uint64 GetAllMoney();
 	uint32 GetMoney(uint8 type, uint8 subtype);
 	void OpenLFGuildWindow();
+	void OpenShroudWindow(Lua_Mob npc);
+	void RemoveShroud();
 	void NotifyNewTitlesAvailable();
 	void Signal(int signal_id);
 	void AddAlternateCurrencyValue(uint32 currency, int amount);

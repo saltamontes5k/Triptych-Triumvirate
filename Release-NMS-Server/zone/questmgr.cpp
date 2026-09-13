@@ -136,6 +136,18 @@ void QuestManager::StartQuest(Mob *_owner, Client *_initiator, EQ::ItemInstance*
 	quests_running_.push(run);
 }
 
+void QuestManager::StartQuest(::Zone* zone) {
+	running_quest run;
+	run.owner = nullptr;
+	run.initiator = nullptr;
+	run.questitem = nullptr;
+	run.questspell = nullptr;
+	run.depop_npc = false;
+	run.encounter = "";
+	run.zone = zone;
+	quests_running_.push(run);
+}
+
 void QuestManager::EndQuest() {
 	running_quest run = quests_running_.top();
 	if(run.depop_npc && run.owner->IsNPC()) {

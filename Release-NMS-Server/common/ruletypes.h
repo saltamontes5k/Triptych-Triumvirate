@@ -430,7 +430,7 @@ RULE_INT(Spells, BaseCritChance, 0, "Base percentage chance that everyone has to
 RULE_INT(Spells, BaseCritRatio, 100, "Base percentage bonus to damage on a successful spell crit. 100=2xdamage")
 RULE_INT(Spells, WizCritLevel, 1, "Level wizards first get spell crits")
 RULE_INT(Spells, WizCritChance, 8, "Wizards crit chance, on top of BaseCritChance")
-RULE_INT(Spells, WizCritRatio, 0, "Wizards crit bonus, on top of BaseCritRatio (should be 0 for Live-like)")
+RULE_INT(Spells, WizCritRatio, 50, "Wizards crit bonus, on top of BaseCritRatio, in percentage of base damage (50 = 1.5x; set 0 to make wizard crits deal no bonus damage)")
 RULE_INT(Spells, TranslocateTimeLimit, 0, "If not zero, time in seconds to accept a Translocate")
 RULE_INT(Spells, SacrificeMinLevel, 46, "First level the spell Sacrifice will work on")
 RULE_INT(Spells, SacrificeMaxLevel, 70, "Last level the spell Sacrifice will work on")
@@ -551,7 +551,7 @@ RULE_INT(Spells, TargetedAOEMaxTargets, 0, "Max number of targets a Targeted AOE
 RULE_INT(Spells, PointBlankAOEMaxTargets, 0, "Max number of targets a Point-Blank AOE spell can cast on. Set to 0 for no limit.")
 RULE_INT(Spells, DefaultAOEMaxTargets, 0, "Max number of targets that an AOE spell which does not meet other descriptions can cast on. Set to 0 for no limit.")
 RULE_BOOL(Spells, AllowFocusOnSkillDamageSpells, false, "Allow focus effects 185, 459, and 482 to enhance SkillAttack spell effect 193")
-RULE_STRING(Spells, AlwaysStackSpells, "36877,2750,3271,3272,3273,4521,4522,4523,4549,4550,4551,5933,5934,5935,6079,6080,6081,6499,8156,8157,8158,8216,8406,8407,8408,11023,11103,11104,11105,11226,11227,11228,11232,11279,11297,11298,11299,11317,11615,11616,11617,11642,11643,11644,16121,16203,36856,36869,43002", "Comma-Seperated list of spell IDs to always stack with every other spell, except themselves.")
+RULE_STRING(Spells, AlwaysStackSpells, "2750,3271,3272,3273,4521,4522,4523,4549,4550,4551,5933,5934,5935,6079,6080,6081,6499,7176,7708,8156,8157,8158,8216,8260,8406,8407,8408,11023,11103,11104,11105,11112,11113,11114,11115,11116,11117,11118,11119,11120,11121,11122,11123,11124,11125,11126,11127,11128,11129,11130,11131,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11142,11143,11144,11145,11146,11147,11148,11149,11150,11151,11152,11153,11154,11155,11156,11157,11158,11159,11160,11161,11162,11163,11164,11165,11166,11167,11168,11169,11170,11171,11172,11173,11174,11175,11176,11177,11178,11179,11180,11181,11182,11183,11184,11185,11186,11187,11188,11189,11190,11191,11192,11193,11194,11195,11196,11197,11198,11199,11200,11201,11226,11227,11228,11232,11279,11297,11298,11299,11317,11495,11615,11616,11617,11642,11643,11644,16121,16203,36856,36869,36877,43002,50009,50010,50011,50012,50013,50014", "Comma-Seperated list of spell IDs to always stack with every other spell, except themselves.")
 RULE_BOOL(Spells, AllowSympatheticProcOnDurationSpells, true, "Allow Sympathetic Strike/Heal procs on initial cast of Damage over Time (DoT) and Heal over Time (HoT) spells. Default: True")
 RULE_STRING(Spells, DoppelgangerBuffBacklist, "", "Comma-seperated list of spells to never transfer to Doppelganger")
 RULE_BOOL(Spells, DoppelgangerRetargetOnOwnerAttack, true, "Enable doppelganger retarget when owner attacks")
@@ -1214,11 +1214,11 @@ RULE_REAL(Custom, 	NonDaggerBackstabMultiplier1H, 			0.800000000000, 	"Multiple 
 RULE_REAL(Custom, 	NonDaggerBackstabMultiplier2H,			0.5000000000000, 	"Multiple Backstabs conducted with not-1hp 2h weapon by this amount")
 RULE_BOOL(Custom, 	MonkSkillAttacksAreH2HForProcs, 		true, 	"Read the name")
 RULE_INT(Custom,	BaseCharacterSets,						2,		"Base number of character sets which players have access to.")
-RULE_INT(Custom,	EoMUnlockCharacterSets,					3,		"Maximum number of character sets which a player can unlock with EoM.")
-RULE_INT(Custom,	EoMUnlockCharacterSetCost,				5,		"EoM Cost to unlock a character set")
+RULE_INT(Custom,	TriuneOfFateUnlockCharacterSets,		3,		"Maximum number of character sets which a player can unlock with Triune of Fate.")
+RULE_INT(Custom,	TriuneOfFateUnlockCharacterSetCost,		5,		"Triune of Fate cost to unlock a character set")
 RULE_INT(Custom,	BaseCharacterSlots,						24,		"Base number of character slots which players have access to.")
-RULE_INT(Custom,	EoMUnlockCharacterSlots,				12,		"Maximum number of character slots which a player can unlock with EoM.")
-RULE_INT(Custom,	EoMUnlockCharacterSlotCost,				5,		"EoM Cost to unlock a character slot")
+RULE_INT(Custom,	TriuneOfFateUnlockCharacterSlots,		12,		"Maximum number of character slots which a player can unlock with Triune of Fate.")
+RULE_INT(Custom,	TriuneOfFateUnlockCharacterSlotCost,		5,		"Triune of Fate cost to unlock a character slot")
 
 // NMS Launcher Enforcement (Bazaar holding-shard jail for wrong-client / no-4GB / not-launcher)
 
@@ -1251,7 +1251,7 @@ RULE_INT(Custom, 	FarmingInstanceTemplateVersion,			0, "Template version for non
 RULE_BOOL(Custom, 	DoubleAttackSkillRanged, 				true, "Use Double & Triple Attack skills for ranged attacks")
 RULE_BOOL(Custom, 	TemporaryStunImmunity, 					true, "Clients become immune to Stun for a duration after being stunned")
 RULE_BOOL(Custom,   ForceNPCFearPathing, 					true, "Forces NPCs to Fear path even if Combat:EnableFearPathing is disabled.")
-RULE_INT(Custom,    EventEOMDropChance,						200,     "Increase this value to make EoM drops during event more rare")
+RULE_INT(Custom,    TriuneOfFateDropChance,					150,     "Increase this value to make Triune of Fate drops more rare (1 in N per player per kill)")
 RULE_BOOL(Custom,	GroupIncentiveProgram,					true, "Enable GroupIncentiveProgram")
 RULE_BOOL(Custom, 	UseAAEXPVeterancy,						true, "Use max AA on any character in account for value of AA:ModernAAScalingAALimit if it is higher")
 RULE_REAL(Custom,	CastedSpellCritBonusRatio, 				1.0000000000000, "Multiply casted (Not procs) spells crit ratio by this value")
@@ -1310,6 +1310,8 @@ RULE_INT(Custom,	SuppressDispelsTime,					6, "Number of tics that dispelled buff
 RULE_INT(Custom,	SuppressDebuffSpellID,					21840, "Spell ID to send to client when a spell is supprssed.  21840 = 'Suppression Field'")
 RULE_INT(Custom,    PetAssistRateLimit,                     1000, "Minimum time in milliseconds between pet assist commands")
 RULE_BOOL(Custom, 	CorpseFixSummonsCorpses,				false, "Enable to cause #corpsefix to summon corpses to player")
+RULE_INT(Custom, CampTimerMs, 100, "Milliseconds after /camp before the server completes the logout for players outside the Bazaar. Below 29000 the server closes the connection itself so the client drops to character select at once; 29000 or more is stock behavior (client closes after its own 30 s countdown). GMs always camp instantly.")
+RULE_BOOL(Custom, FastCampBlockedInCombat, true, "When true, a player that any NPC has on its hate list, is in a duel, or is feigning death gets the stock 29 second camp instead of Custom:CampTimerMs")
 
 // Seasonal
 RULE_INT(Custom,  	EnableSeasonalCharacters, 				0, "Set to Seasonal ID to track for current Seasonal characters, 0 to disable.")
@@ -1318,6 +1320,7 @@ RULE_BOOL(Custom,   EnableGlobalLoot,                       true,    "Enable or 
 RULE_BOOL(Custom,   PermanentServerBuffsEnabled,            false,   "Enable or disable permanent server buffs (spells 43002, 43005, 36856, 17779)")
 RULE_BOOL(Custom,   GuideAudit,                             true,    "Enable command auditing for guides/GMs of status 80 or higher.")
 RULE_BOOL(Custom,   EnableFabledMobs,                       false,   "Enable Fabled Season globally (true to enable 100% Fabled spawns, false to disable).")
+RULE_BOOL(Custom,   AllowAllClassesClickItems,              false,   "Allow all classes to click all items regardless of class restrictions on click effects.")
 
 RULE_CATEGORY_END()
 

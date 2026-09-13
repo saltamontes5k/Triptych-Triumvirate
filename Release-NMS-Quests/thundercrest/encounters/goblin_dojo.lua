@@ -7,7 +7,6 @@
 -- since live will not respawn a wave more than once, failing the `animals` phase twice
 -- results in the npcs depopping but not respawning (allowing it to be bypassed)
 -- `silk/steel` and `sensei` do not depop but can be infinitely attempted due to this bug
-local __meditation_awarded = false
 local enable_live_bug = true
 
 -- npc ids for zone version 10 (Stormreach Challenge)
@@ -424,18 +423,6 @@ function steel_spawn(e)
 	e.self:ModSkillDmgTaken(74, -60);	-- frenzy
 end
 
-function __award_meditation(e)
-  if __meditation_awarded then return end
-  __meditation_awarded = true
-  local __cl = eq.get_entity_list():GetClientList()
-  if __cl then
-    for _, __c in __cl.entries do
-      __c:SummonItem(57204)
-    end
-  end
-end
-
-
 function event_encounter_load(e)
 	eq.register_npc_event(Event.spawn, 340616, sensei_spawn) -- #Storm_Reach_Sensei
 	eq.register_npc_event(Event.timer, 340616, sensei_timer)
@@ -446,10 +433,6 @@ function event_encounter_load(e)
 	for _, wave in pairs(waves) do
 		for _, npc in pairs(wave) do
 			eq.register_npc_event(Event.timer, npc.id, enemy_timer)
-
-  eq.register_npc_event(Event.death_complete, 340616, __award_meditation)
-  eq.register_npc_event(Event.death_complete, 340416, __award_meditation)
-
 		end
 	end
 end

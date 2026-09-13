@@ -3,7 +3,7 @@ sub EVENT_ITEM {
     my $dbh = plugin::LoadMysql();
 
 	if (plugin::check_handin(\%itemcount, 24152 => 1)) {
-		my $random_result = get_random_glamour_of_any_type();
+		my $random_result = get_random_glamour();
 		if ($random_result) {
 			plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
 			$client->SummonItem($random_result);
@@ -32,7 +32,7 @@ sub EVENT_ITEM {
     if ($total_glamours == 4) {
         if (plugin::check_handin(\%itemcount, %glamour_handin)) {
             # Get a random new glamour
-            my $random_result = get_random_glamour_of_any_type();
+            my $random_result = get_random_glamour();
             
             if (defined $random_result) {
                 plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
@@ -78,7 +78,7 @@ sub EVENT_SAY {
     my $link_services_2       = "[".quest::saylink("link_services", 1, "do for you")."]";
     my $link_glamour          = "[".quest::saylink("link_glamour", 1, "Glamour")."]";
     my $link_custom_work      = "[".quest::saylink("link_custom_work", 1, "custom enchantments")."]";
-    my $link_echo_of_memory   = "[".quest::saylink("link_echo_of_memory", 1, "Echo of Memory")."]";
+    my $link_triune_of_fate  = "[".quest::saylink("link_triune_of_fate", 1, "Triune of Fate")."]";
     my $link_random_glamour   = "[".quest::saylink("link_random_glamour", 1, "random glamour")."]";
 
     if($text=~/hail/i) {
@@ -105,25 +105,25 @@ sub EVENT_SAY {
     elsif ($text eq "link_custom_work") {
         $response = "I can produce a Glamour of a remarkable and unique nature, based upon whatever item my muse conjures. 
                     There is no predicting what illusion may be produced! I will only embark upon this artistic work in exchange 
-                    for two $link_echo_of_memory, however. Would you like me to produce a $link_random_glamour for you?
+                    for two $link_triune_of_fate, however. Would you like me to produce a $link_random_glamour for you?
                     
                     Alternatively, if you have four Glamours you no longer want, you can hand them to me all at once, and I'll create 
                     a new random Glamour for you. It's quite an efficient method of recycling!";
     }
 
-    elsif ($text eq "link_echo_of_memory") {
-        $response = "These are rare fragments of a previous age. Rumor is, only by great service to the realm can you obtain them.";
+    elsif ($text eq "link_triune_of_fate") {
+        $response = "These are drops of fate itself, gathered where three tides meet. Rumor is, only by great service to the realm can you obtain them.";
     }
 
     elsif ($text eq "link_random_glamour") {
-        my $eom_available = $client->GetAlternateCurrencyValue(6);
+        my $triune_of_fate_available = $client->GetAlternateCurrencyValue(6);
 
-        if ($eom_available < 2) {
-            $response = "I'm sorry, $clientName. You don't have enough Echo of Memory, please return when you have enough to pay me.";
+        if ($triune_of_fate_available < 2) {
+            $response = "I'm sorry, $clientName. You don't have enough Triune of Fate, please return when you have enough to pay me.";
         } else {
-            my $random_result = get_random_glamour_of_any_type();
+            my $random_result = get_random_glamour();
             
-            if ($random_result && plugin::SpendEOM($client, 2)) {
+            if ($random_result && plugin::SpendTriuneOfFate($client, 2)) {
                 $client->SummonItem($random_result);
             }
         }
@@ -144,20 +144,6 @@ sub SerializeList {
 sub DeserializeList {
     my $string = shift;
     return split(',', $string);
-}
-
-# Function to get a random glamour of any type (weapon or armor)
-sub get_random_glamour_of_any_type {
-    # Randomly choose between weapon or armor glamour
-    if (int(rand(2)) == 0) {
-        # Get a random weapon glamour
-        quest::debug("Generating random weapon glamour");
-        return get_random_glamour();
-    } else {
-        # Get a random armor glamour
-        quest::debug("Generating random armor glamour");
-        return get_random_armor();
-    }
 }
 
 sub get_random_glamour {
@@ -193,11 +179,22 @@ sub get_random_glamour {
                         idfile, name
                 )
                 SELECT
-                    i.id
-                FROM
-                    items i
-                JOIN
-                    limited_items li ON i.name = CONCAT("Glamour - '", li.name, "'")
+                    id
+                FROM (
+                    SELECT
+                        i.id AS id
+                    FROM
+                        items i
+                    JOIN
+                        limited_items li ON i.name = CONCAT("Glamour - '", li.name, "'")
+                    UNION
+                    SELECT
+                        id
+                    FROM
+                        items
+                    WHERE
+                        id IN (24112, 24113, 24114, 24115, 24116, 24117, 24139, 24140, 24141, 24142, 24143, 24144)
+                ) AS glamour_pool
                 ORDER BY RAND()
                 LIMIT 1;
     };
@@ -212,42 +209,6 @@ sub get_random_glamour {
     my $id = $sth->fetchrow(); 
     if (defined $id) {
         quest::debug("Random Weapon Glamour: $id");
-    } else {
-        $client->Message(13, "ERROR: Unable to retrieve random ornament. Seek help on #bugs in Discord.");
-    }
-
-    # Return the fetched ID
-    $dbh->disconnect();
-    return $id;
-}
-
-sub get_random_armor {
-    my $dbh = plugin::LoadMysql();
-    
-    # Prepare the SQL statement
-    my $sql = q{
-        SELECT id 
-        FROM items
-        WHERE (
-            Name LIKE 'Glamour - \'Heroic %\'' OR
-            Name LIKE 'Glamour - \'Elegant %\'' OR
-            Name LIKE 'Glamour - \'Ornate %\'' OR
-            Name LIKE 'Glamour - \'Resplendant %\''
-        ) AND herosforgemodel
-        ORDER BY RAND()
-        LIMIT 1;
-    };
-
-    # Prepare the SQL statement
-    my $sth = $dbh->prepare($sql);
-    
-    # Execute the statement
-    $sth->execute();
-
-    # Fetch the result (a random item id)
-    my $id = $sth->fetchrow(); 
-    if (defined $id) {
-        quest::debug("Random Ornament: $id");
     } else {
         $client->Message(13, "ERROR: Unable to retrieve random ornament. Seek help on #bugs in Discord.");
     }

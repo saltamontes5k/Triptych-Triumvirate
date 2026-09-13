@@ -9,9 +9,16 @@ sub EVENT_SAY {
     #You have been assigned the task 'Love in the Air: Guard's Fancy'
     quest::say("Kamilah is a jeweler in Artisan's Row on the second level of Crescent Reach. You will no doubt recognize her beauty very easily.  I've been saving this gift for her until I had the courage to hand it to her.  Take this to her and tell her it is from me!  Oh how my spirits have been lifted!");
     quest::summonitem(85089); #Wild Crescent Rose
+    if (!quest::istaskactive(600090) && !quest::istaskcompleted(600090)) {
+      quest::assigntask(600090);
+    }
   }
 }
 
 sub EVENT_ITEM {
+  if (plugin::check_handin(\%itemcount, 53493 => 1)) { #Kamilah's Amulet of Love
+    quest::say("Two admirers? I am the luckiest captain in Crescent Reach - and the most confused. Thank you, friend. I have a great deal of thinking to do.");
+    quest::emote("clutches the amulet and stares off into the middle distance, thoroughly flustered.");
+  }
   plugin::return_items(\%itemcount);
 }

@@ -1,7 +1,6 @@
 -- npc id: 237743
 
 local events_completed    = 0
-local favor_awarded       = false
 local sludge_complete     = false
 local skeletons_complete  = false
 local bone_golem_complete = false
@@ -42,16 +41,6 @@ function event_signal(e)
     local dz = eq.get_expedition()
     if dz.valid then
       dz:AddReplayLockout(eq.seconds("4d12h"))
-    end
-
-    if not favor_awarded then
-      favor_awarded = true
-      local __cl = eq.get_entity_list():GetClientList()
-      if __cl then
-        for _, __c in __cl.entries do
-          __c:UpdateLDoNPoints(2, 5)
-        end
-      end
     end
 
 

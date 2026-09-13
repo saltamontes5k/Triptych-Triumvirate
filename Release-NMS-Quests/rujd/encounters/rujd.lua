@@ -1,7 +1,6 @@
 -- Prison Break
 
 local prisoners_freed	= 0;		--3 to spawn #Prison_Guard_Talkor
-local favor_awarded      = false
 local pg_chest			= false;	--killed #Prison_Guard_Talkor
 local rpg_piyea			= false;
 local rpg_eneau			= false;
@@ -404,15 +403,6 @@ function check_chests()
 		local dz = eq.get_expedition()
 		if dz.valid then
 			dz:AddReplayLockout(eq.seconds("4d12h"))
-			    if not favor_awarded then
-			      favor_awarded = true
-			      local __cl = eq.get_entity_list():GetClientList()
-			      if __cl then
-			        for _, __c in __cl.entries do
-			          __c:UpdateLDoNPoints(4, 5)
-			        end
-			      end
-			    end
 		end
 	end;
 end

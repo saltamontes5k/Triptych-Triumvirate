@@ -97,15 +97,6 @@ function event_death_complete(e)
 	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- Only spawn in non-respawning dz
 		eq.unique_spawn(218068, 0, 0, e.self:GetX(), e.self:GetY(),  e.self:GetZ(),  e.self:GetHeading()) -- NPC: A_Planar_Projection
 	end
-
-	-- NMS progression: Saryrn is the Gates of Discord prerequisite. Spawn the memory NPC the raid
-	-- hails for the account flag (global/26000.pl); the hail enforces the instance rule itself.
-	-- The pop.flags.saryrn bucket below is the stock PoP flag and is separate from this.
-	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
-	if memory_npc ~= nil then
-		memory_npc:SetEntityVariable("Flag-Name", "saryrn")
-		memory_npc:SetEntityVariable("Stage-Name", "GoD")
-	end
 end
 
 function event_killed_merit(e)

@@ -8,7 +8,6 @@
 local addsdead = 0;
 local failure = 0;
 local event_started = 0;
-local __turnin_awarded = false;
 
 function Hail_Osashi(e)
 if(e.message:findi("hail")) then
@@ -91,19 +90,7 @@ function Goblin_Death4(e)
   end
 end
 
-local function __award_turnin(e)
-  if __turnin_awarded then return end
-  __turnin_awarded = true
-  local __cl = eq.get_entity_list():GetClientList()
-  if __cl then
-    for _, __c in __cl.entries do
-      __c:SummonItem(57203)
-    end
-  end
-end
-
 function event_encounter_load(e)
-  eq.register_npc_event('perseverance', Event.death_complete, 338002, __award_turnin);
   eq.register_npc_event('perseverance', Event.death_complete, 338412, Goblin_Death1);
   eq.register_npc_event('perseverance', Event.combat,         338412, Goblin_Combat);
   eq.register_npc_event('perseverance', Event.timer,          338412, Goblin_Timer);

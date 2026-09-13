@@ -9,7 +9,7 @@ sub CommonCharacterUpdate {
         }
         plugin::EnableTitles($client);
         plugin::UpdateCharMaxLevel($client);
-        plugin::UpdateEoMAward($client);
+        plugin::UpdateTriuneOfFateAward($client);
         plugin::RegisterSeasonalLogin($client);
 
         plugin::DoEventRewards($client);

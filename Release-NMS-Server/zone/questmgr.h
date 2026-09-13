@@ -26,6 +26,7 @@
 
 class Client;
 class Mob;
+class Zone;
 class NPC;
 
 namespace EQ
@@ -41,6 +42,7 @@ class QuestManager {
 		const SPDat_Spell_Struct* questspell;
 		bool depop_npc;
 		std::string encounter;
+		::Zone* zone = nullptr;
 	};
 
 	struct PausedTimer {
@@ -53,6 +55,7 @@ public:
 	virtual ~QuestManager();
 
 	void StartQuest(Mob *_owner, Client *_initiator = nullptr, EQ::ItemInstance* _questitem = nullptr, const SPDat_Spell_Struct* _questspell = nullptr, std::string encounter = "");
+	void StartQuest(::Zone* zone);
 	void EndQuest();
 	bool QuestsRunning() { return !quests_running_.empty(); }
 

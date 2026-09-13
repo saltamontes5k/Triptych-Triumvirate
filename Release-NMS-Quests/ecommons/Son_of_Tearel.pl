@@ -1,6 +1,6 @@
 sub EVENT_SAY {
   my $group_flg       = $client->CheckWaypointGroupFeature(); 
-  my $eom_link        = quest::varlink(46779);
+  my $triune_link     = quest::varlink(46779);
 
   my $bind_loc        = $client->GetBucket("baz_and_back_bind") || 'bazaar';
   my $revind_text     = "";
@@ -37,7 +37,7 @@ sub EVENT_SAY {
     if ($group_flg) {
       plugin::NPCTell("You already have performed this ritual, and have these abilities available to you.");
     } else {
-      plugin::NPCTell("If you can provide me with Five [".$eom_link."], I will [perform this ritual] for you to become more highly attuned to the Map.");
+      plugin::NPCTell("If you can provide me with Five [".$triune_link."], I will [perform this ritual] for you to become more highly attuned to the Map.");
       plugin::YellowText("Once unlocked, the group transport and instance return abilities will be available to all characters on this account.");
     }
     return;
@@ -47,11 +47,11 @@ sub EVENT_SAY {
     if ($group_flg) {
       plugin::NPCTell("You already have performed this ritual, and have these abilities available to you.");
     } else {
-      if (plugin::SpendEOM($client, 5)) {
+      if (plugin::SpendTriuneOfFate($client, 5)) {
         $client->EnableWaypointGroupFeature();
         plugin::NPCTell("$name, forevermore you and yours can transport your entire group to anywhere you have [attuned].");
       } else {
-        plugin::NPCTell("I'm sorry, $name, you do not have enough [".$eom_link."] available to you right now. When you have more...");
+        plugin::NPCTell("I'm sorry, $name, you do not have enough [".$triune_link."] available to you right now. When you have more...");
       }
     }
   }

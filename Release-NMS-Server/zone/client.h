@@ -557,6 +557,16 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	inline const InspectMessage_Struct& GetInspectMessage() const { return m_inspect_message; }
 	void ReloadExpansionProfileSetting();
 
+	// Shrouds (server-driven monster shroud system)
+	bool        OpenShroudWindow(Mob* npc);
+	void        ApplyShroud(uint32 shroud_id);
+	void        RemoveShroud(bool send_updates = true);
+	void        SaveShroudSnapshot();
+	void        ClearShroudSnapshot();
+	bool        RestoreShroudSnapshot();
+	inline bool IsShrouded() const { return m_shrouded; }
+	inline uint32 GetShroudID() const { return m_shroud_id; }
+
 	void SetPetCommandState(int button, int state);
 
 	// Pushes petids to the client as OP_PetList. Prefer MarkPetListDirty() so the
@@ -2521,9 +2531,17 @@ private:
 
 	bool npcflag;
 	uint8 npclevel;
+
+	// shrouds
+	bool                 m_shrouded           = false;
+	uint32               m_shroud_id          = 0;
+	bool                 m_shroud_saved_valid = false;
+	PlayerProfile_Struct m_shroud_saved_pp{};
+
 	bool bZoning;
 	bool tgb;
 	bool instalog;
+	bool fast_camp; // set by Handle_OP_Camp when the server must close the stream itself at camp_timer expiry
 	int32 last_reported_mana;
 	int32 last_reported_endurance;
 

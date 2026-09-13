@@ -9,7 +9,8 @@
 	(5, 'Luclin'),
 	(6, 'The Planes'),
 	(7, 'Taelosia'),
-	(8, 'Discord');
+	(8, 'Discord'),
+	(9, 'Special');
 
 --Antonica waypoints
 	  INSERT INTO content.nms_waypoints(shortname, long_name, category, x, y, z, heading) VALUES('blackburrow', 'Blackburrow', 0, -7, 38, 3, 300),
@@ -106,7 +107,11 @@
 	('txevu', 'Txevu, Lair of the Elite', 7, -316, -20, -420, 430);
 
 --Discord waypoints
-	  INSERT INTO content.nms_waypoints(shortname, long_name, category, x, y, z, heading) VALUES('wallofslaughter', 'Wall of Slaughter', 8, -943, 13, 130, 0);
+	  INSERT INTO content.nms_waypoints(shortname, long_name, category, x, y, z, heading) VALUES('wallofslaughter', 'Wall of Slaughter', 8, -943, 13, 130, 0),
+	('draniksscar', 'Dranik\'s Scar', 8, -1468, -1519, 260, 0),
+	('causeway', 'Nobles\' Causeway', 8, -239, -1674, 317, 0),
+	('provinggrounds', 'Muramite Proving Grounds', 8, -124, -5676, -306, 0),
+	('bloodfields', 'The Bloodfields', 8, -1763, 2140, -928, 0);
 
 --Default waypoints
 	  INSERT INTO content.nms_waypoints_default(waypoint_id, race_id, class_mask, min_level, max_level)

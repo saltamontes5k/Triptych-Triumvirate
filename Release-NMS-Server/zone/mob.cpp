@@ -4867,6 +4867,20 @@ bool Mob::HasClass(uint8 player_class, uint32 bitmask) const {
     return false;
 }
 
+bool Mob::HasAnyClass(std::initializer_list<uint8> classes, uint32 bitmask) const {
+    if (bitmask == 0) {
+        bitmask = GetClassesBits();
+    }
+
+    for (auto class_id : classes) {
+        if (HasClass(class_id, bitmask)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
 bool Mob::CanThisClassParry(void) const
 {

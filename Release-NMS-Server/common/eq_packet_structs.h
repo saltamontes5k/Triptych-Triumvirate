@@ -214,7 +214,7 @@ struct CharacterSetList_Struct {
 	uint32 character_count;
 	uint32 max_character_sets;
 	uint32 max_character_slots;
-	uint32 eom_available;
+	uint32 triune_of_fate_available;
 	uint32 character_slot_cost;
 	uint32 character_set_cost;
 	uint32 available_slot_unlocks;
@@ -5537,6 +5537,55 @@ struct spawnShroudOther
 /*0000*/ uint32 spawnId;		// Spawn Id of the shrouded player
 /*0004*/ Spawn_Struct spawn;	// Updated spawn struct for the player
 /*0586*/
+};
+
+// Internal packet used to hand a player's shrouded form to the RoF2 OP_Shroud
+// encoder: the updated spawn plus the profile block the client applies.
+struct ShroudSelf_Struct
+{
+	Spawn_Struct         spawn;
+	PlayerProfile_Struct profile;
+};
+
+/**
+ * Shroud selection window contents, sent to the client when the player
+ * interacts with a Shroudkeeper. The tree string is a 0x07-delimited flat
+ * list of PROGRESSION / BRANCH / TEMPLATE records that populates the client's
+ * Shrouds page.
+ *
+ * OpCode: OP_ShroudSelectionWindow
+ */
+struct ShroudSelectionWindow
+{
+/*000*/ uint32 triggerNPCID;       // NPC that opened the window
+/*004*/ uint32 numShroudBankItems; // >0 when the shroud bank is unavailable
+/*008*/ uint32 unknown008;         // seen 0
+/*012*/ char   shroudSelectionTreeString[0];
+};
+
+/**
+ * Shroud progression/ability payloads.
+ *
+ * OpCode: OP_ShroudProgress, OP_ShroudProgress2, OP_ShroudRespondStats
+ */
+struct ShroudUpdateSelectWindow
+{
+/*000*/ uint32 numItems;
+/*004*/ char   shroudSelectionTreeString[0];
+};
+
+/**
+ * Client request to become (or stop being) a shroud.
+ *
+ * OpCode: OP_ShroudSelect (and OP_ShroudSelectCancel uses op only)
+ * NOTE: the RoF2 payload is not documented by any working server; the layout
+ * below is the working hypothesis and is validated/parsed defensively.
+ */
+struct ShroudSelect_Struct
+{
+/*000*/ uint32 shroud_id;   // shroud template id, 0 to cancel
+/*004*/ uint32 op;         // 0/absent = select, 1 = cancel (unverified)
+/*008*/
 };
 
 struct ApplyPoison_Struct {

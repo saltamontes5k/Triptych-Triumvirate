@@ -772,6 +772,102 @@ bool Lua_Zone::VariableExists(const std::string& variable_name)
 	return self->VariableExists(variable_name);
 }
 
+uint32 Lua_Zone::GetTimerDuration(std::string name)
+{
+	Lua_Safe_Call_Int();
+	return self->GetTimerDuration(name);
+}
+
+uint32 Lua_Zone::GetTimerRemainingTime(std::string name)
+{
+	Lua_Safe_Call_Int();
+	return self->GetTimerRemainingTime(name);
+}
+
+bool Lua_Zone::HasTimer(std::string name)
+{
+	Lua_Safe_Call_Bool();
+	return self->HasTimer(name);
+}
+
+bool Lua_Zone::IsPausedTimer(std::string name)
+{
+	Lua_Safe_Call_Bool();
+	return self->IsPausedTimer(name);
+}
+
+void Lua_Zone::PauseTimer(std::string name)
+{
+	Lua_Safe_Call_Void();
+	self->PauseTimer(name);
+}
+
+void Lua_Zone::ResumeTimer(std::string name)
+{
+	Lua_Safe_Call_Void();
+	self->ResumeTimer(name);
+}
+
+void Lua_Zone::SetTimer(std::string name, uint32 duration)
+{
+	Lua_Safe_Call_Void();
+	self->SetTimer(name, duration);
+}
+
+void Lua_Zone::StopTimer(std::string name)
+{
+	Lua_Safe_Call_Void();
+	self->StopTimer(name);
+}
+
+void Lua_Zone::StopAllTimers()
+{
+	Lua_Safe_Call_Void();
+	self->StopAllTimers();
+}
+
+void Lua_Zone::SendPayload(int payload_id, std::string payload_value)
+{
+	Lua_Safe_Call_Void();
+	self->SendPayload(payload_id, payload_value);
+}
+
+void Lua_Zone::Signal(int signal_id)
+{
+	Lua_Safe_Call_Void();
+	self->Signal(signal_id);
+}
+
+luabind::object Lua_Zone::GetPausedTimers(lua_State* L) {
+	auto t = luabind::newtable(L);
+	if (d_) {
+		auto self = reinterpret_cast<NativeType*>(d_);
+		auto l = self->GetPausedTimers();
+		int i = 1;
+		for (const auto& v : l) {
+			t[i] = v;
+			i++;
+		}
+	}
+
+	return t;
+}
+
+luabind::object Lua_Zone::GetTimers(lua_State* L) {
+	auto t = luabind::newtable(L);
+	if (d_) {
+		auto self = reinterpret_cast<NativeType*>(d_);
+		auto l = self->GetTimers();
+		int i = 1;
+		for (const auto& v : l) {
+			t[i] = v;
+			i++;
+		}
+	}
+
+	return t;
+}
+
 luabind::scope lua_register_zone() {
 	return luabind::class_<Lua_Zone>("Zones")
 	.def(luabind::constructor<>())
@@ -827,6 +923,19 @@ luabind::scope lua_register_zone() {
 	.def("GetInstanceType", &Lua_Zone::GetInstanceType)
 	.def("GetInstanceVersion", &Lua_Zone::GetInstanceVersion)
 	.def("GetInstanceTimeRemaining", &Lua_Zone::GetInstanceTimeRemaining)
+	.def("GetPausedTimers", &Lua_Zone::GetPausedTimers)
+	.def("GetTimerDuration", &Lua_Zone::GetTimerDuration)
+	.def("GetTimerRemainingTime", &Lua_Zone::GetTimerRemainingTime)
+	.def("GetTimers", &Lua_Zone::GetTimers)
+	.def("HasTimer", &Lua_Zone::HasTimer)
+	.def("IsPausedTimer", &Lua_Zone::IsPausedTimer)
+	.def("PauseTimer", &Lua_Zone::PauseTimer)
+	.def("ResumeTimer", &Lua_Zone::ResumeTimer)
+	.def("SendPayload", &Lua_Zone::SendPayload)
+	.def("SetTimer", &Lua_Zone::SetTimer)
+	.def("Signal", &Lua_Zone::Signal)
+	.def("StopAllTimers", &Lua_Zone::StopAllTimers)
+	.def("StopTimer", &Lua_Zone::StopTimer)
 	.def("GetLavaDamage", &Lua_Zone::GetLavaDamage)
 	.def("GetLongName", &Lua_Zone::GetLongName)
 	.def("GetMaximumClip", &Lua_Zone::GetMaximumClip)

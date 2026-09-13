@@ -1,4 +1,7 @@
 -- items: 52523
+-- Demi-Plane of Blood curse blocker: Rune-Etched Stone (25% of Aura of Crimson Mists).
+local dodh = require("dodh_helper");
+
 function event_say(e)
 	if(e.message:findi("hail")) then
 		e.self:Say("Ah, " .. e.other:GetName() .. ". You have returned.  I have watched as you walked your path.  The reflecting pool has shown me of your feats.  You were introduced to the cruel and unpredictable malice of Graniteclaw and lived to tell about it.  Now I sense that you wish to understand more.  Allow me to hold the Rune-Etched Stone and I will grant you the understanding you seek.");
@@ -21,8 +24,7 @@ function event_trade(e)
 	local item_lib = require("items");
 	if (item_lib.check_turn_in(e.trade, {item1 = 52523})) then	-- Rune-Etched Stone
 		e.self:Emote("directs your attention to the seeing pool once again.  As the ripples clear you can make out a shadowy individual gazing into a full-length mirror.  He casts no reflection.  The figure sees nothing, but continues to gaze intently as if trying to recall what it was once like to see himself.  Irrissa speaks softly, 'This man has riches, ancient artifacts, immortality, and slaves tending to his every need, and yet he would exchange that for the opportunity to gaze upon his own reflection again.  Without the aid of a reflection, this figure seeks to understand himself through the reactions of others.  The fate of these others is of no consequence to him.  They are used, coerced, and destroyed for the sake of shaping and redefining his ego.  Tell me, how does this realization make you feel about the figure?  [Disgusted], [sorrowful], [furious], or [apathetic]?");
+		dodh.grant_blocker(e.other, 52523, "The Rune-Etched Stone");
 	end
 	item_lib.return_items(e.self, e.other, e.trade)
 end
-
--- need to add AA blocker upon Rune-Etched Stone turn in

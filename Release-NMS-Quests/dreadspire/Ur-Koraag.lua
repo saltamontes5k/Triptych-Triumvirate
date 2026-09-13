@@ -1,4 +1,7 @@
 -- items: 52524
+-- Demi-Plane of Blood curse blocker: Shrunken Head (25% of Aura of Crimson Mists).
+local dodh = require("dodh_helper");
+
 function event_say(e)
 	if e.message:findi("hail") and e.other:HasItem(52524) then
 		e.self:Say("You have trophy, Shrunken Head.  That from Hatchet I see.  Means you have Ur-Koraag respect.  Strong are " .. e.other:GetName() .. ".  If share with me the trophy, Ur-Koraag share with you tale.");
@@ -23,8 +26,7 @@ function event_trade(e)
 	local item_lib = require("items");
 	if (item_lib.check_turn_in(e.trade, {item1 = 52524})) then	-- Shrunken Head
 		e.self:Emote("traces a clawed finger along the curves of the Shrunken Head. 'This no longer remnant of a being.  To those living here, this badge.  Trophy.  Mortal life mean nothing to those who make Dreadspire their home.  Lives are used, like tools.  Thrown away when no further needed.  Why that so?  Could be blood drinkers [forget] what it like to be mortal.  Or maybe they hold no care toward life to shows [superiority] to others.  Or now that [mortals is food], it follows that they is also tools.  Maybe they just [angry].");
+		dodh.grant_blocker(e.other, 52524, "The Shrunken Head");
 	end
 	item_lib.return_items(e.self, e.other, e.trade)
 end
-
--- need to add AE blocker AA when turning in Shrunken Head

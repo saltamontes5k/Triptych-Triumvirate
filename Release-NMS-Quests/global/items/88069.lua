@@ -1,0 +1,11 @@
+-- Prophecy of Ro: Scarred Bolvirk Skin
+-- Looting the first saga skin auto-assigns "Saga Skins" (task 3000).
+local por = require("por_helper");
+
+function event_loot(e)
+	local c = e.self;
+	if not c:IsTaskActive(por.tasks.saga_skins) and not c:IsTaskCompleted(por.tasks.saga_skins) then
+		c:AssignTask(por.tasks.saga_skins);
+		c:Message(15, "The strange markings on the skin intrigue you. Grand Librarian Maelin in the Plane of Knowledge may be able to translate them.");
+	end
+end

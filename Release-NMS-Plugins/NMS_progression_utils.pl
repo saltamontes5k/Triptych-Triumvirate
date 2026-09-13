@@ -67,6 +67,13 @@ my %atlas = (
     'hatesfury'      => 'RoK',
     'torgiran'       => 'RoK',
     'mischiefplane'  => 'SoV',
+    'guke'           => 'LDoN',
+    'gukg'           => 'LDoN',
+    'rujd'           => 'LDoN',
+    'rujg'           => 'LDoN',
+    'takc'           => 'LDoN',
+    'mmcc'           => 'LDoN',
+    'mirb'           => 'LDoN',
     'grimling'       => 'SoL',
     'acrylia'        => 'SoL',
     'akheva'         => 'SoL',
@@ -148,11 +155,11 @@ my %atlas = (
   'dranikcatacombsb' => 'OoW',
   'dranikcatacombsc' => 'OoW',
     'dranikhollowsa' => 'OoW',
+    'dranikhollowsb' => 'OoW',
     'dranikhollowsc' => 'OoW',
-    'dranikhollowsd' => 'OoW',
     'draniksewersa'  => 'OoW',
+    'draniksewersb'  => 'OoW',
     'draniksewersc'  => 'OoW',
-    'draniksewersd'  => 'OoW',
     'riftseekers'    => 'OoW',
     'bloodfields'    => 'OoW',
     'wallofslaughter'=> 'OoW',
@@ -248,17 +255,99 @@ my %atlas = (
     'guardian'       => 'SoF',
     'cryptofshade'   => 'SoF',
     'dragonscaleb'   => 'SoF',
+
+    'atiiki'         => 'TBS',
+
+    # Seeds of Destruction
+    'bertoxtemple'   => 'SoD',
+    'discord'        => 'SoD',
+    'discordtower'   => 'SoD',
+    'korascian'      => 'SoD',
+    'oceangreenhills' => 'SoD',
+    'oceangreenvillage' => 'SoD',
+    'oldblackburrow' => 'SoD',
+    'oldbloodfield'  => 'SoD',
+    'oldcommons'     => 'SoD',
+    'olddranik'      => 'SoD',
+    'oldfieldofbone' => 'SoD',
+    'oldhighpass'    => 'SoD',
+    'oldkaesoraa'    => 'SoD',
+    'oldkaesorab'    => 'SoD',
+    'oldkithicor'    => 'SoD',
+    'oldkurn'        => 'SoD',
+    'precipiceofwar' => 'SoD',
+    'rathechamber'   => 'SoD',
+    'thevoida'       => 'SoD',
+    'thevoidb'       => 'SoD',
+    'thevoidc'       => 'SoD',
+    'thevoidd'       => 'SoD',
+    'thevoide'       => 'SoD',
+    'thevoidf'       => 'SoD',
+    'thevoidg'       => 'SoD',
+    'toskirakk'      => 'SoD',
+
+    # Post-SoD content (House of Thule and later) gates as SoD.
+    # Deliberately NOT gated: weddingchapel/weddingchapeldark (event zones),
+    # neighborhood (player housing), and the exp-99 system/misc zones
+    # (tutorial, load, clz, arttest, ...).
+    'arthicrex'      => 'SoD',
+    'brellsarena'    => 'SoD',
+    'brellsrest'     => 'SoD',
+    'brellstemple'   => 'SoD',
+    'convorteum'     => 'SoD',
+    'coolingchamber' => 'SoD',
+    'dragoncrypt'    => 'SoD',
+    'foundation'     => 'SoD',
+    'fungalforest'   => 'SoD',
+    'lichencreep'    => 'SoD',
+    'pellucid'       => 'SoD',
+    'shiningcity'    => 'SoD',
+    'stonesnake'     => 'SoD',
+    'underquarry'    => 'SoD',
+    'alkabormare'    => 'SoD',
+    'fallen'         => 'SoD',
+    'feerrott2'      => 'SoD',
+    'housegarden'    => 'SoD',
+    'miragulmare'    => 'SoD',
+    'morellcastle'   => 'SoD',
+    'somnium'        => 'SoD',
+    'thuledream'     => 'SoD',
+    'thulehouse1'    => 'SoD',
+    'thulehouse2'    => 'SoD',
+    'thulelibrary'   => 'SoD',
+    'well'           => 'SoD',
+    'arelis'         => 'SoD',
+    'argath'         => 'SoD',
+    'beastdomain'    => 'SoD',
+    'cityofbronze'   => 'SoD',
+    'eastsepulcher'  => 'SoD',
+    'pillarsalra'    => 'SoD',
+    'resplendent'    => 'SoD',
+    'rubak'          => 'SoD',
+    'sarithcity'     => 'SoD',
+    'sepulcher'      => 'SoD',
+    'westsepulcher'  => 'SoD',
+    'windsong'       => 'SoD',
+    'breedinggrounds' => 'SoD',
+    'chapterhouse'   => 'SoD',
+    'crystalshard'   => 'SoD',
+    'eastwastesshard' => 'SoD',
+    'eviltree'       => 'SoD',
+    'grelleth'       => 'SoD',
+    'kaelshard'      => 'SoD',
+    'shardslanding'  => 'SoD',
+    'xorbb'          => 'SoD',
 );
 
 # Global hash of valid stages
-my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN DoD PoR TSS TBS SoF FNagafen);
+my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD FNagafen);
 my %VALID_STAGES = map { $_ => 1 } @STAGES;
 
 # Stages open on NMS (multiclass) servers. Anything not listed here is time-locked
 # regardless of kill flags; unlocking a new expansion is a one-line change here.
 # Stages listed here still require their kill prerequisites (see %STAGE_PREREQUISITES)
 # to be earned per-account before the stage's zones are eligible.
-my %NMS_UNLOCKED_STAGES = map { $_ => 1 } qw(RoK SoV SoL PoP GoD OoW DoN DoD PoR TSS TBS SoF);
+my %NMS_UNLOCKED_STAGES = map { $_ => 1 } qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD);
 
 # Global hash of stage prerequisites
 my %STAGE_PREREQUISITES = (
@@ -272,8 +361,10 @@ my %STAGE_PREREQUISITES = (
     'DoD' => ['Tunat`Muram Cuu Vauax'],   # Depths of Darkhollow unlocks on the GoD end boss (same kill that opens OoW)
     'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish'],   # all six MPG chamber Masters + Anguish clear
     'TSS' => ['Deathknell'],              # Deathknell, Tower of Dissonance clear
-    'TBS' => ['Tunat`Muram Cuu Vauax', 'Dyn`Leth'],   # GoD end boss + Ashengate Dyn'Leth raid
-    'SoF' => ['Dyn`Leth'],                # Ashengate Dyn'Leth raid (not Crystallos; that is SoF endgame)
+    'TBS' => ['Dyn`Leth'],                # Ashengate Dyn'Leth raid
+    'SoF' => ['Solusek Ro', 'Mayong Mistmoore'],   # the two gods in Solteris (TBS-era raid)
+    'LDoN' => ['Xegony', 'Fennin Ro the Tyrant of Fire', 'Coirnav the Avatar of Water', 'Rathe Council', 'Agnarr the Storm Lord'],   # opens alongside DoN (same PoP elemental gods)
+    'SoD' => ['Kerafyrm', 'Kerafyrm-Crystallos'],   # the Sleeper in both Sleeper's Tomb and Crystallos
     'FNagafen' => ['Quarm'],
     # ... and so on for each stage
 );
@@ -296,11 +387,13 @@ my %STAGE_DESCRIPTIONS = (
     'GoD' => "Gates of Discord",
     'OoW' => "Omens of War",
     'DoN' => "Dragons of Norrath",
+    'LDoN' => "Lost Dungeons of Norrath",
     'DoD' => "Depths of Darkhollow",
     'PoR' => "Prophecy of Ro",
     'TSS' => "The Serpent's Spine",
     'TBS' => "The Buried Sea",
     'SoF' => "Secrets of Faydwer",
+    'SoD' => "Seeds of Destruction",
     'FNagafen' => "Fabled Nagafen's Lair",
 );
 
@@ -314,8 +407,9 @@ foreach my $stage (keys %STAGE_PREREQUISITES) {
 
 sub list_unlock_progress {
     my $client = shift;
-    foreach my $stage (keys %STAGE_DESCRIPTIONS) {
-        if (is_stage_complete($client, $STAGE_DESCRIPTIONS{$stage})) {
+    foreach my $stage (@STAGES) {
+        next unless exists $STAGE_DESCRIPTIONS{$stage};
+        if (is_stage_complete($client, $stage)) {
             plugin::YellowText("You have unlocked access to $STAGE_DESCRIPTIONS{$stage}.");
         } else {
             plugin::YellowText("You have NOT unlocked access to $STAGE_DESCRIPTIONS{$stage}.");
@@ -450,6 +544,9 @@ sub SetSubflag {
     elsif ($stage eq 'DoN') {
         plugin::BlueText("You recall the ancient dragons, and grow fearful at the prospect of them stirring once more.");
     }
+    elsif ($stage eq 'LDoN') {
+        plugin::BlueText("Dungeons older than memory shift beneath the surface; the lost places of Norrath open their doors.");
+    }
     elsif ($stage eq 'DoD') {
         plugin::BlueText("The dark hollow echoes with the skittering of the forgotten; the priestess waits beneath the reef.");
     }
@@ -464,6 +561,9 @@ sub SetSubflag {
     }
     elsif ($stage eq 'SoF') {
         plugin::BlueText("The gears of Mechanotus turn, and the sleeping wyrm beneath Crystallos stirs in its dreaming.");
+    }
+    elsif ($stage eq 'SoD') {
+        plugin::BlueText("The discord stirs; armies muster for a war that rages across the ashes of the moon.");
     }
 
     # Check if the objective value has changed
@@ -739,6 +839,7 @@ sub UpdateCharMaxLevel
         ['OoW', 70],
         ['TSS', 75],
         ['SoF', 80],
+        ['SoD', 85],
     );
 
     if (plugin::IsSeasonal($client)) {
@@ -814,7 +915,24 @@ sub GrantDrakkinBreathWeapon {
     my $level = $client->GetLevel();
     my $ranks = int($level / 5);
     if ($ranks > 13) {
-        $ranks = 13; # cap at rank 13 (level 65)
+        $ranks = 13; # cap at rank 13 (level 65); ranks 14-15 (lvl 70/75)
+                     # are quest-only: see the Breath of <Lineage> tasks.
+    }
+
+    # Never downgrade a quest-earned rank: GrantAlternateAdvancementAbility
+    # rewrites the stored rank to $ranks, so skip the grant when the
+    # character already ranks higher (Breath XIV/XV quests 600260-600271).
+    my %breath_first_rank = (
+        590 => 20000,
+        591 => 20013,
+        592 => 20026,
+        593 => 20039,
+        594 => 20052,
+        595 => 20065,
+    );
+    my $first_rank = $breath_first_rank{$aa_id};
+    if (defined($first_rank) && $client->GetAA($first_rank) >= $ranks) {
+        return;
     }
 
     if ($ranks > 0) {

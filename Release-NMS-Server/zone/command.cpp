@@ -96,7 +96,7 @@ int command_init(void)
 		command_add("attackmode", "Toggle Ranged and Melee Autoattack modes", AccountStatus::Player, command_attackmode) ||
 		command_add("augmentitem", "Force augments an item. Must have the augment item window open.", AccountStatus::GMImpossible, command_augmentitem) ||
 		command_add("autoskill", "Configure automatic combat skill usage.", AccountStatus::Player, command_autoskill) ||
-		command_add("award", "EoM", AccountStatus::GMAdmin, command_award) ||
+		command_add("award", "[Character Name] [Amount] [Reason] - Grant Triune of Fate to a character", AccountStatus::GMAdmin, command_award) ||
 		command_add("soulmark", "Manipulate account flags", AccountStatus::GMAdmin, command_soulmark) ||
 		command_add("ban", "[Character Name] [Reason] - Ban by character name", AccountStatus::GMLeadAdmin, command_ban) ||
 		command_add("bugs", "[Close|Delete|Review|Search|View] - Handles player bug reports", AccountStatus::QuestTroupe, command_bugs) ||

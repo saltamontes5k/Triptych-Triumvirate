@@ -285,6 +285,10 @@
 	void Handle_OP_SetStartCity(const EQApplicationPacket *app);
 	void Handle_OP_SetTitle(const EQApplicationPacket *app);
 	void Handle_OP_Shielding(const EQApplicationPacket *app);
+	void Handle_OP_Shroud(const EQApplicationPacket *app);
+	void Handle_OP_ShroudSelect(const EQApplicationPacket *app);
+	void Handle_OP_ShroudSelectCancel(const EQApplicationPacket *app);
+	void Handle_OP_ShroudRequestStats(const EQApplicationPacket *app);
 	void Handle_OP_ShopEnd(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerSell(const EQApplicationPacket *app);

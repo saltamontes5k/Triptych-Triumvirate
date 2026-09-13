@@ -239,6 +239,19 @@ bool Client::Process() {
 			instalog = true;
 
 			camp_timer.Disable();
+			if (fast_camp) {
+				fast_camp = false;
+				// The stock client is still counting down its own ~30 s camp, so finish the logout
+				// here instead of waiting for it to close the connection. Everything above already
+				// did what the linkdead/expiry paths do (group, raid, save, guild, trader, merc), so
+				// mirror the tail of the GM camp path: OnDisconnect(false) sends OP_LogoutReply, fires
+				// EVENT_DISCONNECT once and closes the stream; returning false removes the entity
+				// this tick. Do NOT call Disconnect() directly: DISCONNECTED without removal is
+				// treated as an MQ instant-camp hack at the top of Process() and would also route
+				// through LinkDead().
+				OnDisconnect(false);
+				return false;
+			}
 		}
 
 		if (IsStunned() && stunned_timer.Check())

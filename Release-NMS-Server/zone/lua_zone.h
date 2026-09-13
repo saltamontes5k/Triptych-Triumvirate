@@ -139,6 +139,20 @@ public:
 	void SetEXPModifierByCharacterID(uint32 character_id, float exp_modifier);
 	void SetInstanceTimer(uint32 new_duration);
 	void SetInstanceTimeRemaining(uint32 time_remaining);
+
+	uint32 GetTimerDuration(std::string name);
+	uint32 GetTimerRemainingTime(std::string name);
+	bool HasTimer(std::string name);
+	bool IsPausedTimer(std::string name);
+	void PauseTimer(std::string name);
+	void ResumeTimer(std::string name);
+	void SetTimer(std::string name, uint32 duration);
+	void StopTimer(std::string name);
+	void StopAllTimers();
+	void SendPayload(int payload_id, std::string payload_value);
+	void Signal(int signal_id);
+	luabind::object GetTimers(lua_State* L);
+	luabind::object GetPausedTimers(lua_State* L);
 	void SetIsHotzone(bool is_hotzone);
 	void ShowZoneGlobalLoot(Lua_Client c);
 	bool ClearVariables();

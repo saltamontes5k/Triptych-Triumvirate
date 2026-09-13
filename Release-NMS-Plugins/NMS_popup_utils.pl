@@ -4,7 +4,7 @@
 # three hashes define them. %popups is friendly name to ID, %popups_text is ID => text, %popups_title is ID=>title
 
 sub GetMaxExpansionName {
-    return "Omens of War";
+    return "Kunark";
 }
 
 my $color_end = "</font>";

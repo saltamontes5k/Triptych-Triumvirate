@@ -67,7 +67,6 @@ sub Doors_Manipulation_EVENT_SAY{
 				}
 			}
 			$client->Message(15, $ModelsToSelectFrom);
-			$connect->disconnect();
 		}
 		if($arg[1] =~/showmodelsfromfile/i){
 			$connect = plugin::LoadMysql();
@@ -82,7 +81,6 @@ sub Doors_Manipulation_EVENT_SAY{
 				}
 			}
 			$client->Message(15, $ModelsToSelectFrom);
-			$connect->disconnect();
 		}
 		if($arg[1] =~/showmodelszone/i){
 			$connect = plugin::LoadMysql();
@@ -98,7 +96,6 @@ sub Doors_Manipulation_EVENT_SAY{
 				}
 			}
 			$client->Message(15, $ModelsToSelectFrom);
-			$connect->disconnect();
 		}
 		if($arg[1] =~/list/i){ @doors = $entity_list->GetDoorsList(); 
 			foreach $door (@doors){ 
@@ -138,7 +135,6 @@ sub Doors_Manipulation_EVENT_SAY{
 			$query_handle = $connect->prepare($query); $query_handle->execute();
 			$client->Message(15, $query);
 			$client->Message(15, "Reload Doors? " . quest::saylink("#reloadstatic", 0, "#reloadstatic"));
-			$connect->disconnect();
 		}
 		if($arg[1] =~/edit/i){
 			if($client->GetEntityVariable("EditDoorClick") > 0){ $Door = $entity_list->GetDoorsByDoorID($client->GetEntityVariable("EditDoorClick")); }

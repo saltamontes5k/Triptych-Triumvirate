@@ -2,7 +2,6 @@
 local don = require("dragons_of_norrath")
 local had_gm = false
 local hp_event	= 90;
-local __turnin_awarded	= false;
 
 local forms = {
 	{name = "Yar`lir the Living Storm",			addextra = {0, 6603, 1, -1, 15,-425}},
@@ -139,16 +138,6 @@ function yar_death_complete(e)
 	if not had_gm and not don.is_nest_unlocked() then
 		eq.debug("Unlocking the Accursed Nest")
 		don.unlock_nest()
-	end
-
-	if not __turnin_awarded then
-		__turnin_awarded = true
-		local __cl = eq.get_entity_list():GetClientList()
-		if __cl then
-			for _, __c in __cl.entries do
-				__c:SummonItem(57200)
-			end
-		end
 	end
 end
 
