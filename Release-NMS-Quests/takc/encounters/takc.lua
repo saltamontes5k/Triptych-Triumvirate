@@ -64,13 +64,6 @@ function UpdateLockout()
   local dz = eq.get_expedition()
   if dz.valid then
     dz:AddReplayLockout(eq.seconds("4d12h"))
-      eq.zone_emote(MT.Yellow, "The Wayfarers take note of your victory.")
-      local __cl = eq.get_entity_list():GetClientList()
-      if __cl then
-        for _, __c in __cl.entries do
-          __c:UpdateLDoNPoints(5, 5)
-        end
-      end
   end
 end
 

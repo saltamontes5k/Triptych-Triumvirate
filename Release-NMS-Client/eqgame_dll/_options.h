@@ -62,7 +62,7 @@ bool isChecksumFixEnabled = false;
 
 // isOldModelHorseSupportEnabled if set to true enables horses while using old models
 // quality of life for those that don't enjoy Luclin models but want their benefits
-bool isOldModelHorseSupportEnabled = false;
+bool isOldModelHorseSupportEnabled = true;
 
 // isAllowIllegalAugmentsEnabled if set to true will allow inserting augments which create combinations that the player cannot use.
 // This allows you to bypass an error of "The result of this combine would be both NO TRADE and unusable by you.". If you don't get this error, unlikely needed.

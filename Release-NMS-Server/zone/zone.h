@@ -24,6 +24,7 @@
 #include "../common/types.h"
 #include "../common/random.h"
 #include "../common/strings.h"
+#include <deque>
 #include "zonedb.h"
 #include "../common/zone_store.h"
 #include "../common/repositories/grid_repository.h"
@@ -349,6 +350,26 @@ public:
 	void weatherSend(Client *client = nullptr);
 	void ClearSpawnTimers();
 
+	void Signal(int signal_id);
+	void SendPayload(int payload_id, std::string payload_value);
+
+	struct PausedZoneTimer {
+		std::string name;
+		uint32      remaining_time;
+	};
+
+	uint32 GetTimerDuration(std::string name);
+	uint32 GetTimerRemainingTime(std::string name);
+	bool HasTimer(std::string name);
+	bool IsPausedTimer(std::string name);
+	void PauseTimer(std::string name);
+	void ResumeTimer(std::string name);
+	void SetTimer(std::string name, uint32 duration);
+	void StopTimer(std::string name);
+	void StopAllTimers();
+	std::vector<std::string> GetTimers();
+	std::vector<std::string> GetPausedTimers();
+
 	bool IsQuestHotReloadQueued() const;
 	void SetQuestHotReloadQueued(bool in_quest_hot_reload_queued);
 
@@ -550,6 +571,18 @@ private:
 	Timer                               qglobal_purge_timer;
 	Timer*								global_buffs_timer;
 	ZoneSpellsBlocked                   *blocked_spells;
+
+	class ZoneTimer {
+	public:
+		inline ZoneTimer(std::string _name, uint32 duration)
+			: name(_name), timer_(duration) { timer_.Start(duration, false); }
+		std::string name;
+		Timer       timer_;
+	};
+
+	std::vector<ZoneTimer>       zone_timers;
+	std::vector<PausedZoneTimer> paused_zone_timers;
+	std::deque<int>              m_zone_signals;
 
 	// Factions
 	std::vector<NpcFactionRepository::NpcFaction>                 m_npc_factions         = { };

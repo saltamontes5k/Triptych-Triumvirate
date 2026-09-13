@@ -1,6 +1,6 @@
 sub EVENT_SIGNAL {
     if ($signal == 666) {
-        plugin::UpdateEoMAward($client);
+        plugin::UpdateTriuneOfFateAward($client);
         return;
     }
 
@@ -114,8 +114,8 @@ sub EVENT_CONNECT {
 
     if (!$client->GetBucket("First-Login")) {
         $client->SetBucket("First-Login", 1);
-		$client->SummonItemIntoInventory({ item_id => 18471, charges => -1 }); #A Faded Writ
-        $client->Message(263, "You find a small note in your pocket.");
+		$client->SummonItemIntoInventory({ item_id => 18471, charges => -1 }); #A Shimmering Writ
+        $client->Message(263, "You find a water-stained note in your pocket.");
 		$client->SetBucket('FirstLogin', 1);
 
         my $name = $client->GetCleanName();
@@ -444,7 +444,11 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
             24132, 24132,                   # Easter Basket (100% WR bag)
             24139, 24140,                   # Bunnystaff / Bunnybow glamours
             24141, 24142, 24143, 24144,     # Eggstaff glamours
-            24145, 24146, 24147, 24148, 24149 # Rabbit petamorph wands
+            24112, 24113, 24114, 24115,     # Eggbeater glamours
+            24116, 24117,                   # Bunnyfist / Bunnyblade glamours
+            24145, 24146, 24147, 24148, 24149, # Rabbit petamorph wands
+            24156, 24157, 24158, 24159,     # Bunny statuettes (filler)
+            24184, 25862                    # Chocolate / Festive bunny statuettes
         );
         # fully-incubated -> rare table (mount weighted low)
         my @full_rewards = (
@@ -455,7 +459,8 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
             24134,                          # Egg of Armored Protection  (aug)
             24135,                          # Egg of Abominable Rituals  (aug)
             24136,                          # Frozen Egg of Stamina      (aug)
-            24137                           # Flawless Egg of Deftness   (aug)
+            24137,                          # Flawless Egg of Deftness   (aug)
+            21824                           # Bunny Helm glamour (armour)
         );
 
         my $egg_base = $item_id % 1000000;
@@ -849,6 +854,23 @@ sub UpdateDayNightCycle {
         } else {
             quest::spawn_condition($zone, $instance, 2, 1);
             quest::spawn_condition($zone, $instance, 1, 0);
+        }
+    }
+}
+
+# Prophecy of Ro: auto-assign "Saga Skins" (task 3000) when one of the nine
+# saga skins (items 88069-88077) is first looted. The task then tracks the loot
+# steps natively; Grand Librarian Maelin handles the hand-ins.
+sub EVENT_LOOT {
+    if ($looted_id >= 88069 && $looted_id <= 88077) {
+        if (!quest::istaskcompleted(3000)) {
+            if (!quest::istaskactive(3000)) {
+                quest::assigntask(3000);
+                $client->Message(15, "The strange markings on the skin intrigue you. Grand Librarian Maelin in the Plane of Knowledge may be able to translate them.");
+            }
+            # credit the loot directly: the first skin is looted in the same
+            # event the task is assigned, so native loot tracking may miss it.
+            $client->UpdateTaskActivity(3000, $looted_id - 88069, 1);
         }
     }
 }

@@ -6,10 +6,13 @@ sub EVENT_SAY {
     quest::say("Oh yes indeed! I'm always honored when one of the representatives of our great dragon progenitors graces my humble shop. Would you like to [" . quest::saylink("learn more") . "] about the council of the city called, the Scions of the Six, $name?");
   }
   if ($text=~/learn more/i) {
-    if (!quest::istaskcomplete(6802)) {
+    if (!quest::istaskcompleted(6802)) {
       quest::say("Ah $name, you are wise indeed. Take this note to Council Aide Mystrana to be introduced to the Scions of the Six. You are embarking on a fantastic journey of discovery!");
       quest::summonitem(85088); #Crescent Citizen's Declaration
       quest::taskselector(6802); #Getting to Know You: The Council's Aid
+    }
+    else {
+      quest::say("You have already been introduced to the Scions of the Six, $name. May their shadows fall gently upon this house.");
     }
   }
 }

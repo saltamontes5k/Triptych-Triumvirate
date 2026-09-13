@@ -1274,7 +1274,7 @@ uint32 Bot::GetATKRating() {
 int32 Bot::GenerateBaseHitPoints() {
 	// Calc Base Hit Points
 	int new_base_hp = 0;
-	uint32 lm = GetClassLevelFactor();
+	uint32 lm = GetClassLevelFactor(GetClass());
 	int32 Post255;
 	int32 NormalSTA = GetSTA();
 	if (GetOwner() && GetOwner()->CastToClient() && GetOwner()->CastToClient()->ClientVersion() >= EQ::versions::ClientVersion::SoD && RuleB(Character, SoDClientUseSoDHPManaEnd)) {

@@ -598,6 +598,95 @@ bool Perl_Zone_VariableExists(Zone* self, const std::string variable_name)
 	return self->VariableExists(variable_name);
 }
 
+uint32 Perl_Zone_GetTimerDuration(Zone* self, std::string name)
+{
+	return self->GetTimerDuration(name);
+}
+
+uint32 Perl_Zone_GetTimerRemainingTime(Zone* self, std::string name)
+{
+	return self->GetTimerRemainingTime(name);
+}
+
+bool Perl_Zone_HasTimer(Zone* self, std::string name)
+{
+	return self->HasTimer(name);
+}
+
+bool Perl_Zone_IsPausedTimer(Zone* self, std::string name)
+{
+	return self->IsPausedTimer(name);
+}
+
+void Perl_Zone_PauseTimer(Zone* self, std::string name)
+{
+	self->PauseTimer(name);
+}
+
+void Perl_Zone_ResumeTimer(Zone* self, std::string name)
+{
+	self->ResumeTimer(name);
+}
+
+void Perl_Zone_SetTimer(Zone* self, std::string name, uint32 duration)
+{
+	self->SetTimer(name, duration);
+}
+
+void Perl_Zone_StopTimer(Zone* self, std::string name)
+{
+	self->StopTimer(name);
+}
+
+void Perl_Zone_StopAllTimers(Zone* self)
+{
+	self->StopAllTimers();
+}
+
+void Perl_Zone_SendPayload(Zone* self, int payload_id, std::string payload_value)
+{
+	self->SendPayload(payload_id, payload_value);
+}
+
+void Perl_Zone_Signal(Zone* self, int signal_id)
+{
+	self->Signal(signal_id);
+}
+
+perl::array Perl_Zone_GetPausedTimers(Zone* self)
+{
+	perl::array a;
+
+	const auto& l = self->GetPausedTimers();
+
+	if (!l.empty()) {
+		a.reserve(l.size());
+
+		for (const auto& v : l) {
+			a.push_back(v);
+		}
+	}
+
+	return a;
+}
+
+perl::array Perl_Zone_GetTimers(Zone* self)
+{
+	perl::array a;
+
+	const auto& l = self->GetTimers();
+
+	if (!l.empty()) {
+		a.reserve(l.size());
+
+		for (const auto& v : l) {
+			a.push_back(v);
+		}
+	}
+
+	return a;
+}
+
 void perl_register_zone()
 {
 	perl::interpreter perl(PERL_GET_THX);
@@ -655,6 +744,19 @@ void perl_register_zone()
 	package.add("GetInstanceType", &Perl_Zone_GetInstanceType);
 	package.add("GetInstanceVersion", &Perl_Zone_GetInstanceVersion);
 	package.add("GetInstanceTimeRemaining", &Perl_Zone_GetInstanceTimeRemaining);
+	package.add("GetPausedTimers", &Perl_Zone_GetPausedTimers);
+	package.add("GetTimerDuration", &Perl_Zone_GetTimerDuration);
+	package.add("GetTimerRemainingTime", &Perl_Zone_GetTimerRemainingTime);
+	package.add("GetTimers", &Perl_Zone_GetTimers);
+	package.add("HasTimer", &Perl_Zone_HasTimer);
+	package.add("IsPausedTimer", &Perl_Zone_IsPausedTimer);
+	package.add("PauseTimer", &Perl_Zone_PauseTimer);
+	package.add("ResumeTimer", &Perl_Zone_ResumeTimer);
+	package.add("SendPayload", &Perl_Zone_SendPayload);
+	package.add("SetTimer", &Perl_Zone_SetTimer);
+	package.add("Signal", &Perl_Zone_Signal);
+	package.add("StopAllTimers", &Perl_Zone_StopAllTimers);
+	package.add("StopTimer", &Perl_Zone_StopTimer);
 	package.add("GetLavaDamage", &Perl_Zone_GetLavaDamage);
 	package.add("GetLongName", &Perl_Zone_GetLongName);
 	package.add("GetMaximumClip", &Perl_Zone_GetMaximumClip);

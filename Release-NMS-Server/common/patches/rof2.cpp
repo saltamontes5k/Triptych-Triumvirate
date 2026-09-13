@@ -42,6 +42,7 @@
 #include <numeric>
 #include <cassert>
 #include <cinttypes>
+#include <memory>
 
 
 namespace RoF2
@@ -4950,6 +4951,265 @@ namespace RoF2
 			dest->FastQueuePacket(&outapp, ack_req);
 		}
 
+		delete in;
+	}
+
+	// Reuses the OP_ZoneSpawns serializer to build the serialized spawn block
+	// for OP_Shroud by capturing the OP_ZoneEntry packet it would send.
+	namespace {
+		class ShroudCaptureStream : public EQStreamInterface {
+		public:
+			EQApplicationPacket *captured = nullptr;
+
+			void QueuePacket(const EQApplicationPacket *p, bool ack_req = true) override {
+				if (p) {
+					if (captured) { delete captured; }
+					captured = p->Copy();
+				}
+			}
+			void FastQueuePacket(EQApplicationPacket **p, bool ack_req = true) override {
+				if (p && *p) {
+					if (captured) { delete captured; }
+					captured = *p;
+					*p = nullptr;
+				}
+			}
+			EQApplicationPacket *PopPacket() override { return nullptr; }
+			void Close() override {}
+			void ReleaseFromUse() override {}
+			void RemoveData() override {}
+			std::string GetRemoteAddr() const override { return {}; }
+			uint32 GetRemoteIP() const override { return 0; }
+			uint16 GetRemotePort() const override { return 0; }
+			bool CheckState(EQStreamState state) override { return false; }
+			std::string Describe() const override { return "shroud-capture"; }
+			EQStreamState GetState() override { return CLOSED; }
+			void SetOpcodeManager(OpcodeManager **opm) override {}
+			OpcodeManager *GetOpcodeManager() const override { return nullptr; }
+			Stats GetStats() const override { return Stats{}; }
+			void ResetStats() override {}
+			EQStreamManagerInterface *GetManager() const override { return nullptr; }
+		};
+	}
+
+	// ---------------------------------------------------------------------
+	// OP_Shroud self profile block.
+	//
+	// The RoF2 client applier (eqgame+0x5789B0) reads a fixed 20472-byte
+	// *in-memory* character profile starting at (packet + spawnEnd) and copies
+	// each field into the live character profile. This is NOT the variable
+	// length OP_PlayerProfile wire format: the client first parses the wire
+	// profile into this fixed in-memory layout, and the shroud packet ships
+	// that layout directly. The offsets below were recovered from the applier
+	// disassembly; every field is contiguous and the block ends at 0x4FF8.
+	// ---------------------------------------------------------------------
+	static constexpr uint32 kShroudProfileBlockSize = 20472;
+
+	template <typename T>
+	static inline void ShroudWrite(uint8 *buf, uint32 offset, T value)
+	{
+		memcpy(buf + offset, &value, sizeof(T));
+	}
+
+	static void BuildShroudProfileBlock(uint8 *buf, const PlayerProfile_Struct &pp)
+	{
+		memset(buf, 0, kShroudProfileBlockSize);
+
+		ShroudWrite<uint32>(buf, 0x0000, 1);                                  // Shrouded
+		ShroudWrite<uint8>(buf,  0x0008, static_cast<uint8>(pp.gender));
+		ShroudWrite<uint32>(buf, 0x000C, pp.race);
+		ShroudWrite<uint8>(buf,  0x0010, static_cast<uint8>(pp.class_));
+		ShroudWrite<uint8>(buf,  0x0011, static_cast<uint8>(pp.level));
+		ShroudWrite<uint8>(buf,  0x0012, static_cast<uint8>(pp.level));        // level1
+
+		for (int i = 0; i < 5; ++i) {
+			const uint32 o = 0x0014 + i * 20;
+			ShroudWrite<uint32>(buf, o + 0,  pp.binds[i].zone_id);
+			ShroudWrite<float>(buf,  o + 4,  pp.binds[i].x);
+			ShroudWrite<float>(buf,  o + 8,  pp.binds[i].y);
+			ShroudWrite<float>(buf,  o + 12, pp.binds[i].z);
+			ShroudWrite<float>(buf,  o + 16, pp.binds[i].heading);
+		}
+
+		ShroudWrite<uint32>(buf, 0x0078, pp.deity);
+		ShroudWrite<uint32>(buf, 0x007C, pp.intoxication);
+
+		// Worn textures (22 slots, 20 bytes each: material + 4 unknowns).
+		for (int i = 0; i < 22; ++i) {
+			const uint32 o = 0x00A8 + i * 20;
+			const uint32 material = (i < EQ::textures::materialCount)
+				? pp.item_material.Slot[i].Material : 0;
+			ShroudWrite<uint32>(buf, o, material);
+		}
+
+		// Armor tint (9 dwords).
+		for (int i = 0; i < EQ::textures::materialCount; ++i) {
+			ShroudWrite<uint32>(buf, 0x0314 + i * 4, pp.item_tint.Slot[i].Color);
+		}
+
+		// Appearance.
+		ShroudWrite<uint8>(buf, 0x035C, pp.haircolor);
+		ShroudWrite<uint8>(buf, 0x035D, pp.beardcolor);
+		ShroudWrite<uint8>(buf, 0x0364, pp.eyecolor1);
+		ShroudWrite<uint8>(buf, 0x0365, pp.eyecolor2);
+		ShroudWrite<uint8>(buf, 0x0366, pp.hairstyle);
+		ShroudWrite<uint8>(buf, 0x0367, pp.beard);
+		ShroudWrite<uint8>(buf, 0x0368, pp.face);
+		ShroudWrite<uint8>(buf, 0x0369, 0);                                    // "oldface"
+		ShroudWrite<uint32>(buf, 0x036C, pp.drakkin_heritage);
+		ShroudWrite<uint32>(buf, 0x0370, pp.drakkin_tattoo);
+		ShroudWrite<uint32>(buf, 0x0374, pp.drakkin_details);
+
+		// Geometry (same defaults as the normal profile encoder).
+		ShroudWrite<float>(buf,  0x037C, 5.0f);                                // height
+		ShroudWrite<float>(buf,  0x0380, 3.0f);
+		ShroudWrite<float>(buf,  0x0384, 2.5f);
+		ShroudWrite<float>(buf,  0x0388, 5.5f);
+		ShroudWrite<uint32>(buf, 0x0394, pp.points);                           // unspent practice points
+
+		ShroudWrite<uint32>(buf, 0x0398, pp.mana);
+		ShroudWrite<uint32>(buf, 0x039C, pp.cur_hp);
+		ShroudWrite<uint32>(buf, 0x03A0, pp.STR);
+		ShroudWrite<uint32>(buf, 0x03A4, pp.STA);
+		ShroudWrite<uint32>(buf, 0x03A8, pp.CHA);
+		ShroudWrite<uint32>(buf, 0x03AC, pp.DEX);
+		ShroudWrite<uint32>(buf, 0x03B0, pp.INT);
+		ShroudWrite<uint32>(buf, 0x03B4, pp.AGI);
+		ShroudWrite<uint32>(buf, 0x03B8, pp.WIS);
+		ShroudWrite<uint32>(buf, 0x03BC, pp.STR);                              // base stats mirror
+		ShroudWrite<uint32>(buf, 0x03C0, pp.STA);
+		ShroudWrite<uint32>(buf, 0x03C4, pp.CHA);
+		ShroudWrite<uint32>(buf, 0x03C8, pp.DEX);
+		ShroudWrite<uint32>(buf, 0x03CC, pp.INT);
+		ShroudWrite<uint32>(buf, 0x03D0, pp.AGI);
+		ShroudWrite<uint32>(buf, 0x03D4, pp.WIS);
+
+		for (uint32 i = 0; i < MAX_PP_AA_ARRAY; ++i) {
+			const uint32 o = 0x03D8 + i * 12;
+			ShroudWrite<uint32>(buf, o + 0, pp.aa_array[i].AA);
+			ShroudWrite<uint32>(buf, o + 4, pp.aa_array[i].value);
+			ShroudWrite<uint32>(buf, o + 8, pp.aa_array[i].charges);
+		}
+
+		for (uint32 i = 0; i < MAX_PP_SKILL; ++i) {
+			ShroudWrite<uint32>(buf, 0x11E8 + i * 4, pp.skills[i]);
+		}
+		for (uint32 i = 0; i < MAX_PP_INNATE_SKILL; ++i) {
+			ShroudWrite<uint32>(buf, 0x1378 + i * 4, pp.InnateSkills[i]);
+		}
+		for (uint32 i = 0; i < MAX_PP_DISCIPLINES; ++i) {
+			ShroudWrite<uint32>(buf, 0x13DC + i * 4, pp.disciplines.values[i]);
+		}
+
+		// Recast timers (the other two 20/100 dword timer arrays stay zero).
+		for (uint32 i = 0; i < MAX_RECAST_TYPES; ++i) {
+			ShroudWrite<uint32>(buf, 0x18DC + i * 4, pp.recastTimers[i]);
+		}
+
+		for (uint32 i = 0; i < EQ::spells::SPELLBOOK_SIZE; ++i) {
+			ShroudWrite<uint32>(buf, 0x1ABC + i * 4, pp.spell_book[i]);
+		}
+		for (uint32 i = 0; i < EQ::spells::SPELL_GEM_COUNT; ++i) {
+			ShroudWrite<uint32>(buf, 0x25FC + i * 4, pp.mem_spells[i]);
+		}
+		for (uint32 i = 0; i < 12; ++i) {
+			ShroudWrite<uint32>(buf, 0x263C + i * 4, pp.spellSlotRefresh[i]);
+		}
+
+		// Buffs: the client in-memory buff stride is 88 bytes (0x2674..0x34E4).
+		// TODO: map SpellBuff_Struct -> the client 88-byte buff. Left zeroed
+		// for now so the block applies cleanly without buff icons.
+
+		// Money.
+		ShroudWrite<uint32>(buf, 0x34E4, pp.platinum);
+		ShroudWrite<uint32>(buf, 0x34E8, pp.gold);
+		ShroudWrite<uint32>(buf, 0x34EC, pp.silver);
+		ShroudWrite<uint32>(buf, 0x34F0, pp.copper);
+		ShroudWrite<uint32>(buf, 0x34F4, pp.platinum_cursor);
+		ShroudWrite<uint32>(buf, 0x34F8, pp.gold_cursor);
+		ShroudWrite<uint32>(buf, 0x34FC, pp.silver_cursor);
+		ShroudWrite<uint32>(buf, 0x3500, pp.copper_cursor);
+
+		ShroudWrite<uint32>(buf, 0x3508, 0);                                   // mend cooldown
+		ShroudWrite<uint32>(buf, 0x3510, pp.thirst_level);
+		ShroudWrite<uint32>(buf, 0x3514, pp.hunger_level);
+
+		ShroudWrite<uint32>(buf, 0x3518, pp.aapoints_spent);
+		ShroudWrite<uint32>(buf, 0x3530, pp.aapoints);
+
+		// Bandoliers (20 x 320) and potion belt (5 x 72) share the server layout.
+		static_assert(sizeof(Bandolier_Struct) == 320, "unexpected bandolier size");
+		for (uint32 i = 0; i < EQ::profile::BANDOLIERS_SIZE; ++i) {
+			memcpy(buf + 0x3538 + i * sizeof(Bandolier_Struct), &pp.bandoliers[i], sizeof(Bandolier_Struct));
+		}
+		static_assert(sizeof(PotionBeltItem_Struct) == 72, "unexpected potion belt item size");
+		for (uint32 i = 0; i < EQ::profile::POTION_BELT_SIZE; ++i) {
+			memcpy(buf + 0x4E38 + i * sizeof(PotionBeltItem_Struct), &pp.potionbelt.Items[i], sizeof(PotionBeltItem_Struct));
+		}
+
+		// Tail: hp/mana/endurance totals, base resists, and endurance.
+		ShroudWrite<int32>(buf,  0x4FA0, -1);
+		ShroudWrite<uint32>(buf, 0x4FA4, pp.cur_hp);
+		ShroudWrite<uint32>(buf, 0x4FA8, pp.endurance);
+		ShroudWrite<uint32>(buf, 0x4FAC, pp.mana);
+		ShroudWrite<uint32>(buf, 0x4FB0, 0x19);                                // base CR
+		ShroudWrite<uint32>(buf, 0x4FB4, 0x19);                                // base FR
+		ShroudWrite<uint32>(buf, 0x4FB8, 0x19);                                // base MR
+		ShroudWrite<uint32>(buf, 0x4FBC, 0x0f);                                // base DR
+		ShroudWrite<uint32>(buf, 0x4FC0, 0x0f);                                // base PR
+		ShroudWrite<uint32>(buf, 0x4FC4, 0x0f);                                // base PhR
+		ShroudWrite<uint32>(buf, 0x4FC8, 0x0f);                                // base Corruption
+		ShroudWrite<uint32>(buf, 0x4FF4, pp.endurance);
+	}
+
+	ENCODE(OP_Shroud)
+	{
+		EQApplicationPacket *in = *p;
+		*p = nullptr;
+
+		if (in->size < sizeof(ShroudSelf_Struct)) {
+			delete in;
+			return;
+		}
+
+		ShroudSelf_Struct *emu = (ShroudSelf_Struct *) in->pBuffer;
+		const uint32 spawn_id = emu->spawn.spawnId;
+
+		// Serialize the spawn through the existing OP_ZoneSpawns path.
+		EQApplicationPacket *spawn_pkt = new EQApplicationPacket(OP_ZoneSpawns, sizeof(Spawn_Struct));
+		memcpy(spawn_pkt->pBuffer, &emu->spawn, sizeof(Spawn_Struct));
+
+		auto spawn_capture = std::make_shared<ShroudCaptureStream>();
+		Encode_OP_ZoneSpawns(&spawn_pkt, spawn_capture, false);
+		if (!spawn_capture->captured) {
+			delete in;
+			return;
+		}
+		EQApplicationPacket *spawn_entry = spawn_capture->captured;
+		spawn_capture->captured = nullptr;
+
+		const uint32 spawn_len  = spawn_entry->size;
+		const uint16 end_offset = (uint16) (sizeof(uint32) + sizeof(uint16) + spawn_len);
+
+		// RoF2 OP_Shroud self: spawnId (4), uint16 spawn end offset, serialized
+		// spawn, then the fixed 20472-byte in-memory profile block the client's
+		// applier (eqgame+0x5789B0) consumes.
+		auto outapp = new EQApplicationPacket(OP_Shroud, 6 + spawn_len + kShroudProfileBlockSize);
+		uint8 *buf = outapp->pBuffer;
+		*(uint32 *) buf       = spawn_id;
+		*(uint16 *) (buf + 4) = end_offset;
+		memcpy(buf + 6, spawn_entry->pBuffer, spawn_len);
+		BuildShroudProfileBlock(buf + 6 + spawn_len, emu->profile);
+
+		LogNetcode(
+			"[SHROUD] spawn_len [{}] profile_block [{}]",
+			spawn_len,
+			kShroudProfileBlockSize
+		);
+
+		dest->FastQueuePacket(&outapp, ack_req);
+
+		delete spawn_entry;
 		delete in;
 	}
 

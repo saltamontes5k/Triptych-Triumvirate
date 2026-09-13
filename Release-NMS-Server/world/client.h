@@ -37,7 +37,7 @@ class EQApplicationPacket;
 class EQStreamInterface;
 
 constexpr uint8 MAX_CHARACTER_SETS = 64;
-constexpr uint8 EOM_CURRENCY_ID = 6;
+constexpr uint8 TRIUNE_OF_FATE_CURRENCY_ID = 6;
 
 class Client {
 public:
@@ -125,7 +125,7 @@ private:
 
 	uint32  m_selected_character_set;
 	uint32  m_default_character_set;
-	uint32  m_eom_available;
+	uint32  m_triune_of_fate_available;
 
 	AccountCharacterSetLimitsRepository::AccountCharacterSetLimits m_character_set_meta;
 	std::vector<AccountCharacterSetsRepository::AccountCharacterSets> m_character_sets;

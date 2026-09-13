@@ -939,14 +939,14 @@ int Mob::ACSum(bool skip_caps)
 		ac += GetPetACBonusFromOwner();
 		auto spell_aa_ac = aabonuses.AC + spellbonuses.AC;
 		ac += GetSkill(EQ::skills::SkillDefense) / 5;
-		if (EQ::ValueWithin(static_cast<int>(GetClass()), Class::Necromancer, Class::Enchanter))
+		if (HasAnyClass({ Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter }))
 			ac += spell_aa_ac / 3;
 		else
 			ac += spell_aa_ac / 4;
 	}
 	else { // TODO: so we can't set NPC skills ... so the skill bonus ends up being HUGE so lets nerf them a bit
 		auto spell_aa_ac = aabonuses.AC + spellbonuses.AC;
-		if (EQ::ValueWithin(static_cast<int>(GetClass()), Class::Necromancer, Class::Enchanter))
+		if (HasAnyClass({ Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter }))
 			ac += GetSkill(EQ::skills::SkillDefense) / 2 + spell_aa_ac / 3;
 		else
 			ac += GetSkill(EQ::skills::SkillDefense) / 3 + spell_aa_ac / 4;
@@ -3043,58 +3043,43 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 			}
 		}
 
-		// Echo of Memory: direct alt-currency award. One shared roll per kill for the killer's
-		// raid/group; on success every eligible member is awarded together. Currency is personal -
-		// it never enters the loot tables or the corpse. Each member is still gated by con color
-		// (the kill has to be worth something to them) and by the same level-range rule as the XP
-		// split, so passive healers and parked mules are handled consistently.
+		// Triune of Fate: direct alt-currency award. A flat 1-in-N roll per group/raid member per
+		// corpse. Currency is personal - it never enters the loot tables or the corpse.
+		// Deliberately ungated: no level-range check and no con-color check of any kind. A parked
+		// low-level alt in a group rolls, and a grey-con kill rolls. Both are accepted design
+		// choices, not defects - do not reintroduce either gate without asking first.
 		if (killer && killer->IsClient()) {
-			auto IsEOMEligible = [this](Client* c, int reference_level) {
-				if (!c || !Mob::IsWithinRewardLevelRange(c->GetLevel(), reference_level)) {
-					return false;
+			auto TryTriuneOfFateAward = [](Client* c) {
+				if (!c) {
+					return;
 				}
-				const uint32 con_color = c->GetLevelCon(GetLevel());
-				return con_color == ConsiderColor::Red || con_color == ConsiderColor::Yellow || con_color == ConsiderColor::White;
-			};
-
-			auto AwardEOM = [](Client* c) {
-				c->CheckItemDiscoverability(46779);
-				c->AddAlternateCurrencyValue(6, 1, true);
-				c->Message(Chat::Green, "You receive 1 Echo of Memory.");
-				c->SendMarqueeMessage(15, "YOU HAVE FOUND AN ECHO OF MEMORY!", 4000);
+				const int chance = RuleI(Custom, TriuneOfFateDropChance);
+				if (chance > 0 && zone->random.Int(0, chance - 1) == 0) {
+					c->CheckItemDiscoverability(46779);
+					c->AddAlternateCurrencyValue(6, 1, true);
+					c->Message(Chat::Green, "You receive 1 Triune of Fate.");
+					c->SendMarqueeMessage(15, "YOU HAVE FOUND A TRIUNE OF FATE!", 4000);
+				}
 			};
 
 			Client* kc = killer->CastToClient();
-			std::vector<Client*> eom_members;
-			int reference_level = kc->GetLevel();
 
 			if (Raid* r = entity_list.GetRaidByClient(kc)) {
-				reference_level = (int)r->GetHighestLevel();
 				for (const auto& m : r->members) {
 					if (m.member && m.member->IsClient()) {
-						eom_members.emplace_back(m.member->CastToClient());
+						TryTriuneOfFateAward(m.member->CastToClient());
 					}
 				}
 			}
 			else if (Group* g = entity_list.GetGroupByClient(kc)) {
-				reference_level = (int)g->GetHighestLevel();
 				for (const auto& mm : g->members) {
 					if (mm && mm->IsClient()) {
-						eom_members.emplace_back(mm->CastToClient());
+						TryTriuneOfFateAward(mm->CastToClient());
 					}
 				}
 			}
 			else {
-				eom_members.emplace_back(kc);
-			}
-
-			const int eom_drop_chance = RuleI(Custom, EventEOMDropChance);
-			if (eom_drop_chance > 0 && zone->random.Int(0, eom_drop_chance - 1) == 0) {
-				for (Client* c : eom_members) {
-					if (IsEOMEligible(c, reference_level)) {
-						AwardEOM(c);
-					}
-				}
+				TryTriuneOfFateAward(kc);
 			}
 		}
 
@@ -3306,6 +3291,25 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 		std::vector<std::any> args = { corpse, this };
 
 		DispatchZoneControllerEvent(EVENT_DEATH_ZONE, owner_or_self, export_string, 0, &args);
+	}
+
+	if (parse->ZoneHasQuestSub(EVENT_DEATH_ZONE)) {
+		const auto& export_string = fmt::format(
+			"{} {} {} {} {} {} {} {} {}",
+			killer_mob ? killer_mob->GetID() : 0,
+			damage,
+			spell,
+			static_cast<int>(attack_skill),
+			entity_id,
+			m_combat_record.GetStartTime(),
+			m_combat_record.GetEndTime(),
+			m_combat_record.GetDamageReceived(),
+			m_combat_record.GetHealingReceived()
+		);
+
+		std::vector<std::any> args = { corpse, this, owner_or_self };
+
+		parse->EventZone(EVENT_DEATH_ZONE, zone, export_string, 0, &args);
 	}
 
 	return true;

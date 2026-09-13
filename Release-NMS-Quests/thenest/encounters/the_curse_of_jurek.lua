@@ -1,5 +1,4 @@
 local hp_event	= 0;
-local __turnin_awarded	= false;
 
 function Jurek_Combat(e)
 	if e.joined then
@@ -45,22 +44,10 @@ function Add_Combat(e)
 	end
 end
 
-local function __award_turnin(e)
-	if __turnin_awarded then return end
-	__turnin_awarded = true
-	local __cl = eq.get_entity_list():GetClientList()
-	if __cl then
-		for _, __c in __cl.entries do
-			__c:SummonItem(57205)
-		end
-	end
-end
-
 function event_encounter_load(e)
 	eq.register_npc_event(Event.spawn,	343447,		Jurek_Spawn);
 	eq.register_npc_event(Event.timer,	343447,		Jurek_Timer);
 	eq.register_npc_event(Event.combat,	343447,		Jurek_Combat);
 	eq.register_npc_event(Event.hp,		343447,		Jurek_HP);
-	eq.register_npc_event(Event.death_complete,	343447,		__award_turnin);
 	eq.register_npc_event(Event.combat,	343027,		Add_Combat);
   end

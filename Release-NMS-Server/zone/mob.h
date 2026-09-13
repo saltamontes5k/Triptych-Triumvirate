@@ -799,7 +799,7 @@ public:
 	inline uint32 GetLevelCon(uint8 iOtherLevel) const { return GetLevelCon(GetLevel(), iOtherLevel); }
 	// Shared level-range gate for group/raid REWARD sharing. A member no more than ~half their own
 	// level (but always at least 5) below the reference level (the group's or raid's highest) shares
-	// in the reward. Used by the XP split (Group/Raid::SplitExp) and the Echo of Memory award.
+	// in the reward. Used by the XP split (Group/Raid::SplitExp) only.
 	static bool IsWithinRewardLevelRange(int member_level, int reference_level);
 	void AddToHateList(Mob* other, int64 hate = 0, int64 damage = 0, bool iYellForHelp = true,
 		bool bFrenzy = false, bool iBuffTic = false, uint16 spell_id = SPELL_UNKNOWN, bool pet_comand = false);
@@ -1324,7 +1324,7 @@ public:
 	bool CanThisClassBlock(void) const;
 
 	int GetHandToHandDelay(void);
-	uint32 GetClassLevelFactor();
+	uint32 GetClassLevelFactor(uint8 class_id);
 	void Mesmerize();
 	inline bool IsMezzed() const { return mezzed; }
 	inline bool IsStunned() const { return stunned; }
@@ -1516,6 +1516,7 @@ public:
 
 	uint32 GetClassesBits() const;
 	bool HasClass(uint8 player_class, uint32 bitmask = 0) const;
+	bool HasAnyClass(std::initializer_list<uint8> classes, uint32 bitmask = 0) const;
 
 	bool ShieldAbility(uint32 target_id, int shielder_max_distance = 15, int shield_duration = 12000, int shield_target_mitigation = 50, int shielder_mitigation = 75, bool use_aa = false, bool can_shield_npc = true);
 	void DoShieldDamageOnShielder(Mob *shield_target, int64 hit_damage_done, EQ::skills::SkillType skillInUse);

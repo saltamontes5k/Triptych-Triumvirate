@@ -4,7 +4,6 @@ local goblin_npc  = 338175 -- a_Stillmoon_servant (missing different class varia
 local mt_death    = 343    -- "Npc dialogue" in older clients
 local active      = false  -- flag task update made Shogurei active
 local deny_flight = false  -- flag if Shogurei will cast Denial of Flight next tick
-local __turnin_awarded = false
 
 local sand_areas = {
 	-- first big sand room (sand in southwest corner does not spawn goblins on live)
@@ -165,15 +164,6 @@ end
 function Guardian_Death(e)
 	eq.unregister_player_event(Event.enter_area);
 	eq.get_entity_list():MessageClose(e.self, true, 100, mt_death, "Shogurei, Guardian of the Sands's corpse says, 'The garden stands defiled, but you have brought me honor in defeat.'")
-	if not __turnin_awarded then
-		__turnin_awarded = true
-		local __cl = eq.get_entity_list():GetClientList()
-		if __cl then
-			for _, __c in __cl.entries do
-				__c:SummonItem(57207)
-			end
-		end
-	end
 end
 
 local function Guardian_Signal(e)

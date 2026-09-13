@@ -3339,7 +3339,7 @@
 			<EndCapRight>A_GaugeEndCapRight</EndCapRight>
 		</GaugeDrawTemplate>
 	</Gauge>
-	<StaticAnimation item="IW_EOMBackground">
+	<StaticAnimation item="IW_TriuneOfFateBackground">
 		<RelativePosition>true</RelativePosition>
 		<Location>
 			<X>306</X>
@@ -3351,7 +3351,7 @@
 		</Size>
 		<Animation>A_RecessedBox</Animation>
 	</StaticAnimation>
-	<StaticAnimation item="IW_EOMIcon">
+	<StaticAnimation item="IW_TriuneOfFateIcon">
 		<RelativePosition>true</RelativePosition>
 		<Location>
 			<X>309</X>
@@ -3363,7 +3363,7 @@
 		</Size>
 		<Animation>A_EoMIcon</Animation>
 	</StaticAnimation>
-	<Label item="IW_EOMPoints">
+	<Label item="IW_TriuneOfFatePoints">
 		<EQType>338</EQType>
 		<RelativePosition>true</RelativePosition>
 		<Location>
@@ -4048,9 +4048,9 @@
 		<Pieces>IW_DoneButton</Pieces>
 		<Pieces>IW_FacePick</Pieces>
 		<Pieces>IW_Tinting</Pieces>
-		<Pieces>IW_EOMBackground</Pieces>
-		<Pieces>IW_EOMIcon</Pieces>
-		<Pieces>IW_EOMPoints</Pieces>
+		<Pieces>IW_TriuneOfFateBackground</Pieces>
+		<Pieces>IW_TriuneOfFateIcon</Pieces>
+		<Pieces>IW_TriuneOfFatePoints</Pieces>
 		<Pieces>IW_GoodPoints</Pieces>
 		<Pieces>IW_EvilPoints</Pieces>
 		<Pieces>IW_ReclaimButton</Pieces>

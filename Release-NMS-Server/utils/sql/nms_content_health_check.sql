@@ -1,6 +1,6 @@
 -- ============================================================================
 -- Triptych content health check - verifies the DATA every custom-manifest
--- version (v18 through v34) is supposed to deliver, without trusting
+-- version (v18 through v42) is supposed to deliver, without trusting
 -- db_version.
 --
 -- Why this exists: we have now twice found servers whose custom_version was
@@ -10,9 +10,9 @@
 -- expectation - anything that misses its expected value identifies exactly
 -- which payload is absent.
 --
--- Expected custom_version on a fully-booted server: 34. NOTE: the shipped
--- dump (release-peq.sql) is stamped 33 - a fresh import reads 33 until the
--- first `world` boot applies v34. So "34" is correct only after first boot.
+-- Expected custom_version on a fully-booted server: 42. A fresh import only
+-- reaches that once the first `world` boot applies the outstanding custom
+-- migrations (v35-v42). So "42" is correct only after first boot.
 --
 -- Run (Windows / MariaDB):
 --   "C:\Program Files\MariaDB 12.3\bin\mariadb.exe" -u <user> -p <dbname> < nms_content_health_check.sql
@@ -26,7 +26,7 @@
 -- READ-ONLY: SELECT/SHOW only. Safe on any server, any number of times.
 -- ============================================================================
 
-SELECT 'db_version.custom_version (expect 34 once a v34 binary has booted)' AS what, custom_version AS value FROM db_version LIMIT 1;
+SELECT 'db_version.custom_version (expect 42 once a v42 binary has booted)' AS what, custom_version AS value FROM db_version LIMIT 1;
 
 -- ---- v18 / v23: Beastlord spell merchant + scrolls -------------------------
 SELECT 'v23 bl merchant npc (expect 1)' AS what, COUNT(*) AS value FROM npc_types WHERE id = 1120001300;
@@ -90,3 +90,20 @@ SELECT 'v33 character_illusions tbl (expect 1)' AS what, COUNT(*) AS value FROM 
 
 -- ---- v34: npc_types summon_timer_override --------------------------------------------
 SELECT 'v34 npc_types.summon_timer_override col (expect 1)' AS what, COUNT(*) AS value FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'npc_types' AND COLUMN_NAME = 'summon_timer_override';
+
+-- ---- v39: #Echo_of_Chardok (Veeshan's Peak key / Cipher essence branch) ---------------
+SELECT 'v39 chardok echo npc (expect 1)' AS what, COUNT(*) AS value FROM npc_types WHERE id = 103161;
+SELECT 'v39 chardok echo spawn2 (expect 3)' AS what, COUNT(*) AS value FROM spawn2 s JOIN spawnentry e ON e.spawngroupID = s.spawngroupID WHERE e.npcID = 103161 AND s.zone = 'chardok';
+
+-- ---- v40: era zones unlocked through Secrets of Faydwer (per-account gates govern) ----
+SELECT 'v40 OoW zones open (expect 24)' AS what, COUNT(DISTINCT short_name) AS value FROM zone WHERE expansion = 8 AND min_status = 0;
+SELECT 'v40 eras<=14 still locked at 255 (expect 0)' AS what, COUNT(*) AS value FROM zone WHERE expansion <= 14 AND min_status = 255;
+
+-- ---- v41: Echo of Memory -> Triune of Fate rename --------------------------------------
+SELECT 'v41 triune currency (expect Triune of Fate)' AS what, `value` AS value FROM db_str WHERE id = 6 AND type = 17 LIMIT 1;
+SELECT 'v41 triune drop rule (expect 150)' AS what, rule_value AS value FROM rule_values WHERE rule_name = 'Custom:TriuneOfFateDropChance' LIMIT 1;
+
+-- ---- v42: Drakkin breath weapons (and similar slot-3 resist damage spells) always stack -
+-- The rule is a single comma string; assert the Osh'vir lineage (first rank 11112, custom
+-- rank-15 clone 50011) is present so a stale/truncated value is caught.
+SELECT 'v42 always-stack has breath ids (expect 1)' AS what, (rule_value LIKE '%11112%' AND rule_value LIKE '%50011%') AS value FROM rule_values WHERE rule_name = 'Spells:AlwaysStackSpells' LIMIT 1;

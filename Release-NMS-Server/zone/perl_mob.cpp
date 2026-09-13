@@ -1252,7 +1252,7 @@ int Perl_Mob_GetHandToHandDelay(Mob* self) // @categories Stats and Attributes
 
 int Perl_Mob_GetClassLevelFactor(Mob* self) // @categories Stats and Attributes
 {
-	return self->GetClassLevelFactor();
+	return self->GetClassLevelFactor(self->GetClass());
 }
 
 void Perl_Mob_Mesmerize(Mob* self) // @categories Script Utility

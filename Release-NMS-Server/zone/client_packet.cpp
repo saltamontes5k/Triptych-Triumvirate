@@ -389,6 +389,10 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_SetStartCity] = &Client::Handle_OP_SetStartCity;
 	ConnectedOpcodes[OP_SetTitle] = &Client::Handle_OP_SetTitle;
 	ConnectedOpcodes[OP_Shielding] = &Client::Handle_OP_Shielding;
+	ConnectedOpcodes[OP_Shroud] = &Client::Handle_OP_Shroud;
+	ConnectedOpcodes[OP_ShroudSelect] = &Client::Handle_OP_ShroudSelect;
+	ConnectedOpcodes[OP_ShroudSelectCancel] = &Client::Handle_OP_ShroudSelectCancel;
+	ConnectedOpcodes[OP_ShroudRequestStats] = &Client::Handle_OP_ShroudRequestStats;
 	ConnectedOpcodes[OP_ShopEnd] = &Client::Handle_OP_ShopEnd;
 	ConnectedOpcodes[OP_ShopPlayerBuy] = &Client::Handle_OP_ShopPlayerBuy;
 	ConnectedOpcodes[OP_ShopPlayerSell] = &Client::Handle_OP_ShopPlayerSell;
@@ -642,6 +646,9 @@ void Client::ReapplyBuff(uint32 index, bool from_suppress)
 // Finish client connecting state
 void Client::CompleteConnect()
 {
+	// If the zone was killed mid-shroud, restore the real profile before any
+	// class/stat logic runs so the character is never stranded as a shroud.
+	RestoreShroudSnapshot();
 
 	if (RuleB(Custom, MulticlassingEnabled)) {
 		m_pp.classes = Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
@@ -828,6 +835,11 @@ void Client::CompleteConnect()
 
 	if (parse->PlayerHasQuestSub(EVENT_ENTER_ZONE)) {
 		parse->EventPlayer(EVENT_ENTER_ZONE, this, "", 0);
+	}
+
+	if (parse->ZoneHasQuestSub(EVENT_ENTER_ZONE)) {
+		std::vector<std::any> args = { this };
+		parse->EventZone(EVENT_ENTER_ZONE, zone, "", 0, &args);
 	}
 
 	DeleteEntityVariable(SEE_BUFFS_FLAG);
@@ -4535,6 +4547,10 @@ void Client::Handle_OP_Camp(const EQApplicationPacket *app)
 	if (IsLFP())
 		worldserver.StopLFP(CharacterID());
 
+	// Every /camp decides afresh whether the server finishes the logout itself; only the
+	// fast branch below sets this, so a cancelled or combat-blocked camp never inherits it.
+	fast_camp = false;
+
 	if ((zone->GetZoneID() == Zones::BAZAAR || zone->GetZoneID() == Zones::ECOMMONS) && !GetRestTimer()) {
 		camp_timer.Start(100, true);
 	} else {
@@ -4551,7 +4567,19 @@ void Client::Handle_OP_Camp(const EQApplicationPacket *app)
 			return;
 		}
 
-		camp_timer.Start(29000, true);
+		// AggroCount is how many NPCs have this client on their hate list; a Client's own
+		// hate_list is not maintained for NPC aggro, so IsEngaged() would never be true here.
+		const bool in_combat = GetAggroCount() > 0 || IsDueling() || GetFeigned();
+		if (RuleB(Custom, FastCampBlockedInCombat) && in_combat) {
+			camp_timer.Start(29000, true);
+		} else {
+			// The stock client keeps its own ~30 s countdown and closes the connection itself.
+			// Anything shorter only works because Client::Process closes the stream for us when
+			// fast_camp is set at camp_timer expiry. Clamp so the timer is always sane.
+			const int camp_ms = std::max(1, std::min(RuleI(Custom, CampTimerMs), 29000));
+			fast_camp = camp_ms < 29000;
+			camp_timer.Start(camp_ms, true);
+		}
 	}
 
 	if (RuleB(Bots, Enabled)) {
@@ -4960,6 +4988,12 @@ void Client::Handle_OP_ClickDoor(const EQApplicationPacket *app)
 			quest_return = parse->EventPlayer(EVENT_CLICK_DOOR, this, std::to_string(cd->doorid), 0, &args);
 		}
 
+		if (parse->ZoneHasQuestSub(EVENT_CLICK_DOOR)) {
+			std::vector<std::any> args = { currentdoor, this };
+
+			quest_return = parse->EventZone(EVENT_CLICK_DOOR, zone, std::to_string(cd->doorid), 0, &args);
+		}
+
 		if (quest_return == 0) {
 			currentdoor->HandleClick(this, 0);
 		}
@@ -4990,6 +5024,11 @@ void Client::Handle_OP_ClickObject(const EQApplicationPacket *app)
 		if (parse->PlayerHasQuestSub(EVENT_CLICK_OBJECT)) {
 			std::vector<std::any> args = { object };
 			parse->EventPlayer(EVENT_CLICK_OBJECT, this, std::to_string(click_object->drop_id), GetID(), &args);
+		}
+
+		if (parse->ZoneHasQuestSub(EVENT_CLICK_OBJECT)) {
+			std::vector<std::any> args = { object, this };
+			parse->EventZone(EVENT_CLICK_OBJECT, zone, std::to_string(click_object->drop_id), GetID(), &args);
 		}
 
 		if (IsDevToolsEnabled()) {
@@ -11841,6 +11880,11 @@ void Client::Handle_OP_PopupResponse(const EQApplicationPacket *app)
 		parse->EventPlayer(EVENT_POPUP_RESPONSE, this, std::to_string(popup_response->popupid), 0);
 	}
 
+	if (parse->ZoneHasQuestSub(EVENT_POPUP_RESPONSE)) {
+		std::vector<std::any> args = { this };
+		parse->EventZone(EVENT_POPUP_RESPONSE, zone, std::to_string(popup_response->popupid), 0, &args);
+	}
+
 	auto t = GetTarget();
 	if (t) {
 		parse->EventBotMercNPC(EVENT_POPUP_RESPONSE, t, this, [&]() { return std::to_string(popup_response->popupid); });
@@ -14562,6 +14606,7 @@ void Client::Handle_OP_SpawnAppearance(const EQApplicationPacket *app)
 			BindWound(this, false, true);
 			camp_timer.Disable();
 			bot_camp_timer.Disable();
+			fast_camp = false;
 		}
 		else if (sa->parameter == Animation::Sitting) {
 			SetAppearance(eaSitting);
@@ -15713,7 +15758,7 @@ void Client::Handle_OP_TradeSkillRecipeInspect(const EQApplicationPacket* app)
 	const auto& v = TradeskillRecipeEntriesRepository::GetWhere(
 		content_db,
 		fmt::format(
-			"`recipe_id` = {} AND `componentcount` = 0 AND `successcount` > 0 LIMIT 1",
+			"`recipe_id` = {} AND `componentcount` = 0 AND `successcount` > 0 ORDER BY `id` ASC LIMIT 1",
 			s->recipe_id
 		)
 	);

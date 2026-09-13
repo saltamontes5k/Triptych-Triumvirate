@@ -143,6 +143,7 @@ E(OP_ZoneEntry)
 E(OP_ZonePlayerToBind)
 E(OP_ZoneServerInfo)
 E(OP_ZoneSpawns)
+E(OP_Shroud)
 E(OP_CrystalCountUpdate)
 // Begin RoF Decodes
 D(OP_AdventureMerchantSell)

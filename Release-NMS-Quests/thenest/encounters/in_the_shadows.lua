@@ -10,7 +10,6 @@ local lifedrain_min_hit			= 600;
 local lifedrain_max_hit			= 1950;
 local total_npc_list			= {343093,343165,343166,343167,343096,343160,343162,343159,343163,343095,343161,343094};
 local corrupted_drakes			= {343093,343165,343166,343167};
-local __turnin_awarded			= false;
 local egg_locations				= {
 	[1] = {-4461.28,617.90,133,423.0},
 	[2] = {-4513.24,275.87,133,467.3},
@@ -173,16 +172,6 @@ function Vish_Death(e)
 
 	for i = 1, #total_npc_list do
 		eq.depop_all(total_npc_list[i]);
-	end
-
-	if not __turnin_awarded then
-		__turnin_awarded = true
-		local __cl = eq.get_entity_list():GetClientList()
-		if __cl then
-			for _, __c in __cl.entries do
-				__c:SummonItem(57201)
-			end
-		end
 	end
 end
 

@@ -3,7 +3,6 @@
 local e_min_hit		= 339;
 local e_max_hit		= 1061;
 local e_max_hp		= 350000;
-local __turnin_awarded	= false;
 
 function Emoush_Spawn(e)
 	eq.set_timer("spawn", 1 * 1000);
@@ -40,15 +39,6 @@ end
 
 function Emoush_Death(e)
 	eq.depop_all(342060);
-	if not __turnin_awarded then
-		__turnin_awarded = true
-		local __cl = eq.get_entity_list():GetClientList()
-		if __cl then
-			for _, __c in __cl.entries do
-				__c:SummonItem(57202)
-			end
-		end
-	end
 end
 
 function PowerUp(e)

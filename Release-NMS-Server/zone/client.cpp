@@ -270,6 +270,7 @@ Client::Client() : Mob(
 	autosave_timer.Disable();
 	GetMercTimer()->Disable();
 	instalog = false;
+	fast_camp = false;
 	m_pp.autosplit = false;
 	// initialise haste variable
 	m_tradeskill_object = nullptr;
@@ -585,6 +586,7 @@ Client::Client(EQStreamInterface *ieqs) : Mob(
 	autosave_timer.Disable();
 	GetMercTimer()->Disable();
 	instalog = false;
+	fast_camp = false;
 	m_pp.autosplit = false;
 	// initialise haste variable
 	m_tradeskill_object = nullptr;
@@ -1033,6 +1035,11 @@ void Client::RemoveExpendedAA(int aa_id)
 bool Client::Save(uint8 iCommitNow) {
 	if(!ClientDataLoaded())
 		return false;
+
+	// Never persist a shroud form: restore the real profile before writing.
+	if (m_shrouded) {
+		RemoveShroud(false);
+	}
 
 	BenchTimer timer;
 

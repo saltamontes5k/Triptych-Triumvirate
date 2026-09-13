@@ -4,6 +4,11 @@ sub EVENT_CLICKDOOR {
 	if($doorid == 2 || $doorid == 4 || $doorid == 40 || $doorid == 42) {
 		if($uguild_id > 0) {
 			$client->SendToGuildHall();
+			# returning nonzero suppresses the engine's default door handling
+			# (client_packet.cpp only calls HandleClick when quest_return == 0),
+			# so guild members get their instanced hall without also being
+			# teleported to the static guildhall by the door's dest_zone.
+			return 1;
 		}
   	} elsif((($doorid >= 5) && ($doorid <= 38)) ||  (($doorid >= 43) && ($doorid <= 76))) {
 		$client->OpenLFGuildWindow();

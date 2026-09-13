@@ -2879,9 +2879,9 @@ void Client::SendCharacterSetInfo() {
 	// NEW PACKET FIELDS:
 	l->max_character_sets = GetMaxCharacterSets();
 	l->max_character_slots = GetMaxCharacterSlots();  // Total account character limit
-	l->eom_available = m_eom_available;
-	l->character_slot_cost = RuleI(Custom, EoMUnlockCharacterSlotCost);
-	l->character_set_cost = RuleI(Custom, EoMUnlockCharacterSetCost);
+	l->triune_of_fate_available = m_triune_of_fate_available;
+	l->character_slot_cost = RuleI(Custom, TriuneOfFateUnlockCharacterSlotCost);
+	l->character_set_cost = RuleI(Custom, TriuneOfFateUnlockCharacterSetCost);
 	l->available_slot_unlocks = GetAvailableSlotUnlocks();
 	l->available_set_unlocks = GetAvailableSetUnlocks();
 
@@ -2949,7 +2949,7 @@ void Client::PopulateCharacterDataCache() {
 	m_default_character_set = 1;
 	m_selected_character_set = 1;
 
-	m_eom_available = AccountAltCurrencyRepository::FindByAccountAndCurrency(database, GetAccountID(), EOM_CURRENCY_ID).amount;
+	m_triune_of_fate_available = AccountAltCurrencyRepository::FindByAccountAndCurrency(database, GetAccountID(), TRIUNE_OF_FATE_CURRENCY_ID).amount;
 }
 
 void Client::WritebackCharacterDataCache() {
@@ -3141,20 +3141,20 @@ uint32 Client::GetMaxCharacterSlots() {
 }
 
 uint32 Client::GetAvailableSlotUnlocks() {
-	int32 max_eom_slots = RuleI(Custom, EoMUnlockCharacterSlots);
-	if (max_eom_slots == -1) {
+	int32 max_triune_of_fate_slots = RuleI(Custom, TriuneOfFateUnlockCharacterSlots);
+	if (max_triune_of_fate_slots == -1) {
 		return 999;
 	}
-	return (m_character_set_meta.eom_slots >= max_eom_slots) ? 0 : (max_eom_slots - m_character_set_meta.eom_slots);
+	return (m_character_set_meta.eom_slots >= max_triune_of_fate_slots) ? 0 : (max_triune_of_fate_slots - m_character_set_meta.eom_slots);
 }
 
 uint32 Client::GetAvailableSetUnlocks() {
-	int32 max_eom_sets = RuleI(Custom, EoMUnlockCharacterSets);
-	if (max_eom_sets == -1) {
+	int32 max_triune_of_fate_sets = RuleI(Custom, TriuneOfFateUnlockCharacterSets);
+	if (max_triune_of_fate_sets == -1) {
 		uint32 current_max = GetMaxCharacterSets();
 		return (current_max >= MAX_CHARACTER_SETS) ? 0 : (MAX_CHARACTER_SETS - current_max);
 	}
-	return (m_character_set_meta.eom_sets >= max_eom_sets) ? 0 : (max_eom_sets - m_character_set_meta.eom_sets);
+	return (m_character_set_meta.eom_sets >= max_triune_of_fate_sets) ? 0 : (max_triune_of_fate_sets - m_character_set_meta.eom_sets);
 }
 
 bool Client::GrantBonusCharacterSets(uint32 quantity) {
@@ -3181,56 +3181,56 @@ bool Client::HandleSetUnlock(uint32 quantity) {
 		return false;
 	}
 
-	if (RuleI(Custom, EoMUnlockCharacterSets) != -1 && GetAvailableSetUnlocks() < quantity) {
+	if (RuleI(Custom, TriuneOfFateUnlockCharacterSets) != -1 && GetAvailableSetUnlocks() < quantity) {
 		LogError("Account [{}] attempted to unlock {} character sets but only {} unlocks available",
 			GetAccountID(), quantity, GetAvailableSetUnlocks());
 		return false;
 	}
 
-	uint32 cost_per_set = RuleI(Custom, EoMUnlockCharacterSetCost);
+	uint32 cost_per_set = RuleI(Custom, TriuneOfFateUnlockCharacterSetCost);
 	uint32 total_cost = quantity * cost_per_set;
 
-	if (m_eom_available < total_cost) {
-		LogError("Account [{}] attempted to unlock {} character sets for {} EoM but only has {} EoM",
-			GetAccountID(), quantity, total_cost, m_eom_available);
+	if (m_triune_of_fate_available < total_cost) {
+		LogError("Account [{}] attempted to unlock {} character sets for {} Triune of Fate but only has {}",
+			GetAccountID(), quantity, total_cost, m_triune_of_fate_available);
 		return false;
 	}
 
-	m_eom_available -= total_cost;
-	AccountAltCurrencyRepository::UpdateByAccountAndCurrency(database, GetAccountID(), EOM_CURRENCY_ID, m_eom_available);
+	m_triune_of_fate_available -= total_cost;
+	AccountAltCurrencyRepository::UpdateByAccountAndCurrency(database, GetAccountID(), TRIUNE_OF_FATE_CURRENCY_ID, m_triune_of_fate_available);
 
 	m_character_set_meta.eom_sets += quantity;
 	// AccountCharacterSetLimitsRepository::UpdateAccountSetMeta(database, m_character_set_meta);
 
-	LogCharacterSets("Account [{}] unlocked {} character sets for {} EoM, now has [{}] EoM sets",
+	LogCharacterSets("Account [{}] unlocked {} character sets for {} Triune of Fate, now has [{}] unlocked sets",
 		GetAccountID(), quantity, total_cost, m_character_set_meta.eom_sets);
 
 	return true;
 }
 
 bool Client::HandleSlotUnlock(uint32 quantity) {
-	if (RuleI(Custom, EoMUnlockCharacterSlots) != -1 && GetAvailableSlotUnlocks() < quantity) {
+	if (RuleI(Custom, TriuneOfFateUnlockCharacterSlots) != -1 && GetAvailableSlotUnlocks() < quantity) {
 		LogError("Account [{}] attempted to unlock {} character slots but only {} unlocks available",
 			GetAccountID(), quantity, GetAvailableSlotUnlocks());
 		return false;
 	}
 
-	uint32 cost_per_slot = RuleI(Custom, EoMUnlockCharacterSlotCost);
+	uint32 cost_per_slot = RuleI(Custom, TriuneOfFateUnlockCharacterSlotCost);
 	uint32 total_cost = quantity * cost_per_slot;
 
-	if (m_eom_available < total_cost) {
-		LogError("Account [{}] attempted to unlock {} character slots for {} EoM but only has {} EoM",
-			GetAccountID(), quantity, total_cost, m_eom_available);
+	if (m_triune_of_fate_available < total_cost) {
+		LogError("Account [{}] attempted to unlock {} character slots for {} Triune of Fate but only has {}",
+			GetAccountID(), quantity, total_cost, m_triune_of_fate_available);
 		return false;
 	}
 
-	m_eom_available -= total_cost;
-	AccountAltCurrencyRepository::UpdateByAccountAndCurrency(database, GetAccountID(), EOM_CURRENCY_ID, m_eom_available);
+	m_triune_of_fate_available -= total_cost;
+	AccountAltCurrencyRepository::UpdateByAccountAndCurrency(database, GetAccountID(), TRIUNE_OF_FATE_CURRENCY_ID, m_triune_of_fate_available);
 
 	m_character_set_meta.eom_slots += quantity;
 	// AccountCharacterSetLimitsRepository::UpdateAccountSetMeta(database, m_character_set_meta);
 
-	LogCharacterSets("Account [{}] unlocked {} character slots for {} EoM, now has [{}] EoM slots",
+	LogCharacterSets("Account [{}] unlocked {} character slots for {} Triune of Fate, now has [{}] unlocked slots",
 		GetAccountID(), quantity, total_cost, m_character_set_meta.eom_slots);
 
 	return true;

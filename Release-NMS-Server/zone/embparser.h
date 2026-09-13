@@ -30,6 +30,7 @@
 class Mob;
 class Client;
 class NPC;
+class Zone;
 
 namespace EQ {
 	class ItemInstance;
@@ -136,6 +137,22 @@ public:
 		std::vector<std::any>* extra_pointers
 	);
 
+	virtual int EventZone(
+		QuestEventID event_id,
+		Zone* zone,
+		std::string data,
+		uint32 extra_data,
+		std::vector<std::any>* extra_pointers
+	);
+
+	virtual int EventGlobalZone(
+		QuestEventID event_id,
+		Zone* zone,
+		std::string data,
+		uint32 extra_data,
+		std::vector<std::any>* extra_pointers
+	);
+
 	virtual bool HasQuestSub(uint32 npc_id, QuestEventID event_id);
 	virtual bool HasGlobalQuestSub(QuestEventID event_id);
 	virtual bool PlayerHasQuestSub(QuestEventID event_id);
@@ -146,6 +163,8 @@ public:
 	virtual bool GlobalBotHasQuestSub(QuestEventID event_id);
 	virtual bool MercHasQuestSub(QuestEventID event_id);
 	virtual bool GlobalMercHasQuestSub(QuestEventID event_id);
+	virtual bool ZoneHasQuestSub(QuestEventID event_id);
+	virtual bool GlobalZoneHasQuestSub(QuestEventID event_id);
 
 	virtual void LoadNPCScript(std::string filename, int npc_id);
 	virtual void LoadGlobalNPCScript(std::string filename);
@@ -157,6 +176,8 @@ public:
 	virtual void LoadGlobalBotScript(std::string filename);
 	virtual void LoadMercScript(std::string filename);
 	virtual void LoadGlobalMercScript(std::string filename);
+	virtual void LoadZoneScript(std::string filename);
+	virtual void LoadGlobalZoneScript(std::string filename);
 
 	virtual void AddVar(std::string name, std::string val);
 	virtual std::string GetVar(std::string name);
@@ -194,7 +215,8 @@ private:
 		Mob* other,
 		Mob* mob,
 		EQ::ItemInstance* inst,
-		const SPDat_Spell_Struct* spell
+		const SPDat_Spell_Struct* spell,
+		Zone* zone = nullptr
 	);
 
 	void MapFunctions();
@@ -295,6 +317,8 @@ private:
 	PerlQuestStatus global_bot_quest_status_;
 	PerlQuestStatus merc_quest_status_;
 	PerlQuestStatus global_merc_quest_status_;
+	PerlQuestStatus zone_quest_status_;
+	PerlQuestStatus global_zone_quest_status_;
 
 	SV* _empty_sv;
 

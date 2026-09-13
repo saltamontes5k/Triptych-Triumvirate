@@ -372,14 +372,6 @@ end
 
 function OMM_Death(e)
 	eq.signal(317116 , 317109); -- NPC: zone_status
-
-	-- NMS progression: killing Overlord Mata Muram completes Anguish, one half of the
-	-- Prophecy of Ro gate. Spawn the memory NPC (global/26000.pl); hailing grants PoR/anguish.
-	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
-	if memory_npc ~= nil then
-		memory_npc:SetEntityVariable("Flag-Name", "anguish")
-		memory_npc:SetEntityVariable("Stage-Name", "PoR")
-	end
 	eq.zone_emote(MT.Yellow,"The walls of Anguish tremble, you can feel the world shaking your bones. For a brief moment you think you see a smile flash across Mata Muram's face, and as the last breath escapes his lungs you hear a faint voice, 'There are worlds other than these...");
 	eq.world_emote(MT.Yellow, "The world trembles around you. All of Discord seems to howl in pain, in the distance you hear dragorn shouting for their freedom from Mata Muram's terror.");
 

@@ -351,11 +351,11 @@ int64 Client::CalcMaxHP()
 	return EQ::ClampLower(max_hp, static_cast<int64>(1));
 }
 
-uint32 Mob::GetClassLevelFactor()
+uint32 Mob::GetClassLevelFactor(uint8 class_id)
 {
 	uint32 multiplier = 0;
 	uint8  mlevel     = GetLevel();
-	switch (GetClass()) {
+	switch (class_id) {
 		case Class::Warrior: {
 			if (mlevel < 20) {
 				multiplier = 220;
@@ -527,7 +527,7 @@ int64 Client::_CalcBaseHP(int class_id)
 	}
 	else {
 		uint32 Post255;
-		uint32 lm = GetClassLevelFactor();
+		uint32 lm = GetClassLevelFactor(class_id);
 		if ((GetSTA() - 255) / 2 > 0) {
 			Post255 = (GetSTA() - 255) / 2;
 		}
@@ -631,7 +631,7 @@ int64 Client::_CalcBaseMana(uint8 class_id)
 			ConvertedWisInt = (3 * over200 - 300) / 2 + over200;
 		}
 
-		auto base_data = zone->GetBaseData(GetLevel(), GetClass());
+		auto base_data = zone->GetBaseData(GetLevel(), class_id);
 		if (base_data.level == GetLevel()) {
 			max_m = base_data.mana + (ConvertedWisInt * base_data.mana_fac) + itembonuses.heroic_max_mana;
 		}

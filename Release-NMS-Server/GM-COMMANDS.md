@@ -41,7 +41,7 @@ Stock detail (syntax, subcommands) is documented locally in reference/GM Command
 | #attackmode | 0 | Toggle Ranged and Melee Autoattack modes |
 | #augmentitem | 250 | Force augments an item. Must have the augment item window open. |
 | #autoskill | 0 | Configure automatic combat skill usage. |
-| #award | 100 | EoM |
+| #award | 100 | [Character Name] [Amount] [Reason] - Grant Triune of Fate to a character |
 | #ban | 150 | [Character Name] [Reason] - Ban by character name |
 | #bot | 0 | Type \"#bot help\" or \"^help\" to the see the list of available commands for bots. |
 | #bugs | 80 | [Close/Delete/Review/Search/View] - Handles player bug reports |
@@ -212,7 +212,7 @@ These are additions over stock EQEmu. Where a command touches a data bucket, cur
 Toggle the effectiveness of a passive AA by AA ID.
 
 ### #award — GMAdmin
-Award **Echo of Memory** (account alt-currency id 6). Writes the target character's EoM-Award data bucket, fires a Discord webhook on the admin channel, and sends cross-zone signal 666 to the character name. The actual credit happens in plugin::UpdateEoMAward (NMS_multiclass_utils.pl) on that signal and on zone-in.
+Award **Triune of Fate** (account alt-currency id 6). Writes the target character's TriuneOfFate-Award data bucket (accumulating numerically), fires a Discord webhook on the admin channel, and sends cross-zone signal 666 to the character name. The actual credit happens in plugin::UpdateTriuneOfFateAward (NMS_custom_events.pl) on that signal and on zone-in.
 
 ### #castspellnms — status 5
 Cast a non-detrimental spell from your spellbook while out of combat. Refuses in combat, refuses bard songs, checks level.

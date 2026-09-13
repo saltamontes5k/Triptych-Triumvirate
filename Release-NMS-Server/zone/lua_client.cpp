@@ -1620,6 +1620,16 @@ void Lua_Client::OpenLFGuildWindow() {
 	self->OpenLFGuildWindow();
 }
 
+void Lua_Client::OpenShroudWindow(Lua_Mob npc) {
+	Lua_Safe_Call_Void();
+	self->OpenShroudWindow(npc);
+}
+
+void Lua_Client::RemoveShroud() {
+	Lua_Safe_Call_Void();
+	self->RemoveShroud();
+}
+
 void Lua_Client::NotifyNewTitlesAvailable() {
 	Lua_Safe_Call_Void();
 	self->NotifyNewTitlesAvailable();
@@ -4163,6 +4173,8 @@ luabind::scope lua_register_client() {
 	.def("NukeItem", (void(Lua_Client::*)(uint32))&Lua_Client::NukeItem)
 	.def("NukeItem", (void(Lua_Client::*)(uint32,int))&Lua_Client::NukeItem)
 	.def("OpenLFGuildWindow", (void(Lua_Client::*)(void))&Lua_Client::OpenLFGuildWindow)
+	.def("OpenShroudWindow", (void(Lua_Client::*)(Lua_Mob))&Lua_Client::OpenShroudWindow)
+	.def("RemoveShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroud)
 	.def("PlayMP3", (void(Lua_Client::*)(std::string))&Lua_Client::PlayMP3)
 	.def("Popup", (void(Lua_Client::*)(const char*,const char*))&Lua_Client::Popup)
 	.def("Popup", (void(Lua_Client::*)(const char*,const char*,uint32))&Lua_Client::Popup)

@@ -423,7 +423,7 @@ Json::Value ApiGetMobListDetail(EQ::Net::WebsocketServerConnection *connection, 
 		row["charmed"]                     = mob->Charmed();
 		row["check_last_los_state"]        = mob->CheckLastLosState();
 		row["class"]                       = mob->GetClass();
-		row["class_level_factor"]          = mob->GetClassLevelFactor();
+		row["class_level_factor"]          = mob->GetClassLevelFactor(mob->GetClass());
 		row["class_race_ac_bonus"]         = mob->GetClassRaceACBonus();
 		row["compute_defense"]             = mob->compute_defense();
 		row["count_dispellable_buffs"]     = mob->CountDispellableBuffs();
