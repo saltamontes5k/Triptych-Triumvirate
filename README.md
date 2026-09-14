@@ -12,15 +12,22 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - **Prophecy of Ro** — Theater of Blood / Deathknell / Razorthorn access chains, ToB armor
   drops + raid lockouts, phase 2/3/5 side quests, raids (Burning Prince, Sullon Zek, Suchun,
   Daosheen, Freeport Arena, Corruption of Ro), Spirit Mark Armor, Arcstone, Tunare's Shrine,
-  Black Orb of the Scrykin
+  Black Orb of the Scrykin (rough, not quite completable, more scaffolding)
 - **GoD** — Qinimi events solo-requestable; Nalasrine stocks Muramite armor solvents
 - **Water theme** — First Ripple / Mal'zeth V'Tide questlines; **Echo of Memory renamed to
   Triune of Fate** (matches modern upstream; client add-on + NPC updates)
-- **Heroic stats** — reworked to better represent actual classes
+- **Heroic stats** — reworked to better represent actual classes, dinput8 also reflects this
 - **New rule** — `Custom:AllowAllClassesClickItems` (default **false**): let all classes click
   items regardless of class restrictions on click effects
 - **Cartographer title fix** — the TSS Charm of Lore title no longer shows up on every
   character; only the quest grants it now
+- Began very sketchy frail and buggy framework for shrouds and housing (very WIP based on zeklabs/Imperium)
+- Added a truckload of recipes, items for recipes up through HoT, lazily wired in and expansion gated
+- Spell research actually exists now
+- Fixed wizard crit damage now its 1.5x instead of 0, fitting of wizards
+- Added more waypoints to GoD, OoW
+- Added some holiday quest scaffolding
+- Added TBS/TSS quest placeholders, scaffolds
 - **Server binaries** rebuilt; **database re-sanitized** (housing, shroud state and guild
   bank/ranks/tributes are now cleared as well)
 
