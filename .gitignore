@@ -16,8 +16,8 @@ Release-NMS-Server/release-peq.sql
 # --- DB-derived client data (regenerated via export-client-files.bat) ---
 Release-NMS-Server/export/
 
-# --- Maps (not tracked - source separately) ---
-maps/
+# --- Maps: repo-root maps/ not tracked; Release-NMS-Server/maps/ ships ---
+/maps/
 
 # --- Player / private data ---
 backups/
@@ -40,6 +40,9 @@ backups/
 Release-NMS-Client/eqgame_dll/Release/
 Release-NMS-Client/eqgame_dll/Intermediate/
 Release-NMS-Client/eqgame_dll/msvc/
+Release-NMS-Client/eqgame_dll/eqgame_dll_rof2/Release/
+*.recipe
+*.tlog
 
 # --- Node / MCP ---
 everquest1-mcp/node_modules/
