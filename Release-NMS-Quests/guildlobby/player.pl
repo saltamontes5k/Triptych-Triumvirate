@@ -6,7 +6,7 @@ sub EVENT_CLICKDOOR {
 			$client->SendToGuildHall();
 			# returning nonzero suppresses the engine's default door handling
 			# (client_packet.cpp only calls HandleClick when quest_return == 0),
-			# so guild members get their instanced hall without also being
+			# so guild members get their instanced hall instead of also being
 			# teleported to the static guildhall by the door's dest_zone.
 			return 1;
 		}

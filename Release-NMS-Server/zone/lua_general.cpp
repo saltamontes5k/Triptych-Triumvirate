@@ -1054,12 +1054,12 @@ uint32 lua_house_get_owner_for_instance(uint32 instance_id) {
 	return Strings::ToUnsignedInt(row[0]);
 }
 
-uint32 lua_house_create(uint32 char_id, uint32 instance_id) {
+uint32 lua_house_create(uint32 char_id, uint32 instance_id, std::string zone) {
 	// one house per character; INSERT IGNORE makes duplicates a no-op
 	auto results = database.QueryDatabase(
 		fmt::format(
-			"INSERT IGNORE INTO `house` (`char_id`, `instance_id`) VALUES ({}, {})",
-			char_id, instance_id
+			"INSERT IGNORE INTO `house` (`char_id`, `instance_id`, `zone`) VALUES ({}, {}, '{}')",
+			char_id, instance_id, Strings::Escape(zone)
 		)
 	);
 	if (!results.Success() || results.LastInsertedID() == 0) {
@@ -7099,7 +7099,10 @@ luabind::scope lua_register_events() {
 			luabind::value("entity_variable_set", static_cast<int>(EVENT_ENTITY_VARIABLE_SET)),
 			luabind::value("entity_variable_update", static_cast<int>(EVENT_ENTITY_VARIABLE_UPDATE)),
 			luabind::value("aa_loss", static_cast<int>(EVENT_AA_LOSS)),
-			luabind::value("read", static_cast<int>(EVENT_READ_ITEM))
+			luabind::value("read", static_cast<int>(EVENT_READ_ITEM)),
+			luabind::value("spell_effect_bot", static_cast<int>(EVENT_SPELL_EFFECT_BOT)),
+			luabind::value("spell_effect_buff_tic_bot", static_cast<int>(EVENT_SPELL_EFFECT_BUFF_TIC_BOT)),
+			luabind::value("item_generate", static_cast<int>(EVENT_ITEM_GENERATE))
 		)];
 }
 

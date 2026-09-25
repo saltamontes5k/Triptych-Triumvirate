@@ -18,5 +18,9 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Consume the knife only while Treasure of the Dead is active (task system
+  # handles completion); anything else is returned by the handin system.
+  if (quest::istaskactive(600216)) {
+    plugin::check_handin(\%itemcount, 53630 => 1);
+  }
 }

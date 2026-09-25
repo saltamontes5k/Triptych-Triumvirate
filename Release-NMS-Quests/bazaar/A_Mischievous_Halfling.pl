@@ -23,7 +23,7 @@ sub EVENT_SAY {
         }
     }
     elsif ($text =~ /five Triune's of Fate/i) {
-        if (plugin::SpendEOM($client, 5)) {
+        if (plugin::GetTriuneOfFate($client) >= 5 && plugin::SpendTriuneOfFate($client, 5)) {
             quest::whisper("Five Triune's accepted. Rolling the dice!");
             RollCasinoPrize();
         }

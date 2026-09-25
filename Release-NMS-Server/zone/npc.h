@@ -21,6 +21,7 @@
 #include "../common/rulesys.h"
 
 #include "mob.h"
+#include "fabled.h"
 #include "qglobals.h"
 #include "zonedb.h"
 #include "../common/zone_store.h"
@@ -489,6 +490,16 @@ public:
 	void	ModifyNPCStat(const std::string& stat, const std::string& value);
 	virtual void SetLevel(uint8 in_level, bool command = false);
 
+	// NMS Fabled season (fabled.h, FABLED-ENCOUNTERS.md §6.5). SetFabled only records the roster
+	// row; ApplyFabled does the work (name, level, stats, entity variable "fabled"). Pass
+	// already_spawned=true when the NPC is already in the entity list (#fabled force): the rename
+	// is then broadcast and the loot already rolled is re-tiered in place.
+	void                SetFabled(const FabledNpcRow *row) { m_fabled_row = row; m_is_fabled = row != nullptr; }
+	bool                IsFabled() const { return m_is_fabled; }
+	const FabledNpcRow *GetFabledRow() const { return m_fabled_row; }
+	void                ApplyFabled(bool already_spawned);
+	uint8_t             GetFabledLootTier() const;
+
 	bool IsLDoNTrapped() const { return ldon_trapped; }
 	void SetLDoNTrapped(bool n) { ldon_trapped = n; }
 
@@ -735,6 +746,11 @@ protected:
 	// zone state
 	bool m_resumed_from_zone_suspend = false;
 	bool m_queued_for_corpse         = false; // this is to check for corpse creation on zone state restore
+
+	// NMS Fabled season: one bool + one pointer into zone->fabled's roster (rows are never erased)
+	bool                m_is_fabled  = false;
+	const FabledNpcRow *m_fabled_row = nullptr;
+	bool                m_loading_global_loot = false; // true only inside AddLootTable(id, is_global=true)
 
 	// this is a timer that protects a NPC from having double assignment of loot
 	// this is to prevent a player from killing a NPC and then zoning out and back in to get loot again

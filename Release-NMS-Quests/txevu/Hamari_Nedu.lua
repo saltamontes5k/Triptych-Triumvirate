@@ -14,7 +14,14 @@ local tacvi_raid = {
 }
 
 function event_say(e) 
-  local tacvi_flag = tonumber(e.other:GetAccountBucket("god.flags.tacvi")) or 0
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  local tacvi_flag = tonumber(e.other:GetAccountBucket("god.flags.tacvi")) or 0
 	if e.message:findi("hail") then
 		if e.other:HasItem(64034) or tacvi_flag == 1 then
 			e.self:Say("You hold a Signet of Command! I can use the power of the signet to [" .. eq.say_link("open the way") .. "] for you to the upper reaches of the temple once you are prepared to face the Tunat'Muram.");

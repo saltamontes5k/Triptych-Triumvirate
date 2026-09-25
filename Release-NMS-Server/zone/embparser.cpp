@@ -208,9 +208,10 @@ const char* QuestEventSubroutines[_LargestEventID] = {
 	"EVENT_SPELL_BLOCKED",
 	"EVENT_READ_ITEM",
 
-	// Add new events before these or Lua crashes
+	// Must stay in sync with the tail of QuestEventID in event_codes.h
 	"EVENT_SPELL_EFFECT_BOT",
-	"EVENT_SPELL_EFFECT_BUFF_TIC_BOT"
+	"EVENT_SPELL_EFFECT_BUFF_TIC_BOT",
+	"EVENT_ITEM_GENERATE"
 };
 
 PerlembParser::PerlembParser() : perl(nullptr)

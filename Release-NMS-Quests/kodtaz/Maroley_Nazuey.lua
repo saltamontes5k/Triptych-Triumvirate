@@ -14,7 +14,14 @@ local expedition_info = {
 task_ids = require("task_ids")
 
 function event_say(e)
-  local qglobals = eq.get_qglobals(e.other);
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  local qglobals = eq.get_qglobals(e.other);
 
   local is_gm = (e.other:Admin() > 80 and e.other:GetGM())
   local has_kevren_flag = is_gm or e.other:IsTaskActive(task_ids.trials_task) or e.other:IsTaskCompleted(task_ids.trials_task)

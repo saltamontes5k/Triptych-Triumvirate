@@ -1,28 +1,4 @@
-sub EVENT_SPAWN {
-  quest::settimer("zone",1);
-}
-
-sub EVENT_TIMER {
- if($timer eq "zone"){
-  if($x == 0){
-   quest::setglobal("kerafyrm",2,7,"F");
-   quest::stoptimer("zone");   
-   quest::depop();
-  }
- }
-}
-
-sub EVENT_SLAY {
-  quest::shout("Begone insect, I have much slaying yet to do!");
-}
-
-sub EVENT_NPC_SLAY {
-  quest::shout("Begone insect, I have much slaying yet to do!");
-}
-
-sub EVENT_DEATH_COMPLETE { #nearly forgot about this hehe
-  plugin::handle_death($npc, $x, $y, $z, $entity_list);
-  quest::setglobal("kerafyrm",3,7,"F"); 
-  quest::stoptimer("zone");   
-  quest::depop();
-}
+# Sleepers 2.0 -- classic walk-out version (#Kerafyrm_, 128095) retired.
+#
+# 128095 was the awakened Kerafyrm that walked the classic exit grid. The 2.0
+# encounter fights Kerafyrm (#Kerafyrm, 128089) in Kerafyrm's Chamber instead.

@@ -31,7 +31,7 @@ sub EVENT_TIMER {
 
 sub EVENT_SIGNAL {
   if($signal == 666) {
-    quest::updatetaskactivity(218,1,1);
+    quest::updatetaskactivity(3539,1,1);
   }
   if($signal == 667) {
     quest::failtask(218);

@@ -75,7 +75,40 @@ por.items = {
   red_shard_of_mana    = 84166,
   black_shard_of_mana  = 84167,
   divine_fetters_of_ro = 52601, -- final reward from the Shrine of Druzzil Ro
+
+  -- "Entrance to Daosheen's Chamber" (task 3379): the chamber key components
+  dragon_tooth_of_shardrahn = 85646,
+  dragon_tooth_of_tsikut    = 85647,
+  dragon_tooth_of_ashenback = 85648,
+  fragment_of_porthio_staff = 85649,
+  crystals_of_the_firstborn = 84151,
+
+  -- Sullon Zek raid key: three Legendary Berserker Bones handed to Maelin
+  berserker_bone_bazu      = 88102, -- off Titanothon (Devastation)
+  berserker_bone_commander = 88103, -- off Devastation mini-bosses
+  berserker_bone_invader   = 88104, -- off Sverag bosses
+
+  -- "The Corruption of Ro" (task 3398, Tunare's Shrine)
+  chalice_of_life     = 85085,
+  the_chalice_of_life = 85670,
 }
+
+-- Entity ids for the Prophecy of Ro content added by the phase-6 SQL.
+por.npcs = {
+  apprentice_mage_sarcrynn = 369097,
+  orsarro_the_youngest     = 369085,
+  grand_librarian_maelin   = 202125,
+  shalowen_the_pure        = 378059,
+  brazlin                  = 1500000522,
+  guardian_of_high_priest  = 1500000523,
+}
+
+-- Task 3379 - Entrance to Daosheen's Chamber (activity order = the four
+-- chamber-key hand-ins to Apprentice Mage Sarcrynn).
+por.daosheen_key_items = { 85646, 85647, 85648, 85649 }
+
+-- Task 3398 - The Corruption of Ro
+por.corruption_of_ro_task = 3398
 
 -- Inspirations of the six companions, looted from the Theater of Blood encounters.
 por.inspirations = { 52595, 52594, 52598, 52596, 52597, 52599 }
@@ -109,6 +142,9 @@ por.tasks = {
   exploring_arcstone       = 3028,
   heroes_challenge         = 3029,
   arena_champions_badge    = 3030,
+  -- Raid keys / raid tasks
+  entrance_to_daosheen_chamber = 3379,
+  corruption_of_ro             = 3398,
 }
 
 por.aa = {
@@ -244,7 +280,12 @@ por.activity = {
   prep_comb  = 3,
   prep_blood = 4,
   prep_soot  = 5,
-  -- Task 3002 Become the Vessel: deliver the five armor pieces
+  -- Task 3002 Become the Vessel: sit at the tower, vent rage, sit again, then
+  -- deliver the five armor pieces. The two "sit" steps are driven by
+  -- rage/player.lua (activity types are not auto-tracked).
+  vessel_kill  = 0,
+  vessel_sit1  = 1,
+  vessel_sit2  = 2,
   vessel_armor = { [88093] = 3, [88094] = 4, [88095] = 5, [88096] = 6, [88097] = 7 },
 }
 

@@ -358,8 +358,8 @@ my %STAGE_PREREQUISITES = (
     'GoD' => ['Saryrn'],
     'OoW' => ['Tunat`Muram Cuu Vauax'],   # final boss of Tacvi (GoD); flag NPC is spawned by tacvi/encounters/tmcv.lua
     'DoN' => ['Xegony', 'Fennin Ro the Tyrant of Fire', 'Coirnav the Avatar of Water', 'Rathe Council', 'Agnarr the Storm Lord'],
-    'DoD' => ['Tunat`Muram Cuu Vauax'],   # Depths of Darkhollow unlocks on the GoD end boss (same kill that opens OoW)
-    'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish'],   # all six MPG chamber Masters + Anguish clear
+    'DoD' => ['Tunat`Muram Cuu Vauax', 'Warlord Imal Ojun'],   # Depths of Darkhollow unlocks on the GoD end boss (same kill that opens OoW) + the LDoN Rujarkian Hills raid warlord
+    'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish', 'Vishimtar the Fallen'],   # all six MPG chamber Masters + Anguish (OMM) + the DoN Nest raid dragon
     'TSS' => ['Deathknell'],              # Deathknell, Tower of Dissonance clear
     'TBS' => ['Dyn`Leth'],                # Ashengate Dyn'Leth raid
     'SoF' => ['Solusek Ro', 'Mayong Mistmoore'],   # the two gods in Solteris (TBS-era raid)
@@ -1131,6 +1131,129 @@ sub ValidProgInstance {
     }
 }
 
+# ---------------------------------------------------------------------------
+# First-guild kill announcements (progression memory hail mob, NPC 26000)
+#
+# When a progression raid boss dies, its memory hail mob spawns on the corpse.
+# If the memory belongs to a capstone boss below and the killer was a non-GM,
+# guilded player, the world gets a first-guild announcement once per boss.
+# The killing guild id is threaded to the memory via the "Killer-Guild-ID"
+# entity variable, and global/26000.pl calls MemoryCongrats() on a short delay
+# after spawn. GM kills (Admin >= 80) never claim a record.
+# ---------------------------------------------------------------------------
+my %MEMORY_CAPSTONES = (
+    'lord nagafen'                 => 'Lord Nagafen',
+    'lady vox'                     => 'Lady Vox',
+    'trakanon'                     => 'Trakanon',
+    'gorenaire'                    => 'Gorenaire',
+    'severilous'                   => 'Severilous',
+    'talendor'                     => 'Talendor',
+    'klandicar'                    => 'Klandicar',
+    'zlandicar'                    => 'Zlandicar',
+    'wuoshi'                       => 'Wuoshi',
+    'dozekar the cursed'           => 'Dozekar the Cursed',
+    'kelorek`dar'                  => 'Kelorek`Dar',
+    'thought horror overfiend'     => 'Thought Horror Overfiend',
+    'the insanity crawler'         => 'The Insanity Crawler',
+    'grieg veneficus'              => 'Grieg Veneficus',
+    'xerkizh the creator'          => 'Xerkizh the Creator',
+    'emperor ssraeshza'            => 'Emperor Ssraeshza',
+    'emperorssraeshza'             => 'Emperor Ssraeshza',
+    'tunat`muram cuu vauax'        => 'Tunat`Muram Cuu Vauax',
+    'anguish'                      => 'Overlord Mata Muram',
+    'xegony'                       => 'Xegony',
+    'coirnav the avatar of water'  => 'Coirnav the Avatar of Water',
+    'fennin ro the tyrant of fire' => 'Fennin Ro the Tyrant of Fire',
+    'rathe council'                => 'The Rathe Council',
+    'agnarr the storm lord'        => 'Agnarr the Storm Lord',
+    'warlord imal ojun'            => 'Warlord Imal Ojun',
+    'vishimtar the fallen'         => 'Vishimtar the Fallen',
+    'mayong mistmoore dreadspire'  => 'Mayong Mistmoore of the Demi-Plane',
+    'deathknell'                   => 'Ayonae Ro of Deathknell',
+    'dyn`leth'                     => 'Dyn`Leth',
+    'solusek ro'                   => 'Solusek Ro',
+    'mayong mistmoore'             => 'Mayong Mistmoore',
+    'kerafyrm'                     => 'Kerafyrm the Sleeper',
+    'kerafyrm-crystallos'          => 'Kerafyrm of Crystallos',
+);
+
+# Resolves the guild id of the player credited with a death for first-kill
+# announcements. Returns 0 when the killer is not a client (or a pet's owner),
+# or when the killer is a GM (Admin >= 80) so GM kills never claim records.
+# Only valid inside EVENT_DEATH / EVENT_DEATH_COMPLETE context (reads the
+# exported $killer_id from the calling quest event).
+sub get_memory_killer_guild_id {
+    my ($entity_list) = @_;
+
+    my $killer_id = plugin::val('$killer_id');
+    return 0 if !$killer_id;
+
+    my $killer = $entity_list ? $entity_list->GetMobByID($killer_id) : undef;
+    return 0 if !$killer;
+
+    if ($killer->IsClient()) {
+        my $killer_client = $killer->CastToClient();
+        return 0 if $killer_client->Admin() >= 80;
+        return $killer_client->GuildID() || 0;
+    }
+
+    if ($killer->IsPet()) {
+        my $owner = $killer->GetOwner();
+        if ($owner && $owner->IsClient()) {
+            my $owner_client = $owner->CastToClient();
+            return 0 if $owner_client->Admin() >= 80;
+            return $owner_client->GuildID() || 0;
+        }
+    }
+
+    return 0;
+}
+
+# Called by global/26000.pl shortly after the memory mob spawns (delayed so
+# the spawner's SetEntityVariable calls are guaranteed visible). Announces the
+# first non-GM guild kill for capstone bosses, keyed per boss in data_buckets.
+sub MemoryCongrats {
+    my ($npc) = @_;
+
+    return if !$npc;
+
+    my $stage    = $npc->GetEntityVariable("Stage-Name");
+    my $flag     = $npc->GetEntityVariable("Flag-Name");
+    my $guild_id = $npc->GetEntityVariable("Killer-Guild-ID");
+
+    $stage    = '' if !defined $stage;
+    $flag     = '' if !defined $flag;
+    $guild_id = 0  if !defined $guild_id;
+
+    return if $flag eq '' || $guild_id !~ /^\d+$/ || $guild_id == 0;
+
+    my $display = $MEMORY_CAPSTONES{lc($flag)};
+    return if !$display;
+
+    my $slug = lc($flag);
+    $slug =~ s/[^a-z0-9]+/-/g;
+    $slug =~ s/^-+//;
+    $slug =~ s/-+$//;
+
+    my $key = "First-Kill-$stage-$slug";
+    my $existing = quest::get_data($key) // '';
+    return if $existing ne '';
+
+    quest::set_data($key, $guild_id);
+    quest::we(5, "Congratulations to [" . quest::getguildnamebyid($guild_id) . "] for being the first guild to defeat $display!");
+}
+
+# Mirrors the server's CleanMobName(): "_" -> space, then drop everything that is not a letter,
+# a backtick or a space (trailing spawn digits, "#", etc.). Feed it GetOrigName() so a mob that was
+# renamed after spawning (a Fabled promotion) still resolves to its normal name.
+sub CleanNpcName {
+    my $n = shift // '';
+    $n =~ s/_/ /g;
+    $n =~ s/[^A-Za-z` ]//g;
+    $n =~ s/^[#\s]+|[#\s]+$//g;
+    return $n;
+}
+
 sub handle_death {
     my ($npc, $x, $y, $z, $entity_list) = @_;
 
@@ -1144,7 +1267,8 @@ sub handle_death {
         }
     }
 
-    my $npc_name = lc($npc->GetCleanName());
+    # Original (spawn-time) name, not the live one: a Fabled kill must still flag the normal named.
+    my $npc_name = lc(CleanNpcName($npc->GetOrigName()));
 
     quest::debug("CleanName: $npc_name");
 
@@ -1156,6 +1280,11 @@ sub handle_death {
         
         $new_npc->SetEntityVariable("Flag-Name", $npc_name);
         $new_npc->SetEntityVariable("Stage-Name", plugin::get_subflag_stage($npc_name));
+
+        my $killer_guild_id = plugin::get_memory_killer_guild_id($entity_list);
+        if ($killer_guild_id) {
+            $new_npc->SetEntityVariable("Killer-Guild-ID", $killer_guild_id);
+        }
     }    
 }
 

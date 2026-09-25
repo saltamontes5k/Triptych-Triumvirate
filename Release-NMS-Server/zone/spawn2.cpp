@@ -299,11 +299,28 @@ bool Spawn2::Process() {
 		npc->SetResumedFromZoneSuspend(m_resumed_from_zone_suspend);
 		m_resumed_from_zone_suspend = false;
 
+		// NMS Fabled season (FABLED-ENCOUNTERS.md §6.4). Decided before loot so DoUpgradeLoot sees
+		// IsFabled(); stats applied after loot so drops are rolled at the base level. A zone-state
+		// resume never re-rolls: its entity variables were restored above, so "fabled" decides.
+		if (npc->IsResumedFromZoneSuspend()) {
+			if (npc->EntityVariableExists("fabled")) {
+				if (const auto *row = zone->fabled.Find(npc->GetNPCTypeID())) {
+					npc->SetFabled(row);
+				}
+			}
+		}
+		else if (const auto *row = zone->fabled.Roll(npc->GetNPCTypeID())) {
+			npc->SetFabled(row);
+		}
+
 		npc->AddLootTable();
 		if (npc->DropsGlobalLoot()) {
 			npc->CheckGlobalLootTables();
 		}
 
+		if (npc->IsFabled()) {
+			npc->ApplyFabled(false); // name, level, stats — before AddNPC so the spawn packet carries them
+		}
 
 		npc->SetSpawnGroupId(spawngroup_id_);
 		npc->SaveGuardPointAnim(anim);

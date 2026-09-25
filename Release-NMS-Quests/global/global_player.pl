@@ -25,6 +25,9 @@ sub EVENT_ENTERZONE {
 
 	plugin::CommonCharacterUpdate($client);
 
+    # Deity blessing passive (e.g. Tunare's damage shield).
+    plugin::BlessingOnEnterZone($client);
+
     # Catch-up grant for existing Drakkin characters (and re-verifies on every zone).
     plugin::GrantDrakkinBreathWeapon($client);
 
@@ -54,6 +57,12 @@ sub EVENT_ENTERZONE {
         UpdateDayNightCycle($zonesn, $instanceid, $zonetime);
         quest::settimer("DayNightTimer", 30);
     }
+}
+
+sub EVENT_RESPAWN {
+    # Re-apply deity blessing passives (e.g. Tunare's damage shield) after death,
+    # which strips buffs but does not fire EVENT_ENTERZONE.
+    plugin::BlessingOnEnterZone($client);
 }
 
 sub EVENT_EXP_GAIN {
@@ -173,6 +182,22 @@ sub EVENT_TASK_COMPLETE {
     if ($task_id == 3 && !$client->IsTaskCompleted(4)) {
         $client->AssignTask(4);
     }
+
+    # Deity blessing system: rank advancement quest completion (ranks 1-10).
+    plugin::BlessingGrantRank($client, $task_id);
+}
+
+sub EVENT_DAMAGE_GIVEN {
+    plugin::BlessingOnDamageGiven($client, $entity_id, $damage, $spell_id, $is_damage_shield, $is_buff_tic, $special_attack);
+}
+
+sub EVENT_DAMAGE_TAKEN {
+    plugin::BlessingOnDamageTaken($client, $entity_id, $damage, $spell_id, $is_damage_shield, $is_buff_tic);
+    return 0;   # never override incoming damage
+}
+
+sub EVENT_CAST {
+    plugin::BlessingOnCast($client, $spell_id, $target_id, $target, $spell);
 }
 
 sub EVENT_LEVEL_UP {

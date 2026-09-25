@@ -20,6 +20,9 @@ sub EVENT_SAY {
     elsif (!quest::istaskcompleted(600005)) {
       quest::say("Now that the traitor is gone, there is one small thing left to [take care of], $name.");
     }
+    elsif (!quest::istaskcompleted(600006)) {
+      quest::say("You have done all I could ask of you here, $name. But the true war waits within [Frostcrypt]. Say the word and I will see you and your allies to the front.");
+    }
     else {
       quest::say("You have done all I could ask, $name. The Wraithguard will remember your deeds.");
     }
@@ -111,6 +114,21 @@ sub EVENT_SAY {
     }
     elsif (quest::istaskactive(600005)) {
       $client->MovePCDynamicZone(401, 3);
+    }
+  }
+
+  if ($text=~/frostcrypt/i) {
+    if (!quest::istaskcompleted(600005)) {
+      quest::say("The way to Frostcrypt is not yet open to you, $name. Prove yourself against the king first.");
+    }
+    elsif (!quest::istaskactive(600006) && !quest::istaskcompleted(600006)) {
+      quest::say("Then it begins. The Wraithguard will open the way. Seek Sergeant Thavin at the Frostcrypt gate and tell him [" . quest::saylink("Fergarin sent me") . "]. Hold nothing back, $name.");
+      quest::assigntask(600006);
+      $client->CreateExpeditionFromTemplate(6011);
+    }
+    else {
+      quest::say("Frostcrypt waits. Tell Sergeant Thavin [" . quest::saylink("Fergarin sent me") . "] and see it done.");
+      $client->CreateExpeditionFromTemplate(6011);
     }
   }
 }

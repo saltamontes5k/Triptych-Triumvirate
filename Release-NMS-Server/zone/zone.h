@@ -31,6 +31,7 @@
 #include "../common/repositories/grid_entries_repository.h"
 #include "../common/repositories/zone_points_repository.h"
 #include "qglobals.h"
+#include "fabled.h"
 #include "spawn2.h"
 #include "spawngroup.h"
 #include "aa_ability.h"
@@ -169,6 +170,7 @@ public:
 
 	EQ::Random random;
 	EQTime     zone_time;
+	ZoneFabled fabled; // NMS Fabled season cache (fabled.h); fed by world, read by Spawn2::Process
 
 	ZonePoint *
 	GetClosestZonePoint(const glm::vec3 &location, const char *to_name, Client *client, float max_distance = 40000.0f);

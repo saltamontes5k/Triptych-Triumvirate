@@ -7,7 +7,14 @@ local paladin_dz = {
 }
 
 function event_say(e)
-  local qglobals = eq.get_qglobals(e.self, e.other)
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  local qglobals = eq.get_qglobals(e.self, e.other)
 
   if (qglobals["paladin_epic"] ~= nil and qglobals["paladin_epic"] >= "6") then
     e.self:Say(("Auuugh...%s...the...catacombs...is where...my essence...is..."):format(e.other:GetCleanName()))

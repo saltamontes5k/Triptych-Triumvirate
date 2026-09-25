@@ -764,14 +764,278 @@ void TriggerLocalAbilityUI(int targetSkillId) {
 }
 
 
+// ---------------------------------------------------------------------------
+// NMS: Shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
+//
+// The client's OP_Shroud self path (eqgame+0x4C2EA0) clears the local-player
+// spawn pointer (flt_DD2630 @ 0xDD2630) before applying the shroud profile,
+// and only restores it inside the success path of the spawn re-parse
+// (sub_4BD5F0). When the re-parse takes its "spawn still exists -> update in
+// place" branch it returns 0, the dispatcher early-returns, and the player
+// pointer stays NULL: feigned pose, dead UI.
+//
+// Two tiny patches, both of which only ever execute inside this self path:
+//   A) 0x4C2F60: 'mov dword ptr [0xDD2630], 0' (10 bytes) -> NOPs
+//   B) 0x4C2F85: 'jnz short +0x0A' (75 0A) -> 'jmp short +0x0A' (EB 0A),
+//      i.e. always run the completion path (standstate restore + UI reload)
+// ---------------------------------------------------------------------------
+
+// NMS: shroud diagnostics. 0 = compile out all shroud runtime logging and
+// packet captures (leave 0 for release builds).
+#ifndef NMS_SHROUD_DIAG
+#define NMS_SHROUD_DIAG 0
+#endif
+
+#if NMS_SHROUD_DIAG
+static void ShroudLog(const char *fmt, ...) {
+  FILE *f = fopen("C:\\EQS\\shroud_dump\\client_shroud.log", "a");
+  if (!f)
+    return;
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  fprintf(f, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond,
+          st.wMilliseconds);
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(f, fmt, args);
+  va_end(args);
+  fprintf(f, "\n");
+  fclose(f);
+}
+
+static void ShroudLogCharbase(const char *when);
+static void ShroudDumpRecvPacket(const char *buf, size_t size);
+#endif
+
+// Set after the OP_Shroud self-transform completes; consumed by the pulse
+// hook which issues /sit + /stand so the actor rebuilds its pose.
+bool g_shroudPoseFix = false;
+
+static DWORD g_clientBase = 0x400000;
+
+static void ApplyShroudFlowFix(DWORD baseAddress) {
+  g_clientBase = baseAddress;
+  DWORD pNull = (DWORD)0x004C2F60 - 0x400000 + baseAddress;
+  DWORD pJz = (DWORD)0x004C2F85 - 0x400000 + baseAddress;
+
+  // NOTE: at runtime the loader relocates the absolute address inside
+  // 'mov dword ptr [0xDD2630], 0' (base != 0x400000), so only the opcode +
+  // disp32 prefix (C7 05 30 26) can be matched; the imm32 varies.
+  const unsigned char expectNullPrefix[4] = {0xC7, 0x05, 0x30, 0x26};
+  if (memcmp((const void *)pNull, expectNullPrefix, 4) == 0) {
+    static const unsigned char nops[10] = {0x90, 0x90, 0x90, 0x90, 0x90,
+                                           0x90, 0x90, 0x90, 0x90, 0x90};
+    PatchA((LPVOID)pNull, nops, 10);
+#if NMS_SHROUD_DIAG
+    ShroudLog("shroud fix A applied: NOPed mov [flt_DD2630],0 @ %08X", pNull);
+#endif
+  } else {
+#if NMS_SHROUD_DIAG
+    ShroudLog("shroud fix A SKIPPED: unexpected bytes @ %08X", pNull);
+#endif
+  }
+
+  const unsigned char expectJz[2] = {0x75, 0x0A};
+  if (memcmp((const void *)pJz, expectJz, 2) == 0) {
+    const unsigned char jmp[2] = {0xEB, 0x0A};
+    PatchA((LPVOID)pJz, jmp, 2);
+#if NMS_SHROUD_DIAG
+    ShroudLog("shroud fix B applied: jnz->jmp @ %08X", pJz);
+#endif
+  } else {
+#if NMS_SHROUD_DIAG
+    ShroudLog("shroud fix B SKIPPED: unexpected bytes @ %08X", pJz);
+#endif
+  }
+}
+
+#if NMS_SHROUD_DIAG
+static void ShroudLogPacket(const char *buf, size_t size) {
+  if (size < 6) {
+    ShroudLog("OP_Shroud recv size=%u (too small)", (unsigned)size);
+    return;
+  }
+  unsigned int spawnId = *(const unsigned int *)buf;
+  unsigned short endOff = *(const unsigned short *)(buf + 4);
+  ShroudLog("OP_Shroud recv size=%u spawnId=%u endOffset=%u %s", (unsigned)size,
+            spawnId, endOff,
+            size >= (size_t)endOff + 20472 ? "(self-size ok)"
+                                           : "(SHORT: no 20472 block?)");
+  ShroudLog("  head: %02X %02X %02X %02X %02X %02X | profile[0..15]: "
+            "%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X "
+            "%02X %02X %02X",
+            (unsigned char)buf[0], (unsigned char)buf[1], (unsigned char)buf[2],
+            (unsigned char)buf[3], (unsigned char)buf[4], (unsigned char)buf[5],
+            (unsigned char)buf[endOff], (unsigned char)buf[endOff + 1],
+            (unsigned char)buf[endOff + 2], (unsigned char)buf[endOff + 3],
+            (unsigned char)buf[endOff + 4], (unsigned char)buf[endOff + 5],
+            (unsigned char)buf[endOff + 6], (unsigned char)buf[endOff + 7],
+            (unsigned char)buf[endOff + 8], (unsigned char)buf[endOff + 9],
+            (unsigned char)buf[endOff + 10], (unsigned char)buf[endOff + 11],
+            (unsigned char)buf[endOff + 12], (unsigned char)buf[endOff + 13],
+            (unsigned char)buf[endOff + 14], (unsigned char)buf[endOff + 15]);
+  if (size >= (size_t)endOff + 0x18) {
+    // identity block: shrouded(0x00) unk(04) gender(08) race(0C) class(10)
+    // level(11) level1(12)
+    ShroudLog("  identity: shrouded=%u unk04=%u gender=%u race=%u class=%u "
+              "level=%u level1=%u",
+              *(const uint32_t *)(buf + endOff + 0x00),
+              *(const uint32_t *)(buf + endOff + 0x04),
+              (unsigned char)buf[endOff + 0x08],
+              *(const uint32_t *)(buf + endOff + 0x0C),
+              (unsigned char)buf[endOff + 0x10],
+              (unsigned char)buf[endOff + 0x11],
+              (unsigned char)buf[endOff + 0x12]);
+  }
+}
+
+static void ShroudLogPlayerState(const char *when) {
+  PSPAWNINFO p = (PSPAWNINFO)pLocalPlayer;
+  if (!p) {
+    ShroudLog("  [%s] pLocalPlayer=null", when);
+    return;
+  }
+  // flt_DD2630 (relocated) = the client's cached self-spawn pointer; the
+  // OP_Shroud self path NULLs it and the success path reassigns it.
+  DWORD selfPtr = *(DWORD *)(0x00DD2630 - 0x400000 + g_clientBase);
+  ShroudLog("  [%s] me=%08X mySpawnId=%u race=%u gender=%u class=%u level=%u "
+            "standstate=0x%02X hpc=%d selfptr=%08X actor=%08X actorex=%08X "
+            "anim=%d illusion=%u",
+            when, (unsigned)p, (unsigned)p->SpawnID, (unsigned)p->Race,
+            (unsigned)p->Gender, (unsigned)p->Class, (unsigned)p->Level,
+            (unsigned)p->StandState, (int)p->HPCurrent, selfPtr,
+            (unsigned)p->pActorClient, (unsigned)p->pcactorex,
+            (int)p->Animation, (unsigned)p->InNonPCRaceIllusion);
+  ShroudLogCharbase(when);
+}
+#endif
+
 unsigned char __fastcall HandleWorldMessage_Trampoline(
     DWORD * con, DWORD edx, unsigned __int32 unk, unsigned __int16 opcode,
     char *buf, size_t size);
+
+// NMS: the shroud profile swap (OP_Shroud) rebuilds the class-dependent UI and
+// leaves the hotbar windows (HotButtonWnd + pages 2..10) hidden; they only come
+// back at zone-in. Re-show them after the handler so the bars survive both the
+// shroud and the unshroud. Re-run a few times over the next second because the
+// client can re-hide them while it finishes rebuilding the UI.
+void ShroudRestoreHotbars() {
+  static const char *kHotbarWnds[] = {
+      "HotButtonWnd",  "HotButtonWnd2", "HotButtonWnd3", "HotButtonWnd4",
+      "HotButtonWnd5", "HotButtonWnd6", "HotButtonWnd7", "HotButtonWnd8",
+      "HotButtonWnd9", "HotButtonWnd10",
+  };
+
+#if NMS_SHROUD_DIAG
+  int shown = 0;
+  int visible = 0;
+#endif
+  for (const char *name : kHotbarWnds) {
+    CXWnd *wnd = FindMQ2Window((PCHAR)name);
+    if (wnd) {
+      wnd->Show(true, true);
+#if NMS_SHROUD_DIAG
+      ++shown;
+      if (wnd->IsReallyVisible()) {
+        ++visible;
+      }
+#endif
+    }
+  }
+#if NMS_SHROUD_DIAG
+  ShroudLog("hotbar restore: %d/%d windows shown, %d visible", shown, visible,
+            (int)(sizeof(kHotbarWnds) / sizeof(kHotbarWnds[0])));
+#endif
+}
+
+int   g_shroudHotbarFixesLeft = 0;
+DWORD g_shroudHotbarNextTick  = 0;
+
+#if NMS_SHROUD_DIAG
+// Capture exactly what the client's applier will consume (20472-byte profile
+// block + raw spawn bytes) for offline diffing vs the server dump.
+// SEH-guarded: instrumentation must never take the client down.
+static void ShroudDumpRecvPacket(const char *buf, size_t size) {
+  __try {
+    if (size >= 6) {
+      unsigned short endOff = *(const unsigned short *)(buf + 4);
+      if (size >= (size_t)endOff + 20472) {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        char name[300];
+        sprintf_s(name, sizeof(name),
+                  "C:\\EQS\\shroud_dump\\client_recv_block_%02u%02u%02u_"
+                  "%02u%02u%02u%03u.bin",
+                  st.wYear % 100, st.wMonth, st.wDay, st.wHour, st.wMinute,
+                  st.wSecond, st.wMilliseconds);
+        FILE *df = fopen(name, "wb");
+        if (df) {
+          fwrite(buf + endOff, 1, 20472, df);
+          fclose(df);
+          ShroudLog("  dumped %s", name);
+        }
+        sprintf_s(name, sizeof(name),
+                  "C:\\EQS\\shroud_dump\\client_recv_spawn_%02u%02u%02u_"
+                  "%02u%02u%02u%03u.bin",
+                  st.wYear % 100, st.wMonth, st.wDay, st.wHour, st.wMinute,
+                  st.wSecond, st.wMilliseconds);
+        df = fopen(name, "wb");
+        if (df) {
+          fwrite(buf + 6, 1, endOff - 6, df);
+          fclose(df);
+        }
+      }
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    ShroudLog("  recv capture faulted (suppressed)");
+  }
+}
+
+// Client character-object state the OP_Shroud handler mutates (0x2DD4 is set
+// to 1 at eqgame+0x4C3112; the class gate at 0x443F50 reads 0x3374).
+static void ShroudLogCharbase(const char *when) {
+  __try {
+    PCHARINFO2 cb = GetCharInfo2();
+    if (cb) {
+      const unsigned char *bb = reinterpret_cast<const unsigned char *>(cb);
+      ShroudLog("  [%s] charbase=%08X [0x2DC8]=%u [0x2DD4]=%u [0x3374]=%u",
+                when, (unsigned)cb, bb[0x2DC8], bb[0x2DD4], bb[0x3374]);
+    } else {
+      ShroudLog("  [%s] charbase=null", when);
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    ShroudLog("  [%s] charbase read faulted (suppressed)", when);
+  }
+}
+#endif
 
 unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
                                                    unsigned __int32 unk,
                                                    unsigned __int16 opcode,
                                                    char *buf, size_t size) {
+  // NMS: shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
+  if (opcode == 0x6562) {
+#if NMS_SHROUD_DIAG
+    ShroudLogPlayerState("before");
+    ShroudLogPacket(buf, size);
+    ShroudDumpRecvPacket(buf, size);
+#endif
+    unsigned char shroud_ret =
+        HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
+#if NMS_SHROUD_DIAG
+    ShroudLogPlayerState("after");
+#endif
+    // The transform animation leaves the actor in its last frame (this branch
+    // fails to rebuild the shroud model); nudge the pose with /sit + /stand.
+    extern bool g_shroudPoseFix;
+    g_shroudPoseFix = true;
+    // Put the hotbar windows back; schedule follow-ups to beat deferred UI work.
+    ShroudRestoreHotbars();
+    g_shroudHotbarFixesLeft = 12;
+    g_shroudHotbarNextTick  = GetTickCount() + 500;
+    return shroud_ret;
+  }
+
   // Capture the real zone UdpConnection* via the Send hook instead — see UdpSend_Detour
   // Capture bitmask from OP_ServerAuthStats for deferred CAuth response
   if (opcode == 0x1338 && size >= 4) {
@@ -1404,6 +1668,9 @@ void InitHooks() {
   var = (((DWORD)0x004C3250 - 0x400000) + baseAddress);
   EzDetour((DWORD)var, HandleWorldMessage_Detour,
            HandleWorldMessage_Trampoline);
+
+  // NMS: Shroud self-transform flow fix (see ApplyShroudFlowFix above)
+  ApplyShroudFlowFix(baseAddress);
 
   // Hook UdpConnection::Send (0x8C51F0) to capture the real zone UdpConnection* for CAuth
   var = (((DWORD)0x008C51F0 - 0x400000) + baseAddress);

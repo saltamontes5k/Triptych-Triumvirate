@@ -356,6 +356,12 @@ bool Lua_NPC::IsGuarding() {
 	return self->IsGuarding();
 }
 
+// NMS: true when this spawn was promoted to a Fabled (see Release-NMS-Deploy/FABLED-ENCOUNTERS.md).
+bool Lua_NPC::IsFabled() {
+	Lua_Safe_Call_Bool();
+	return self->IsFabled();
+}
+
 void Lua_NPC::AI_SetRoambox(float dist, float max_x, float min_x, float max_y, float min_y) {
 	Lua_Safe_Call_Void();
 	self->AI_SetRoambox(dist, max_x, min_x, max_y, min_y);
@@ -1066,6 +1072,7 @@ luabind::scope lua_register_npc() {
 	.def("HasAISpellEffect", (bool(Lua_NPC::*)(int))&Lua_NPC::HasAISpellEffect)
 	.def("HasItem", (bool(Lua_NPC::*)(uint32))&Lua_NPC::HasItem)
 	.def("IsAnimal", (bool(Lua_NPC::*)(void))&Lua_NPC::IsAnimal)
+	.def("IsFabled", (bool(Lua_NPC::*)(void))&Lua_NPC::IsFabled)
 	.def("IsGuarding", (bool(Lua_NPC::*)(void))&Lua_NPC::IsGuarding)
 	.def("IsLDoNLocked", (bool(Lua_NPC::*)(void))&Lua_NPC::IsLDoNLocked)
 	.def("IsMultiQuestEnabled", (bool(Lua_NPC::*)(void))&Lua_NPC::IsMultiQuestEnabled)

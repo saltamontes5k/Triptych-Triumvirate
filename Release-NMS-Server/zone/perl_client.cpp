@@ -927,7 +927,10 @@ void Perl_Client_SummonFixedItem(Client* self, uint32 item_id, int16 charges, bo
 
 void Perl_Client_SummonFixedItem(Client* self, uint32 item_id, int16 charges, bool attune, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4, uint32 aug5, uint16 slot_id) // @categories Inventory and Items, Script Utility
 {
-	self->SummonApocItem(item_id, charges, aug1, aug2, aug3, aug4, aug5, 0, attune, slot_id);
+	// "Fixed" means no upgrade-tier roll. Every other SummonFixedItem overload goes through
+	// Client::SummonItem; the two slot_id overloads used to call SummonApocItem, which rewrites
+	// item_id when Custom:DoItemUpgrades is on. Routed to SummonItem so the name is honest.
+	self->SummonItem(item_id, charges, aug1, aug2, aug3, aug4, aug5, 0, attune, slot_id);
 }
 
 // Same as above but with the SIXTH augment, which every overload before this one hardcoded to 0.
@@ -937,7 +940,7 @@ void Perl_Client_SummonFixedItem(Client* self, uint32 item_id, int16 charges, bo
 // slot), so a script restoring an item through the 5-aug version handed the player back a bare copy.
 void Perl_Client_SummonFixedItem(Client* self, uint32 item_id, int16 charges, bool attune, uint32 aug1, uint32 aug2, uint32 aug3, uint32 aug4, uint32 aug5, uint32 aug6, uint16 slot_id) // @categories Inventory and Items, Script Utility
 {
-	self->SummonApocItem(item_id, charges, aug1, aug2, aug3, aug4, aug5, aug6, attune, slot_id);
+	self->SummonItem(item_id, charges, aug1, aug2, aug3, aug4, aug5, aug6, attune, slot_id);
 }
 
 void Perl_Client_ReturnItem(Client* self, uint32 item_id) // @categories Inventory and Items, Script Utility
@@ -991,11 +994,12 @@ void Perl_Client_ReturnItem(Client* self, uint32 item_id, int16 charges, bool at
 // ReturnItem with the SIXTH augment AND a slot. This is what any "give the player back the exact item
 // they gave us" path needs, and until now it did not exist.
 //
-// Both SummonFixedItem overloads that take a slot_id route to Client::SummonApocItem, which -- with
-// RuleB(Custom, DoItemUpgrades) on -- REWRITES item_id ("item_id += 1000000; GetApocItemUpgrade(...)")
-// and can hand back a DIFFERENT, upgraded item. That is correct for a reward. It is catastrophic for
-// any "give the player back the exact item they gave us" storage path -- deposit/withdraw/repeat
-// becomes a free upgrade treadmill. Client::ReturnItem exists precisely as the no-upgrade passthrough;
+// Historically both SummonFixedItem overloads that take a slot_id routed to Client::SummonApocItem,
+// which -- with RuleB(Custom, DoItemUpgrades) on -- REWRITES item_id ("item_id += 1000000;
+// GetApocItemUpgrade(...)") and can hand back a DIFFERENT, upgraded item. That is correct for a
+// reward. It is catastrophic for any "give the player back the exact item they gave us" storage
+// path -- deposit/withdraw/repeat becomes a free upgrade treadmill. Those overloads now go through
+// Client::SummonItem (see above). Client::ReturnItem remains the canonical no-upgrade passthrough;
 // this overload gives it aug6+slot coverage so storage scripts always have a safe call available.
 //
 // aug6 matters: nothing uses aug slot 5, while ~110k items use slot 6 (the ORNAMENTATION slot).

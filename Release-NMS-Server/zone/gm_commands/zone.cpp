@@ -67,11 +67,15 @@ void command_zone(Client *c, const Seperator *sep)
 	}
 
 	// coordinates
-	auto x         = sep->IsNumber(2) ? Strings::ToFloat(sep->arg[2]) : 0.0f;
-	auto y         = sep->IsNumber(3) ? Strings::ToFloat(sep->arg[3]) : 0.0f;
-	auto z         = sep->IsNumber(4) ? Strings::ToFloat(sep->arg[4]) : 0.0f;
-	auto zone_mode = sep->IsNumber(2) ? ZoneSolicited : ZoneToSafeCoords;
+	auto x         = sep->IsNumber(2) ? Strings::ToFloat(sep->arg[2]) : (zd ? zd->safe_x : 0.0f);
+	auto y         = sep->IsNumber(3) ? Strings::ToFloat(sep->arg[3]) : (zd ? zd->safe_y : 0.0f);
+	auto z         = sep->IsNumber(4) ? Strings::ToFloat(sep->arg[4]) : (zd ? zd->safe_z : 0.0f);
 
+	// Always solicit the zone change. ZoneToSafeCoords is the evac/succor
+	// idiom: the client answers with a zero zone id and the server then
+	// resolves the destination to the player's *current* zone, so `#zone
+	// <other>` bounces back. Landing at the destination's safe point is
+	// preserved by passing its safe coordinates explicitly.
 	c->MovePC(
 		zone_id,
 		x,
@@ -79,6 +83,6 @@ void command_zone(Client *c, const Seperator *sep)
 		z,
 		zd ? zd->safe_heading : 0.0f,
 		0,
-		zone_mode
+		ZoneSolicited
 	);
 }

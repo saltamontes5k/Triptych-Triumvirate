@@ -12,6 +12,11 @@ sub EVENT_SAY {
 	elsif ($text=~/karana bandits/i) {
 		quest::say("The Karana bandits are rogues who operate in the plains. I have heard there are bounties for the bandits. Within the Temple of Thunder in Qeynos, Cleric Gehna offers one for bandit spectacles and Paladin Chesgard offers one for bandit sashes.");
 	}
+	elsif ($text=~/help/i && quest::is_content_flag_enabled('peq_halloween')) {
+		quest::say("The Nights of the Dead are upon us and my torches have gone dark! Carry four torches to Anderia, just over yonder, and she will see them lit.");
+		quest::assigntask(620003);
+		quest::updatetaskactivity(620003, 0);
+	}
 }
 
 sub EVENT_ITEM {

@@ -1799,6 +1799,7 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	if (my_hit.damage_done > 0 && RuleR(Custom, ScaleAutoAttackByHStr)) {
 		float bonus = HeroicSTRScale(GetHeroicSTR());
 		my_hit.damage_done += my_hit.damage_done * (RuleR(Custom, ScaleAutoAttackByHStr) * bonus);
+		my_hit.damage_done = std::max<int64>(my_hit.damage_done, 1);
 	}
 
 	///////////////////////////////////////////////////////////
@@ -5140,6 +5141,8 @@ void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
 	}
 
 	if (acthealed) {
+		const std::string healed_amount = std::to_string(acthealed);
+
 		if (caster && IsValidSpell(spell_id)) {
 			eqFilterType filter = caster->IsClient() ? FilterPCSpells : FilterNPCSpells;
 			if (caster->GetOwner() && filter == FilterNPCSpells) {
@@ -5154,22 +5157,80 @@ void Mob::HealDamage(uint64 amount, Mob* caster, uint16 spell_id)
 				? (GetGender() == 0 ? "himself" : (GetGender() == 1 ? "herself" : "itself"))
 				: GetCleanName();
 
-			entity_list.FilteredMessageClose(this,
-											false,
-											RuleI(Range, SpellMessages),
-											Chat::NonMelee,
-											filter,
-											fmt::format("{} has healed {} for {} points of damage. ({})",
-														caster_name,
-														target_name,
-														acthealed,
-														spells[spell_id].name).c_str());
+			// Notify nearby observers. The healer and the healed get their own
+			// personal messages below, so they are skipped here to avoid
+			// duplicate lines (and so the "Heal Over Time" filter governs
+			// whether they see the heal at all).
+			const float heal_message_dist2 = RuleI(Range, SpellMessages) * RuleI(Range, SpellMessages);
+			const std::string observer_message = fmt::format(
+				"{} has healed {} for {} points of damage. ({})",
+				caster_name,
+				target_name,
+				acthealed,
+				spells[spell_id].name
+			);
 
-		} else if ( // this is going to almost always be a HoT, this a fallback condition for spells with no valid caster.
-			CastToClient()->GetFilter(FilterHealOverTime) != FilterShowSelfOnly ||
-			CastToClient()->GetFilter(FilterHealOverTime) != FilterHide
-		) {
-			Message(Chat::NonMelee, "You have been healed for %d points of damage.", acthealed);
+			for (const auto& client_entry : entity_list.GetClientList()) {
+				Client* observer = client_entry.second;
+				if (!observer || observer == caster || observer == this) {
+					continue;
+				}
+
+				if (DistanceSquared(observer->GetPosition(), GetPosition()) <= heal_message_dist2) {
+					observer->FilteredMessage(this, Chat::NonMelee, filter, "%s", observer_message.c_str());
+				}
+			}
+
+			// Personal heal messages, gated by the "Heal Over Time" chat
+			// filter (eqFilterType 24): the healer sees the heals they cast,
+			// the healed sees who healed them.
+			if (caster->IsClient() && caster != this) {
+				caster->CastToClient()->FilteredMessageString(
+					caster,
+					Chat::NonMelee,
+					FilterHealOverTime,
+					HOT_HEAL_OTHER,
+					GetCleanName(),
+					healed_amount.c_str(),
+					spells[spell_id].name
+				);
+			}
+
+			if (IsClient()) {
+				if (caster == this) {
+					CastToClient()->FilteredMessageString(
+						this,
+						Chat::NonMelee,
+						FilterHealOverTime,
+						HOT_HEAL_SELF,
+						healed_amount.c_str(),
+						spells[spell_id].name
+					);
+				}
+				else {
+					CastToClient()->FilteredMessageString(
+						this,
+						Chat::NonMelee,
+						FilterHealOverTime,
+						HOT_HEALED_OTHER,
+						caster->GetCleanName(),
+						healed_amount.c_str(),
+						spells[spell_id].name
+					);
+				}
+			}
+		} else if (IsClient()) {
+			// Heals with no valid caster (this is almost always a HoT tick
+			// whose caster has left) still notify the healed client, respecting
+			// the "Heal Over Time" filter.
+			CastToClient()->FilteredMessageString(
+				this,
+				Chat::NonMelee,
+				FilterHealOverTime,
+				HOT_HEAL_SELF,
+				healed_amount.c_str(),
+				IsValidSpell(spell_id) ? spells[spell_id].name : ""
+			);
 		}
 	}
 
@@ -5450,6 +5511,25 @@ void Mob::TryWeaponProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon
 	return;
 }
 
+void Mob::DoWeaponProc(Mob *on, uint16 hand)
+{
+	if (!on || !on->IsNPC() || on->GetOwnerID()) {
+		return;
+	}
+
+	const EQ::ItemInstance *inst = GetInv().GetItem(hand);
+	if (!inst) {
+		return;
+	}
+
+	const EQ::ItemData *weapon = inst->GetItem();
+	if (!weapon) {
+		return;
+	}
+
+	TryWeaponProc(inst, weapon, on, hand);
+}
+
 void Mob::TrySpellProc(const EQ::ItemInstance *inst, const EQ::ItemData *weapon, Mob *on, uint16 hand)
 {
 	if (!on) {
@@ -5682,6 +5762,7 @@ void Mob::TryPetCriticalHit(Mob *defender, DamageHitInfo &hit)
 	if (critChance > 0) {
 		if (zone->random.Roll(critChance)) {
 			critMod += GetCritDmgMod(hit.skill, owner);
+			critMod = std::max(critMod, 100);
 			hit.damage_done += 5;
 			hit.damage_done = (hit.damage_done * critMod) / 100;
 
@@ -6882,6 +6963,8 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			hit.damage_done -= hit.damage_done * defender->spellbonuses.ShieldTargetSpa[SBIndex::SHIELD_TARGET_MITIGATION_PERCENT] / 100;
 		}
 	}
+
+	hit.damage_done = std::max<int64>(hit.damage_done, 1);
 
 	CheckNumHitsRemaining(NumHit::OutgoingHitSuccess);
 }

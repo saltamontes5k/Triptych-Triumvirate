@@ -647,8 +647,9 @@ void Client::ReapplyBuff(uint32 index, bool from_suppress)
 void Client::CompleteConnect()
 {
 	// If the zone was killed mid-shroud, restore the real profile before any
-	// class/stat logic runs so the character is never stranded as a shroud.
-	RestoreShroudSnapshot();
+	// class/stat logic runs so the character is never stranded as a shroud;
+	// otherwise re-apply a persisted shroud (shrouds survive zoning/relogging).
+	LoadAndApplyShroudState();
 
 	if (RuleB(Custom, MulticlassingEnabled)) {
 		m_pp.classes = Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
@@ -2487,6 +2488,22 @@ void Client::Handle_OP_AdventureMerchantSell(const EQApplicationPacket *app)
 		return;
 	}
 
+	// A container holding items cannot be sold - its contents would be lost.
+	if (inst->IsClassBag()) {
+		bool bag_has_contents = false;
+		for (uint8 bag_slot = 0; bag_slot < item->BagSlots; bag_slot++) {
+			if (inst->GetItem(bag_slot)) {
+				bag_has_contents = true;
+				break;
+			}
+		}
+
+		if (bag_has_contents) {
+			Message(Chat::Red, "You must empty that container before it can be sold.");
+			return;
+		}
+	}
+
 	// Note that Lucy has ldonsold values of 4 and 5 for items sold by Norrath's Keepers and Dark Reign, whereas 13th Floor
 	// has ldonsold = 0 for these items, so some manual editing of the items DB will be required to support sell back of the
 	// items.
@@ -3012,6 +3029,22 @@ void Client::Handle_OP_AltCurrencySell(const EQApplicationPacket *app)
 		if (!RuleB(Merchant, EnableAltCurrencySell)) {
 			Message(Chat::Red, "Selling alternate currency items is disabled.");
 			return;
+		}
+
+		// A container holding items cannot be sold - its contents would be lost.
+		if (inst->IsClassBag()) {
+			bool bag_has_contents = false;
+			for (uint8 bag_slot = 0; bag_slot < inst->GetItem()->BagSlots; bag_slot++) {
+				if (inst->GetItem(bag_slot)) {
+					bag_has_contents = true;
+					break;
+				}
+			}
+
+			if (bag_has_contents) {
+				Message(Chat::Red, "You must empty that container before it can be sold.");
+				return;
+			}
 		}
 
 		const EQ::ItemData* item = nullptr;
@@ -14196,6 +14229,28 @@ void Client::Handle_OP_ShopPlayerSell(const EQApplicationPacket *app)
 		return;
 	}
 
+	// A container holding items cannot be sold - the sale takes the bag and every
+	// item inside it without paying for the contents, effectively destroying them.
+	// Refuse the sale and tell the player to empty it first.
+	if (inst->IsClassBag()) {
+		bool bag_has_contents = false;
+		for (uint8 bag_slot = 0; bag_slot < item->BagSlots; bag_slot++) {
+			if (inst->GetItem(bag_slot)) {
+				bag_has_contents = true;
+				break;
+			}
+		}
+
+		if (bag_has_contents) {
+			if (vendor) {
+				Message(Chat::MerchantExchange, "%s tells you, 'Empty that out first - I'll not buy a bag full of someone else's junk.'", vendor->GetCleanName());
+			} else {
+				Message(Chat::MerchantExchange, "You must empty that container before it can be sold.");
+			}
+			return;
+		}
+	}
+
 	uint32 cost_quantity = mp->quantity;
 	if (inst->IsCharged())
 		uint32 cost_quantity = 1;
@@ -16853,6 +16908,7 @@ void Client::RecordStats()
 	r.endurance_regen          = GetEnduranceRegen() - GetSpellBonuses().EnduranceRegen;
 	r.shielding                = GetShielding() - GetSpellBonuses().MeleeMitigation;
 	r.spell_damage             = GetSpellDmg() - GetSpellBonuses().SpellDmg;
+	r.heal_amount              = GetHealAmt() - GetSpellBonuses().HealAmt;
 	r.spell_shielding          = GetSpellShield() - GetSpellBonuses().SpellShield;
 	r.strikethrough            = GetStrikeThrough() - GetSpellBonuses().StrikeThrough;
 	r.stun_resist              = GetStunResist() - GetSpellBonuses().StunResist;

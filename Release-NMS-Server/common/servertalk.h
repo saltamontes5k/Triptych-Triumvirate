@@ -274,6 +274,10 @@
 #define ServerOP_WWSpell 0x4757
 #define ServerOP_WWTaskUpdate 0x4758
 
+// NMS: Fabled season (see Release-NMS-Deploy/FABLED-ENCOUNTERS.md)
+#define ServerOP_FabledSeason        0x4790 // world -> zone: ServerFabledSeason_Struct (authoritative state)
+#define ServerOP_FabledSeasonUpdate  0x4791 // zone -> world: ServerFabledSeasonUpdate_Struct (request or row-changed)
+
 // player events
 #define ServerOP_QSSendQuery 0x5000
 #define ServerOP_PlayerEvent 0x5100
@@ -1737,6 +1741,30 @@ struct ServerSendPlayerEvent_Struct {
 struct ServerDataBucketCacheUpdate_Struct {
 	uint32_t cereal_size;
 	char cereal_data[0];
+};
+
+// NMS Fabled season. World is the owner; zones cache exactly this struct.
+// Zones never poll: they receive it on boot (after sending a request), and on every change.
+enum FabledScopeKind : uint8 {
+	FabledScope_All  = 0,
+	FabledScope_Era  = 1, // scope_value = era name as in fabled_npcs.era (Classic, RoK, SoV, SoL, PoP)
+	FabledScope_Zone = 2, // scope_value = zone short name
+};
+
+struct ServerFabledSeason_Struct {
+	uint8  active;          // GM intent from fabled_season.active
+	uint8  scope_kind;      // FabledScopeKind
+	uint8  chance;          // 1-100, season default (fabled_npcs.chance overrides per row)
+	uint8  loot_tier;       // 2 = Legendary (+2,000,000)
+	int64  start_epoch;     // UTC seconds
+	int64  end_epoch;       // UTC seconds; 0 = open-ended
+	char   scope_value[32];
+};
+
+struct ServerFabledSeasonUpdate_Struct {
+	uint8 action;           // 0 = zone requests current state (world replies to that zone only)
+	                        // 1 = zone changed fabled_season row (world re-reads and broadcasts to all)
+	char  set_by[64];       // GM name for the world log / emote, action 1 only
 };
 
 struct ServerFlagUpdate_Struct {

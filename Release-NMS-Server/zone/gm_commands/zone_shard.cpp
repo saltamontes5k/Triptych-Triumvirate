@@ -149,6 +149,7 @@ void command_zone_shard(Client *c, const Seperator *sep)
 				break;
 			case Zones::BAZAAR:
 				c->MovePC(zone_id, instance_id, 105, -175, -15, 65, 0, ZoneSolicited);
+				break;
 			default: {
 				c->MovePC(zone_id, instance_id, 0.0, 0.0, 0.0, 0.0, 0, ZoneToSafeCoords);
 			}

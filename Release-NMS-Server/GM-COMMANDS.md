@@ -223,6 +223,24 @@ Brings nearby corpses back up from underneath the ground.
 ### #disable_seasonal / #seasoninfo — seasonal handlers
 Seasonal-character helpers (implemented in zone/gm_commands/seasonal.cpp). #disable_seasonal confirm permanently removes the character from the current season; #seasoninfo shows the active seasonal event.
 
+### #fabled — GMMgmt
+Controls the Fabled season (see `Release-NMS-Deploy/FABLED-ENCOUNTERS.md`): a window during which named NPCs
+from the `fabled_npcs` roster can spawn as `The_Fabled_<name>` variants at their roster level, with their own
+loot forced to the Legendary (+2,000,000) tier.
+
+| Syntax | Effect |
+|---|---|
+| `#fabled on [scope] [duration] [chance]` | Start a season. Scope: `all`, `era:<Classic\|RoK\|SoV\|SoL\|PoP>`, `zone:<short_name>`. Duration: `30m`/`6h`/`3d`/`2w` (omit = open-ended). Chance 1-100 (omit = `Custom:FabledDefaultChance`, default 50). |
+| `#fabled schedule [scope] <YYYY-MM-DD> <YYYY-MM-DD> [chance]` | Schedule start/end at server-local midnight; dates may be in the future. |
+| `#fabled off` | End the season everywhere immediately. |
+| `#fabled status` | Season row, time remaining, this zone's participation, eligible NPC count here. |
+| `#fabled force` | Promote the targeted NPC now (testing; ignores the season, respects the roster). |
+
+State lives in the `fabled_season` table (row id 1); world re-reads it and pushes it to every zone, so all
+zones agree with no reload or restart. Already-spawned Fableds stay until killed or their spawn point cycles.
+`#reload fabled` re-reads the `fabled_npcs` roster after editing it (add `global` to push the new roster to
+all zones).
+
 ### #feature / #size — QuestTroupe
 Temporarily change your/target's appearance features (Drakkin heritage/beard/beardcolor/face/eyes/hair etc.) or size.
 

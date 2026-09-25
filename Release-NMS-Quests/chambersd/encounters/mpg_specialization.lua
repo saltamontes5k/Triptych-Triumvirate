@@ -23,6 +23,7 @@ local lockout_win   = "5d";
 local lockout_loss  = "3h";
 local this_zone		= 'chambersd';
 local this_bit		= 8;
+local memory = require("nms_memory");
 local player_list;
 local spell_list	= {};
 local spell_idx		= 1;
@@ -97,9 +98,12 @@ function Boss_Death(e)
 	-- Disable the Death Toucher
 	eq.spawn_condition(this_zone,instance_id,5,0);
 	eq.depop_all(307006);
-	-- Spawn Shell of the Master 
+	-- Spawn Shell of the Master
 	eq.spawn2(307008,0,0,-212,270,66,e.self:GetHeading()); -- NPC: Shell_of_the_Master_
-	-- Update the Win Lockout
+
+	-- NMS progression: spawn the progression memory hail mob (PoR flag)
+	memory.spawn(e, "PoR", "master of specialization", nil, nil, -212, 270, 66, e.self:GetHeading());
+-- Update the Win Lockout
 	local dz = eq.get_expedition()
 	if dz.valid then
 		dz:AddReplayLockoutDuration(eq.seconds(lockout_win)) -- 5 days + current timer (max 123 hours)

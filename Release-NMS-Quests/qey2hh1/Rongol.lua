@@ -8,6 +8,10 @@ function event_say(e)
 		e.self:Say(string.format("With the frequent rains, I find my only need is a blanket to keep me warm during the long cold nights. Thank Karana the temple has begun to send young %s to deliver extra blankets.", e.other:GetClassName()));
 	elseif e.message:findi("karana bandits") then
 		e.self:Say("The Karana bandits are rogues who operate in the plains. I have heard there are bounties for the bandits. Within the Temple of Thunder in Qeynos, Cleric Gehna offers one for bandit spectacles and Paladin Chesgard offers one for bandit sashes.");
+	elseif e.message:findi("help") and eq.is_content_flag_enabled("peq_halloween") then
+		e.self:Say("The Nights of the Dead are upon us and my torches have gone dark! Carry four torches to Anderia, just over yonder, and she will see them lit.");
+		eq.assign_task(620003);
+		eq.update_task_activity(620003, 0, 1);
 	end
 end
 

@@ -32,6 +32,7 @@
 local instance_id;
 local this_bit			= 32;
 local this_zone			= 'chambersf';
+local memory = require("nms_memory");
 local lockout_win		= "3d";
 local lockout_loss		= "2h";
 local event_active		= false;
@@ -105,6 +106,9 @@ function Destruction_Death(e)
 	eq.spawn_condition(this_zone,instance_id,1,0);
 	eq.stop_all_timers();
 	eq.spawn2(309068,0,0,-212,273,71,40); -- NPC: Shell_of_the_Master
+
+	-- NMS progression: spawn the progression memory hail mob (PoR flag)
+	memory.spawn(e, "PoR", "master of destruction", nil, nil, -212, 273, 71, 40);
 
 	local dz = eq.get_expedition()
 	if dz.valid then

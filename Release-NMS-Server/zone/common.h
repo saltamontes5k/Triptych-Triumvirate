@@ -423,6 +423,7 @@ struct StatBonuses {
 	int32   CriticalProcChance;
 	int32	SpellCritDmgIncrease;				//i
 	int32	SpellCritDmgIncNoStack;				// increase
+	int32	AACritDmgNoStackSum;				// additive sum of AA SPA 294 crit dmg components (for rule-based stacking)
 	int32	DotCritDmgIncrease;					//i
 	int32	CriticalHealChance;					//i
 	int32   CriticalLifeTapChance;

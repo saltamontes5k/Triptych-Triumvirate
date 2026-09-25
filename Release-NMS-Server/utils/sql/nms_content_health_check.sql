@@ -1,7 +1,8 @@
 -- ============================================================================
--- Triptych content health check - verifies the DATA every custom-manifest
--- version (v18 through v42) is supposed to deliver, without trusting
--- db_version.
+-- Triptych content health check - verifies the DATA each custom-manifest
+-- version is supposed to deliver, without trusting db_version. Coverage is
+-- full for v18-v42 plus targeted checks for v50 (the alternate-currency
+-- self-heal) and v62-v63 (the Fabled season schema).
 --
 -- Why this exists: we have now twice found servers whose custom_version was
 -- stamped PAST an entry whose content never landed (a half-apply healed by a
@@ -10,9 +11,9 @@
 -- expectation - anything that misses its expected value identifies exactly
 -- which payload is absent.
 --
--- Expected custom_version on a fully-booted server: 42. A fresh import only
+-- Expected custom_version on a fully-booted server: 63. A fresh import only
 -- reaches that once the first `world` boot applies the outstanding custom
--- migrations (v35-v42). So "42" is correct only after first boot.
+-- migrations (v35-v63). So "63" is correct only after first boot.
 --
 -- Run (Windows / MariaDB):
 --   "C:\Program Files\MariaDB 12.3\bin\mariadb.exe" -u <user> -p <dbname> < nms_content_health_check.sql
@@ -26,7 +27,7 @@
 -- READ-ONLY: SELECT/SHOW only. Safe on any server, any number of times.
 -- ============================================================================
 
-SELECT 'db_version.custom_version (expect 42 once a v42 binary has booted)' AS what, custom_version AS value FROM db_version LIMIT 1;
+SELECT 'db_version.custom_version (expect 63 once a v63 binary has booted)' AS what, custom_version AS value FROM db_version LIMIT 1;
 
 -- ---- v18 / v23: Beastlord spell merchant + scrolls -------------------------
 SELECT 'v23 bl merchant npc (expect 1)' AS what, COUNT(*) AS value FROM npc_types WHERE id = 1120001300;
@@ -107,3 +108,28 @@ SELECT 'v41 triune drop rule (expect 150)' AS what, rule_value AS value FROM rul
 -- The rule is a single comma string; assert the Osh'vir lineage (first rank 11112, custom
 -- rank-15 clone 50011) is present so a stale/truncated value is caught.
 SELECT 'v42 always-stack has breath ids (expect 1)' AS what, (rule_value LIKE '%11112%' AND rule_value LIKE '%50011%') AS value FROM rule_values WHERE rule_name = 'Spells:AlwaysStackSpells' LIMIT 1;
+
+-- ---- v50: alternate-currency rows + client strings self-heal -----------------------------
+-- The base release-peq.sql import ships only alternate_currency ids 1 and 6 and no db_str
+-- names for ids 4/5 or 30-39; v50 restores the upstream PEQ rows. Both halves are asserted
+-- so a half-applied migration (rows without names, or names without rows) is caught. The
+-- names are what the client's Alt. Currency tab reads; without them Radiant/Ebon crystals
+-- render as "db unknown". Regenerate client files with export_client_files after this lands.
+SELECT 'v50 alternate_currency 4/5/10-39 (expect 29)' AS what, COUNT(*) AS value FROM alternate_currency WHERE id IN (4,5,10,11,12,13,14,16,17,18,20,21,22,23,24,25,27,28,29,30,31,32,33,34,35,36,37,38,39);
+SELECT 'v50 alt-currency strings 4,5,30-39 x17/18 (expect 24)' AS what, COUNT(*) AS value FROM db_str WHERE type IN (17,18) AND id IN (4,5,30,31,32,33,34,35,36,37,38,39);
+SELECT 'v50 radiant crystal name (expect Radiant Crystal)' AS what, `value` AS value FROM db_str WHERE id = 4 AND type = 17 LIMIT 1;
+SELECT 'v50 ebon crystal name (expect Ebon Crystal)' AS what, `value` AS value FROM db_str WHERE id = 5 AND type = 17 LIMIT 1;
+
+-- ---- v62/v63: Fabled season ----------------------------------------------------------
+-- v62 creates fabled_npcs (content schema); the 472-row roster is seeded by hand from
+-- utils/sql/fabled_roster_seed.sql (NOT part of the migration), so the row count is only
+-- correct after that seed is applied. v63 creates fabled_season and its single id=1 row.
+SELECT 'v62 fabled_npcs tbl (expect 1)' AS what, COUNT(*) AS value FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'fabled_npcs';
+SELECT 'v62 fabled roster seeded (expect 472)' AS what, COUNT(*) AS value FROM fabled_npcs;
+SELECT 'v62 fabled roster enabled (expect 472)' AS what, COUNT(*) AS value FROM fabled_npcs WHERE enabled = 1;
+SELECT 'v63 fabled_season tbl (expect 1)' AS what, COUNT(*) AS value FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'fabled_season';
+SELECT 'v63 fabled_season row 1 (expect 1)' AS what, COUNT(*) AS value FROM fabled_season WHERE id = 1;
+SELECT 'v63 fabled_season inactive (expect 0)' AS what, active AS value FROM fabled_season WHERE id = 1;
+
+-- ---- v71: bazaar "Echo of X" blessings renamed to "Triune of X" --------------------------
+SELECT 'v71 triune blessings renamed (expect 9)' AS what, COUNT(*) AS value FROM spells_new WHERE id IN (17779,36856,43002,43003,43004,43005,43006,43007,43008) AND `name` LIKE 'Triune of %';

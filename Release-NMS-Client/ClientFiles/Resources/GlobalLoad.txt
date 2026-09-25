@@ -1,0 +1,89 @@
+1,1,TFFFE,gequip_nms,Loading NMS Equipment Files
+1,1,TFFFE,gequip_patch,Loading NMS Equipment Files
+1,1,TFFFE,Equipment-01.eqg,Loading Character Equipment Files
+1,1,TFFFC,GlobalFroglok_chr,Loading Froglok
+1,1,TFFTC,GlobalPCFroglok_chr,Loading Froglok
+1,1,TFFFE,frogequip,Loading Froglok
+1,1,TFFTC,GlobalSKE_chr2,Loading Froglok
+1,1,TFFFC,GlobalDRK_chr,Loading Froglok
+1,1,TFFFE,Global_obj,Loading Character Equipment Files
+1,1,TFTFE,GEquip,Loading Character Equipment Files
+2,0,TFFFE,GEquip8,Loading Character Equipment Files
+2,0,TFFFE,GEquip2,Loading Character Equipment Files
+2,0,TFFFU,grass,Loading Character Equipment Files
+2,0,TFFFC,ske_chr,Loading Classic Skeleton
+2,0,TFFFE,GEquip5,Loading Character Equipment Files
+2,0,TFFFE,GEquip4,Loading Character Equipment Files
+2,0,TFFFE,GEquip3,Loading Character Equipment Files
+2,0,TFFFE,loyequip,Loading Character Equipment Files
+2,0,TFFFE,ldonequip,Loading Character Equipment Files
+2,0,TFFFE,gatesequip,Loading Character Equipment Files
+3,0,TFFFC,sca_chr,Loading Scarecrow
+3,0,TFFFC,wof_v2_chr,Loading New Chokidai
+3,0,TFFFC,hohonorb_chr,Loading Characters
+3,0,TFFFC,poair_chr,Loading Characters
+3,0,TFFFC,rap_chr,Loading Characters
+3,0,TFFFC,Dpm_chr,Loading Characters
+3,0,TFFFC,Dpf_chr,Loading Characters
+3,0,TFFFC,Epm_chr,Loading Characters
+3,0,TFFFC,Epf_chr,Loading Characters
+3,0,TFFFC,Gpm_chr,Loading Characters
+3,0,TFFFC,Gpf_chr,Loading Characters
+3,0,TFFFC,Hpf_chr,Loading Characters
+3,0,TFFFC,Hpm_chr,Loading Characters
+3,0,TFFFC,Opf_chr,Loading Characters
+3,0,TFFFC,Opm_chr,Loading Characters
+3,0,TFFFC,Tbm_chr,Loading Characters
+3,0,TFFFC,Tbf_chr,Loading Characters
+3,0,TFFFC,mmm_chr,Loading Characters
+3,0,TFFFC,mmf_chr,Loading Characters
+3,0,TFFFC,tnf_chr,Loading Characters
+3,0,TFFFC,tnm_chr,Loading Characters
+3,0,TFFFC,skt_chr,Loading Character Equipment Files
+3,0,TFFFC,Global6_chr2,Loading Character Equipment Files
+3,0,TFFFC,Global6_chr,Loading Character Equipment Files
+3,0,TFFFC,Global4_chr,Loading Characters
+3,1,TFFFC,Global_chr,Loading Characters
+3,0,TFFFC,fgh_chr,Loading Characters
+3,0,TFFFC,mmm_chr,Loading Characters
+3,0,TFFFC,mmf_chr,Loading Characters
+3,0,TFFFC,ila_chr,Loading Characters
+3,0,TFFFC,rpt.eqg,Loading Characters
+3,0,TFFFC,jkr_chr,Loading Characters
+3,0,TFFFC,mmy_chr,Loading Characters
+3,0,TFFFC,xef.eqg,Loading Characters
+3,0,TFFFC,xhm.eqg,Loading Characters
+3,0,TFFFC,xhf.eqg,Loading Characters
+3,0,TFFFC,bwd_chr,Loading Characters
+3,0,TFFFC,pma.eqg,Loading Custom Beastlord Pets...
+3,0,TFFFC,kbd.eqg,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,dke.eqg,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,gbl_chr,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,snk.eqg,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,ponightmare_chr,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,poinnovation_chr,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,pbr_chr,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,fng.eqg,Loading Custom Beaslotrd Pets...
+3,0,TFFFC,gho.eqg,Loading Ghouls...
+3,0,TFFFC,wlf.eqg,Loading Wolves...
+3,0,TFFFC,eru.eqg,Loading Erudites...
+3,0,TFFFC,gtd_chr,Loading Fiends...
+3,0,TFFFC,grn.eqg,Loading Griffins...
+3,0,TFFFC,mth.eqg,Loading Mammoths...
+3,0,TFFFC,pgs.eqg,Loading Pegasus...
+3,0,TFFFC,gfr.eqg,Loading Giants...
+3,0,TFFFC,fud_chr,Loading Undead Froglok...
+3,0,TFFFC,cdr.eqg,Loading Skeletal Drake...
+3,0,TFFFC,fgt_anims.eqg,Loading Giant Animations...
+3,0,TFFFC,freportn_chr,Loading Dervish...
+3,0,TFFFC,mmv_chr,Loading Master Vampires...
+3,0,TFFFC,lmm_chr,Loading UndeadVampire...
+3,0,TFFFC,lmf_chr,Loading UndeadVampire...
+3,0,TFFFC,fdr_chr,Loading Fay Drake
+3,0,TFFFC,unm.eqg,Loading Mounts
+3,0,TFFFC,hrs.eqg,Loading Mounts
+3,0,TFFFC,mch.eqg,Loading Mounts
+3,0,TFFFC,mki.eqg,Loading Mounts
+3,0,TFFFC,mpu.eqg,Loading Mounts
+4,0,TFFFC,Global2_chr,Loading Global Items and Equipment
+4,0,TFFFC,Global3_chr,Loading Global Items and Equipment

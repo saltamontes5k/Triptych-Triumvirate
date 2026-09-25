@@ -562,6 +562,12 @@ std::string Perl_Mob_GetCleanName(Mob* self) // @categories Script Utility
 	return self->GetCleanName();
 }
 
+// NMS: the spawn-time name before any TempName() rename (e.g. a Fabled promotion). Underscored form.
+std::string Perl_Mob_GetOrigName(Mob* self) // @categories Script Utility
+{
+	return self->GetOrigName();
+}
+
 Mob* Perl_Mob_GetTarget(Mob* self) // @categories Script Utility
 {
 	return self->GetTarget();
@@ -2206,6 +2212,42 @@ void Perl_Mob_SendIllusionPacket(Mob* self, perl::reference table_ref)
 			.size = size,
 			.target = target,
 			.texture = texture,
+		}
+	);
+}
+
+void Perl_Mob_DoWeaponProc(Mob* self, Mob* on) // @categories Script Utility
+{
+	self->DoWeaponProc(on, EQ::invslot::slotPrimary);
+}
+
+void Perl_Mob_DoWeaponProc(Mob* self, Mob* on, uint16 hand) // @categories Script Utility
+{
+	self->DoWeaponProc(on, hand);
+}
+
+void Perl_Mob_CopyAppearance(Mob* self, Mob* target) // @categories Script Utility
+{
+	if (!target) {
+		return;
+	}
+
+	self->SendIllusionPacket(
+		AppearanceStruct{
+			.beard = target->GetBeard(),
+			.beard_color = target->GetBeardColor(),
+			.drakkin_details = target->GetDrakkinDetails(),
+			.drakkin_heritage = target->GetDrakkinHeritage(),
+			.drakkin_tattoo = target->GetDrakkinTattoo(),
+			.face = target->GetLuclinFace(),
+			.gender_id = static_cast<uint8>(target->GetGender()),
+			.hair = target->GetHairStyle(),
+			.hair_color = target->GetHairColor(),
+			.helmet_texture = target->GetHelmTexture(),
+			.race_id = target->GetRace(),
+			.send_effects = true,
+			.size = target->GetSize(),
+			.texture = target->GetTexture(),
 		}
 	);
 }
@@ -3969,6 +4011,7 @@ void perl_register_mob()
 	package.add("GetNimbusEffect1", &Perl_Mob_GetNimbusEffect1);
 	package.add("GetNimbusEffect2", &Perl_Mob_GetNimbusEffect2);
 	package.add("GetNimbusEffect3", &Perl_Mob_GetNimbusEffect3);
+	package.add("GetOrigName", &Perl_Mob_GetOrigName);
 	package.add("GetOwner", &Perl_Mob_GetOwner);
 	package.add("GetOwnerID", &Perl_Mob_GetOwnerID);
 	package.add("GetPR", &Perl_Mob_GetPR);
@@ -4198,6 +4241,9 @@ void perl_register_mob()
 	package.add("SendIllusion", (void(*)(Mob*, uint16, uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint32, uint32, uint32, float))&Perl_Mob_SendIllusion);
 	package.add("SendIllusion", (void(*)(Mob*, uint16, uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint8, uint32, uint32, uint32, float, Client*))&Perl_Mob_SendIllusion);
 	package.add("SendIllusionPacket", (void(*)(Mob*, perl::reference))&Perl_Mob_SendIllusionPacket);
+	package.add("DoWeaponProc", (void(*)(Mob*, Mob*))&Perl_Mob_DoWeaponProc);
+	package.add("DoWeaponProc", (void(*)(Mob*, Mob*, uint16))&Perl_Mob_DoWeaponProc);
+	package.add("CopyAppearance", (void(*)(Mob*, Mob*))&Perl_Mob_CopyAppearance);
 	package.add("SendTo", &Perl_Mob_SendTo);
 	package.add("SendToFixZ", &Perl_Mob_SendToFixZ);
 	package.add("SendWearChange", &Perl_Mob_SendWearChange);

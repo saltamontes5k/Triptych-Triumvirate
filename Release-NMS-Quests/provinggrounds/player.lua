@@ -7,6 +7,14 @@ local door_ids = {
   [7] = "chambersc"
 }
 
+task_ids = require('task_ids')
+
+function event_enter_zone(e)
+  if not e.self:IsTaskActive(task_ids.oow_mpg) and not e.self:IsTaskCompleted(task_ids.oow_mpg) then
+    e.self:AssignTask(task_ids.oow_mpg)
+  end
+end
+
 function event_click_door(e)
   local door_id = e.door:GetDoorID();
 

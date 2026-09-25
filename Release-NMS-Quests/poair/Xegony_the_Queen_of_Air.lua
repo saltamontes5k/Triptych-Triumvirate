@@ -1,3 +1,5 @@
+local memory = require("nms_memory")
+
 function event_spawn(e)
 	eq.set_next_hp_event(98)
 end
@@ -120,11 +122,7 @@ function event_death_complete(e)
 	-- NMS progression: Xegony is one of the elemental gods gating Dragons of Norrath (and LDoN).
 	-- Spawn the memory NPC (global/26000.pl); hailing it grants the DoN subflag. The Essence of
 	-- Air hail in 215438.lua grants it too, so either path credits the kill.
-	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
-	if memory_npc ~= nil then
-		memory_npc:SetEntityVariable("Flag-Name", "xegony")
-		memory_npc:SetEntityVariable("Stage-Name", "DoN")
-	end
+	memory.spawn(e, "DoN", "xegony")
 end
 
 function event_killed_merit(e)

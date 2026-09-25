@@ -34,6 +34,7 @@ local this_bit			= 4;
 local lockout_win		= "3d";
 local lockout_loss		= "2h";
 local this_zone			= 'chambersb';
+local memory = require("nms_memory");
 local event_active		= false;
 local warnings			= 0; -- Warnings for breaking rules
 local minis_dead		= 0;
@@ -127,6 +128,8 @@ function Weaponry_Signal(e)
 		eq.spawn_condition(this_zone,instance_id,1,0);
 		eq.stop_all_timers();
 		eq.spawn2(305005, 0, 0, -212, 273, 71, 40); -- NPC: Shell_of_the_Master
+		-- NMS progression: spawn the progression memory hail mob (PoR flag)
+		memory.spawn(e, "PoR", "master of weaponry", nil, nil, -212, 273, 71, 40);
 		eq.depop();
 		local dz = eq.get_expedition()
 		if dz.valid then

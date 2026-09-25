@@ -350,6 +350,41 @@ void Heartbeat()
 
     FireCAuthHandshake(); // Deferred CAuth — main thread, safe to send
 
+    // NMS: shroud transform pose fix — after OP_Shroud the actor keeps the
+    // transform's last frame; cycle /sit then /stand to rebuild the pose.
+    {
+        extern bool g_shroudPoseFix;
+        static int  s_shroudPosePhase = 0;
+        static DWORD s_shroudPoseTick = 0;
+        if (g_shroudPoseFix && gGameState == GAMESTATE_INGAME && pLocalPlayer) {
+            if (s_shroudPosePhase == 0) {
+                EzCommand("/sit");
+                s_shroudPosePhase = 1;
+                s_shroudPoseTick = GetTickCount();
+            } else if (s_shroudPosePhase == 1 &&
+                       GetTickCount() - s_shroudPoseTick > 400) {
+                EzCommand("/stand");
+                s_shroudPosePhase = 0;
+                g_shroudPoseFix = false;
+            }
+        }
+    }
+
+    // NMS: follow-up hotbar restores. The class rebuild triggered by OP_Shroud
+    // can re-hide the bars a moment after the handler returns, so re-show them
+    // a few times over the next second. See ShroudRestoreHotbars() in eqgame.cpp.
+    {
+        extern int   g_shroudHotbarFixesLeft;
+        extern DWORD g_shroudHotbarNextTick;
+        extern void  ShroudRestoreHotbars();
+        if (g_shroudHotbarFixesLeft > 0 && gGameState == GAMESTATE_INGAME &&
+            GetTickCount() >= g_shroudHotbarNextTick) {
+            ShroudRestoreHotbars();
+            --g_shroudHotbarFixesLeft;
+            g_shroudHotbarNextTick = GetTickCount() + 500;
+        }
+    }
+
     // NMS: keep discipline timer-bands applied (native client re-wraps CARecastTimerID
     // mod 20 on spell load; this restores the >=20 banded IDs so classes stay separated).
     {

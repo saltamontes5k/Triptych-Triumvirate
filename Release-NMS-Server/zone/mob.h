@@ -373,6 +373,7 @@ public:
 	int GetSharedCriticalSpellChance();
 	int GetSharedSpellCritDmgIncrease();
 	int GetSharedSpellCritDmgIncNoStack();
+	int GetAACritDmgNoStackPool();
 	int GetSharedCriticalDoTChance();
 	int GetSharedDotCritDmgIncrease();
 	int GetSharedCriticalHealChance();
@@ -1995,6 +1996,10 @@ public:
 	const CombatRecord &GetCombatRecord() const;
 
 	virtual EQ::InventoryProfile& GetInvPublic() { return m_inv; }
+
+	// Re-run the wielded weapon's combat proc for the given hand (used by the
+	// deity blessing "twinproc"). Mirrors Mob::TryWeaponProc, which is protected.
+	void DoWeaponProc(Mob *on, uint16 hand = EQ::invslot::slotPrimary);
 
 public:
 	bool GetWasSpawnedInWater() const;

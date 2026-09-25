@@ -163,7 +163,7 @@ sub EVENT_SPAWN {
 
     
     if ($instanceversion > 0) {        
-        if ($npc->GetName() =~ /Echo_of_the_Past/) {
+        if ($npc->GetName() =~ /Herald_of_the_Triumvirate/) {
             $npc->Depop(0);
         }
     }

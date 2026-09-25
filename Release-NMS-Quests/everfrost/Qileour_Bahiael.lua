@@ -6,7 +6,19 @@ local mirb = {
   zonein     = { x=607.0, y=1504.0, z=28.0, h=156.0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  if not prog.gate_stage(e.other, "DoN", "Qileour Bahiael says, 'The Wayfarers will open these dungeons only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Qileour Bahiael says, 'I am busy building a strategy to take on those oddities deep under the ice here.  If you need something, speak up now.  I have little time for pleasantries.  However, if you can rally the call of your friends perhaps you can help us with a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

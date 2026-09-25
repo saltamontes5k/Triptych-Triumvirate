@@ -1,4 +1,9 @@
+task_ids = require('task_ids')
+
 function event_enter_zone(e)
+	if not e.self:IsTaskActive(task_ids.oow_rss) and not e.self:IsTaskCompleted(task_ids.oow_rss) then
+		e.self:AssignTask(task_ids.oow_rss)
+	end
 	local qglobals = eq.get_qglobals(e.self);	
 	if(qglobals["ranger_epic"] == "8" and qglobals["rng_spawn_rss"] == nil and not eq.get_entity_list():IsMobSpawnedByNpcTypeID(334087)) then
 		eq.load_encounter("ranger_2_0");

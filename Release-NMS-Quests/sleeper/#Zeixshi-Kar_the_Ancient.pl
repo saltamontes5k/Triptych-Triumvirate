@@ -1,13 +1,7 @@
-sub EVENT_SPAWN {
-quest::settimer("zeixshi",1);
-  }
-
-sub EVENT_TIMER { 
-$kerafyrm = $entity_list->GetMobByNpcTypeID(128089);
-if ($timer eq "zeixshi") {
-if ($kerafyrm) {
-  quest::stoptimer("zeixshi");
-  quest::depop_withtimer();
-  } 
-   }
-    }
+# Sleepers 2.0 -- Zeixshi-Kar the Ancient (128044). One of the five seals.
+#
+# This seal no longer despawns while Kerafyrm is present. Seal tracking and the
+# unlock of Kerafyrm are handled by encounters/sleeper_custom.lua.
+sub EVENT_DEATH_COMPLETE {
+	quest::shout("The seal of frost is broken... the prison weakens.");
+}

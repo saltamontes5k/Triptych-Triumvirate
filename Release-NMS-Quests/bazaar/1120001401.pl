@@ -1,4 +1,4 @@
-# 1120001401 - Wandering Adventure (DoN LDoN Key) - Bazaar v0
+# 1120001401 - Wandering Adventurer (DoN LDoN Key) - Bazaar v0
 # DoN / LDoN keying status. Reports whether the account has slain the five elemental gods
 # (Xegony, Agnarr, Fennin Ro, the Rathe Council, Coirnav) whose fall keys the Dragons of
 # Norrath and, with it, the LDoN raids on this server.

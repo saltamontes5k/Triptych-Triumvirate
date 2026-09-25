@@ -561,9 +561,10 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool        OpenShroudWindow(Mob* npc);
 	void        ApplyShroud(uint32 shroud_id);
 	void        RemoveShroud(bool send_updates = true);
-	void        SaveShroudSnapshot();
+	void        SaveShroudSnapshot(uint32 shroud_id);
 	void        ClearShroudSnapshot();
-	bool        RestoreShroudSnapshot();
+	void        LoadAndApplyShroudState();
+	void        ResendShroudState();
 	inline bool IsShrouded() const { return m_shrouded; }
 	inline uint32 GetShroudID() const { return m_shroud_id; }
 
@@ -2537,6 +2538,16 @@ private:
 	uint32               m_shroud_id          = 0;
 	bool                 m_shroud_saved_valid = false;
 	PlayerProfile_Struct m_shroud_saved_pp{};
+	// Base appearance captured when the shroud is applied (the profile only
+	// carries race/gender/class/level); restored on unshroud and re-read from
+	// the snapshot row after a zone/relog.
+	uint8                m_shroud_saved_texture      = UINT8_MAX;
+	uint8                m_shroud_saved_helmtexture  = UINT8_MAX;
+	float                m_shroud_saved_size         = -1.0f;
+	// Zone-in re-apply is deferred: an OP_Shroud that arrives while the RoF2
+	// client is still building the zone crashes its self-spawn re-add.
+	bool                 m_shroud_zonein_pending     = false;
+	uint32               m_shroud_zonein_at          = 0;
 
 	bool bZoning;
 	bool tgb;

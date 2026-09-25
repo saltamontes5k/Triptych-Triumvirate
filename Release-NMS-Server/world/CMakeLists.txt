@@ -9,6 +9,7 @@ SET(world_sources
     console.cpp
     ../common/data_bucket.cpp
     dynamic_zone.cpp
+    fabled_season.cpp
     dynamic_zone_manager.cpp
     eql_config.cpp
     eqemu_api_world_data_service.cpp
@@ -45,6 +46,7 @@ SET(world_headers
     console.h
     ../common/data_bucket.h
     dynamic_zone.h
+    fabled_season.h
     dynamic_zone_manager.h
     eql_config.h
     eqemu_api_world_data_service.h

@@ -63,5 +63,20 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Consume quest hand-ins only while their task is active (task system
+  # handles completion); anything else is returned by the handin system.
+  if (quest::istaskactive(600081)) {
+    plugin::check_handin(\%itemcount, 36164 => 1);
+    plugin::check_handin(\%itemcount, 36192 => 1);
+  }
+  if (quest::istaskactive(600082)) {
+    plugin::check_handin(\%itemcount, 36165 => 1);
+    plugin::check_handin(\%itemcount, 36166 => 1);
+    plugin::check_handin(\%itemcount, 36167 => 1);
+    plugin::check_handin(\%itemcount, 36168 => 1);
+  }
+  if (quest::istaskactive(600083)) {
+    plugin::check_handin(\%itemcount, 36169 => 1);
+    plugin::check_handin(\%itemcount, 36170 => 1);
+  }
 }

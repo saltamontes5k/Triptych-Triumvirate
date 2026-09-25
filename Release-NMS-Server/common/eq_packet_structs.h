@@ -5578,14 +5578,15 @@ struct ShroudUpdateSelectWindow
  * Client request to become (or stop being) a shroud.
  *
  * OpCode: OP_ShroudSelect (and OP_ShroudSelectCancel uses op only)
- * NOTE: the RoF2 payload is not documented by any working server; the layout
- * below is the working hypothesis and is validated/parsed defensively.
+ * RE-VERIFIED against the RoF2 client binary: the client sends a 6-byte
+ * buffer (u16 opcode + u32 value) through its send helper at
+ * eqgame+0x413830, so the server-side body is a single uint32 shroud id
+ * (0 = remove).
  */
 struct ShroudSelect_Struct
 {
 /*000*/ uint32 shroud_id;   // shroud template id, 0 to cancel
-/*004*/ uint32 op;         // 0/absent = select, 1 = cancel (unverified)
-/*008*/
+/*004*/
 };
 
 struct ApplyPoison_Struct {

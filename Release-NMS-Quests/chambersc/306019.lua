@@ -3,13 +3,11 @@
 -- clear grants its matching grant-only 'Mastery of X' AA (70000-70005) to everyone in the instance.
 -- Memory NPC is global/26000.pl; hailing it grants the PoR subflag.
 
+local memory = require("nms_memory")
+
 function event_death_complete(e)
 	-- PoR gate subflag
-	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
-	if memory_npc ~= nil then
-		memory_npc:SetEntityVariable("Flag-Name", "master of foresight")
-		memory_npc:SetEntityVariable("Stage-Name", "PoR")
-	end
+	memory.spawn(e, "PoR", "master of foresight")
 
 	-- Trial AA grant to every client in the instance (raid credit)
 	local aa_id = 70002

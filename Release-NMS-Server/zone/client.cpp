@@ -1036,9 +1036,36 @@ bool Client::Save(uint8 iCommitNow) {
 	if(!ClientDataLoaded())
 		return false;
 
-	// Never persist a shroud form: restore the real profile before writing.
-	if (m_shrouded) {
-		RemoveShroud(false);
+	// Never persist a shroud form: write the real profile, but keep the live
+	// shroud state intact. Calling RemoveShroud() here would un-shroud the
+	// session (restore m_pp, clear the snapshot) mid-transform, which corrupts
+	// the OP_Shroud packet that ApplyShroud is still building.
+	struct ShroudPersistGuard {
+		Client *client = nullptr;
+		bool    swap   = false;
+		PlayerProfile_Struct live{};
+		~ShroudPersistGuard() {
+			if (swap) {
+				client->m_pp = live;
+			}
+		}
+	} shroud_persist_guard;
+	shroud_persist_guard.client = this;
+	if (m_shrouded && m_shroud_saved_valid) {
+		shroud_persist_guard.live = m_pp;
+		m_pp                      = m_shroud_saved_pp;
+		// The shroud snapshot is from the moment the shroud was applied, so its
+		// zone/instance/position are stale. Those fields must stay live: after a
+		// zone change the client disconnect saves the character here (see
+		// Client::~Client), and persisting the snapshot's old zone makes the
+		// world bounce the client back to it instead of the requested zone.
+		m_pp.zone_id      = shroud_persist_guard.live.zone_id;
+		m_pp.zoneInstance = shroud_persist_guard.live.zoneInstance;
+		m_pp.x            = shroud_persist_guard.live.x;
+		m_pp.y            = shroud_persist_guard.live.y;
+		m_pp.z            = shroud_persist_guard.live.z;
+		m_pp.heading      = shroud_persist_guard.live.heading;
+		shroud_persist_guard.swap = true;
 	}
 
 	BenchTimer timer;

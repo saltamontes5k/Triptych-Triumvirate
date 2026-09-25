@@ -188,7 +188,13 @@ const char *LuaEvents[_LargestEventID] = {
 	"event_entity_variable_update",
 	"event_aa_loss",
 	"event_spell_blocked",
-	"event_read_item"
+	"event_read_item",
+	// These three must stay in sync with the tail of QuestEventID in event_codes.h.
+	// The array is sized _LargestEventID; any missing initializer is a nullptr that
+	// gets dereferenced when the event dispatches.
+	"event_spell_effect_bot",
+	"event_spell_effect_buff_tic_bot",
+	"event_item_generate"
 };
 
 extern Zone *zone;

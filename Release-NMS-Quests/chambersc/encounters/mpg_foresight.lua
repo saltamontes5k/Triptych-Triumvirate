@@ -21,6 +21,7 @@ local lockout_win		= "5d";
 local lockout_loss		= "3h";
 local this_zone			= 'chambersc';
 local this_bit			= 4;
+local memory = require("nms_memory");
 local player_list;
 local warnings			= 0;
 local emotes			= {};
@@ -425,6 +426,9 @@ function Event_Win(e)
 
 	-- Spawn Shell of the Master
 	eq.spawn2(306024,0,0,-204,274,66,144); -- NPC: Shell_of_the_Master_
+
+	-- NMS progression: spawn the progression memory hail mob (PoR flag)
+	memory.spawn(e, "PoR", "master of foresight", nil, nil, -204, 274, 66, 144);
 
 	-- Update the Lockouts
 	local dz = eq.get_expedition()

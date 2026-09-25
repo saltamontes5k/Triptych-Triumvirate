@@ -52,6 +52,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../common/server_reload_types.h"
 #include "../common/repositories/trader_repository.h"
 #include "../common/repositories/buyer_repository.h"
+#include "fabled_season.h"
 
 extern GroupLFPList LFPGroupList;
 extern volatile bool RunLoops;
@@ -421,6 +422,16 @@ void ZoneServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p) {
 
 			auto sse = (ServerSpawnEvent_Struct*) pack->pBuffer;
 			ZSList::Instance()->SendPacket(sse->zoneID, 0, pack);
+			break;
+		}
+		case ServerOP_FabledSeasonUpdate: {
+			// NMS: zone requests the Fabled season state (boot) or reports it changed the row (#fabled).
+			if (pack->size != sizeof(ServerFabledSeasonUpdate_Struct)) {
+				break;
+			}
+
+			auto u = (ServerFabledSeasonUpdate_Struct*) pack->pBuffer;
+			WorldFabledSeason::Instance()->HandleZoneUpdate(this, u);
 			break;
 		}
 		case ServerOP_ChannelMessage: {

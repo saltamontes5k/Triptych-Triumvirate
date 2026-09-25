@@ -21,5 +21,9 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Consume the shard only while Unearthed Power is active (task system grants
+  # the flute on completion); anything else is returned by the handin system.
+  if (quest::istaskactive(600219)) {
+    plugin::check_handin(\%itemcount, 87246 => 1);
+  }
 }

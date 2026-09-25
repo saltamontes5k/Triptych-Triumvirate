@@ -9,7 +9,14 @@ local fhalls_dz = {
 }
 
 function event_say(e)
-	if(e.message:findi("Hail")) then
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end	if(e.message:findi("Hail")) then
 		e.self:Say("Well met, ".. e.other:GetName() .. ". I've recently been appointed as an ambassador of sorts to Taelosians who wish to visit our bountiful shores. It is my duty to ensure that visiting Taelosians are looked after and kept safely away from the greedy intentions of our less savory Norrathian cousins. It's not expected that many will undertake the journey, but we have had one [" .. eq.say_link("Taelosian") .. "] visit our shores recently.");
 	elseif(e.message:findi("Taelosian")) then
 		e.self:Say("Her name is Nideno Eliagy. She is an elder within her community, an Undari as they are known. Nideno has come to our shores in the hopes that she can teach us more about her people. She has brought with her the means to transport others to a [" .. eq.say_link("temple") .. "] deep in the mountains of Taelosia.");

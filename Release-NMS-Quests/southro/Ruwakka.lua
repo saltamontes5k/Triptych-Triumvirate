@@ -8,7 +8,19 @@ local guke = {
   -- safereturn = { zone="innothuleb", x=540, y=961, z=15.125, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  if not prog.gate_stage(e.other, "DoN", "Ruwakka says, 'The Wayfarers will open these dungeons only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Ruwakka says, 'Me helping de adventurers of de Wayfarers Brotherhood.  Me in charge of recruiting brave fighters for de strange stuff going on in de land of de froggies.  If you rally de call of your friends we needs help wit dis serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

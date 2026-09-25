@@ -123,6 +123,11 @@ bool Client::Process() {
 			SendHPUpdate();
 		}
 
+		// Deferred zone-in shroud re-apply (see LoadAndApplyShroudState).
+		if (m_shroud_zonein_pending && Timer::GetTimeSeconds() >= m_shroud_zonein_at) {
+			ResendShroudState();
+		}
+
 		/* I haven't naturally updated my position in 10 seconds, updating manually */
 		if (!IsMoving() && m_position_update_timer.Check()) {
 			BroadcastPositionUpdate();

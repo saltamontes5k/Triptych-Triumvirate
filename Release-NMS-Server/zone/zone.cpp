@@ -1214,6 +1214,13 @@ bool Zone::Init(bool is_static) {
 
 	spawn_conditions.LoadSpawnConditions(short_name, instanceid);
 
+	// NMS Fabled season: roster must be in memory before PopulateZoneSpawnList below, which runs
+	// Spawn2::Process synchronously on a zone-state resume. The season is read once from the DB
+	// here, so the first spawns cannot race world's reply, then kept current by world pushes.
+	fabled.LoadRoster();
+	fabled.LoadSeasonFromDatabase();
+	fabled.RequestFromWorld();
+
 	content_db.LoadStaticZonePoints(&zone_point_list, short_name, GetInstanceVersion());
 
 	if (!content_db.LoadSpawnGroups(short_name, GetInstanceVersion(), &spawn_group_list)) {

@@ -7366,6 +7366,10 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 
 		int32 Total3 = 0;
 
+		bool sum_aa_focus = RuleB(Custom, AAFocusEffectsStack);
+		bool is_dmg_focus = (type == focusImprovedDamage || type == focusImprovedDamage2 ||
+			type == focusFcDamagePctCrit || type == focusFcDamageAmtCrit);
+
 		for (const auto &aa : aa_ranks) {
 			auto ability_rank = zone->GetAlternateAdvancementAbilityAndRank(aa.first, aa.second.first);
 			auto ability = ability_rank.first;
@@ -7384,11 +7388,26 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 			}
 
 			Total3 = CalcAAFocus(type, *rank, spell_id);
-			if (Total3 > 0 && realTotal3 >= 0 && Total3 > realTotal3) {
+			if (sum_aa_focus) {
+				realTotal3 += Total3;
+			}
+			else if (Total3 > 0 && realTotal3 >= 0 && Total3 > realTotal3) {
 				realTotal3 = Total3;
 			}
 			else if (Total3 < 0 && Total3 < realTotal3) {
 				realTotal3 = Total3;
+			}
+		}
+
+		if (sum_aa_focus && is_dmg_focus) {
+			int32 aa_focus_cap = RuleI(Custom, MaxAACritDmgFocus);
+			if (aa_focus_cap > 0) {
+				if (realTotal3 > aa_focus_cap) {
+					realTotal3 = aa_focus_cap;
+				}
+				else if (realTotal3 < -aa_focus_cap) {
+					realTotal3 = -aa_focus_cap;
+				}
 			}
 		}
 	}

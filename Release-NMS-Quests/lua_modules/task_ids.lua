@@ -71,6 +71,11 @@ task_ids = {
   aqualung = 75,
   clockwork_grease = 76,
   wind_bow_cam = 77,
+  -- Omens of War
+  oow_mpg = 800000,
+  oow_rss = 800001,
+  oow_anguish = 800002,
+  oow_hollows = 800003,
   -- Prophecy of Ro
   por_saga_skins = 3000,
   por_preparing_your_new_skins = 3001,

@@ -13,7 +13,14 @@ local paladin_mmcc = {
 }
 
 function event_say(e)
-	local qglobals = eq.get_qglobals(e.other);
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end	local qglobals = eq.get_qglobals(e.other);
 	if(qglobals["paladin_epic"] == "9") then
 		if(e.message:findi("hail")) then
 			e.self:Say("Hail to you, " .. e.other:GetName() .. ". I'm very glad to see a paladin such as yourself here in Felwithe. There have been some [" .. eq.say_link("odd occurrences") .. "] as of late.");

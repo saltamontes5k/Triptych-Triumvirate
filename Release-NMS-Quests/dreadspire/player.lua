@@ -48,6 +48,11 @@ function event_timer(e)
 		return
 	end
 
+	-- Clients who have defeated Mayong Mistmoore are immune to the aura.
+	if dodh.has_mayong_immunity(c) then
+		return
+	end
+
 	local spell = dodh.aura_spell(c)
 	if spell then
 		c:ApplySpell(spell)

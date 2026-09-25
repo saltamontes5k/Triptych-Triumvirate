@@ -1,5 +1,6 @@
 sub EVENT_SPAWN {
   quest::settimer(1, 1200);
+  quest::settimer(2, 3); # deferred first-guild congrats; spawner sets entity vars after spawn
   quest::emote("rises from the corpse and stares around, as if waiting...");
 
   my $expedition = quest::get_expedition();
@@ -27,6 +28,13 @@ sub EVENT_SAY {
         }  
         plugin::SetSubflag($client, $flag_stage, $flag_name);
 
+        # Optional second flag pair (e.g. Tunat`Muram opens both OoW and DoD on one hail)
+        my $flag_stage_2 = $npc->GetEntityVariable("Stage-Name-2");
+        my $flag_name_2  = $npc->GetEntityVariable("Flag-Name-2");
+        if (defined $flag_stage_2 && defined $flag_name_2 && $flag_stage_2 ne '' && $flag_name_2 ne '') {
+            plugin::SetSubflag($client, $flag_stage_2, $flag_name_2);
+        }
+
         quest::debug(". $flag_name . " . $client->IsTaskActivityActive(4, 6));
 
         if ($flag_name eq lc("Lord Nagafen") && $client->IsTaskActivityActive(4, 5)) {
@@ -40,6 +48,12 @@ sub EVENT_SAY {
 }
 
 sub EVENT_TIMER {
+    if ($timer == 2) {
+        quest::stoptimer(2);
+        plugin::MemoryCongrats($npc);
+        return;
+    }
+
     quest::emote("vanishes.");
     quest::depop();
 }

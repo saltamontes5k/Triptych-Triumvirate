@@ -1,6 +1,7 @@
 -- Vishimtar
 
 -- Variables
+local memory					= require("nms_memory");
 local event_started				= false;
 local player_disconnect_adds	= false
 local egg_position				= 1;
@@ -173,6 +174,9 @@ function Vish_Death(e)
 	for i = 1, #total_npc_list do
 		eq.depop_all(total_npc_list[i]);
 	end
+
+	-- NMS progression: Vishimtar the Fallen is a Depths of Darkhollow gate
+	memory.spawn(e, "DoD", "vishimtar the fallen");
 end
 
 -- Corrupted Drake Functions
