@@ -113,7 +113,7 @@ void command_set(Client *c, const Seperator *sep)
 		Cmd{.cmd = "skill", .u = "skill [Skill ID] [Skill Level]", .fn = SetSkill, .a = {"#setskill"}},
 		Cmd{.cmd = "skill_all", .u = "skill_all [Skill Level]", .fn = SetSkillAll, .a = {"#setskillall"}},
 		Cmd{.cmd = "skill_all_max", .u = "skill_all_max", .fn = SetSkillAllMax, .a = {"#maxskills"}},
-		Cmd{.cmd = "start_zone", .u = "endurance [Amount]", .fn = SetStartZone, .a = {"#setstartzone"}},
+		Cmd{.cmd = "start_zone", .u = "start_zone [Zone ID|Zone Short Name]", .fn = SetStartZone, .a = {"#setstartzone"}},
 		Cmd{.cmd = "temporary_name", .u = "temporary_name [Name]", .fn = SetTemporaryName, .a = {"#tempname"}},
 		Cmd{.cmd = "texture", .u = "texture [Texture ID]", .fn = SetTexture, .a = {"#texture"}},
 		Cmd{.cmd = "time", .u = "time [Hour] [Minute]", .fn = SetTime, .a = {"#time"}},

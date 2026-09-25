@@ -11,7 +11,14 @@ local inktuta_raid = {
 }
 
 function event_say(e)
-	local is_cynosure_alive = (eq.get_entity_list():IsMobSpawnedByNpcTypeID(295140) or eq.get_entity_list():IsMobSpawnedByNpcTypeID(295149));
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end	local is_cynosure_alive = (eq.get_entity_list():IsMobSpawnedByNpcTypeID(295140) or eq.get_entity_list():IsMobSpawnedByNpcTypeID(295149));
 	local is_gm = (e.other:GetGM()); -- Not including 80 status check
 
 	if e.message:findi("hail") then

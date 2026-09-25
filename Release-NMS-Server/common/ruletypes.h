@@ -551,7 +551,7 @@ RULE_INT(Spells, TargetedAOEMaxTargets, 0, "Max number of targets a Targeted AOE
 RULE_INT(Spells, PointBlankAOEMaxTargets, 0, "Max number of targets a Point-Blank AOE spell can cast on. Set to 0 for no limit.")
 RULE_INT(Spells, DefaultAOEMaxTargets, 0, "Max number of targets that an AOE spell which does not meet other descriptions can cast on. Set to 0 for no limit.")
 RULE_BOOL(Spells, AllowFocusOnSkillDamageSpells, false, "Allow focus effects 185, 459, and 482 to enhance SkillAttack spell effect 193")
-RULE_STRING(Spells, AlwaysStackSpells, "2750,3271,3272,3273,4521,4522,4523,4549,4550,4551,5933,5934,5935,6079,6080,6081,6499,7176,7708,8156,8157,8158,8216,8260,8406,8407,8408,11023,11103,11104,11105,11112,11113,11114,11115,11116,11117,11118,11119,11120,11121,11122,11123,11124,11125,11126,11127,11128,11129,11130,11131,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11142,11143,11144,11145,11146,11147,11148,11149,11150,11151,11152,11153,11154,11155,11156,11157,11158,11159,11160,11161,11162,11163,11164,11165,11166,11167,11168,11169,11170,11171,11172,11173,11174,11175,11176,11177,11178,11179,11180,11181,11182,11183,11184,11185,11186,11187,11188,11189,11190,11191,11192,11193,11194,11195,11196,11197,11198,11199,11200,11201,11226,11227,11228,11232,11279,11297,11298,11299,11317,11495,11615,11616,11617,11642,11643,11644,16121,16203,36856,36869,36877,43002,50009,50010,50011,50012,50013,50014", "Comma-Seperated list of spell IDs to always stack with every other spell, except themselves.")
+RULE_STRING(Spells, AlwaysStackSpells, "2750,3271,3272,3273,4521,4522,4523,4549,4550,4551,5933,5934,5935,6079,6080,6081,6499,7176,7708,8156,8157,8158,8216,8260,8406,8407,8408,11023,11103,11104,11105,11112,11113,11114,11115,11116,11117,11118,11119,11120,11121,11122,11123,11124,11125,11126,11127,11128,11129,11130,11131,11132,11133,11134,11135,11136,11137,11138,11139,11140,11141,11142,11143,11144,11145,11146,11147,11148,11149,11150,11151,11152,11153,11154,11155,11156,11157,11158,11159,11160,11161,11162,11163,11164,11165,11166,11167,11168,11169,11170,11171,11172,11173,11174,11175,11176,11177,11178,11179,11180,11181,11182,11183,11184,11185,11186,11187,11188,11189,11190,11191,11192,11193,11194,11195,11196,11197,11198,11199,11200,11201,11226,11227,11228,11232,11279,11297,11298,11299,11317,11495,11615,11616,11617,11642,11643,11644,16121,16203,36856,36869,36877,43002,50009,50010,50011,50012,50013,50014,50018,50019,50020,50021,50022", "Comma-Seperated list of spell IDs to always stack with every other spell, except themselves.")
 RULE_BOOL(Spells, AllowSympatheticProcOnDurationSpells, true, "Allow Sympathetic Strike/Heal procs on initial cast of Damage over Time (DoT) and Heal over Time (HoT) spells. Default: True")
 RULE_STRING(Spells, DoppelgangerBuffBacklist, "", "Comma-seperated list of spells to never transfer to Doppelganger")
 RULE_BOOL(Spells, DoppelgangerRetargetOnOwnerAttack, true, "Enable doppelganger retarget when owner attacks")
@@ -1200,6 +1200,9 @@ RULE_BOOL(Custom, 	ServerAuthStats, 						true, "Enable this rule in order to se
 RULE_BOOL(Custom, 	MulticlassingEnabled, 					true, "Enable this to enable all multiclass-related tweaks. Requires ServerAuthStats and UseDynamicAATimers for full functionality.")
 RULE_BOOL(Custom, 	UseDynamicAATimers, 					true, "Enable using dynamic AA timers. Required to deconflict multiclass AA timers")
 
+// Spirit Shrouds
+RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
+
 // NMS Options
 RULE_BOOL(Custom, 	SuspendGroupBuffs, 						true, 	"Enable this to cause self buffs and group's buffs to not tick down")
 RULE_STRING(Custom, SuspendGroupBuffsExtra,					"17723",		"Comma-seperated list of bags which also count as 'equipped' for purposes of buff suspending")
@@ -1277,6 +1280,11 @@ RULE_INT(Custom,    PetCriticalAACap,						75,	 "Maximum amount of SE_PetCritica
 RULE_INT(Custom, 	PetMaximumSpellCritRatio,				300, "Maximum spell critical ratio which can be applied to pets, 0 to disable. (300 is 3x damage)")
 RULE_INT(Custom, 	PetMaximumSpellCritChance,				75,  "Maximum spell critical chance which can be applied to pets, 100 to disable.")
 
+RULE_BOOL(Custom,   AAFocusEffectsStack,					true, "AA focus effects (damage, crit damage, etc.) sum additively across all AA lines instead of using only the highest single source")
+RULE_BOOL(Custom,   AACritDmgNoStackComponentsStack,		true, "AA SPA 294 critical spell damage components sum additively across all AA lines instead of using only the highest single source")
+RULE_BOOL(Custom,   DoTCritsShareNoStackPool,				true, "DoT critical damage ratio also receives the capped AA critical damage pool from SPA 294")
+RULE_INT(Custom,    MaxAACritDmgFocus,						500, "Maximum combined AA critical damage focus value in percent from stacked AA sources, 0 to disable cap")
+
 RULE_BOOL(Custom,   AdditiveBackstabDamage,					true, "Backstab damage functions as extra damage rather than a replacement of normal damage.")
 RULE_INT(Custom, 	SE_DamageModifierMaxCumulativeValue, 	300, "Maximum cumulative which can be applied by SE_DamageModifier via spells")
 
@@ -1319,7 +1327,7 @@ RULE_INT(Custom,  	EnableSeasonalCharacters, 				0, "Set to Seasonal ID to track
 RULE_BOOL(Custom,   EnableGlobalLoot,                       true,    "Enable or disable global loot tables dynamically")
 RULE_BOOL(Custom,   PermanentServerBuffsEnabled,            false,   "Enable or disable permanent server buffs (spells 43002, 43005, 36856, 17779)")
 RULE_BOOL(Custom,   GuideAudit,                             true,    "Enable command auditing for guides/GMs of status 80 or higher.")
-RULE_BOOL(Custom,   EnableFabledMobs,                       false,   "Enable Fabled Season globally (true to enable 100% Fabled spawns, false to disable).")
+RULE_INT(Custom,    FabledDefaultChance,                    50,      "Percent chance used by #fabled on when no chance is given. Read only at command time, never per spawn.")
 RULE_BOOL(Custom,   AllowAllClassesClickItems,              false,   "Allow all classes to click all items regardless of class restrictions on click effects.")
 
 RULE_CATEGORY_END()

@@ -41,6 +41,67 @@ extern Zone* zone;
 
 namespace {
 
+// NMS: shroud flow diagnostics. 0 = compile out all shroud runtime logging
+// (leave 0 for release builds).
+#ifndef NMS_SHROUD_DIAG
+#define NMS_SHROUD_DIAG 0
+#endif
+
+#if NMS_SHROUD_DIAG
+static void ShroudDiag(const char *fmt, ...) {
+  FILE *f = fopen("C:\\EQS\\shroud_dump\\server_shroud.log", "a");
+  if (!f)
+    return;
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  fprintf(f, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond,
+          st.wMilliseconds);
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(f, fmt, args);
+  va_end(args);
+  fprintf(f, "\n");
+  fclose(f);
+}
+#else
+#define ShroudDiag(...) ((void)0)
+#endif
+
+// Builds and queues the OP_Shroud self-transform (spawn block + profile block).
+// The spawn block is stamped with the target identity because FillSpawnStruct
+// copies the mob's class_/size, which are stale for the frame in which a
+// transform is applied -- that mismatch is what leaves the client's self-model
+// lying in a broken pose and hides its gear/UI.
+void SendShroudTransform(Client *client, const PlayerProfile_Struct &profile, float size)
+{
+	NewSpawn_Struct ns{};
+	client->FillSpawnStruct(&ns, client);
+
+	ns.spawn.race   = static_cast<uint16>(profile.race);
+	ns.spawn.gender = static_cast<uint8>(profile.gender);
+	ns.spawn.class_ = static_cast<uint8>(profile.class_);
+	ns.spawn.level  = static_cast<uint8>(profile.level);
+	if (size > 0.0f) {
+		ns.spawn.size = size;
+	}
+
+	// Serialize the self spawn as a *player-type* spawn even when the shroud
+	// form is a monster race. FillSpawnStruct marks the client's own spawn
+	// NPC=10, which makes the RoF2 spawn writer take its monster-race branch
+	// (a 60-byte tail with no equipment/tint block). The client parses its own
+	// spawn with the same branch, so the re-added self actor is rebuilt without
+	// the player equipment block and ends up broken: feigned/sideways pose,
+	// hidden gear and hotbars, and failed zone transitions. Reporting NPC=0
+	// keeps both the writer and the client on the player branch.
+	ns.spawn.NPC = 0;
+
+	auto *app = new EQApplicationPacket(OP_Shroud, sizeof(ShroudSelf_Struct));
+	auto *shroud = reinterpret_cast<ShroudSelf_Struct *>(app->pBuffer);
+	shroud->spawn   = ns.spawn;
+	shroud->profile = profile;
+	client->QueuePacket(app);
+}
+
 // A single shroud form as authored in the `shrouds` table.
 struct ShroudDefinition {
 	uint32      id             = 0;
@@ -107,6 +168,12 @@ std::vector<ShroudDefinition> LoadAllShrouds()
 
 	auto results = content_db.QueryDatabase(query);
 	if (!results.Success()) {
+		// Log once: a missing `shrouds` table would otherwise spam on every hail.
+		static bool logged_failure = false;
+		if (!logged_failure) {
+			logged_failure = true;
+			LogError("Shrouds: could not query the `shrouds` table; shroud forms are unavailable.");
+		}
 		return shrouds;
 	}
 
@@ -133,9 +200,19 @@ std::vector<ShroudDefinition> LoadAllShrouds()
 }
 
 // Builds the 0x07-delimited PROGRESSION/BRANCH/TEMPLATE tree the client's
-// Shrouds page consumes. The exact grammar for RoF2 is not documented by any
-// working server; this mirrors the format recovered from the zeklabs prototype
-// and is expected to be tuned against a packet capture.
+// Shrouds page consumes. RE-VERIFIED against the RoF2 client binary
+// (Release #630, May 10 2013): the selection-window parser (eqgame+0x414320,
+// dispatched from the shroud manager thunk at eqgame+0x414A90) reads a 12-byte
+// header (triggerNPCID, numShroudBankItems -- which must be 0 or the client
+// refuses the window and sends 0x11CD -- and a third dword), then treats the
+// rest as a NUL-terminated token stream split on 0x07 (the delimiter is the
+// third argument of the client's ReadToken, eqgame+0x416EF0).
+//
+// PROGRESSION <id> <name> <id2>
+// BRANCH <id> <name> <str> <id2>   (the client atoi()s the 4th field and
+//                                  counts it when it equals 100; EQS writes
+//                                  "100" there)
+// TEMPLATE <name> <level> <id> <bool>
 std::string BuildShroudTree(const std::vector<ShroudDefinition>& shrouds)
 {
 	const char sep = '\a';
@@ -198,40 +275,50 @@ std::string BuildShroudTree(const std::vector<ShroudDefinition>& shrouds)
 	return out;
 }
 
-// Builds the OP_ShroudRespondStats payload body for one template. The client
-// deserializer (eqgame+0x5CA570) reads a stream of NUL-terminated text tokens:
-//   id, name, description, then 12 numeric template fields (class animation,
-//   level, hp, mana, endurance, str, sta, cha, dex, int, agi, wis), then two
-//   array counts (abilities, equipment). The packet is an 8-byte header
-//   (count, flag) followed by this token stream.
+// Builds the OP_ShroudRespondStats payload body for one template. RE-VERIFIED
+// against the RoF2 client binary: OP_ShroudRespondStats is dispatched to
+// eqgame+0x413C10, which reads two leading dwords (the first is handed to the
+// UI update; the second must be nonzero for the payload to be parsed) and then
+// passes data+8 to the token deserializer at eqgame+0x5CA570. That parser
+// splits the stream on '^' (0x5E) -- NOT NUL -- and expects:
+//   id ^ name ^ description(<=4000) ^ 12 integers ^ abilityCount
+//   ^ (abilityField ^ abilityField) x abilityCount ^ equipCount
+//   ^ (equipField) x equipCount
+// Integers accept decimal or 0x-prefixed hex. The 12 integers are stored at
+// template+0xFEC..0x1020 (class animation, level, hp, mana, endurance and the
+// seven stats as sent by EQS's shrouds table).
 std::string BuildShroudStatsBlob(const ShroudDefinition& def)
 {
-	auto token = [](const std::string& s) {
+	// The client's field reader (eqgame+0x413C10 -> eqgame+0x5CA570) splits on
+	// '^' (0x5E); a trailing delimiter after the last field is harmless.
+	const char sep = '^';
+
+	auto token = [](const std::string& s, char delimiter) {
 		std::string t = s;
-		t.push_back('\0');
+		t.push_back(delimiter);
 		return t;
 	};
 
 	std::string blob;
-	blob += token(std::to_string(def.id));
-	blob += token(def.name);
-	blob += token(fmt::format("Shroud form of {}", def.name));
+	blob += token(std::to_string(def.id), sep);
+	blob += token(def.name, sep);
+	blob += token(fmt::format("Shroud form of {}", def.name), sep);
 
-	blob += token(std::to_string(def.class_id)); // class animation id
-	blob += token(std::to_string(def.level));
-	blob += token(std::to_string(def.hp));
-	blob += token(std::to_string(def.mana));
-	blob += token(std::to_string(def.endurance));
-	blob += token("100"); // strength
-	blob += token("100"); // stamina
-	blob += token("100"); // charisma
-	blob += token("100"); // dexterity
-	blob += token("100"); // intelligence
-	blob += token("100"); // agility
-	blob += token("100"); // wisdom
+	blob += token(std::to_string(def.class_id), sep); // class animation id
+	blob += token(std::to_string(def.level), sep);
+	blob += token(std::to_string(def.hp), sep);
+	blob += token(std::to_string(def.mana), sep);
+	blob += token(std::to_string(def.endurance), sep);
+	blob += token("100", sep); // strength
+	blob += token("100", sep); // stamina
+	blob += token("100", sep); // charisma
+	blob += token("100", sep); // dexterity
+	blob += token("100", sep); // intelligence
+	blob += token("100", sep); // agility
+	blob += token("100", sep); // wisdom
 
-	blob += token("0"); // abilities array count
-	blob += token("0"); // equipment array count
+	blob += token("0", sep); // abilities array count
+	blob += "0";             // equipment array count (terminates the stream)
 
 	return blob;
 }
@@ -240,7 +327,16 @@ std::string BuildShroudStatsBlob(const ShroudDefinition& def)
 
 bool Client::OpenShroudWindow(Mob* npc)
 {
+	if (!RuleB(Custom, ShroudsEnabled)) {
+		Message(Chat::Yellow, "Shrouds are not enabled on this server.");
+		return false;
+	}
+
 	const auto shrouds = LoadAllShrouds();
+	if (shrouds.empty()) {
+		Message(Chat::Yellow, "The shroud forms are unavailable right now.");
+		return false;
+	}
 
 	const std::string tree = BuildShroudTree(shrouds);
 	const uint32 length   = static_cast<uint32>(tree.length());
@@ -257,13 +353,7 @@ bool Client::OpenShroudWindow(Mob* npc)
 	}
 	window->shroudSelectionTreeString[length] = '\0';
 
-	std::string printable = tree;
-	for (auto& ch : printable) {
-		if (ch == '\a') {
-			ch = '|';
-		}
-	}
-	LogInfo("Shroud window for [{}] (npc [{}]): [{}]", GetCleanName(), window->triggerNPCID, printable);
+	LogInfo("Shroud window opened for [{}] (npc [{}])", GetCleanName(), window->triggerNPCID);
 
 	FastQueuePacket(&outapp);
 	return true;
@@ -277,16 +367,31 @@ void Client::ApplyShroud(uint32 shroud_id)
 		return;
 	}
 
+	// Live rule: you may shroud down to a lower level, never up. Compare
+	// against the base character level when switching shrouds (GetLevel is
+	// the shroud's level while transformed).
+	const uint32 base_level = (m_shrouded && m_shroud_saved_valid)
+		? m_shroud_saved_pp.level
+		: static_cast<uint32>(GetLevel());
+	if (def.level > base_level) {
+		Message(Chat::Red, "You cannot shroud to a level higher than your own.");
+		return;
+	}
+
 	if (!m_shrouded) {
-		m_shroud_saved_pp    = m_pp;
-		m_shroud_saved_valid = true;
-		SaveShroudSnapshot();
+		m_shroud_saved_pp          = m_pp;
+		m_shroud_saved_valid       = true;
+		m_shroud_saved_texture     = texture;
+		m_shroud_saved_helmtexture = helmtexture;
+		m_shroud_saved_size        = size;
+		SaveShroudSnapshot(shroud_id);
 	}
 
 	// Mark shrouded before touching the profile so a save during the transform
 	// (or afterwards) restores the real profile instead of persisting the shroud.
 	m_shrouded  = true;
 	m_shroud_id = shroud_id;
+	m_shroud_zonein_pending = false;
 
 	AppearanceStruct appearance{};
 	appearance.race_id        = def.race;
@@ -302,6 +407,21 @@ void Client::ApplyShroud(uint32 shroud_id)
 	m_pp.class_ = def.class_id;
 	m_pp.level  = def.level;
 
+	// Put the shroud form on the mob BEFORE serializing the spawn: the client
+	// re-adds its self spawn from this block, so it must carry the shroud
+	// appearance (otherwise the client keeps the old race/model).
+	race           = def.race;
+	gender         = def.gender;
+	class_         = def.class_id;
+	texture        = def.texture;
+	helmtexture    = def.helmet_texture;
+	if (def.size > 0.0f) {
+		size = def.size;
+	}
+	ShroudDiag("ApplyShroud id=%u def(race=%u gender=%u class=%u lvl=%u) "
+	           "m_pp(race=%u gender=%u class=%u lvl=%u)",
+	           shroud_id, def.race, def.gender, def.class_id, def.level,
+	           m_pp.race, m_pp.gender, m_pp.class_, m_pp.level);
 	SetLevel(def.level);
 	CalcBonuses();
 	SetMaxHP();
@@ -314,13 +434,13 @@ void Client::ApplyShroud(uint32 shroud_id)
 		m_pp.mana      = current_mana;
 		m_pp.endurance = current_endurance;
 
-		NewSpawn_Struct ns{};
-		FillSpawnStruct(&ns, this);
-		auto* shroud_app = new EQApplicationPacket(OP_Shroud, sizeof(ShroudSelf_Struct));
-		auto* shroud     = reinterpret_cast<ShroudSelf_Struct*>(shroud_app->pBuffer);
-		shroud->spawn    = ns.spawn;
-		shroud->profile  = m_pp;
-		QueuePacket(shroud_app);
+		SendShroudTransform(this, m_pp, def.size);
+		ShroudDiag("ApplyShroud sent OP_Shroud: mob(race=%u gender=%u class=%u lvl=%u "
+		           "texture=%u helm=%u size=%.1f) def.size=%.1f",
+		           race, gender, class_, level, texture, helmtexture, size, def.size);
+		// The client's spawn re-add resets its displayed HP to the wire
+		// max_hp byte (100); refresh the real HP afterwards.
+		SendHPUpdate();
 	}
 
 	// Apply the shroud appearance last so the profile load cannot overwrite it.
@@ -349,6 +469,7 @@ void Client::RemoveShroud(bool send_updates)
 
 	m_shrouded  = false;
 	m_shroud_id = 0;
+	m_shroud_zonein_pending = false;
 
 	ClearShroudSnapshot();
 
@@ -356,19 +477,56 @@ void Client::RemoveShroud(bool send_updates)
 		return;
 	}
 
-	// Reset the illusion to the character's base profile.
-	AppearanceStruct appearance{};
-	SendIllusionPacket(appearance);
+	// Put the real identity and appearance back on the mob BEFORE serializing
+	// the spawn: FillSpawnStruct copies these from the mob, so without this the
+	// re-sent OP_Shroud still carries the shroud's model and the client keeps
+	// the form (gear hidden) while the profile says otherwise.
+	race        = m_pp.race;
+	gender      = m_pp.gender;
+	class_      = m_pp.class_;
+	texture     = m_shroud_saved_texture;
+	helmtexture = m_shroud_saved_helmtexture;
+	if (m_shroud_saved_size > 0.0f) {
+		size = m_shroud_saved_size;
+	}
 
 	SetLevel(m_pp.level);
 	CalcBonuses();
 	SetMaxHP();
 	SendHPUpdate();
 
+	// Re-send OP_Shroud carrying the restored real profile. The client's
+	// shroud apply (eqgame+0x4C2EA0) is the only verb that rewrites its
+	// in-memory character profile; without it the client keeps the shroud's
+	// class/race/level and every class-gated UI element (spell bar, combat
+	// window, hotbars) stays broken until zone-in.
+	m_pp.cur_hp    = GetHP();
+	m_pp.mana      = current_mana;
+	m_pp.endurance = current_endurance;
+
+	SendShroudTransform(this, m_pp, m_shroud_saved_size);
+	ShroudDiag("RemoveShroud sent OP_Shroud: mob(race=%u gender=%u class=%u lvl=%u texture=%u helm=%u size=%.1f)",
+	           race, gender, class_, level, texture, helmtexture, size);
+
+	// Stand up: the shroud/transform cycle can leave the client showing the
+	// feign/lying state.
+	SendAppearancePacket(AppearanceType::Animation, Animation::Standing);
+
+	// Restore the illusion with the real appearance (a zeroed AppearanceStruct
+	// does not reliably clear a monster-race form).
+	AppearanceStruct appearance{};
+	appearance.race_id        = m_pp.race;
+	appearance.gender_id      = m_pp.gender;
+	appearance.texture        = m_shroud_saved_texture;
+	appearance.helmet_texture = m_shroud_saved_helmtexture;
+	appearance.size           = m_shroud_saved_size;
+	appearance.send_effects   = true;
+	SendIllusionPacket(appearance);
+
 	Message(Chat::Yellow, "You return to your natural form.");
 }
 
-void Client::SaveShroudSnapshot()
+void Client::SaveShroudSnapshot(uint32 shroud_id)
 {
 	if (!m_shroud_saved_valid) {
 		return;
@@ -376,13 +534,18 @@ void Client::SaveShroudSnapshot()
 
 	const PlayerProfile_Struct& p = m_shroud_saved_pp;
 	const std::string query = fmt::format(
-		"REPLACE INTO `character_shroud_snapshot` (`character_id`,`race`,`gender`,`class`,`level`) "
-		"VALUES ({},{},{},{},{})",
+		"REPLACE INTO `character_shroud_snapshot` "
+		"(`character_id`,`shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size`) "
+		"VALUES ({},{},{},{},{},{},{},{},{})",
 		CharacterID(),
+		shroud_id,
 		p.race,
 		p.gender,
 		p.class_,
-		p.level
+		p.level,
+		m_shroud_saved_texture,
+		m_shroud_saved_helmtexture,
+		m_shroud_saved_size
 	);
 
 	database.QueryDatabase(query);
@@ -398,45 +561,118 @@ void Client::ClearShroudSnapshot()
 	database.QueryDatabase(query);
 }
 
-bool Client::RestoreShroudSnapshot()
+// Called once on zone-in. If the character has a persisted shroud, re-apply it:
+// shrouds survive zoning/relogging and are only removed at the Shroudkeeper. A
+// legacy row with shroud_id 0 (written before persistence existed) is cleared.
+void Client::LoadAndApplyShroudState()
 {
 	const std::string query = fmt::format(
-		"SELECT `race`,`gender`,`class`,`level` FROM `character_shroud_snapshot` WHERE `character_id` = {} LIMIT 1",
+		"SELECT `shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size` "
+		"FROM `character_shroud_snapshot` WHERE `character_id` = {} LIMIT 1",
 		CharacterID()
 	);
 
 	auto results = database.QueryDatabase(query);
 	if (!results.Success() || results.RowCount() == 0) {
-		return false;
+		return;
 	}
 
 	auto row = results.begin();
-	m_pp.race   = static_cast<uint16>(Strings::ToInt(row[0]));
-	m_pp.gender = static_cast<uint8>(Strings::ToInt(row[1]));
-	m_pp.class_ = static_cast<uint8>(Strings::ToInt(row[2]));
-	m_pp.level  = static_cast<uint8>(Strings::ToInt(row[3]));
+	const uint32 shroud_id = Strings::ToUnsignedInt(row[0]);
 
-	race   = m_pp.race;
-	gender = m_pp.gender;
-	class_ = m_pp.class_;
-	SetLevel(m_pp.level);
+	// m_pp still holds the real character here; the Save() guard writes this
+	// while shrouded, so capture it before the form is applied.
+	m_shroud_saved_pp          = m_pp;
+	m_shroud_saved_valid       = true;
+	m_shroud_saved_texture     = static_cast<uint8>(Strings::ToInt(row[5], UINT8_MAX));
+	m_shroud_saved_helmtexture = static_cast<uint8>(Strings::ToInt(row[6], UINT8_MAX));
+	m_shroud_saved_size        = Strings::ToFloat(row[7], -1.0f);
 
-	ClearShroudSnapshot();
+	if (shroud_id == 0) {
+		// Legacy repair row: the profile is already real, nothing to re-apply.
+		m_shroud_saved_valid = false;
+		ClearShroudSnapshot();
+		return;
+	}
+
+	ShroudDefinition def;
+	if (!LoadShroud(shroud_id, def)) {
+		LogError(
+			"Character [{}] has a persisted shroud [{}] that no longer exists; clearing.",
+			GetCleanName(),
+			shroud_id
+		);
+		m_shroud_saved_valid = false;
+		ClearShroudSnapshot();
+		return;
+	}
+
+	m_shrouded  = true;
+	m_shroud_id = shroud_id;
+
+	m_pp.race   = def.race;
+	m_pp.gender = def.gender;
+	m_pp.class_ = def.class_id;
+	m_pp.level  = def.level;
+
+	race        = def.race;
+	gender      = def.gender;
+	class_      = def.class_id;
+	texture     = def.texture;
+	helmtexture = def.helmet_texture;
+	if (def.size > 0.0f) {
+		size = def.size;
+	}
+
+	SetLevel(def.level);
+	CalcBonuses();
+	SetMaxHP();
+
+	// The RoF2 client crashes if OP_Shroud arrives while it is still building
+	// the zone (its self-spawn re-add dereferences a null local player).
+	// Defer the packet send until Process() sees the zone settle.
+	m_shroud_zonein_pending = true;
+	m_shroud_zonein_at      = Timer::GetTimeSeconds() + 3;
 
 	LogInfo(
-		"Restored shroud snapshot for [{}]: race [{}] class [{}] level [{}]",
+		"Client [{}] has a persisted shroud [{}]; client re-apply deferred to zone settle",
 		GetCleanName(),
-		m_pp.race,
-		m_pp.class_,
-		m_pp.level
+		shroud_id
 	);
+}
 
-	return true;
+// Delivers the current shroud state to this client (used by the deferred
+// zone-in path). The mob appearance and profile were already put in place
+// when the shroud was applied; this only sends the client-visible packets.
+void Client::ResendShroudState()
+{
+	m_shroud_zonein_pending = false;
+
+	m_pp.cur_hp    = GetHP();
+	m_pp.mana      = current_mana;
+	m_pp.endurance = current_endurance;
+
+	SendShroudTransform(this, m_pp, size);
+	SendHPUpdate();
+
+	AppearanceStruct appearance{};
+	appearance.race_id        = race;
+	appearance.gender_id      = gender;
+	appearance.texture        = texture;
+	appearance.helmet_texture = helmtexture;
+	appearance.size           = size;
+	appearance.send_effects   = true;
+	SendIllusionPacket(appearance);
+
+	ShroudDefinition def;
+	if (LoadShroud(m_shroud_id, def)) {
+		Message(Chat::Yellow, "You are still shrouded as %s.", def.name.c_str());
+	}
+	LogInfo("Client [{}] re-applied persisted shroud [{}] after zone settle", GetCleanName(), m_shroud_id);
 }
 
 void Client::Handle_OP_Shroud(const EQApplicationPacket* app)
 {
-	Message(Chat::Yellow, "[shroud] recv OP_Shroud (size %u)", app->size);
 	LogInfo(
 		"Client [{}] sent OP_Shroud (size [{}])",
 		GetCleanName(),
@@ -447,7 +683,6 @@ void Client::Handle_OP_Shroud(const EQApplicationPacket* app)
 void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 {
 	if (app->size < sizeof(uint32)) {
-		Message(Chat::Yellow, "[shroud] recv OP_ShroudSelect too small (size %u)", app->size);
 		LogError(
 			"OP_ShroudSelect from [{}] too small (size [{}])",
 			GetCleanName(),
@@ -460,7 +695,6 @@ void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 	// shroud id, and log the raw size so a capture can confirm.
 	const uint32 shroud_id = *reinterpret_cast<const uint32*>(app->pBuffer);
 
-	Message(Chat::Yellow, "[shroud] recv OP_ShroudSelect id %u size %u", shroud_id, app->size);
 	LogInfo(
 		"Client [{}] OP_ShroudSelect shroud_id [{}] size [{}]",
 		GetCleanName(),
@@ -473,24 +707,33 @@ void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 		return;
 	}
 
+	// Shrouding on is gated by the rule; removal (id 0, above) never is, so a
+	// player who is already shrouded can always revert.
+	if (!RuleB(Custom, ShroudsEnabled)) {
+		Message(Chat::Yellow, "Shrouds are not enabled on this server.");
+		return;
+	}
+
 	ApplyShroud(shroud_id);
 }
 
 void Client::Handle_OP_ShroudSelectCancel(const EQApplicationPacket* app)
 {
-	Message(Chat::Yellow, "[shroud] recv OP_ShroudSelectCancel (size %u)", app->size);
 	LogInfo("Client [{}] OP_ShroudSelectCancel (size [{}])", GetCleanName(), app->size);
 	RemoveShroud();
 }
 
 void Client::Handle_OP_ShroudRequestStats(const EQApplicationPacket* app)
 {
+	if (!RuleB(Custom, ShroudsEnabled)) {
+		return;
+	}
+
 	uint32 requested_id = 0;
 	if (app->size >= sizeof(uint32)) {
 		requested_id = *reinterpret_cast<const uint32*>(app->pBuffer);
 	}
 
-	Message(Chat::Yellow, "[shroud] recv OP_ShroudRequestStats id %u size %u", requested_id, app->size);
 	LogInfo(
 		"Client [{}] OP_ShroudRequestStats: size [{}] requested_id [{}]",
 		GetCleanName(),
@@ -500,7 +743,6 @@ void Client::Handle_OP_ShroudRequestStats(const EQApplicationPacket* app)
 
 	ShroudDefinition def;
 	if (!LoadShroud(requested_id, def)) {
-		Message(Chat::Red, "[shroud] no template for id %u", requested_id);
 		return;
 	}
 
@@ -508,8 +750,8 @@ void Client::Handle_OP_ShroudRequestStats(const EQApplicationPacket* app)
 
 	auto* outapp = new EQApplicationPacket(OP_ShroudRespondStats, 8 + static_cast<uint32>(blob.length()));
 	auto* header = reinterpret_cast<uint32*>(outapp->pBuffer);
-	header[0] = 1; // template count
-	header[1] = 1; // has template payload
+	header[0] = def.id; // template id (handed to the client's UI update)
+	header[1] = 1;      // payload present -- must be nonzero or the client skips parsing
 	memcpy(outapp->pBuffer + 8, blob.data(), blob.length());
 
 	FastQueuePacket(&outapp);

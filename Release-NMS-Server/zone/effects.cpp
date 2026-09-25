@@ -84,8 +84,28 @@ int Mob::GetSharedSpellCritDmgIncrease() {
 	return base + (GetOwner()->GetSharedSpellCritDmgIncrease() * RuleI(Spells, PetsScaleWithOwnerPercent) / 100);
 }
 
+int Mob::GetAACritDmgNoStackPool() {
+	int aa_pool = aabonuses.AACritDmgNoStackSum;
+	int aa_cap = RuleI(Custom, MaxAACritDmgFocus);
+
+	if (aa_cap > 0 && aa_pool > aa_cap) {
+		aa_pool = aa_cap;
+	}
+
+	if (IsClient() || !IsPet() || (IsNPC() && CastToNPC()->GetSwarmOwner()))
+	{
+		return aa_pool;
+	}
+
+	return aa_pool + (GetOwner()->GetAACritDmgNoStackPool() * RuleI(Spells, PetsScaleWithOwnerPercent) / 100);
+}
+
 int Mob::GetSharedSpellCritDmgIncNoStack() {
 	int base = itembonuses.SpellCritDmgIncNoStack + spellbonuses.SpellCritDmgIncNoStack + aabonuses.SpellCritDmgIncNoStack;
+
+	if (RuleB(Custom, AACritDmgNoStackComponentsStack)) {
+		base += GetAACritDmgNoStackPool();
+	}
 
 	if (IsClient() || !IsPet() || (IsNPC() && CastToNPC()->GetSwarmOwner()))
 	{
@@ -507,6 +527,10 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 			int64 ratio = 200;
 			ratio += GetSharedDotCritDmgIncrease();
+
+			if (RuleB(Custom, DoTCritsShareNoStackPool)) {
+				ratio += GetAACritDmgNoStackPool();
+			}
 
 			value = value * ratio / 100;
 

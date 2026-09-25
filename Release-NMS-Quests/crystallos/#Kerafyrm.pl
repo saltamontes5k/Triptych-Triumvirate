@@ -8,4 +8,9 @@ sub EVENT_DEATH_COMPLETE {
 
     $new_npc->SetEntityVariable("Flag-Name", "kerafyrm-crystallos");
     $new_npc->SetEntityVariable("Stage-Name", "SoD");
+
+    my $killer_guild_id = plugin::get_memory_killer_guild_id($entity_list);
+    if ($killer_guild_id) {
+        $new_npc->SetEntityVariable("Killer-Guild-ID", $killer_guild_id);
+    }
 }

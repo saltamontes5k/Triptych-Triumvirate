@@ -128,6 +128,10 @@ payload that is missing.
 | `loginserver/` | optional standalone login server |
 | `libs/`, `submodules/` | bundled dependencies (required — do not delete) |
 | `utils/` | SQL, scripts and maintenance tools |
+| [`GM-COMMANDS.md`](GM-COMMANDS.md) | Every in-game `#command`, its default status level, and the NMS-specific side effects |
+
+For what is custom in this fork and how it fits together, see
+[`../Release-NMS-Deploy/CODEBASE.md`](../Release-NMS-Deploy/CODEBASE.md).
 
 ## Credits
 

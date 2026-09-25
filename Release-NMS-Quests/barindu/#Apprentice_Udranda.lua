@@ -40,7 +40,14 @@ local function create_expedition(client, expedition_info)
 end
 
 function event_say(e)
-  local is_gm = (e.other:Admin() > 80 and e.other:GetGM())
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  local is_gm = (e.other:Admin() > 80 and e.other:GetGM())
   local sewers_flag = tonumber(e.other:GetAccountBucket("god.flags.sewers")) or 0
   local ferubi_flag = tonumber(e.other:GetAccountBucket("god.flags.ferubi")) or 0
 

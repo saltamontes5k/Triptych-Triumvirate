@@ -8,6 +8,7 @@
 -- Flow: the raid disrupts the warlord's army. Slaying the three captains crumbles the
 -- force; finishing #Warlord_Imal_Ojun ends the war march and wins the raid.
 
+local memory = require("nms_memory");
 local warlord_down = false;
 
 function Captain_Death(e)
@@ -33,6 +34,9 @@ function Warlord_Death(e)
         end
       end
   end
+
+  -- NMS progression: Warlord Imal Ojun is a Depths of Darkhollow gate
+  memory.spawn(e, "DoD", "warlord imal ojun")
 end
 
 function event_encounter_load(e)

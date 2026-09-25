@@ -1,17 +1,14 @@
 --[[
 	Sunrise Hills House Key (item 9015300)
-	SoD/Imperium-style: clicking the key ports you straight home to
-	your instanced house in phinteriortree (Evantil's Abode).
+	Clicking the key carries the owner straight home to their instanced
+	house. Arrival uses the house zone's safe point (set per zone in the
+	zone table), so it always lands on the floor.
 ]]
 
-local HOUSE_ZONE     = "phinteriortree"
 local HOUSE_DURATION = 315360000 -- 10 years, in seconds; refreshed on every use
 
--- arrival point inside the house (ground floor of the treehouse; tune with #loc if needed)
-local ARRIVAL = { x = 100.0, y = 90.0, z = -60.0, h = 128.0 }
-
 function event_item_click(e)
-	-- NOTE: in item scripts e.self is the ItemInstance; the clicking player is e.owner
+	-- in item scripts e.self is the ItemInstance; the clicking player is e.owner
 	local c = e.owner
 	if not c or not c:IsClient() then return end
 
@@ -26,5 +23,5 @@ function event_item_click(e)
 	eq.update_instance_timer(instance_id, HOUSE_DURATION)
 
 	c:Message(15, "Your key hums softly as it carries you home...")
-	c:MoveZoneInstance(instance_id, ARRIVAL.x, ARRIVAL.y, ARRIVAL.z, ARRIVAL.h)
+	c:MoveZoneInstance(instance_id) -- no coords -> lands on the zone's safe point
 end

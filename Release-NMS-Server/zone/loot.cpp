@@ -28,6 +28,10 @@ void NPC::AddLootTable(uint32 loottable_id, bool is_global)
 		return;
 	}
 
+	// NMS Fabled season: DoUpgradeLoot forces the Legendary tier only for the named's own table,
+	// never for global loot. Scoped to this call; AddLootTable is synchronous.
+	m_loading_global_loot = is_global;
+
 	if (!is_global) {
 		m_loot_copper   = 0;
 		m_loot_silver   = 0;
@@ -39,6 +43,7 @@ void NPC::AddLootTable(uint32 loottable_id, bool is_global)
 
 	const auto *l = zone->GetLootTable(loottable_id);
 	if (!l) {
+		m_loading_global_loot = false;
 		return;
 	}
 
@@ -58,6 +63,7 @@ void NPC::AddLootTable(uint32 loottable_id, bool is_global)
 	};
 
 	if (!WorldContentService::Instance()->DoesPassContentFiltering(content_flags)) {
+		m_loading_global_loot = false;
 		return;
 	}
 
@@ -125,6 +131,8 @@ void NPC::AddLootTable(uint32 loottable_id, bool is_global)
 		loottable_id,
 		is_global
 	);
+
+	m_loading_global_loot = false;
 }
 
 void NPC::AddLootDropTable(uint32 lootdrop_id, uint8 drop_limit, uint8 min_drop)
@@ -268,6 +276,16 @@ bool NPC::MeetsLootDropLevelRequirements(LootdropEntriesRepository::LootdropEntr
 }
 
 uint32 NPC::DoUpgradeLoot(uint32 itemID) {
+	// NMS Fabled season: a promoted named's own drops are forced to the season tier (Legendary).
+	// Global loot keeps the normal roll. Items with no variant at that tier fall through below.
+	if (IsFabled() && !m_loading_global_loot) {
+		const uint32 base   = itemID % 1000000;
+		const uint32 forced = base + static_cast<uint32>(GetFabledLootTier()) * 1000000;
+		if (forced > itemID && database.GetItem(forced)) {
+			return forced;
+		}
+	}
+
 	if (RuleB(Custom, DoItemUpgrades)) {
 		// roll MUST be a real, not an integer. Truncating it to uint32 bucketed every rate to a
 		// whole percent: a configured 5.0 matched rolls 0-5 inclusive, which is 6%, and anything

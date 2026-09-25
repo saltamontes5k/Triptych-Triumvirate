@@ -1,19 +1,5 @@
-sub EVENT_SPAWN {
- quest::settimer(1,1);
-}
-
-sub EVENT_TIMER {
- if($timer eq "1") {
-  $npc->SetAppearance(1);
-  quest::stoptimer(1);
- }
-}
-
-sub EVENT_SIGNAL {
-  if ($signal == 66){
-     quest::shout("I AM FREE!");
-     quest::depop_withtimer();
-     quest::spawn2(128089,1,0,-1499,-2344.8,-1052.8,0); # NPC: #Kerafyrm
- }
-}
-#Original work by froglok23, additions by Jim Mills
+# Sleepers 2.0 -- classic signal-66 wake retired.
+#
+# This used to depop #The_Sleeper and spawn #Kerafyrm (128089) when signalled by
+# the Warder chain. The 2.0 encounter spawns Kerafyrm into the chamber directly
+# and gates him behind the five seals (see encounters/sleeper_custom.lua).

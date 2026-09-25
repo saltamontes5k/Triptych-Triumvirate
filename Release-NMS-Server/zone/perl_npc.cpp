@@ -373,6 +373,12 @@ bool Perl_NPC_IsGuarding(NPC* self) // @categories Script Utility
 	return self->IsGuarding();
 }
 
+// NMS: true when this spawn was promoted to a Fabled (see Release-NMS-Deploy/FABLED-ENCOUNTERS.md).
+bool Perl_NPC_IsFabled(NPC* self) // @categories Script Utility
+{
+	return self->IsFabled();
+}
+
 void Perl_NPC_AI_SetRoambox(NPC* self, float distance, float max_x, float min_x, float max_y, float min_y) // @categories Script Utility
 {
 	self->AI_SetRoambox(distance, max_x, min_x, max_y, min_y);
@@ -1009,6 +1015,7 @@ void perl_register_npc()
 	package.add("HasSpecialAbilities", &Perl_NPC_HasSpecialAbilities);
 	package.add("HasItem", &Perl_NPC_HasItem);
 	package.add("IsAnimal", &Perl_NPC_IsAnimal);
+	package.add("IsFabled", &Perl_NPC_IsFabled);
 	package.add("IsGuarding", &Perl_NPC_IsGuarding);
 	package.add("IsLDoNLocked", &Perl_NPC_IsLDoNLocked);
 	package.add("IsLDoNTrapped", &Perl_NPC_IsLDoNTrapped);

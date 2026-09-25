@@ -583,7 +583,12 @@ void Client::DoZoneSuccess(ZoneChange_Struct *zc, uint16 zone_id, uint32 instanc
 }
 
 void Client::MovePC(const char* zonename, float x, float y, float z, float heading, uint8 ignorerestrictions, ZoneMode zm) {
-	ProcessMovePC(ZoneID(zonename), 0, x, y, z, heading, ignorerestrictions, zm);
+	// Same-zone teleports/banishes (e.g. Trakanon's Banishing Touch, spell 6791) must keep
+	// the current instance, otherwise the client is dropped to the base zone (instance 0).
+	// Mirrors the zone-point logic in Client::SendZonePoints (zone/client.cpp:8490).
+	const uint32 zone_id     = ZoneID(zonename);
+	const uint32 instance_id = (zone_id == zone->GetZoneID()) ? zone->GetInstanceID() : 0;
+	ProcessMovePC(zone_id, instance_id, x, y, z, heading, ignorerestrictions, zm);
 }
 
 //designed for in zone moving
@@ -771,6 +776,7 @@ void Client::ZonePC(uint32 zoneID, uint32 instance_id, float x, float y, float z
 
 	auto r = WorldContentService::Instance()->FindZone(zoneID, instance_id);
 	if (r.zone_id) {
+		const bool instance_unspecified = (instance_id == 0);
 		zoneID      = r.zone_id;
 		instance_id = r.instance.id;
 		LogZoning(
@@ -786,8 +792,10 @@ void Client::ZonePC(uint32 zoneID, uint32 instance_id, float x, float y, float z
 			static_cast<int>(zm)
 		);
 
-		// If we are zoning to the same zone, we need to use the current instance ID if it is not specified.
-		if (WorldContentService::Instance()->IsInPublicStaticInstance(instance_id) && zoneID == zone->GetZoneID() && instance_id == 0) {
+		// If we are zoning to the same zone, use the current instance when none was specified.
+		// Restricted to teleport-style modes so death/bind moves are unaffected.
+		if (instance_unspecified && zoneID == zone->GetZoneID() &&
+			(zm == ZoneSolicited || zm == ZoneToSafeCoords || zm == EvacToSafeCoords)) {
 			instance_id = zone->GetInstanceID();
 		}
 	}

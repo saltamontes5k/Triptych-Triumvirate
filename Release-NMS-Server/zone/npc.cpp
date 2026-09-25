@@ -3516,6 +3516,143 @@ void NPC::SetLevel(uint8 in_level, bool command)
 	SendAppearancePacket(AppearanceType::WhoLevel, in_level);
 }
 
+uint8_t NPC::GetFabledLootTier() const
+{
+	const uint8_t tier = zone ? zone->fabled.Season().loot_tier : 0;
+	return tier ? tier : 2;
+}
+
+// NMS Fabled season — promote this NPC using its roster row (FABLED-ENCOUNTERS.md §6.5).
+// Runs once per Fabled: from Spawn2::Process after loot and before entity_list.AddNPC
+// (already_spawned=false), or from #fabled force on a live NPC (already_spawned=true).
+void NPC::ApplyFabled(bool already_spawned)
+{
+	const FabledNpcRow *row = m_fabled_row;
+	if (!row) {
+		return;
+	}
+
+	// A live NPC that already carries the marker was promoted once; applying the multipliers again
+	// would compound them. (On the spawn path the marker is present only on a zone-state resume,
+	// where the NPC was rebuilt from npc_types and needs the promotion re-applied.)
+	if (already_spawned && EntityVariableExists("fabled")) {
+		return;
+	}
+
+	// Name. orig_name is left alone so name-keyed kill logic can use GetOrigName() (§6.6).
+	// The NPC constructor already runs RemoveNumbers + MakeNameUnique on an unregistered NPC, so
+	// doing the same here before AddNPC is safe; TempName is only used on a live NPC because it
+	// also broadcasts OP_MobRename, which a spawn packet that has not been sent yet does not need.
+	char fabled_name[64];
+	strn0cpy(fabled_name, fmt::format("{}{}", FabledDefaults::NamePrefix, GetOrigName()).c_str(), sizeof(fabled_name));
+	if (already_spawned) {
+		TempName(fabled_name);
+	}
+	else {
+		EntityList::RemoveNumbers(fabled_name);
+		entity_list.MakeNameUnique(fabled_name);
+		SetName(fabled_name);
+		clean_name[0] = 0;
+	}
+
+	// Level. row->level is already clamped to Character:MaxLevel by ZoneFabled::LoadRoster.
+	const uint8 base_level = GetLevel();
+	const uint8 target     = row->level ? row->level : base_level;
+	const int   delta      = std::max(0, static_cast<int>(target) - static_cast<int>(base_level));
+
+	if (target != base_level) {
+		if (already_spawned) {
+			SetLevel(target); // sends the level-appearance packets to nearby clients
+		}
+		else {
+			level = target;   // not registered yet: no entity id, so no packets; the spawn packet carries it
+		}
+		RecalculateSkills();
+		ReloadSpells();
+	}
+
+	// Stats. Row overrides win; a multiplier < 0 derives from the level delta (FabledDefaults).
+	const float hp_mult      = row->hp_mult      >= 0.0f ? row->hp_mult      : 1.0f + FabledDefaults::HpPerLevel  * delta;
+	const float min_hit_mult = row->min_hit_mult >= 0.0f ? row->min_hit_mult : 1.0f + FabledDefaults::HitPerLevel * delta;
+	const float max_hit_mult = row->max_hit_mult >= 0.0f ? row->max_hit_mult : 1.0f + FabledDefaults::HitPerLevel * delta;
+
+	const int64 new_max_hp  = std::max<int64>(1, static_cast<int64>(std::llround(static_cast<double>(base_hp) * hp_mult)));
+	const int   new_min_hit = std::max(1, static_cast<int>(std::lround(min_dmg * min_hit_mult)));
+	const int   new_max_hit = std::max(new_min_hit, static_cast<int>(std::lround(max_dmg * max_hit_mult)));
+
+	// ModifyNPCStat keeps #showstats / mob_info honest and records modify_stat_* entity variables.
+	// max_hit is applied first so min_hit is not clamped down by the old max.
+	ModifyNPCStat("max_hp", std::to_string(new_max_hp));
+	ModifyNPCStat("max_hit", std::to_string(new_max_hit));
+	ModifyNPCStat("min_hit", std::to_string(new_min_hit));
+
+	// Charm removal restores these; keep the Fabled values so a charmed Fabled does not revert.
+	default_min_dmg = min_dmg;
+	default_max_dmg = max_dmg;
+
+	if (row->npc_spells_id) {
+		ModifyNPCStat("npc_spells_id", std::to_string(row->npc_spells_id));
+	}
+
+	if (!row->special_abilities_append.empty()) {
+		// ProcessSpecialAbilities clears before it parses, so the DB string is re-supplied.
+		std::string abilities = default_special_abilities;
+		if (!abilities.empty()) {
+			abilities += "^";
+		}
+		abilities += row->special_abilities_append;
+
+		ModifyNPCStat("special_abilities", abilities);
+		strn0cpy(default_special_abilities, abilities.c_str(), sizeof(default_special_abilities));
+	}
+
+	SetHP(GetMaxHP());
+
+	// Persisted with zone state; Spawn2::Process re-attaches the row on resume when it is present.
+	SetEntityVariable("fabled", "1");
+
+	// Loot already rolled at the base tier (#fabled force): force the season tier in place.
+	// The spawn path never gets here — DoUpgradeLoot saw IsFabled() while the table was rolled.
+	if (already_spawned) {
+		const uint32 tier = GetFabledLootTier();
+
+		std::vector<std::pair<uint32, uint16>> retier;
+		for (const auto *l: m_loot_items) {
+			if (l->item_id / 1000000 < tier) {
+				retier.emplace_back(l->item_id, l->charges);
+			}
+		}
+
+		// AddLootDropFixed refuses while the resume flag is set; a live NPC is not resuming now.
+		const bool was_resuming = m_resumed_from_zone_suspend;
+		m_resumed_from_zone_suspend = false;
+
+		for (const auto &[item_id, charges]: retier) {
+			const uint32 new_id = (item_id % 1000000) + tier * 1000000;
+			if (new_id == item_id || !database.GetItem(new_id)) {
+				continue;
+			}
+			RemoveItem(item_id);
+			AddItem(new_id, charges);
+		}
+
+		m_resumed_from_zone_suspend = was_resuming;
+	}
+
+	LogSpawns(
+		"Fabled promote: [{}] npc_id [{}] level [{}] -> [{}] hp [{}] hits [{}]-[{}] spells [{}] already_spawned [{}]",
+		GetName(),
+		GetNPCTypeID(),
+		base_level,
+		GetLevel(),
+		GetMaxHP(),
+		min_dmg,
+		max_dmg,
+		GetNPCSpellsID(),
+		already_spawned
+	);
+}
+
 void NPC::ModifyNPCStat(const std::string& stat, const std::string& value)
 {
 	auto stat_lower = Strings::ToLower(stat);

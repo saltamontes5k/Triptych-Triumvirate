@@ -90,6 +90,7 @@
 #include "../common/skill_caps.h"
 #include "../common/repositories/character_parcels_repository.h"
 #include "../common/ip_util.h"
+#include "fabled_season.h"
 
 GroupLFPList        LFPGroupList;
 LauncherList        launcher_list;
@@ -167,11 +168,16 @@ int main(int argc, char **argv)
 	parcel_prune_timer.Start(86400000);
 	Timer player_event_log_process(1000);
 	player_event_log_process.Start(1000);
+	Timer fabled_season_timer(60000); // NMS: Fabled season expiry/announce bookkeeping
+	fabled_season_timer.Start(60000);
 
 	// global loads
 	LogInfo("Loading launcher list");
 	launcher_list.LoadList();
 	ZSList::Instance()->Init();
+	LogInfo("Loading Fabled season state");
+	WorldFabledSeason::Instance()->Load();
+	WorldFabledSeason::Instance()->Broadcast(); // zones that stayed up across a world restart resync here
 
 	if (IpUtil::IsPortInUse(Config->WorldIP, Config->WorldTCPPort)) {
 		LogError("World port [{}] already in use", Config->WorldTCPPort);
@@ -429,6 +435,10 @@ int main(int argc, char **argv)
 
 				database.PurgeCharacterParcels();
 			}
+		}
+
+		if (fabled_season_timer.Check()) {
+			WorldFabledSeason::Instance()->Tick();
 		}
 
 		if (PurgeInstanceTimer.Check()) {

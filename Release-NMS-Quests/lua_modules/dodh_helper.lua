@@ -114,19 +114,46 @@ end
 
 -- Grant a curse credit to every client in the current zone (raid death hook).
 function dodh.grant_curse_zone(key)
-  if not dodh.curses[key] then
-    return
-  end
-  local el = eq.get_entity_list()
-  local cl = el and el:GetClientList()
-  if not cl then
-    return
-  end
-  for _, c in ipairs(cl.entries) do
-    if c.valid then
-      dodh.grant_curse(c, key)
-    end
-  end
+	if not dodh.curses[key] then
+		return
+	end
+	local el = eq.get_entity_list()
+	local cl = el and el:GetClientList()
+	if not cl then
+		return
+	end
+	for _, c in ipairs(cl.entries) do
+		if c.valid then
+			dodh.grant_curse(c, key)
+		end
+	end
+end
+
+-- Grant all five Curse of Blood credits to every client in the zone. Mayong
+-- Mistmoore's defeat awards the full set at once (see grant_mayong_immunity_zone).
+function dodh.grant_all_curses_zone()
+	for key in pairs(dodh.curses) do
+		dodh.grant_curse_zone(key)
+	end
+end
+
+-- Defeating Mayong also confers immunity to the blood-raid curses. Stored as a
+-- bucket so the Demi-Plane aura can be suppressed for that client.
+function dodh.grant_mayong_immunity_zone()
+	local el = eq.get_entity_list()
+	local cl = el and el:GetClientList()
+	if not cl then
+		return
+	end
+	for _, c in ipairs(cl.entries) do
+		if c.valid then
+			c:SetBucket("dodh.mayong_immune", "1")
+		end
+	end
+end
+
+function dodh.has_mayong_immunity(client)
+	return (tonumber(client:GetBucket("dodh.mayong_immune")) or 0) == 1
 end
 
 -- Number of curse blockers absorbed (0..4); 4 == fully immune to the Aura.

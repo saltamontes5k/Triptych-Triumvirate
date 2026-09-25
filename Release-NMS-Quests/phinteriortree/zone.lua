@@ -1,18 +1,26 @@
 --[[
-	phinteriortree (766) - Evantil's Abode - Player House Interior
-	Zone script for the player housing system.
+	Player House Interior - furniture zone script.
 
-	- On the first player entering this instance session, loads the owner's
-	  persisted furniture (house_objects) and spawns the placement slots.
-	- Clicking an empty slot marker places the first furniture item found in your bags.
+	This file is placed in every house-interior zone's quest folder.
+	- On the first player entering this instance session, it loads the
+	  owner's persisted furniture (house_objects) and lays out placement
+	  slots around the arrival point.
+	- Clicking an empty slot places the first furniture item found in your bags.
 	- Clicking placed furniture picks it back up (owner only).
 
-	All placement/pickup is owner-only (MVP access model).
+	Placement/pickup is owner-only (MVP access model).
 ]]
 
-local ARRIVAL = { x = 100.0, y = 90.0, z = -60.0, h = 128.0 }
+local SLOT_MODEL = "IT64_ACTORDEF" -- small bag model used as the slot marker
 
--- placement slot offsets around the arrival point
+-- placeable furniture (items table, itemtype 11 housing items)
+local FURNITURE = {
+	61800, 61801, 61802, 61803, 61804, 61805, 61806, 61807, 61808, 61809,
+	61810, 61811, 61812, 61813, 61814, 61815, 61816, 61817, 61818, 61819,
+	61820, 61821,
+}
+
+-- slot offsets around the arrival point
 local SLOTS = {
 	{ dx =  2.0, dy =  2.0 },
 	{ dx = -2.0, dy =  2.0 },
@@ -24,17 +32,9 @@ local SLOTS = {
 	{ dx =  2.0, dy = -2.0 },
 }
 
-local SLOT_MODEL = "IT64_ACTORDEF" -- small bag model used as the slot marker
-
--- placeable furniture (items table, itemtype 11 housing items)
-local FURNITURE = {
-	61800, 61801, 61802, 61803, 61804, 61805, 61806, 61807, 61808, 61809,
-	61810, 61811, 61812, 61813, 61814, 61815, 61816, 61817, 61818, 61819,
-	61820, 61821,
-}
-
 -- per-session state (a zone process hosts exactly one house instance)
 local initialized = false
+local origin     = { x = 0.0, y = 0.0, z = 0.0, h = 0.0 }
 local placed     = {}  -- [object_entity_id] = { row, item, slot }
 local slots      = {}  -- [object_entity_id] = slot_index
 local slot_taken = {}  -- [slot_index] = true when furniture sits on the slot
@@ -47,10 +47,10 @@ local function spawn_slots()
 	for i, s in ipairs(SLOTS) do
 		local ent = eq.create_ground_object_from_model(
 			SLOT_MODEL,
-			ARRIVAL.x + s.dx,
-			ARRIVAL.y + s.dy,
-			ARRIVAL.z,
-			ARRIVAL.h
+			origin.x + s.dx,
+			origin.y + s.dy,
+			origin.z,
+			origin.h
 		)
 		if ent and ent > 0 then
 			slots[ent] = i
@@ -83,6 +83,7 @@ function event_enter_zone(e)
 
 	if not initialized then
 		initialized = true
+		origin.x, origin.y, origin.z, origin.h = c:GetX(), c:GetY(), c:GetZ(), c:GetHeading()
 		load_furniture()
 		spawn_slots()
 	end
@@ -126,7 +127,6 @@ function event_click_object(e)
 			c:Message(13, "This is not your home.")
 			return
 		end
-
 		if slot_taken[slot_index] then
 			c:Message(13, "This spot is already furnished.")
 			return
@@ -145,15 +145,15 @@ function event_click_object(e)
 		end
 
 		local s = SLOTS[slot_index]
-		local sx, sy = ARRIVAL.x + s.dx, ARRIVAL.y + s.dy
-		local row = eq.house_add_object(eq.get_zone_instance_id(), chosen, sx, sy, ARRIVAL.z, ARRIVAL.h)
+		local sx, sy = origin.x + s.dx, origin.y + s.dy
+		local row = eq.house_add_object(eq.get_zone_instance_id(), chosen, sx, sy, origin.z, origin.h)
 		if not row or row == 0 then
 			c:Message(13, "Something went wrong while placing your furnishing.")
 			return
 		end
 
 		c:RemoveItem(chosen, 1)
-		local new_ent = eq.create_ground_object(chosen, sx, sy, ARRIVAL.z, ARRIVAL.h)
+		local new_ent = eq.create_ground_object(chosen, sx, sy, origin.z, origin.h)
 		if new_ent and new_ent > 0 then
 			placed[new_ent] = { row = row, item = chosen, slot = slot_index }
 			slot_taken[slot_index] = true

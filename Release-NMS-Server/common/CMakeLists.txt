@@ -218,6 +218,8 @@ SET(repositories
     repositories/base/base_dynamic_zone_lockouts_repository.h
     repositories/base/base_dynamic_zone_members_repository.h
     repositories/base/base_dynamic_zone_templates_repository.h
+    repositories/base/base_fabled_npcs_repository.h
+    repositories/base/base_fabled_season_repository.h
     repositories/base/base_faction_association_repository.h
     repositories/base/base_faction_base_data_repository.h
     repositories/base/base_faction_list_repository.h
@@ -415,6 +417,8 @@ SET(repositories
     repositories/dynamic_zone_lockouts_repository.h
     repositories/dynamic_zone_members_repository.h
     repositories/dynamic_zone_templates_repository.h
+    repositories/fabled_npcs_repository.h
+    repositories/fabled_season_repository.h
     repositories/faction_association_repository.h
     repositories/faction_base_data_repository.h
     repositories/faction_list_repository.h

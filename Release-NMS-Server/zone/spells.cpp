@@ -2042,7 +2042,7 @@ void Mob::CastedSpellFinished(uint16 spell_id, uint32 target_id, CastingSlot slo
 		if(IsClient())
 		{
 			Client *c = CastToClient();
-			if (!IsBardSong(spell_id)) {
+			if (!IsBardSong(spell_id) || IsFromItem) {
 				c->SendSpellBarEnable(spell_id);
 			}
 

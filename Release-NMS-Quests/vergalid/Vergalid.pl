@@ -1,6 +1,26 @@
 # Vergalid - Vergalid Mines (TSS instanced raid finale, Vergalid's End)
 # npc: 600144   dz template: 6007
 # The beast at the heart of the mines. Its life force is fed by the six Stone Protectors.
+#
+# This file is also the ZONE script for vergalid (the zone script name
+# "vergalid.pl" resolves to this file on Windows): sub EVENT_CLICKDOOR below
+# guards the stone statue at the Shrine of Zek (doors table doorid 4,
+# OBJ_VM_DOORA at -1438.81, 879.28, -394.38). Clicking it while carrying a
+# Flawless Indicolite Shard (87246) leads down to the Inner Vergalid /
+# Ancient Ruins (zone_points 1625/3449: -1291, 375, -1070, heading 282).
+
+sub EVENT_CLICKDOOR {
+  if ($doorid == 4) {
+    if (plugin::check_hasitem($client, 87246)) {
+      $client->Message(4, "The Flawless Indicolite Shard flares to life in your grasp. The stone statue grinds aside, and a cold draft rises from the deep halls of the Ancient Ruins.");
+      quest::movepc(404, -1291, 375, -1070, 282);
+    }
+    else {
+      $client->Message(13, "The stone statue stands silent. Its sealed gate does not answer to you.");
+    }
+    return 1;
+  }
+}
 
 sub EVENT_SPAWN {
   quest::setnexthpevent(60);

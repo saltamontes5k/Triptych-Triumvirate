@@ -64,6 +64,7 @@ local lockout_win   	= "5d";
 local lockout_loss  	= "3h";
 local this_zone			= 'chamberse';
 local this_bit			= 16;
+local memory = require("nms_memory");
 local player_list;
 local list_constructs	= {};
 local last_mob;
@@ -401,6 +402,9 @@ function Boss_Death(e)
 
 	-- Spawn Shell of the Master
 	eq.spawn2(308015, 0, 0, -212, 270, 66, e.self:GetHeading()); -- NPC: Shell_of_the_Master_
+
+	-- NMS progression: spawn the progression memory hail mob (PoR flag)
+	memory.spawn(e, "PoR", "master of adaptation", nil, nil, -212, 270, 66, e.self:GetHeading());
 
 	-- Update the Lockouts
 	local dz = eq.get_expedition()

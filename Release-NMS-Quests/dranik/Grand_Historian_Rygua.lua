@@ -44,7 +44,14 @@ for i=1,#sewers do
 end
 
 function event_say(e)
-	local is_gm = (e.other:Admin() > 80 and e.other:GetGM())
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end	local is_gm = (e.other:Admin() > 80 and e.other:GetGM())
 
 	if (e.message:findi("hail")) then
 		eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Grand Historian Rygua says, 'Greetings, traveler. I am Grand Historian Rygua and I can open your mind to the history of our people if you wish. I can show you the [" .. eq.say_link("catacombs") .. "] or the [" .. eq.say_link("sewers") .. "].'")

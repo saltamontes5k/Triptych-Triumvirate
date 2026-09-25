@@ -20,7 +20,8 @@ quest::summonitem(17277); # Item: Small parts kit
 if (plugin::check_handin(\%itemcount, 28283 => 1)) {
 quest::say("Oh, you've returned! Very good, $name! Saria and I have made some real progress on the document that you brought us. Watch this and you'll see what I mean!");
 	quest::emote("quickly opens the small case and removes the parts. He takes a tiny spanner, several small bolts, and a long wire and quickly pieces together what appears to be a small clockwork talisman. He pulls a leather string through the top of it and offers it to you.");
-quest::summonitem(28284); # Item: Small Clockwork Talisman
+	quest::summonitem(28284); # Item: Small Clockwork Talisman
+	quest::summonitem(17278); # Item: Small Parts Container
 	quest::say("That should work for you, but from what we gathered, there's another layer of mechanics that works to shield and envelope the existing talisman. It's going to require more parts. So take this container and let me know when you're [ready] to write down the names of the next set of parts.");
 quest::exp(100000);
 }

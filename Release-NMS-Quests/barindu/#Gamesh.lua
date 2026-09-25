@@ -36,7 +36,14 @@ local function create_sewer_expedition(e, sewer)
 end
 
 function event_say(e)
-  if e.message:findi("hail") then
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Gamesh says, 'I don't know why you would want to, but if you want me to tell you the way to one of the different areas of the sewers let me know.  I know how to get to the treatment [" .. eq.say_link("plant") .. "], [" .. eq.say_link("crematory") .. "], [" .. eq.say_link("pools") .. "] of sludge, or the [" .. eq.say_link("lair") .. "] of trapped ones.'")
   elseif e.message:findi("plant") then
     create_sewer_expedition(e, sewers.snplant)

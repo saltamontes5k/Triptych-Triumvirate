@@ -1,7 +1,14 @@
 task_ids = require("task_ids")
 
 function event_say(e)
-  local qvic_flag = tonumber(e.other:GetAccountBucket("god.flags.qvic")) or 0
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  local qvic_flag = tonumber(e.other:GetAccountBucket("god.flags.qvic")) or 0
   if e.message:findi('hail') then
     if not e.other:IsTaskCompleted(task_ids.trusik_task) or qvic_flag ~= 1 then
       e.other:Message(MT.NPCQuestSay, "The Sentinel of the Altar ignores your every attempt to interact with it.")

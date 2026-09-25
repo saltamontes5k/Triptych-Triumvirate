@@ -62,7 +62,7 @@ sub EVENT_SAY {
     my $link_services_2       = "[".quest::saylink("link_services", 1, "do for you")."]";
     my $link_glamour          = "[".quest::saylink("link_glamour", 1, "Glamour")."]";
     my $link_custom_work      = "[".quest::saylink("link_custom_work", 1, "custom enchantments")."]";
-    my $link_echo_of_memory   = "[".quest::saylink("link_echo_of_memory", 1, "Echo of Memory")."]";
+    my $link_triune_of_fate   = "[".quest::saylink("link_triune_of_fate", 1, "Triune of Fate")."]";
     my $link_random_glamour   = "[".quest::saylink("link_random_glamour", 1, "random glamour")."]";
 
     if($text=~/hail/i) {
@@ -91,22 +91,22 @@ sub EVENT_SAY {
     elsif ($text eq "link_custom_work") {
         $response = "I can produce an armour ornament of remarkable and unique nature, based upon whatever design my muse conjures.
                     There is no predicting what cosmetic enchantment may be produced! I will only embark upon this artistic work in exchange
-                    for two $link_echo_of_memory, however. Would you like me to produce a $link_random_glamour for you?";
+                    for two $link_triune_of_fate, however. Would you like me to produce a $link_random_glamour for you?";
     }
 
-    elsif ($text eq "link_echo_of_memory") {
-        $response = "These are rare fragments of a previous age. Rumor is, only by great service to the realm can you obtain them.";
+    elsif ($text eq "link_triune_of_fate") {
+        $response = "Three tides turned in your favor, pressed into a single shining drop. Only by great service to the realm can you obtain them.";
     }
 
     elsif ($text eq "link_random_glamour") {
-        my $eom_available = $client->GetAlternateCurrencyValue(6);
+        my $triune_available = $client->GetAlternateCurrencyValue(6);
 
-        if ($eom_available < 2) {
-            $response = "I'm sorry, $clientName. You don't have enough Echo of Memory, please return when you have enough to pay me.";
+        if ($triune_available < 2) {
+            $response = "I'm sorry, $clientName. You don't have enough Triune of Fate, please return when you have enough to pay me.";
         } else {
             my $random_result = get_random_armour();
 
-            if ($random_result && plugin::SpendEOM($client, 2)) {
+            if ($random_result && plugin::SpendTriuneOfFate($client, 2)) {
                 $client->SummonItem($random_result);
             }
         }

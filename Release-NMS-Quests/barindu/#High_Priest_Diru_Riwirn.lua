@@ -38,7 +38,14 @@ end
 task_ids = require('task_ids')
 
 function event_say(e)
-  if e.message:findi("hail") then
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  if e.message:findi("hail") then
     -- No sewers task: Assign sewers
     if not e.other:IsTaskActive(task_ids.sewers_task) and not e.other:IsTaskCompleted(task_ids.sewers_task) then
       e.other:Message(MT.NPCQuestSay, "High Priest Diru tells you, 'These are sad times. Not only have the invaders taken away all that we own, but our own problems still occur. If only there was someone willing to help our cause. I beg of you, please, help us with all the problems going on in the sewers underneath this city. They have become the breeding grounds for stonemites. These nasty bugs get into everything. They eat our stored food and our crops. We need to terminate the source of the stonemites so that we will have enough food to survive. The invaders do not provide enough for us, and we need these crops to live. Please prepare and talk to me again when you are ready to help.'")

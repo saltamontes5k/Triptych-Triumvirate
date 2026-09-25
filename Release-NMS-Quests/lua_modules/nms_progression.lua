@@ -14,7 +14,9 @@ local PREREQ = {
         "rathe council",
         "agnarr the storm lord",
     },
-    -- Prophecy of Ro: six MPG chamber Masters + Anguish clear
+    -- Depths of Darkhollow: LDoN Warlord Imal Ojun + DoN Vishimtar the Fallen
+    DoD = { "warlord imal ojun", "vishimtar the fallen" },
+    -- Prophecy of Ro: six MPG chamber Masters + Anguish + Demi-Plane Mayong
     PoR = {
         "master of hate",
         "master of weaponry",
@@ -23,13 +25,16 @@ local PREREQ = {
         "master of adaptation",
         "master of destruction",
         "anguish",
+        "mayong mistmoore dreadspire",
     },
     -- The Serpent's Spine: Deathknell (Ayonae Ro) clear
     TSS = { "deathknell" },
-    -- The Buried Sea: Tunat'Muram + Dyn'Leth
-    TBS = { "tunat`muram cuu vauax", "dyn`leth" },
-    -- Secrets of Faydwer: Dyn'Leth
-    SoF = { "dyn`leth" },
+    -- The Buried Sea: Ashengate Dyn'Leth raid
+    TBS = { "dyn`leth" },
+    -- Secrets of Faydwer: Solteris Mayong Mistmoore + Solusek Ro
+    SoF = { "mayong mistmoore", "solusek ro" },
+    -- Seeds of Destruction: Crystallos Kerafyrm + Sleeper's Tomb 2.0 Kerafyrm
+    SoD = { "kerafyrm", "kerafyrm-crystallos" },
 }
 
 local M = {}

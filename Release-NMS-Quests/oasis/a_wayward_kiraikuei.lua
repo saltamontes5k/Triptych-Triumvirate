@@ -8,7 +8,14 @@ local rogue_dz = {
 }
 
 function event_say(e)
-	if(e.message:findi("hail")) then
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end	if(e.message:findi("hail")) then
 		e.self:Say("I will scour this desert until the one with the orb arrives. Leave me to my wandering, weakling!");
 	end
 end

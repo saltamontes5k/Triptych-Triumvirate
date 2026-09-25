@@ -23,9 +23,16 @@ function event_say(e)
 		assign_next(e.other, e.self);
 	elseif t:find("corruption") or t:find("help") or t:find("elddar") then
 		assign_next(e.other, e.self);
-	elseif t:find("raid") or t:find("priest of ro") or t:find("cleanse") then
+	elseif t:find("gather a force") or t:find("raid") or t:find("priest of ro") or t:find("cleanse") then
+		if not e.other:IsTaskCompleted(por.tasks.key_to_corruption) then
+			e.self:Say("The way to the top of the shrine is not yet open to you. Root out the corruption among my people first.");
+			return;
+		end
+		if not e.other:IsTaskActive(por.tasks.corruption_of_ro) and not e.other:IsTaskCompleted(por.tasks.corruption_of_ro) then
+			e.other:AssignTask(por.tasks.corruption_of_ro);
+		end
 		if por.enter(e.other, "elddara", "The Corruption of Ro", 1, 36, "6h", "3d") then
-			e.self:Say("The heart of the corruption festers within the shrine. Gather your allies and cleanse it.");
+			e.self:Say("Brazlin the High Priest of Ro festers at the top of the shrine. Gather your allies and cleanse it.");
 		end
 	end
 end
@@ -53,6 +60,23 @@ function event_trade(e)
 	if item_lib.check_turn_in(e.trade, { item1 = 85079 }) then
 		c:UpdateTaskActivity(por.tasks.key_to_corruption, 1, 1);
 		e.self:Say("The key to the corruption. With this, we can end it.");
+		return;
+	end
+
+	-- Chalice of Life (raid drop from the Guardian of the High Priest) -> The
+	-- Chalice of Life, once Shalowen's three group tasks are complete.
+	if item_lib.check_turn_in(e.trade, { item1 = por.items.chalice_of_life }) then
+		if c:IsTaskCompleted(por.tasks.investigating_the_elddar)
+			and c:IsTaskCompleted(por.tasks.questioning_the_priest)
+			and c:IsTaskCompleted(por.tasks.key_to_corruption) then
+			if not c:HasItem(por.items.the_chalice_of_life) then
+				c:SummonFixedItem(por.items.the_chalice_of_life);
+			end
+			e.self:Say("The Chalice of Life, renewed to its original state. The Chalice must be protected at all costs. I trust that you will defend it with your life.");
+		else
+			c:SummonFixedItem(por.items.chalice_of_life);
+			e.self:Say("There is more yet to be done before the grove is whole again.");
+		end
 		return;
 	end
 

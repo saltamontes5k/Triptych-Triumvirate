@@ -1,33 +1,19 @@
-sub EVENT_SPAWN {
-  quest::shout("ZERZURA!");
-  quest::setglobal("kerafyrm",1,7,"F");
-  quest::spawn_condition(sleeper,2,1);
-  quest::spawn_condition(sleeper,1,0);
-  quest::forcedooropen(46);
-  quest::settimer("depop",1);
-}
-
-sub EVENT_TIMER {
- if($timer eq "depop"){
-  if($x == -675){
-   quest::spawn2(128095,2,0,1014,-981,-125,0); # NPC: #Kerafyrm_
-   quest::stoptimer("depop");   
-   quest::depop();
-  }
- }
-}
-
+# Sleepers 2.0 -- Kerafyrm (128089), the sealed boss of Kerafyrm's Chamber.
+#
+# The old wake chain (globals, door 46, the #Kerafyrm_ walk-out, and the
+# spawn-condition swap) is no longer used. The bubble / five-seal gate lives in
+# encounters/sleeper_custom.lua.
+#
+# plugin::handle_death spawns the memory NPC (global/26000.pl) with the SoD
+# "kerafyrm" objective when the kill happens in a qualifying instance.
 sub EVENT_SLAY {
-  quest::shout("Begone insect, I have much slaying yet to do!");
+	quest::shout("Begone insect, I have much slaying yet to do!");
 }
 
 sub EVENT_NPC_SLAY {
-  quest::shout("Begone insect, I have much slaying yet to do!");
+	quest::shout("Begone insect, I have much slaying yet to do!");
 }
 
-sub EVENT_DEATH_COMPLETE { #nearly forgot about this hehe
-  plugin::handle_death($npc, $x, $y, $z, $entity_list);
-  quest::setglobal("kerafyrm",3,7,"F"); 
-  quest::stoptimer("depop");   
-  quest::depop();
+sub EVENT_DEATH_COMPLETE {
+	plugin::handle_death($npc, $x, $y, $z, $entity_list);
 }

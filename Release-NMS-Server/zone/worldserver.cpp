@@ -421,6 +421,15 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 
 		break;
 	}
+	case ServerOP_FabledSeason: {
+		if (pack->size != sizeof(ServerFabledSeason_Struct))
+			break;
+		if (!is_zone_loaded || !zone)
+			break;
+
+		zone->fabled.ApplySeason(*reinterpret_cast<ServerFabledSeason_Struct *>(pack->pBuffer));
+		break;
+	}
 	case ServerOP_AcceptWorldEntrance: {
 		if (pack->size != sizeof(WorldToZone_Struct))
 			break;
@@ -5023,6 +5032,12 @@ void WorldServer::ProcessReload(const ServerReload::Request& request)
 			content_db.LoadFactionData();
 			zone->ReloadNPCFactions();
 			zone->ReloadFactionAssociations();
+			break;
+
+		case ServerReload::Type::Fabled:
+			if (zone) {
+				zone->fabled.LoadRoster();
+			}
 			break;
 
 		case ServerReload::Type::LevelEXPMods:

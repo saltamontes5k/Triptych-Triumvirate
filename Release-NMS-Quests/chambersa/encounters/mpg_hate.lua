@@ -12,6 +12,7 @@ local lockout_win			= "5d";
 local lockout_loss			= "3h";
 local this_zone				= 'chambersa';
 local this_bit				= 1;
+local memory = require("nms_memory");
 local event_active			= false;
 local player_list;
 local hate_di;
@@ -90,6 +91,9 @@ function Hate_Death(e)
 	eq.spawn_condition(this_zone,instance_id,3,0);
 	-- Spawn a Shell of the Master (304020)
 	eq.spawn2(304020,0,0,-212,270,66,e.self:GetHeading()); -- NPC: Shell_of_the_Master_
+
+	-- NMS progression: spawn the progression memory hail mob (PoR flag)
+	memory.spawn(e, "PoR", "master of hate", nil, nil, -212, 270, 66, e.self:GetHeading());
 
 	-- Update the Win Lockout
 	local dz = eq.get_expedition()

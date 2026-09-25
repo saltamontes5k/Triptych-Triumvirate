@@ -6,7 +6,19 @@ local mmcc = {
   zonein     = { x=-424.0, y=-108.0, z=1.25, h=0 }
 }
 
+local prog = require("nms_progression")
+
 function event_say(e)
+  -- NMS: enter your active expedition directly (like the Echo projections)
+  if e.message:findi("ready") then
+    local __dz = e.other:GetExpedition()
+    if __dz.valid then
+      e.other:MovePCDynamicZone(__dz:GetZoneID())
+      return
+    end
+  end  if not prog.gate_stage(e.other, "DoN", "Kroggl says, 'The Wayfarers will open these dungeons only to those who have toppled the elemental gods of the planes.'") then
+    return
+  end
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "Kroggl says, 'Me gots big jobs to do for de Wayfarers. Vampires really bad tings but dey gots lots of stuffs we want to see. Me gets to go with adventurers to see. You go too if you gots a strong head. Spooky dere. Really spooky.  If you can rally de call of your friend perhaps you can help wit a serious [" .. eq.say_link("problem") .. "].'")
   elseif e.message:findi("problem") then

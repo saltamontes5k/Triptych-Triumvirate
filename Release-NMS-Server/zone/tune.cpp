@@ -1585,4 +1585,6 @@ void Mob::TuneCommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraA
 		DoShieldDamageOnShielder(defender, hit.damage_done, hit.skill);
 		hit.damage_done -= hit.damage_done * defender->GetShieldTargetMitigation() / 100; //Default shielded takes 50 pct damage
 	}
+
+	hit.damage_done = std::max<int64>(hit.damage_done, 1);
 }

@@ -21,5 +21,10 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Consume the relic only while Pieces of the Past is active (task system
+  # grants the reward on completion); anything else is returned by the handin
+  # system.
+  if (quest::istaskactive(600210)) {
+    plugin::check_handin(\%itemcount, 54638 => 1);
+  }
 }

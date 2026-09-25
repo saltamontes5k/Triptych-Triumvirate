@@ -3,10 +3,8 @@
 -- Additive hook: when Ayonae Ro dies, spawn the memory NPC (global/26000.pl);
 -- hailing it grants the TSS/deathknell subflag.
 
+local memory = require("nms_memory")
+
 function event_death_complete(e)
-	local memory_npc = eq.spawn2(26000, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading())
-	if memory_npc ~= nil then
-		memory_npc:SetEntityVariable("Flag-Name", "deathknell")
-		memory_npc:SetEntityVariable("Stage-Name", "TSS")
-	end
+	memory.spawn(e, "TSS", "deathknell")
 end

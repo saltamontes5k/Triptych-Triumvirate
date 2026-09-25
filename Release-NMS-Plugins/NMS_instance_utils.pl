@@ -111,13 +111,21 @@ sub OfferStandardInstance {
 }
 
 sub ScaleInstanceNPC {
+	my $npc          = shift;
+	my $player_count = shift;
 	my $instanceversion = plugin::val('$instanceversion');
-	if ($instanceversion != quest::get_rule("Custom:StaticInstanceVersion")) {
+	my $zoneid          = plugin::val('$zoneid');
+
+	# LDoN expedition zones (zoneidnumber 229-276): force scaling from
+	# npc_scale_global_base (god-tier named/raid, elevated trash).
+	if ($zoneid >= 229 && $zoneid <= 276) {
+		$npc->ScaleNPC($npc->GetLevel(), 0) if $npc;
 		return;
 	}
 
-	my $npc = shift;
-	my $player_count = shift;
+	if ($instanceversion != quest::get_rule("Custom:StaticInstanceVersion")) {
+		return;
+	}
 
 	if (!$npc || !$player_count || $player_count <= 2 || ($npc->GetOwner() && $npc->GetOwner()->IsClient())) {
 		return;

@@ -17,6 +17,15 @@ local door_requirements = {
 		},
 		level = 55
 	},
+	[19] = {
+		flags = {
+			"rallos"
+		},
+		zones = {
+			Zone.powar
+		},
+		level = 65
+	},
 	[12] = {
 		flags = {
 			"adler", "elder", "grummus"

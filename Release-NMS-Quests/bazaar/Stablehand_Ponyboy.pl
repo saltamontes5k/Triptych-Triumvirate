@@ -1,4 +1,4 @@
-my $MOUNT_COST = 5; # Echo of Memory per random mount
+my $MOUNT_COST = 5; # Triune of Fate per random mount
 
 sub EVENT_SAY {
     my $response = "";
@@ -9,18 +9,18 @@ sub EVENT_SAY {
     my $link_recycle  = "[".quest::saylink("link_recycle", 1, "recycle")."]";
 
     if ($text =~ /hail/i) {
-        $response = "Hail, $clientName! I'm Stablehand Ponyboy, tender of the finest mounts Lady Glamor's flock can offer. I can summon you a steed, though the good ones cost a bit of coin... or rather, a few Echoes of Memory. Ask about my $link_services to learn more.";
+        $response = "Hail, $clientName! I'm Stablehand Ponyboy, tender of the finest mounts Lady Glamor's flock can offer. I can summon you a steed, though the good ones cost a bit of coin... or rather, a few Triunes of Fate. Ask about my $link_services to learn more.";
     }
     elsif ($text eq "link_services") {
-        $response = "For $MOUNT_COST Echoes of Memory, I'll summon you a random mount to call your very own - a bridle or saddle you can use anytime. If it's not to your liking, hand it back and I'll $link_recycle it into something different, no fee charged! Ready to try your luck on $link_mount?";
+        $response = "For $MOUNT_COST Triunes of Fate, I'll summon you a random mount to call your very own - a bridle or saddle you can use anytime. If it's not to your liking, hand it back and I'll $link_recycle it into something different, no fee charged! Ready to try your luck on $link_mount?";
     }
     elsif ($text eq "link_mount") {
-        my $eom_available = $client->GetAlternateCurrencyValue(6);
-        if ($eom_available < $MOUNT_COST) {
-            $response = "I'm afraid you don't have enough Echo of Memory, $clientName. You need $MOUNT_COST to summon a mount from me. Come back when you've gathered enough.";
+        my $triune_available = $client->GetAlternateCurrencyValue(6);
+        if ($triune_available < $MOUNT_COST) {
+            $response = "I'm afraid you don't have enough Triune of Fate, $clientName. You need $MOUNT_COST to summon a mount from me. Come back when you've gathered enough.";
         } else {
             my $random_mount = get_random_mount(0, $client);
-            if ($random_mount && plugin::SpendEOM($client, $MOUNT_COST)) {
+            if ($random_mount && plugin::SpendTriuneOfFate($client, $MOUNT_COST)) {
                 $client->SummonItem($random_mount);
                 plugin::Whisper("Enjoy your new mount, $clientName! Should it not catch your fancy, bring it back and I'll recycle it into something else for free.");
             } else {
@@ -77,7 +77,7 @@ sub EVENT_ITEM {
 
     $dbh->disconnect();
     plugin::return_items(\%itemcount);
-    plugin::Whisper("I don't need that, $clientName. I only trade in mount bridles and saddles, and a little Echo of Memory.");
+    plugin::Whisper("I don't need that, $clientName. I only trade in mount bridles and saddles, and a little Triune of Fate.");
 }
 
 # Pick one representative item per distinct mount, preferring the "Fast" variant

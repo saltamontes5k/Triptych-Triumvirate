@@ -22,5 +22,19 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Consume recovered texts and the empty book only while Ancient Tomes is
+  # active (task system grants the reward on completion); anything else is
+  # returned by the handin system.
+  if (quest::istaskactive(600214)) {
+    plugin::check_handin(\%itemcount, 88180 => 1);
+    plugin::check_handin(\%itemcount, 88181 => 1);
+    plugin::check_handin(\%itemcount, 88182 => 1);
+    plugin::check_handin(\%itemcount, 88183 => 1);
+    plugin::check_handin(\%itemcount, 88184 => 1);
+    plugin::check_handin(\%itemcount, 88185 => 1);
+    plugin::check_handin(\%itemcount, 88186 => 1);
+    plugin::check_handin(\%itemcount, 88187 => 1);
+    plugin::check_handin(\%itemcount, 88188 => 1);
+    plugin::check_handin(\%itemcount, 88189 => 1);
+  }
 }

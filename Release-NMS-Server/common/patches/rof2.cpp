@@ -5015,7 +5015,10 @@ namespace RoF2
 	{
 		memset(buf, 0, kShroudProfileBlockSize);
 
-		ShroudWrite<uint32>(buf, 0x0000, 1);                                  // Shrouded
+		// The client gates spellbook/inventory on this flag while "shrouded",
+		// which is broken in this client branch; the server tracks the shroud
+		// state itself, so present the form as a normal character.
+		ShroudWrite<uint32>(buf, 0x0000, 0);                                  // Shrouded
 		ShroudWrite<uint8>(buf,  0x0008, static_cast<uint8>(pp.gender));
 		ShroudWrite<uint32>(buf, 0x000C, pp.race);
 		ShroudWrite<uint8>(buf,  0x0010, static_cast<uint8>(pp.class_));
@@ -5034,18 +5037,11 @@ namespace RoF2
 		ShroudWrite<uint32>(buf, 0x0078, pp.deity);
 		ShroudWrite<uint32>(buf, 0x007C, pp.intoxication);
 
-		// Worn textures (22 slots, 20 bytes each: material + 4 unknowns).
-		for (int i = 0; i < 22; ++i) {
-			const uint32 o = 0x00A8 + i * 20;
-			const uint32 material = (i < EQ::textures::materialCount)
-				? pp.item_material.Slot[i].Material : 0;
-			ShroudWrite<uint32>(buf, o, material);
-		}
+		// Worn textures / equip2 / tint / bodycolor (0x00A8..0x035C): the
+		// client's live profile keeps these zeroed - worn appearance comes
+		// from the spawn struct, not the profile. Leave zeroed.
 
-		// Armor tint (9 dwords).
-		for (int i = 0; i < EQ::textures::materialCount; ++i) {
-			ShroudWrite<uint32>(buf, 0x0314 + i * 4, pp.item_tint.Slot[i].Color);
-		}
+		// Armor tint (9 dwords) also stays zeroed (matches live client state).
 
 		// Appearance.
 		ShroudWrite<uint8>(buf, 0x035C, pp.haircolor);
@@ -5055,18 +5051,22 @@ namespace RoF2
 		ShroudWrite<uint8>(buf, 0x0366, pp.hairstyle);
 		ShroudWrite<uint8>(buf, 0x0367, pp.beard);
 		ShroudWrite<uint8>(buf, 0x0368, pp.face);
-		ShroudWrite<uint8>(buf, 0x0369, 0);                                    // "oldface"
-		ShroudWrite<uint32>(buf, 0x036C, pp.drakkin_heritage);
-		ShroudWrite<uint32>(buf, 0x0370, pp.drakkin_tattoo);
-		ShroudWrite<uint32>(buf, 0x0374, pp.drakkin_details);
+		ShroudWrite<uint8>(buf, 0x0369, static_cast<uint8>(pp.drakkin_heritage));
+		// Tattoo/details are kept shifted into the high byte by the client.
+		ShroudWrite<uint32>(buf, 0x036C, pp.drakkin_tattoo << 24);
+		ShroudWrite<uint32>(buf, 0x0370, pp.drakkin_details << 24);
+		ShroudWrite<uint8>(buf, 0x0378, 0xFF);
+		ShroudWrite<uint8>(buf, 0x037B, 0x01);
 
 		// Geometry (same defaults as the normal profile encoder).
 		ShroudWrite<float>(buf,  0x037C, 5.0f);                                // height
 		ShroudWrite<float>(buf,  0x0380, 3.0f);
 		ShroudWrite<float>(buf,  0x0384, 2.5f);
 		ShroudWrite<float>(buf,  0x0388, 5.5f);
-		ShroudWrite<uint32>(buf, 0x0394, pp.points);                           // unspent practice points
-
+		// Golden-block alignment (judy_golden_block.bin): 0x390 = practice
+		// points, 0x394/0x398 = mana (the client keeps both), 0x39C = hp.
+		ShroudWrite<uint32>(buf, 0x0390, pp.points);
+		ShroudWrite<uint32>(buf, 0x0394, pp.mana);
 		ShroudWrite<uint32>(buf, 0x0398, pp.mana);
 		ShroudWrite<uint32>(buf, 0x039C, pp.cur_hp);
 		ShroudWrite<uint32>(buf, 0x03A0, pp.STR);
@@ -5116,9 +5116,29 @@ namespace RoF2
 			ShroudWrite<uint32>(buf, 0x263C + i * 4, pp.spellSlotRefresh[i]);
 		}
 
-		// Buffs: the client in-memory buff stride is 88 bytes (0x2674..0x34E4).
-		// TODO: map SpellBuff_Struct -> the client 88-byte buff. Left zeroed
-		// for now so the block applies cleanly without buff icons.
+		// Buffs: the client stores these as 88-byte (0x58) entries at
+		// 0x2674..0x34E4 (layout per _SPELLBUFF in the client headers).
+		for (uint32 i = 0; i < BUFF_COUNT; ++i) {
+			const uint32 o = 0x2674 + i * 0x58;
+			const SpellBuff_Struct &b = pp.buffs[i];
+
+			if (b.spellid == 0xFFFF || b.spellid == 0) {
+				continue; // empty slot stays zeroed
+			}
+
+			ShroudWrite<uint8>(buf,  o + 0x00, 0);                              // unknown
+			ShroudWrite<uint8>(buf,  o + 0x01, b.level);
+			ShroudWrite<int8>(buf,   o + 0x02, static_cast<int8>(b.bard_modifier));
+			ShroudWrite<int8>(buf,   o + 0x03, static_cast<int8>(b.unknown003)); // damage shield
+			const float instrument_mod = b.bard_modifier > 0
+				? 1.0f + (b.bard_modifier - 10) / 10.0f
+				: 1.0f;
+			ShroudWrite<float>(buf,  o + 0x04, instrument_mod);
+			ShroudWrite<uint32>(buf, o + 0x08, b.spellid);
+			ShroudWrite<uint32>(buf, o + 0x0C, b.duration);
+			ShroudWrite<uint32>(buf, o + 0x10, 0x000717FD);                     // caster id
+			// 0x14..0x58 client-internal scratch - zeroed.
+		}
 
 		// Money.
 		ShroudWrite<uint32>(buf, 0x34E4, pp.platinum);
@@ -5137,21 +5157,23 @@ namespace RoF2
 		ShroudWrite<uint32>(buf, 0x3518, pp.aapoints_spent);
 		ShroudWrite<uint32>(buf, 0x3530, pp.aapoints);
 
-		// Bandoliers (20 x 320) and potion belt (5 x 72) share the server layout.
-		static_assert(sizeof(Bandolier_Struct) == 320, "unexpected bandolier size");
-		for (uint32 i = 0; i < EQ::profile::BANDOLIERS_SIZE; ++i) {
-			memcpy(buf + 0x3538 + i * sizeof(Bandolier_Struct), &pp.bandoliers[i], sizeof(Bandolier_Struct));
-		}
+		// Bandolier entries (0x3538, 20 x 320) are client-internal objects
+		// (name is a pointer, not inline text) - zeroed; the bandolier window
+		// will be empty while shrouded. The potion belt (0x4E38, 5 x 72) uses
+		// the wire layout {id, icon, name[64]} with icon -1 for empty slots.
 		static_assert(sizeof(PotionBeltItem_Struct) == 72, "unexpected potion belt item size");
 		for (uint32 i = 0; i < EQ::profile::POTION_BELT_SIZE; ++i) {
-			memcpy(buf + 0x4E38 + i * sizeof(PotionBeltItem_Struct), &pp.potionbelt.Items[i], sizeof(PotionBeltItem_Struct));
+			const uint32 o = 0x4E38 + i * sizeof(PotionBeltItem_Struct);
+			ShroudWrite<uint32>(buf, o + 0, pp.potionbelt.Items[i].ID);
+			ShroudWrite<uint32>(buf, o + 4, pp.potionbelt.Items[i].Icon ? pp.potionbelt.Items[i].Icon : 0xFFFFFFFFu);
+			memcpy(buf + o + 8, pp.potionbelt.Items[i].Name, sizeof(pp.potionbelt.Items[i].Name));
 		}
 
-		// Tail: hp/mana/endurance totals, base resists, and endurance.
+		// Tail: the client mirrors the wire encoder's trailing placeholders.
 		ShroudWrite<int32>(buf,  0x4FA0, -1);
-		ShroudWrite<uint32>(buf, 0x4FA4, pp.cur_hp);
-		ShroudWrite<uint32>(buf, 0x4FA8, pp.endurance);
-		ShroudWrite<uint32>(buf, 0x4FAC, pp.mana);
+		ShroudWrite<uint32>(buf, 0x4FA4, 123);                                 // hp_total (placeholder)
+		ShroudWrite<uint32>(buf, 0x4FA8, 234);                                 // endurance_total
+		ShroudWrite<uint32>(buf, 0x4FAC, 345);                                 // mana_total
 		ShroudWrite<uint32>(buf, 0x4FB0, 0x19);                                // base CR
 		ShroudWrite<uint32>(buf, 0x4FB4, 0x19);                                // base FR
 		ShroudWrite<uint32>(buf, 0x4FB8, 0x19);                                // base MR
@@ -5159,8 +5181,15 @@ namespace RoF2
 		ShroudWrite<uint32>(buf, 0x4FC0, 0x0f);                                // base PR
 		ShroudWrite<uint32>(buf, 0x4FC4, 0x0f);                                // base PhR
 		ShroudWrite<uint32>(buf, 0x4FC8, 0x0f);                                // base Corruption
+		ShroudWrite<uint32>(buf, 0x4FE0, 20);                                  // expansion count
 		ShroudWrite<uint32>(buf, 0x4FF4, pp.endurance);
 	}
+
+// NMS: shroud capture diagnostics. 0 = compile out all shroud runtime logging
+// and block captures (leave 0 for release builds).
+#ifndef NMS_SHROUD_DIAG
+#define NMS_SHROUD_DIAG 0
+#endif
 
 	ENCODE(OP_Shroud)
 	{
@@ -5200,6 +5229,54 @@ namespace RoF2
 		*(uint16 *) (buf + 4) = end_offset;
 		memcpy(buf + 6, spawn_entry->pBuffer, spawn_len);
 		BuildShroudProfileBlock(buf + 6 + spawn_len, emu->profile);
+
+#if NMS_SHROUD_DIAG
+		// Full captures of exactly what goes on the wire (profile block +
+		// serialized spawn) for offline diffing against the client's view.
+		{
+			SYSTEMTIME st;
+			GetLocalTime(&st);
+			char name[300];
+			snprintf(name, sizeof(name),
+				"C:\\EQS\\shroud_dump\\server_block_%02u%02u%02u_%02u%02u%02u%03u.bin",
+				st.wYear % 100, st.wMonth, st.wDay, st.wHour, st.wMinute,
+				st.wSecond, st.wMilliseconds);
+			FILE *df = fopen(name, "wb");
+			if (df) {
+				fwrite(buf + 6 + spawn_len, 1, kShroudProfileBlockSize, df);
+				fclose(df);
+			}
+			snprintf(name, sizeof(name),
+				"C:\\EQS\\shroud_dump\\server_spawn_%02u%02u%02u_%02u%02u%02u%03u.bin",
+				st.wYear % 100, st.wMonth, st.wDay, st.wHour, st.wMinute,
+				st.wSecond, st.wMilliseconds);
+			df = fopen(name, "wb");
+			if (df) {
+				fwrite(buf + 6, 1, spawn_len, df);
+				fclose(df);
+			}
+		}
+#endif
+
+#if NMS_SHROUD_DIAG
+		{
+			FILE *f = fopen("C:\\EQS\\shroud_dump\\server_shroud.log", "a");
+			if (f) {
+				const uint8 *p = buf + 6 + spawn_len;
+				SYSTEMTIME st;
+				GetLocalTime(&st);
+				fprintf(f, "[%02d:%02d:%02d.%03d] ENCODE(OP_Shroud) spawn_len=%u "
+				           "block: shrouded=%u unk04=%u gender=%u race=%u class=%u "
+				           "level=%u level1=%u mana=%u hp=%u\n",
+				           st.wHour, st.wMinute, st.wSecond, st.wMilliseconds,
+				           spawn_len, *(const uint32 *)p, *(const uint32 *)(p + 4),
+				           p[8], *(const uint32 *)(p + 0x0C), p[0x10], p[0x11],
+				           p[0x12], *(const uint32 *)(p + 0x398),
+				           *(const uint32 *)(p + 0x39C));
+				fclose(f);
+			}
+		}
+#endif
 
 		LogNetcode(
 			"[SHROUD] spawn_len [{}] profile_block [{}]",

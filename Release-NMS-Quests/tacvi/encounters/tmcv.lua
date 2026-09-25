@@ -1,6 +1,8 @@
 local Ukun_Inactive = "19,1^20,1^21,1^24,1^25,1"; 
 local Ukun_Active = "7,1^13,1^14,1^17,1^21,1";
 
+local memory = require("nms_memory");
+
 local lp_mob = nil;
 local tunat_id = nil;
 local tunat_heal = nil;
@@ -15,6 +17,10 @@ function Tunat_Second_Spawn()
 end
 
 function Tunat_Second_Death(e)
+	-- NMS progression: spawn the progression memory hail mob; one hail sets BOTH
+	-- the OoW and DoD flags (Tunat`Muram is the end boss that opens both).
+	memory.spawn(e, "OoW", "tunat`muram cuu vauax", "DoD", "tunat`muram cuu vauax");
+
 	eq.signal(298223, 298055); -- NPC: zone_status
 	eq.signal(298223,2); -- Unlock Doors
 end

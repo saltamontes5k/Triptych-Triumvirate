@@ -10,6 +10,7 @@ local STATE_END = 255;
 
 local bucket_key = "ssratemple.emp";
 local saving_enabled = true;
+local memory = require("nms_memory");
 
 function get_state_from_bucket()
 	local zone = eq.get_zone();
@@ -81,10 +82,10 @@ function process_spawn(npc_id, npc)
 end
 
 function evt_zone_death(e)
-	process_death(e.self:GetNPCTypeID(), e.self);
+	process_death(e.self:GetNPCTypeID(), e.self, e);
 end
 
-function process_death(npc_id, npc)
+function process_death(npc_id, npc, e)
 	if npc_id == blood_id then
 		set_state(STATE_BLOOD_DEAD);
 		eq.depop(empfake_id);
@@ -100,15 +101,12 @@ function process_death(npc_id, npc)
 		eq.spawn2(wraith_id, 0, 0, 773, -360, 403, 128);
 		eq.spawn2(wraith_id, 0, 0, 770, -289, 403, 128);
 
-		local memory_npc = eq.spawn2(memory_id, 0, 0, npc:GetX(), npc:GetY(), npc:GetZ(), npc:GetHeading());
-		if memory_npc ~= nil then
-			local name = string.lower(npc:GetCleanName());
-			name = string.gsub(name, "^[#%s]+", "");
-			name = string.gsub(name, "[#%s]+$", "");
-			--
-			memory_npc:SetEntityVariable("Flag-Name", name);
-			memory_npc:SetEntityVariable("Stage-Name", "PoP");
-		end
+		local killer = e and e.other or nil;
+		local name = string.lower(npc:GetCleanName());
+		name = string.gsub(name, "^[#%s]+", "");
+		name = string.gsub(name, "[#%s]+$", "");
+		--
+		memory.spawn_at(killer, npc:GetX(), npc:GetY(), npc:GetZ(), npc:GetHeading(), "PoP", name);
 	end
 end
 

@@ -1,6 +1,6 @@
 #Kanthu M'Rekkor, Neriakc 42075
 #Status: COMPLETE
-# items: 17124, 19561, 19558, 19555, 19559, 19560, 19557, 19556, 2416
+# items: 17124, 19561, 19558, 19555, 19559, 19560, 19557, 19556, 19584
 
 sub EVENT_SAY {
   if($text=~/hail/i) {
@@ -41,7 +41,7 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  if(plugin::check_handin(\%itemcount, 2416 => 1)) {
+  if(plugin::check_handin(\%itemcount, 19584 => 1)) {
     quest::say("Greetings, $name. So you are one of Selzar's new recruits. You are to assist in the construction of the armor you will don as a new Rogue of the House of the Ebon Mask. I have assembled a kit that is used in the crafting of Ashen Bone Mail. You must travel beyond Neriak into the Nektulos Forest for the [materials] that compose the armor.");
     quest::exp(500);
   }
