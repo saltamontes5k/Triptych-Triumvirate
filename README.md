@@ -113,14 +113,12 @@ Each folder has its own README with detailed instructions. Start with the server
 will need the RoF2-era client this server was built against. See
 [the client README](Release-NMS-Client/README.md) for what to do with it.
 
-**2. Get the map files.** The `maps/` folder is **not** included in this repository (too large
-for GitHub). Sourcing map packs is a one-time download:
+**2. Map files.** The server maps **are** included at `Release-NMS-Server/maps/`:
 - `.map` files live under `maps/base/` and `maps/legacy/base/`
 - `.nav` files live under `maps/nav/` and `maps/legacy/nav/`
 - `.zon` water mesh files live under `maps/water/`
 
-Any current EQEmu map pack for the zones in this server works. Drop them into `maps/` in the
-server folder.
+They are already in place for a fresh checkout — no separate download needed.
 
 **3. Set up the database.** Unzip `Release-NMS-Server/database/release-peq.zip` and import it
 into an empty schema. It contains **no player data** — it is a fresh world.

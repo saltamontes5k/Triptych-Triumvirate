@@ -11,6 +11,7 @@ Release-NMS-Server/perl/
 Release-NMS-Server/logs/
 Release-NMS-Server/shared_memory/
 Release-NMS-Server/spire.exe
+Release-NMS-Server/spire.exe.*
 Release-NMS-Server/release-peq.sql
 
 # --- DB-derived client data (regenerated via export-client-files.bat) ---
