@@ -33,9 +33,25 @@ sub EVENT_SAY {
     quest::say("Kura dra, very much. I will always be grateful.");
     quest::assigntask(600256); # Locked Up Locket
   }
+  # Hardy Seeds (600577)
+  if ($text=~/seeds/i) {
+    if (!quest::istaskactive(600577) && !quest::istaskcompleted(600577)) {
+      quest::say("One more thing, if you have the [stomach] for it - the walking shrubs of the moors carry the hardiest [vegetables] I have ever seen. Five of them, and my seed stock will be the envy of the Reach.");
+      quest::assigntask(600577);
+    }
+    elsif (quest::istaskactive(600577)) {
+      quest::say("The vegetables, friend. Five shambling ones from the moors shrubs.");
+    }
+    else {
+      quest::say("Hardy as they come! The seed stock is restocked.");
+    }
+  }
 }
 
 sub EVENT_ITEM {
+  if (quest::istaskactive(600577)) {
+    plugin::check_handin(\%itemcount, 97048 => 5);
+  }
   if (plugin::check_handin(\%itemcount, 84232 => 1)) { # Lize's Locket
     quest::say("Farmer Joen gently dusts off the locket before handing it to Farmer Lize.");
     quest::say("Karui, very much. This locket is worth much more to me than its apparent value. You have our gratitude.");

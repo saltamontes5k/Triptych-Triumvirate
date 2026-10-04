@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620015 =>
+    625015 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -14,7 +14,7 @@ my %chains = (
          ["What supplies do you need?", "I be needin' all sort of stuff from that cursed place.  Meat from the creepy crawlies that roam the beach, fins from the mighty sharks that roam the reef, and the little heads the cannibals be fond of.  There even be some ships that sunk on the reef, and though their dead be restless, ye might find some worthy booty from them.  And then there be the dead themselves, they be a menace.  Perhaps ye can return some to their watery grave while yer gatherin' me supplies.  Be thee " . quest::saylink("willing") . "?"],
          ["I am willing", "Arrr!  Ye be as brave as me thought ye were.  Choose ye task!"],
         ],
-    620029 =>
+    625029 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -22,7 +22,7 @@ my %chains = (
          ["What supplies do you need?", "I be needin' all sort of stuff from that cursed place.  Meat from the creepy crawlies that roam the beach, fins from the mighty sharks that roam the reef, and the little heads the cannibals be fond of.  There even be some ships that sunk on the reef, and though their dead be restless, ye might find some worthy booty from them.  And then there be the dead themselves, they be a menace.  Perhaps ye can return some to their watery grave while yer gatherin' me supplies.  Be thee " . quest::saylink("willing") . "?"],
          ["I am willing", "Arrr!  Ye be as brave as me thought ye were.  Choose ye task!"],
         ],
-    620030 =>
+    625030 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -30,7 +30,7 @@ my %chains = (
          ["What supplies do you need?", "I be needin' all sort of stuff from that cursed place.  Meat from the creepy crawlies that roam the beach, fins from the mighty sharks that roam the reef, and the little heads the cannibals be fond of.  There even be some ships that sunk on the reef, and though their dead be restless, ye might find some worthy booty from them.  And then there be the dead themselves, they be a menace.  Perhaps ye can return some to their watery grave while yer gatherin' me supplies.  Be thee " . quest::saylink("willing") . "?"],
          ["I am willing", "Arrr!  Ye be as brave as me thought ye were.  Choose ye task!"],
         ],
-    620031 =>
+    625031 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -38,7 +38,7 @@ my %chains = (
          ["What supplies do you need?", "I be needin' all sort of stuff from that cursed place.  Meat from the creepy crawlies that roam the beach, fins from the mighty sharks that roam the reef, and the little heads the cannibals be fond of.  There even be some ships that sunk on the reef, and though their dead be restless, ye might find some worthy booty from them.  And then there be the dead themselves, they be a menace.  Perhaps ye can return some to their watery grave while yer gatherin' me supplies.  Be thee " . quest::saylink("willing") . "?"],
          ["I am willing", "Arrr!  Ye be as brave as me thought ye were.  Choose ye task!"],
         ],
-    620032 =>
+    625032 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -46,7 +46,7 @@ my %chains = (
          ["What supplies do you need?", "I be needin' all sort of stuff from that cursed place.  Meat from the creepy crawlies that roam the beach, fins from the mighty sharks that roam the reef, and the little heads the cannibals be fond of.  There even be some ships that sunk on the reef, and though their dead be restless, ye might find some worthy booty from them.  And then there be the dead themselves, they be a menace.  Perhaps ye can return some to their watery grave while yer gatherin' me supplies.  Be thee " . quest::saylink("willing") . "?"],
          ["I am willing", "Arrr!  Ye be as brave as me thought ye were.  Choose ye task!"],
         ],
-    620033 =>
+    625033 =>
         [
          "Ahoy landlubber! Me current wares be feeble, but ye look hale and hearty.  Ye will " . quest::saylink("help") . " me!",
          ["I will help", "Aye.  I be needing some " . quest::saylink("supplies") . " that can only be found on " . quest::saylink("deadbone reef") . ".  The reef ain't safe for man nor landlubber like you, but I'm willin' ta gamble with yer life, if ye be.  Har!"],
@@ -56,7 +56,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620015, 620029, 620030, 620031, 620032, 620033);
+my @mytasks = (625015, 625029, 625030, 625031, 625032, 625033);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

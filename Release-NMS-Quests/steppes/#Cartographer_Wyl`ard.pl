@@ -40,8 +40,28 @@ sub EVENT_SAY {
     quest::say("Venture into the Entry Hall, the Shade Temple, and the Treasure Room, and bring me back what you find.");
     quest::assigntask(600206);
   }
+  if ($text=~/gear/i) {
+    if (quest::istaskactive(600608)) {
+      quest::say("My [tools], friend. The Darkfell scattered them along the gnoll roads.");
+    }
+    elsif (!quest::istaskcompleted(600608)) {
+      quest::say("Blast it all. My [gear] is gone - scattered across the steppes when the Darkfell ran us off the ridge.");
+    }
+    else {
+      quest::say("My tools are back in their rolls, my maps in their tubes. An organized life is a happy life.");
+    }
+  }
+  if ($text=~/gear/i && !quest::istaskactive(600608) && !quest::istaskcompleted(600608)) {
+    quest::say("Recover my cartography tools from the Darkfell gnolls and deliver them back to me. Without my instruments I am just a wanderer with opinions.");
+    quest::assigntask(600608);
+  }
 }
 
 sub EVENT_ITEM {
+  # Consume the cartography tools only while Scattered Gear is active (task
+  # system handles completion); anything else is returned.
+  if (quest::istaskactive(600608)) {
+    plugin::check_handin(\%itemcount, 54659 => 1);
+  }
   plugin::return_items(\%itemcount);
 }

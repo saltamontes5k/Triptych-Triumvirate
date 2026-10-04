@@ -6,34 +6,34 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620034 =>
+    625034 =>
         [
          "Hail!  What brings you to this forsaken shore?  If you're looking for adventure, that's easily enough found out on the Buried Sea.  This place is for traders and fisherfolk.  Me, I'm a trader.  I don't have anything for sale, getting goods out here is far too difficult.  But I'm interested in " . quest::saylink("obtaining") . " a few items.  All I have to do now is figure out what those items might be.' Brynden smiles.",
          ["Obtaining what items?", "There are a number of things that hold my interests in the direction of Suncrest."],
         ],
-    620035 =>
+    625035 =>
         [
          "Hail!  What brings you to this forsaken shore?  If you're looking for adventure, that's easily enough found out on the Buried Sea.  This place is for traders and fisherfolk.  Me, I'm a trader.  I don't have anything for sale, getting goods out here is far too difficult.  But I'm interested in " . quest::saylink("obtaining") . " a few items.  All I have to do now is figure out what those items might be.' Brynden smiles.",
          ["Obtaining what items?", "There are a number of things that hold my interests in the direction of Suncrest."],
         ],
-    620036 =>
+    625036 =>
         [
          "Hail!  What brings you to this forsaken shore?  If you're looking for adventure, that's easily enough found out on the Buried Sea.  This place is for traders and fisherfolk.  Me, I'm a trader.  I don't have anything for sale, getting goods out here is far too difficult.  But I'm interested in " . quest::saylink("obtaining") . " a few items.  All I have to do now is figure out what those items might be.' Brynden smiles.",
          ["Obtaining what items?", "There are a number of things that hold my interests in the direction of Suncrest."],
         ],
-    620037 =>
+    625037 =>
         [
          "Hail!  What brings you to this forsaken shore?  If you're looking for adventure, that's easily enough found out on the Buried Sea.  This place is for traders and fisherfolk.  Me, I'm a trader.  I don't have anything for sale, getting goods out here is far too difficult.  But I'm interested in " . quest::saylink("obtaining") . " a few items.  All I have to do now is figure out what those items might be.' Brynden smiles.",
          ["Obtaining what items?", "There are a number of things that hold my interests in the direction of Suncrest."],
         ],
-    620038 =>
+    625038 =>
         [
          "Hail!  What brings you to this forsaken shore?  If you're looking for adventure, that's easily enough found out on the Buried Sea.  This place is for traders and fisherfolk.  Me, I'm a trader.  I don't have anything for sale, getting goods out here is far too difficult.  But I'm interested in " . quest::saylink("obtaining") . " a few items.  All I have to do now is figure out what those items might be.' Brynden smiles.",
          ["Obtaining what items?", "There are a number of things that hold my interests in the direction of Suncrest."],
         ],
 );
 
-my @mytasks = (620034, 620035, 620036, 620037, 620038);
+my @mytasks = (625034, 625035, 625036, 625037, 625038);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

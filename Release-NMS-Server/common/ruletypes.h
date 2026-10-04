@@ -1210,8 +1210,8 @@ RULE_BOOL(Custom, 	FadeNPCDebuffsOutofCombat, 				true, 	"Enable to to cause NPC
 RULE_BOOL(Custom, 	UseNMSItemMutations, 					true, 	"Rename items according to NMS standards and apply other mutations")
 RULE_BOOL(Custom, 	ClearRestingDetrimentalEffectsEnabled, 	true, 	"Remove detrimental spell effects from self and pets when OOC regen engages")
 RULE_REAL(Custom, 	ItemExtraSpellAmtMaximumPercentage, 	0.0000000000000, 	"Adjust the maximum effectiveness of Spell Damage and Heal Amount. 0.0 to Disable, 1.0 to allow adding up to the base effect value, 2.0 to allow double effect value, etc.")
-RULE_INT(Custom,    AbsolutePetLimit, 						9, 	    "Maximum number of permanent pets that a player can control.")
-RULE_REAL(Custom,	PetPlacementAdjustment,					-0.6000000238419,  	"Adjust pet formation positioning")
+	RULE_INT(Custom,    AbsolutePetLimit, 						9, 	    "Maximum number of permanent pets that a player can control.")
+	RULE_REAL(Custom,	PetPlacementAdjustment,					-0.6000000238419,  	"Adjust pet formation positioning")
 RULE_REAL(Custom,	PetPlacementDistance ,					7.0000000000000,  	"Adjust pet formation positioning")
 RULE_REAL(Custom, 	NonDaggerBackstabMultiplier1H, 			0.800000000000, 	"Multiple Backstabs conducted with not-1hp by this amount")
 RULE_REAL(Custom, 	NonDaggerBackstabMultiplier2H,			0.5000000000000, 	"Multiple Backstabs conducted with not-1hp 2h weapon by this amount")
@@ -1233,6 +1233,19 @@ RULE_BOOL(Custom, 	PowerSourceItemUpgrade, 		 		true, "Enable to add Power Sourc
 RULE_REAL(Custom, 	PowerSourceItemUpgradeRateScale, 		100.0, "Scale XP rate of items using this value.")
 RULE_REAL(Custom, 	PowerSourceItemTier1RateFloor,			0.75, "Smallest percentage item XP that a white can can award for a tier 1 item")
 RULE_REAL(Custom, 	PowerSourceItemTier2RateFloor,			0.07500000014901, "Smallest percentage item XP that a white can can award for a tier 2 item")
+
+// Power Source (Energeian orbs) purity mechanic
+RULE_BOOL(Custom, 	PowerSourceEnabled, 				true, "Enable the Power Source purity mechanic (Energeian orbs and similar).")
+RULE_INT(Custom, 	PowerSourcePurityCap, 				12000, "Maximum total worn purity counted toward Power Source scaling.")
+RULE_INT(Custom, 	PowerSourceMaxCharge, 				12000, "Maximum charge a Power Source item can hold.")
+RULE_REAL(Custom, 	PowerSourceDrainBase, 				2.0000000000000, "Power drained per second while equipped with exactly one eligible (purity>0) worn item.")
+RULE_REAL(Custom, 	PowerSourceDrainStep, 				2.5555555820465, "Additional power drained per second for each extra eligible worn item (23/9).")
+RULE_INT(Custom, 	PowerSourceTickMs, 					6000, "Tick interval, in milliseconds, for Power Source charge drain.")
+
+// Nautilus Vault (key item, #vault_* commands, Proc Locker, clicky autoload, vault bank/merchant)
+RULE_BOOL(Custom, 	NautilusVault,						true, "Enable the Nautilus Vault (#vault_*) storage, Proc Locker, clicky autoload, vault bank/merchant, and the Nautilus Vault inventory key. Off = no vault commands, grant, or combat hooks.")
+RULE_BOOL(Custom, 	ProcLockerStacks,					true, "When true, the Nautilus Vault Proc Locker procs independently of the held weapon and its augs (all can proc in one swing). When false, the locker item replaces the held weapon's proc and suppresses its aug procs (reference behavior).")
+RULE_REAL(Custom, 	PowerSourceDrainMultiplier, 		1.0000000000000, "Global multiplier applied to Power Source drain rate (set below 1.0 to slow drain).")
 
 // General QoL and Customizations
 RULE_BOOL(Custom, 	UseDynamicItemDiscoveryTags, 			true, "Enable appfending Discovered By: items using the charmfile method")

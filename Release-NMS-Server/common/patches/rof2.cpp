@@ -7232,9 +7232,15 @@ namespace RoF2
 
 		iqbs.scriptfileid = item->ScriptFileID;
 		iqbs.quest_item = item->QuestItemFlag;
-		iqbs.Power = 0;
+		// Candidate wire field for the client's ITEMINFO::MaxPower (+0x588),
+		// which gates/clamps the power bar. Safe value (capacity) — sentinel
+		// probing of the unknown fields crashed the client twice.
+		const bool is_power_source =
+			(item->PowerSourceCapacity > 0) ||
+			(item->GetActualCharmFile() && ::strncmp(item->GetActualCharmFile(), "PS-", 3) == 0);
+		iqbs.Power = is_power_source ? (item->PowerSourceCapacity > 0 ? item->PowerSourceCapacity : 12000) : 0;
 		iqbs.Purity = item->Purity;
-		iqbs.unknown16 = 0;
+		iqbs.unknown16 = 0;	// RoF
 		iqbs.BackstabDmg = item->BackstabDmg;
 		iqbs.DSMitigation = item->DSMitigation;
 		iqbs.HeroicStr = item->HeroicStr;
@@ -7260,6 +7266,7 @@ namespace RoF2
 
 		iqbs.Heirloom = 0;
 		iqbs.Placeable = 0;
+		iqbs.unknown_RoF_6 = 0;	// 0 New to March 21 2012 client
 		iqbs.unknown28 = -1;
 		iqbs.unknown29 = packet_type == ItemPacketInvalid ? 0xFF : 0;
 		iqbs.unknown30 = -1;

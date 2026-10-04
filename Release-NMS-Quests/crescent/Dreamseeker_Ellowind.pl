@@ -1,14 +1,27 @@
 sub EVENT_SAY {
   if ($text=~/hail/i) {
-    quest::say("My aptitudes have led me to become the guildmaster of the Dreamseekers, our enchanter guild. I wish I could recall who I was before I experienced my awakening as a drakkin. You would think as an enchanter, I would be able to tap into my memories, but the magic of The Six and their blood is so strong!");
+    my @chain = (600572);
+    my $talked = 0;
+    foreach my $tsk (@chain) {
+      if ($tsk == 600572 && quest::istaskactive(600572)) { quest::say("Eight hedge devils. The bones still crawl."); $talked = 1; last; }
+    }
+    if (!$talked) {
+      foreach my $tsk (@chain) {
+        if ($tsk == 600572 && !quest::istaskcompleted(600572) && !quest::istaskactive(600572)) { quest::say("Eight [hedge devils] crawl over the fallen dragon's bones in the moors fens. Drive them off."); $talked = 1; last; }
+      }
+    }
+    if (!$talked) { quest::say("The bones rest easier. The dreams are quiet tonight."); }
+  }
+  if ($text=~/dragon/i) {
+    if (!quest::istaskactive(600572) && !quest::istaskcompleted(600572)) {
+      quest::say("Eight hedge devils from the fens by the fallen dragon.");
+      quest::assigntask(600572);
+    }
+    elsif (quest::istaskactive(600572)) { quest::say("Eight hedge devils. The bones still crawl."); }
+    else { quest::say("The bones rest easier. The dreams are quiet tonight."); }
   }
 }
 
 sub EVENT_ITEM {
-  if (($class eq "Enchanter") && (plugin::check_handin(\%itemcount, 58658 => 1))) { #Crescent Reach Guild Summons
-    quest::say("It would seem fate has led you to us, $name. We welcome you into the Dreamseekers. Your gifts with enhancing minds and bodies, and harming them, will make you a very powerful foe. Take this robe to protect you as you advance.  Also, Innkeeper Fathus and Initiate Dakkan in the city will have work for you. Udra, $name, and return for training at any time.");
-    quest::faction(1129, 100); #Circle of the Crystalwing
-    quest::summonitem(58762); #The Dreamseekers Apprentice Tunic*
-  }
   plugin::return_items(\%itemcount);
 }

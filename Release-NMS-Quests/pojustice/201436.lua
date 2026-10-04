@@ -80,10 +80,12 @@ function event_say(e)
 				)
 			end
 		elseif (e.message:findi("knowledge") ) then
-			local marks = { 31796, 31842, 31844, 31845, 31846 , 31960 }
+			-- Completion is tracked by account flags, not the physical marks,
+			-- as turning a mark in to the Tribunal consumes it.
+			local trials = { "execution", "flame", "hanging", "lashing", "stoning", "torture" }
 			local has_six = 1;
-			for k,v in pairs(marks) do
-				if (not e.other:HasItem(v)) then
+			for k,v in ipairs(trials) do
+				if ((tonumber(e.other:GetAccountBucket(string.format("pop.flags.%s", v))) or 0) == 0) then
 					has_six = 0;
 				end
 			end
@@ -170,6 +172,32 @@ function event_signal(e)
 
 	end
 
+end
+
+function event_trade(e)
+	local item_lib = require("items")
+	local mavuin_bucket = tonumber(e.other:GetAccountBucket("pop.flags.mavuin")) or 0
+	if mavuin_bucket == 1 then
+		local trials = {
+			[31842] = "execution",
+			[31796] = "flame",
+			[31960] = "lashing",
+			[31845] = "stoning",
+			[31844] = "torture",
+			[31846] = "hanging"
+		}
+
+		for item_id, flag in pairs(trials) do
+			if item_lib.check_turn_in(e.trade, {item1 = item_id}) then
+				e.other:Message(MT.LightBlue, "You have completed a trial - impressive for mortals. You can tell Mavuin that we will hear his plea. We will seek him out as time befits us.")
+				e.other:SetAccountBucket("pop.flags.tribunal", "1")
+				e.other:SetAccountBucket(string.format("pop.flags.%s", flag), "1")
+				e.other:Message(MT.LightBlue, "You receive a character flag!")
+			end
+		end
+	end
+
+	item_lib.return_items(e.self, e.other, e.trade)
 end
 
 function MoveGroup(trial_group, src_x, src_y, src_z, distance, tgt_x, tgt_y, tgt_z, tgt_h, msg)

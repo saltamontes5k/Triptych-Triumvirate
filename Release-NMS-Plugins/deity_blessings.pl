@@ -49,6 +49,30 @@ my %BLESS_R1_IDOL = (
 );
 
 # ---------------------------------------------------------------------------
+# Agnostic "cause" system.
+# At Rank II an Agnostic (140/396) chooses a cause; their procs then follow the
+# hidden god's bundles directly. The god is NEVER shown -- only the concept
+# label. All Agnostics still share the Agnostic rank questline.
+# ---------------------------------------------------------------------------
+my %BLESS_CAUSE_LABEL = (
+    201 => 'Legacy',             202 => 'Wealth',
+    203 => 'Myself',             204 => 'Love',
+    205 => 'Fun and Games',      206 => 'Revenge',
+    207 => 'Adventure',          208 => 'Valor',
+    209 => 'Glory',              210 => 'Peace',
+    211 => 'Battle',             212 => 'The People',
+    213 => 'Power',              214 => 'Justice',
+    215 => 'Nature',             216 => 'Knowledge and Reason',
+);
+my %BLESS_CAUSE_ALIAS = (
+    legacy => 201, wealth => 202, myself => 203, love => 204,
+    fun => 205, games => 205, revenge => 206, adventure => 207,
+    valor => 208, glory => 209, peace => 210, battle => 211,
+    people => 212, power => 213, justice => 214, nature => 215,
+    knowledge => 216, reason => 216,
+);
+
+# ---------------------------------------------------------------------------
 # Spell palette.
 #   Buff-type effects use custom collision-free spell ids (50018-50022),
 #   registered in Spells:AlwaysStackSpells so they never clash with player
@@ -62,7 +86,6 @@ my $SP_LIFETAP  = 446;    # Siphon Life (instant)
 my $SP_HEAL     = 12;     # Healing (instant)
 my $SP_GROUPHEAL= 18006;  # Cantata of Rodcet (instant)
 my $SP_STUN     = 216;    # Stun (instant)
-my $SP_WHIRL    = 461;    # Cast Force (instant PB AE)
 my $SP_FIRE     = 657;    # Flame Shock (instant)
 my $SP_FIRE2    = 6862;   # Flame Shock alt (instant)
 my $SP_MAGIC    = 383;    # Shock of Lightning (instant)
@@ -142,6 +165,7 @@ my %BLESS_PROC = (
     },
     212 => {  # Rodcet Nife
         melee     => [ {heal=>0.05} ],
+        cast      => [ {heal=>0.05} ],   # heal procs on hostile damage casts
         cast_heal => [ {cast=>$SP_GROUPHEAL, to=>'self'} ],
     },
     213 => {  # Solusek Ro
@@ -230,6 +254,92 @@ sub BlessingRank1Idol { my $d = shift; return $BLESS_R1_IDOL{$d} || 0; }
 sub BlessingRank   { my $c = shift; return int($c->GetBucket('bless-rank') || 0); }
 sub BlessingPoints { my $c = shift; return int($c->GetBucket('bless-pts')  || 0); }
 
+sub BlessingIsAgnostic { my $d = shift; return ($d == 140 || $d == 396) ? 1 : 0; }
+
+sub BlessingCause { my $c = shift; return int($c->GetBucket('bless-cause') || 0); }
+sub BlessingCauseLabel { my $d = shift; return $BLESS_CAUSE_LABEL{$d} || ''; }
+
+# Effective deity used for procs: a Rank II+ Agnostic with a cause follows it.
+sub BlessingEffectiveDeity {
+    my $c     = shift;
+    my $deity = BlessingCheckDeity($c);
+    return $deity unless BlessingIsAgnostic($deity);
+    return $deity if BlessingRank($c) < 2;
+    my $cause = BlessingCause($c);
+    return $cause if $cause && $BLESS_CAUSE_LABEL{$cause};
+    return $deity;
+}
+
+# Player-facing devotion strings (never name the hidden cause god).
+sub BlessingDevotionTitle {
+    my $c     = shift;
+    my $deity = $c->GetDeity();
+    if (BlessingIsAgnostic($deity)) {
+        my $label = BlessingCauseLabel(BlessingCause($c));
+        return $label ? "Devotion: $label" : "Devotion";
+    }
+    return "Devotion to " . BlessingDeityName($deity);
+}
+sub BlessingDevotionNoun {   # "... Rank N of <noun>."
+    my $c     = shift;
+    my $deity = $c->GetDeity();
+    if (BlessingIsAgnostic($deity)) {
+        my $label = BlessingCauseLabel(BlessingCause($c));
+        return $label ? "your devotion to $label" : "your devotion";
+    }
+    return "the blessing of " . BlessingDeityName($deity);
+}
+sub BlessingDevotionTo {     # "... devotion$to ..." -> "" for Agnostic
+    my $c     = shift;
+    my $deity = $c->GetDeity();
+    return '' if BlessingIsAgnostic($deity);
+    return ' to ' . BlessingDeityName($deity);
+}
+sub BlessingDevotionOf {     # "... idol$of ..." -> "" for Agnostic
+    my $c     = shift;
+    my $deity = $c->GetDeity();
+    return '' if BlessingIsAgnostic($deity);
+    return ' of ' . BlessingDeityName($deity);
+}
+
+sub BlessingCauseByKeyword {
+    my $w = shift;
+    return 0 unless defined $w;
+    $w = lc($w);
+    $w =~ s/^\s+//;
+    $w =~ s/\s+$//;
+    return 0 unless length $w;
+    return $BLESS_CAUSE_ALIAS{$w} if $BLESS_CAUSE_ALIAS{$w};
+    for my $d (keys %BLESS_CAUSE_LABEL) {
+        return $d if lc($BLESS_CAUSE_LABEL{$d}) eq $w;
+    }
+    return 0;
+}
+
+# Choose/change the cause. First choice requires Rank II. A different cause
+# severs devotion entirely (same as a change of faith).
+sub BlessingSetCause {
+    my ($c, $cause) = @_;
+    return 0 unless $c && $cause && $BLESS_CAUSE_LABEL{$cause};
+    my $deity = BlessingCheckDeity($c);
+    return 0 unless BlessingIsAgnostic($deity);
+    return 0 if BlessingRank($c) < 2;
+    my $cur = BlessingCause($c);
+    if ($cur && $cur != $cause) {
+        $c->DeleteBucket('bless-rank');
+        $c->DeleteBucket('bless-pts');
+        $c->DeleteBucket('bless-deity');
+        $c->DeleteBucket('bless-r1-claimed');
+        $c->DeleteBucket('bless-cause');
+        $c->Message(15, "Your change of cause has severed your devotion. Your devotion must be earned anew.");
+        return 0;
+    }
+    $c->SetBucket('bless-deity', $deity);
+    $c->SetBucket('bless-cause', $cause);
+    $c->Message(15, "Your devotion is bound: " . BlessingDevotionTitle($c) . ".");
+    return 1;
+}
+
 sub BlessingProcChance {
     my $r = shift;
     return ($r >= 0 && $r <= 10) ? $BLESS_CHANCE[$r] : 0;
@@ -252,6 +362,7 @@ sub BlessingCheckDeity {
         $c->DeleteBucket('bless-pts');
         $c->DeleteBucket('bless-deity');
         $c->DeleteBucket('bless-r1-claimed');
+        $c->DeleteBucket('bless-cause');
         $c->Message(15, "Your change of faith has severed your divine blessings. Your devotion must be earned anew.");
     }
     return $deity;
@@ -281,7 +392,7 @@ sub BlessingGrantRank1 {
     $c->SetBucket('bless-deity', $deity);
     $c->SetBucket('bless-rank', 1);
     $c->SetBucket('bless-pts', BlessingPoints($c) + 1);
-    $c->Message(15, "You have awakened Rank I of the blessing of " . BlessingDeityName($deity) . ". (1 blessing point)");
+    $c->Message(15, "You have awakened Rank I of " . BlessingDevotionNoun($c) . ". (1 blessing point)");
     return 1;
 }
 
@@ -319,7 +430,7 @@ sub BlessingGrantRank {
     $c->SetBucket('bless-deity', $deity);
     $c->SetBucket('bless-rank', $r);
     $c->SetBucket('bless-pts', BlessingPoints($c) + 1);
-    $c->Message(15, "You have awakened Rank $r of the blessing of " . BlessingDeityName($deity) . ". (1 blessing point)");
+    $c->Message(15, "You have awakened Rank $r of " . BlessingDevotionNoun($c) . ". (1 blessing point)");
     return 1;
 }
 
@@ -437,9 +548,10 @@ sub _BlessingIsFireSpell {
 sub _BlessingMimicry {
     my ($c, $opp, $trigger, $spell_id) = @_;
     $trigger = 'melee' unless $trigger;
+    my $self_eff = BlessingEffectiveDeity($c);   # hoisted: don't recompute per key
     my $mimic_ok = sub {
         my $d = shift;
-        return 0 if $d == $c->GetDeity();
+        return 0 if $d == $self_eff;
         for my $x (@BLESS_MIMIC_EXCLUDE) { return 0 if $d == $x; }
         my $e = $BLESS_PROC{$d};
         return ($e && $e->{$trigger}) ? 1 : 0;
@@ -562,7 +674,7 @@ sub BlessingOnDamageGiven {
     my $el  = plugin::val('$entity_list');
     my $tgt = $el ? $el->GetMobByID($entity_id) : undef;
     return unless $tgt && $tgt->IsNPC() && !$tgt->GetOwnerID();
-    my $eff = $BLESS_PROC{ $c->GetDeity() };
+    my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return unless $eff && $eff->{melee};
     _BlessingTryList($c, $tgt, $eff->{melee}, 1, undef, 'melee');
 }
@@ -575,7 +687,7 @@ sub BlessingOnDamageTaken {
     return 0 if $is_ds || $is_tic;
     # DEBUG (re-enable): my $dbg = _BlessingDebug($c);
     return 0 unless _BlessingInCombat($c);
-    my $eff = $BLESS_PROC{ $c->GetDeity() };
+    my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return 0 unless $eff && $eff->{taken};
     my $el  = plugin::val('$entity_list');
     my $atk = $el ? $el->GetMobByID($entity_id) : undef;
@@ -588,7 +700,7 @@ sub BlessingOnCast {
     my ($c, $spell_id, $target_id, $target, $spell) = @_;
     return unless $c && $spell;
     BlessingCheckDeity($c);
-    my $eff = $BLESS_PROC{ $c->GetDeity() };
+    my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return unless $eff;
 
     # Beneficial casts (buffs/heals): heal procs only, no combat requirement.
@@ -624,7 +736,7 @@ sub BlessingOnEnterZone {
     my $c = shift;
     return unless $c;
     BlessingCheckDeity($c);
-    my $eff = $BLESS_PROC{ $c->GetDeity() };
+    my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return unless $eff && $eff->{passive} && BlessingRank($c) >= 1;
     _BlessingRunActions($c, undef, $eff->{passive}, undef, 'passive');
 }
@@ -634,19 +746,22 @@ sub BlessingOnEnterZone {
 # ---------------------------------------------------------------------------
 sub BlessingStatusHtml {
     my $c      = shift;
-    my $deity  = BlessingCheckDeity($c);
-    my $name   = BlessingDeityName($deity);
+    BlessingCheckDeity($c);
+    my $title  = BlessingDevotionTitle($c);
     my $rank   = BlessingRank($c);
     my $pts    = BlessingPoints($c);
     my $tier   = BlessingTier($rank);
     my $chance = BlessingProcChance($rank);
 
-    my $html = "<c \"#FFD700\">Devotion to $name</c><br><br>";
+    my $html = "<c \"#FFD700\">$title</c><br><br>";
     $html .= "<c \"#FFFFFF\">Rank:</c> <c \"#00FF00\">$rank</c> / $BLESS_RANK_CAP";
     $html .= "   <c \"#FFFFFF\">Tier:</c> <c \"#00CCFF\">" . ($tier ? $tier : '-') . "</c><br>";
     $html .= "<c \"#FFFFFF\">Blessing points:</c> <c \"#FFD700\">$pts</c><br>";
     $html .= "<c \"#FFFFFF\">Proc chance:</c> <c \"#00FF00\">$chance%</c> per trigger<br><br>";
 
+    if (BlessingIsAgnostic($c->GetDeity()) && !BlessingCause($c) && $rank >= 2) {
+        $html .= "<c \"#AAAAAA\">Choose your cause to bind your path.</c><br><br>";
+    }
     if ($rank < 1) {
         $html .= "<c \"#AAAAAA\">Forge a fired idol of your faith and deliver it to the Keeper of Devotion in The Bazaar to awaken Rank I.</c>";
     } elsif ($rank < $BLESS_RANK_CAP) {

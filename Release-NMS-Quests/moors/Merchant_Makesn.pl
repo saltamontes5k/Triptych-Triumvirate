@@ -18,12 +18,41 @@ sub EVENT_SAY {
       quest::say("The gnolls headed south toward their mines. My locket, please.");
     }
   }
+  # Jumjum Research (600450)
+  if ($text=~/jumjum/i) {
+    if (!quest::istaskactive(600450) && !quest::istaskcompleted(600450)) {
+      quest::say("The bixies of Stone Hive grow a strange [jumjum]. A scholar would pay well for the research: their honey-covered journal, and some of the raw honey itself.");
+      quest::assigntask(600450);
+    }
+    elsif (quest::istaskactive(600450)) {
+      quest::say("The journal, and the raw honey. The hive workers carry both.");
+    }
+    else {
+      quest::say("The research was well received, they tell me. My thanks again.");
+    }
+  }
+  # Buzz on the Bixies (600483)
+  if ($text=~/buzz/i) {
+    if (!quest::istaskactive(600483) && !quest::istaskcompleted(600483)) {
+      quest::say("The whole hive has a [buzz] about it lately - warriors and drones on the move. Thin them out before they decide the farm is theirs.");
+      quest::assigntask(600483);
+    }
+    elsif (quest::istaskactive(600483)) {
+      quest::say("The buzz, friend. Warriors and drones alike.");
+    }
+    else {
+      quest::say("Quieter, isn't it? The farm thanks you.");
+    }
+  }
 }
 
 sub EVENT_ITEM {
-  # Consume the locket only while A Widow's Last Memory is active (task system
-  # handles completion); anything else is returned by the handin system.
+  # Consume hand-ins only while their task is active (task system handles
+  # completion); anything else is returned by the handin system.
   if (quest::istaskactive(600211)) {
     plugin::check_handin(\%itemcount, 52644 => 1);
+  }
+  if (quest::istaskactive(600450)) {
+    plugin::check_handin(\%itemcount, 54639 => 1, 52639 => 5);
   }
 }

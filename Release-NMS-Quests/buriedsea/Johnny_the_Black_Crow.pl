@@ -6,13 +6,13 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620022 =>
+    625022 =>
         [
          "Har har.  That's more like it, $name.  I'm liking you already.  Now, unless you've got a map of " . quest::saylink("Redfeather Isle") . " tattooed to your backside, shove off, swabby.  Johnny is a busy man.",
          ["What chests?", "Long story, that, involving bloodshed, betrayal, and burning sails.  The long and short of it is that a merchant vessel was downed just off the coast of Redfeather Isle and I've got the impression that the booty washed ashore, among the bird people.  If you somehow stumble upon the goods I've a mind to award you for the " . quest::saylink("effort") . "."],
          ["Effort?", "Alright, if you insist, $name.  Head out to Redfeather Isle.  Look on the coast for boxes washed up on shore, or perhaps just under the water.  The merchant vessel's goods will be of no use to you, but they're of particular importance to some associates of mine."],
         ],
-    620023 =>
+    625023 =>
         [
          "Har har.  That's more like it, $name.  I'm liking you already.  Now, unless you've got a map of " . quest::saylink("Redfeather Isle") . " tattooed to your backside, shove off, swabby.  Johnny is a busy man.",
          ["What landmarks?", "My map's no good without the landmarks on the island pinpointed.  I could see them from the waters but just as ghostly silhouettes.  Would need to get much " . quest::saylink("closer") . " to pinpoint their exact locations."],
@@ -20,7 +20,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620022, 620023);
+my @mytasks = (625022, 625023);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

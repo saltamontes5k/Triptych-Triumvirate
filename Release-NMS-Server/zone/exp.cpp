@@ -21,6 +21,8 @@
 #include "../common/rulesys.h"
 #include "../common/strings.h"
 
+#include <cmath>
+
 #include "client.h"
 #include "../common/data_bucket.h"
 #include "groups.h"
@@ -780,10 +782,15 @@ float Client::GetBaseExpValueForKill(int conlevel, int target_tier, EQ::ItemInst
 
 	return exp_value;
 }
-
-bool Client::AddItemExperience(EQ::ItemInstance* item, int conlevel) {
+bool Client::AddItemExperience(EQ::ItemInstance* item, int conlevel)
+{
 	if (!item || conlevel == 0xFF) {
 		LogError("Attempted to add experience to an invalid item, or from an invalid source.");
+		return false;
+	}
+
+	// Power sources (Energeian orbs) are batteries, not tiered items.
+	if (IsPowerSourceItem(item)) {
 		return false;
 	}
 
@@ -942,6 +949,283 @@ bool Client::AddItemExperience(EQ::ItemInstance* item, int conlevel) {
 	return true;
 }
 
+// -----------------------------------------------------------------------------
+// Power Source (Energeian orb) purity mechanic
+//   - The orb in the power source slot contributes its authored stats scaled by
+//     min(total worn purity, Custom:PowerSourcePurityCap) / 100.
+//   - The orb holds a charge (custom data "Power") that drains while equipped
+//     and goes inert at zero.
+// -----------------------------------------------------------------------------
+
+bool Client::IsPowerSourceItem(const EQ::ItemInstance* item)
+{
+	if (!item || !item->GetItem()) {
+		return false;
+	}
+
+	if (item->GetItem()->PowerSourceCapacity > 0) {
+		return true;
+	}
+
+	// Fallback: detect by the "PS-" charm-file tag (loaded even when the
+	// powersourcecapacity column is unavailable in shared memory).
+	const char* charm = item->GetItem()->GetActualCharmFile();
+	return charm && ::strncmp(charm, "PS-", 3) == 0;
+}
+
+uint32 Client::GetPowerSourceCharge(EQ::ItemInstance* item)
+{
+	if (!item) {
+		return 0;
+	}
+
+	const std::string charge = item->GetCustomData("Power");
+	if (charge.empty()) {
+		return 0;
+	}
+
+	return Strings::ToUnsignedInt(charge);
+}
+
+void Client::SetPowerSourceCharge(EQ::ItemInstance* item, uint32 charge)
+{
+	if (item) {
+		item->SetCustomData("Power", static_cast<int>(charge));
+	}
+}
+
+void Client::InitializePowerSourceCharge()
+{
+	auto* orb = m_inv.GetItem(EQ::invslot::slotPowerSource);
+	if (!IsPowerSourceItem(orb)) {
+		return;
+	}
+
+	if (!orb->GetCustomData("Power").empty()) {
+		return;
+	}
+
+	uint32 capacity = static_cast<uint32>(std::max(0, RuleI(Custom, PowerSourceMaxCharge)));
+	if (capacity == 0) {
+		capacity = orb->GetItem()->PowerSourceCapacity;
+	} else if (orb->GetItem()->PowerSourceCapacity > 0 && orb->GetItem()->PowerSourceCapacity < capacity) {
+		capacity = orb->GetItem()->PowerSourceCapacity;
+	}
+
+	SetPowerSourceCharge(orb, capacity);
+	database.UpdateInventorySlot(CharacterID(), orb, EQ::invslot::slotPowerSource);
+	SendPowerSourceUpdate();
+}
+
+// RoF2 client parks the per-instance charge in CONTENTS::Power (offset 0x110)
+// and renders the power bar from it.  The client's power-source message handler
+// (opcode 0x4c89) consumes {slot, bag, power}.
+void Client::SendPowerSourceUpdate()
+{
+	auto* orb = m_inv.GetItem(EQ::invslot::slotPowerSource);
+	if (!IsPowerSourceItem(orb)) {
+		return;
+	}
+
+	uint32 charge = GetPowerSourceCharge(orb);
+	if (orb->GetCustomData("Power").empty()) {
+		charge = static_cast<uint32>(std::max(0, RuleI(Custom, PowerSourceMaxCharge)));
+		if (charge == 0) {
+			charge = orb->GetItem()->PowerSourceCapacity;
+		}
+	}
+
+	uint32 capacity = static_cast<uint32>(std::max(0, RuleI(Custom, PowerSourceMaxCharge)));
+	if (capacity == 0) {
+		capacity = orb->GetItem()->PowerSourceCapacity;
+	} else if (orb->GetItem()->PowerSourceCapacity > 0 && orb->GetItem()->PowerSourceCapacity < capacity) {
+		capacity = orb->GetItem()->PowerSourceCapacity;
+	}
+
+	auto outapp = new EQApplicationPacket(OP_PowerSource, 4 * sizeof(uint32));
+	auto* buf = reinterpret_cast<uint32*>(outapp->pBuffer);
+	buf[0] = EQ::invslot::slotPowerSource;
+	buf[1] = 0;
+	buf[2] = charge;
+	buf[3] = capacity;
+	QueuePacket(outapp);
+	safe_delete(outapp);
+}
+
+uint32 Client::CalcWornPurity()
+{
+	uint32 total = 0;
+
+	for (int16 slot_id = EQ::invslot::slotCharm; slot_id <= EQ::invslot::slotWaist; ++slot_id) {
+		const auto* inst = m_inv.GetItem(slot_id);
+		if (!inst || !inst->GetItem()) {
+			continue;
+		}
+
+		total += inst->GetItem()->Purity;
+
+		for (int aug_slot = EQ::invaug::SOCKET_BEGIN; aug_slot <= EQ::invaug::SOCKET_END; ++aug_slot) {
+			const auto* aug = inst->GetAugment(aug_slot);
+			if (aug && aug->GetItem()) {
+				total += aug->GetItem()->Purity;
+			}
+		}
+	}
+
+	return total;
+}
+
+void Client::AddPowerSourceBonuses(StatBonuses* b)
+{
+	if (!b || !RuleB(Custom, PowerSourceEnabled)) {
+		return;
+	}
+
+	auto* orb = m_inv.GetItem(EQ::invslot::slotPowerSource);
+	if (!IsPowerSourceItem(orb)) {
+		return; // no orb
+	}
+
+	uint32 charge = GetPowerSourceCharge(orb);
+	if (orb->GetCustomData("Power").empty()) {
+		// Newly equipped orb (charge not yet persisted by the drain timer):
+		// treat it as fully charged so its stats apply immediately.
+		charge = static_cast<uint32>(std::max(0, RuleI(Custom, PowerSourceMaxCharge)));
+		if (charge == 0) {
+			charge = orb->GetItem()->PowerSourceCapacity;
+		}
+	}
+
+	if (charge == 0) {
+		return; // orb has gone inert
+	}
+
+	uint32 purity = CalcWornPurity();
+	const uint32 cap = static_cast<uint32>(std::max(0, RuleI(Custom, PowerSourcePurityCap)));
+	if (cap > 0 && purity > cap) {
+		purity = cap;
+	}
+
+	const double factor = static_cast<double>(purity) / 100.0;
+	if (factor <= 0.0) {
+		return;
+	}
+
+	const auto* o = orb->GetItem();
+
+	auto add = [&](int value) -> int {
+		return static_cast<int>(std::llround(static_cast<double>(value) * factor));
+	};
+
+	b->AC               += add(o->AC);
+	b->HP               += add(o->HP);
+	b->Mana             += add(o->Mana);
+	b->Endurance        += add(o->Endur);
+	b->ATK              += add(o->Attack);
+	b->STR              += add(o->AStr);
+	b->STA              += add(o->ASta);
+	b->DEX              += add(o->ADex);
+	b->AGI              += add(o->AAgi);
+	b->INT              += add(o->AInt);
+	b->WIS              += add(o->AWis);
+	b->CHA              += add(o->ACha);
+	b->MR               += add(o->MR);
+	b->FR               += add(o->FR);
+	b->CR               += add(o->CR);
+	b->PR               += add(o->PR);
+	b->DR               += add(o->DR);
+	b->Corrup           += add(o->SVCorruption);
+	b->HPRegen          += add(o->Regen);
+	b->ManaRegen        += add(o->ManaRegen);
+	b->EnduranceRegen   += add(o->EnduranceRegen);
+	b->HealAmt          += add(o->HealAmt);
+	b->SpellDmg         += add(o->SpellDmg);
+	b->Clairvoyance     += add(o->Clairvoyance);
+	b->DSMitigation     += add(o->DSMitigation);
+	b->DamageShield     += add(o->DamageShield);
+	b->SpellShield      += add(o->SpellShield);
+	b->MeleeMitigation  += add(o->Shielding);
+	b->StunResist       += add(o->StunResist);
+	b->StrikeThrough    += add(o->StrikeThrough);
+	b->AvoidMeleeChance += add(o->Avoidance);
+	b->HitChance        += add(o->Accuracy);
+	b->ProcChance       += add(o->CombatEffects);
+	b->DoTShielding     += add(o->DotShielding);
+
+	if (o->Haste > b->haste) {
+		b->haste = o->Haste;
+	}
+}
+
+void Client::CalcPowerSourceDrain()
+{
+	auto* orb = m_inv.GetItem(EQ::invslot::slotPowerSource);
+	if (!IsPowerSourceItem(orb)) {
+		return;
+	}
+
+	InitializePowerSourceCharge();
+	SendPowerSourceUpdate();
+
+	// Only drain while the wearer is actively fighting or casting.
+	if (!IsEngaged() && !IsCasting()) {
+		return;
+	}
+
+	// Count eligible worn items: any worn piece (excl. power source/ammo) that
+	// carries purity on itself or on one of its augments.
+	int eligible = 0;
+	for (int16 slot_id = EQ::invslot::slotCharm; slot_id <= EQ::invslot::slotWaist; ++slot_id) {
+		const auto* inst = m_inv.GetItem(slot_id);
+		if (!inst || !inst->GetItem()) {
+			continue;
+		}
+
+		bool counts = inst->GetItem()->Purity > 0;
+		for (int aug_slot = EQ::invaug::SOCKET_BEGIN; !counts && aug_slot <= EQ::invaug::SOCKET_END; ++aug_slot) {
+			const auto* aug = inst->GetAugment(aug_slot);
+			if (aug && aug->GetItem() && aug->GetItem()->Purity > 0) {
+				counts = true;
+			}
+		}
+
+		if (counts) {
+			eligible++;
+		}
+	}
+
+	if (eligible <= 0) {
+		return;
+	}
+
+	const double per_second = (static_cast<double>(RuleR(Custom, PowerSourceDrainBase)) +
+		static_cast<double>(eligible - 1) * static_cast<double>(RuleR(Custom, PowerSourceDrainStep))) *
+		static_cast<double>(RuleR(Custom, PowerSourceDrainMultiplier));
+
+	const double tick_seconds = static_cast<double>(std::max(1, RuleI(Custom, PowerSourceTickMs))) / 1000.0;
+	const uint32 drained = static_cast<uint32>(std::llround(per_second * tick_seconds));
+
+	const uint32 charge = GetPowerSourceCharge(orb);
+	if (charge == 0) {
+		return;
+	}
+
+	const uint32 new_charge = (drained >= charge) ? 0 : (charge - drained);
+	SetPowerSourceCharge(orb, new_charge);
+
+	// Persist periodically (crash insurance) and immediately when depleted;
+	// otherwise the in-memory instance is saved on zone/logout. This keeps the
+	// drain from issuing a DB write every single tick.
+	if (new_charge == 0 || (++m_power_source_save_ticks % 5) == 0) {
+		database.UpdateInventorySlot(CharacterID(), orb, EQ::invslot::slotPowerSource);
+	}
+
+	if (new_charge == 0) {
+		// Orb just went inert; refresh bonuses so its contribution drops out.
+		CalcBonuses();
+	}
+}
+
 void Client::AddEXP(ExpSource exp_source, uint64 in_add_exp, uint8 conlevel, bool resexp, NPC* npc) {
 	if (!IsEXPEnabled()) {
 		return;
@@ -955,9 +1239,17 @@ void Client::AddEXP(ExpSource exp_source, uint64 in_add_exp, uint8 conlevel, boo
 		}
 	}
 
-	if (RuleB(Custom, PowerSourceItemUpgrade) && m_inv.GetItem(EQ::invslot::slotPowerSource) && exp_source == ExpSource::Kill && conlevel != 0xFF) {
+	auto* power_source_item = m_inv.GetItem(EQ::invslot::slotPowerSource);
+
+	if (
+		RuleB(Custom, PowerSourceItemUpgrade) &&
+		power_source_item &&
+		!IsPowerSourceItem(power_source_item) && // purity batteries don't tier/eject
+		exp_source == ExpSource::Kill &&
+		conlevel != 0xFF
+	) {
 		if (!(GetRaid() && GetRaid()->RaidCount())) {
-			AddItemExperience(m_inv.GetItem(EQ::invslot::slotPowerSource), conlevel);
+			AddItemExperience(power_source_item, conlevel);
 		}
 	}
 

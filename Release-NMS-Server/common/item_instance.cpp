@@ -17,6 +17,7 @@
 */
 
 #include "inventory_profile.h"
+#include "nms_vault_item.h"
 #include "../common/data_verification.h"
 //#include "classes.h"
 //#include "global_define.h"
@@ -1062,7 +1063,7 @@ bool EQ::ItemInstance::IsDroppable(bool recurse) const
 	}
 	/*if (m_ornamentidfile) // not implemented
 		return false;*/
-	if (m_attuned) {
+	if (m_attuned || NmsVaultIsArmoryItem(m_item->ID)) {
 		return false;
 	}
 

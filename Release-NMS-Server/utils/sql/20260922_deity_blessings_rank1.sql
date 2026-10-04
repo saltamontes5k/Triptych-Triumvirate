@@ -27,7 +27,7 @@ DELETE FROM `spawnentry`                WHERE `spawngroupID` IN (5004100,5004101
 DELETE FROM `spawngroup`                WHERE `id` IN (5004100,5004101);
 DELETE FROM `npc_types`                 WHERE `id` IN (344200,344201);
 DELETE FROM `items`                     WHERE `id` IN (9910018,9910019,9910020,9910021,9910022,9910023);
-DELETE FROM `spells_new`                WHERE `id`=50017;
+DELETE FROM `spells_new`                WHERE `id`=44013;
 
 -- ===========================================================================
 -- Phase A -- Veeshan gem chain
@@ -61,7 +61,7 @@ UPDATE `tmp_item` SET
     `loregroup`=0,
     `price`=2933,
     `scrolltype`=0,
-    `scrolleffect`=50017,
+    `scrolleffect`=44013,
     `itemtype`=20,
     `minstatus`=0
 WHERE `id`=15895;
@@ -72,7 +72,7 @@ DROP TEMPORARY TABLE `tmp_item`;
 DROP TEMPORARY TABLE IF EXISTS `tmp_spell`;
 CREATE TEMPORARY TABLE `tmp_spell` AS SELECT * FROM `spells_new` WHERE `id`=1888;
 UPDATE `tmp_spell` SET
-    `id`=50017,
+    `id`=44013,
     `name`='Imbue Jacinth',
     `effect_base_value1`=9910018,
     `components1`=10053,

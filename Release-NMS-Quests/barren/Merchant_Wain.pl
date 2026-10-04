@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620042 =>
+    625042 =>
         [
          "Ah welcome welcome! Have you come to see my fantastic wares? Yes, yes I know, I assure you there is enough for " . quest::saylink("almost") . " everyone.",
          ["Almost?", "True, true, almost everyone. There are many people who come see me for my specialty wares. Things you cannot obtain from anyone else.  I am the only one with the savvy to collect these items you see. The best money of these islands is to be had by selling my " . quest::saylink("combs") . " and exotic " . quest::saylink("wigs and cloth") . ". These items I am constantly running low on it seems."],
@@ -14,7 +14,7 @@ my %chains = (
          ["Let", "I will tell you where I get these combs if you will agree to retrieve several for me so I can replenish my stock. Profit for us both, " . quest::saylink("yes") . "?"],
          ["Yes", "The combs are used by the elusive sirens on the island known as Maiden's Grave. Tis a dangerous place to be sure, but the combs make the risk worth it.  Bring me back several of them and I will share the profits with you."],
         ],
-    620043 =>
+    625043 =>
         [
          "Ah welcome welcome! Have you come to see my fantastic wares? Yes, yes I know, I assure you there is enough for " . quest::saylink("almost") . " everyone.",
          ["Almost?", "True, true, almost everyone. There are many people who come see me for my specialty wares. Things you cannot obtain from anyone else.  I am the only one with the savvy to collect these items you see. The best money of these islands is to be had by selling my " . quest::saylink("combs") . " and exotic " . quest::saylink("wigs and cloth") . ". These items I am constantly running low on it seems."],
@@ -24,7 +24,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620042, 620043);
+my @mytasks = (625042, 625043);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

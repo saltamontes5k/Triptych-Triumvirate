@@ -652,4 +652,5 @@ N(OP_ShroudSelectCancel),
 N(OP_ShroudProgress),
 N(OP_ShroudProgress2),
 N(OP_ShroudRemove),
+N(OP_PowerSource), // RoF2 client per-instance power source charge (opcode 0x4c89)
 // mail and chat opcodes located in ../mail_oplist.h

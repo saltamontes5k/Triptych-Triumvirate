@@ -67,23 +67,21 @@ function event_say(e)
 				)
 			end
 		elseif e.message:findi("knowledge") then
-			if (
-				e.other:HasItem(31796) and
-				e.other:HasItem(31842) and
-				e.other:HasItem(31845) and
-				e.other:HasItem(31846) and
-				e.other:HasItem(31960)
-			) then
+			-- Completion is tracked by account flags, not the physical marks,
+			-- as turning a mark in to the Tribunal consumes it.
+			local trials = { "execution", "flame", "hanging", "lashing", "stoning", "torture" }
+			local has_six = 1
+			for k,v in ipairs(trials) do
+				if ((tonumber(e.other:GetAccountBucket(string.format("pop.flags.%s", v))) or 0) == 0) then
+					has_six = 0
+				end
+			end
+
+			if has_six == 1 then
 				if not e.other:HasItem(31599) then
 					e.other:SummonItem(31599) -- Item: The Mark of Justice
 				end
-			elseif (
-				e.other:HasItem(31796) or
-				e.other:HasItem(31842) or
-				e.other:HasItem(31845) or
-				e.other:HasItem(31846) or
-				e.other:HasItem(31960)
-			) then
+			elseif has_six == 0 then
 				e.self:Say("You have done well, mortal, but there are more trials yet for you to complete.")
 			end
 		end

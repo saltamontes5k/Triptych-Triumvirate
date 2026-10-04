@@ -25,6 +25,7 @@
 #include "client.h"
 #include "entity.h"
 #include "mob.h"
+#include "nms_vault.h"
 
 #include "bot.h"
 
@@ -186,6 +187,7 @@ void Mob::CalcItemBonuses(StatBonuses* b) {
 	}
 
 	if (IsClient()) {
+		NmsVaultApplyLockerBonuses(CastToClient(), b);
 		if (CastToClient()->GetPP().tribute_active) {
 			for (auto const &t: CastToClient()->GetPP().tributes) {
 				auto item_id = CastToClient()->LookupTributeItemID(t.tribute, t.tier);
@@ -225,6 +227,10 @@ void Mob::CalcItemBonuses(StatBonuses* b) {
 
 			AdditiveWornBonuses(inst, b);
 		}
+	}
+
+	if (IsClient() && RuleB(Custom, PowerSourceEnabled)) {
+		CastToClient()->AddPowerSourceBonuses(b);
 	}
 
 	if (IsMerc()) {

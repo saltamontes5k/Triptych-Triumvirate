@@ -43,6 +43,7 @@
 #include "event_codes.h"
 #include "guild_mgr.h"
 #include "map.h"
+#include "nms_vault.h"
 #include "petitions.h"
 #include "queryserv.h"
 #include "quest_parser_collection.h"
@@ -162,6 +163,10 @@ bool Client::Process() {
 
 		if (charm_update_timer.Check()) {
 			CalcItemScale();
+		}
+
+		if (RuleB(Custom, PowerSourceEnabled) && power_source_timer.Check()) {
+			CalcPowerSourceDrain();
 		}
 
 		if (TaskPeriodic_Timer.Check() && task_state)
@@ -1689,7 +1694,7 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 		{
 			uint32 distance = 0;
 			NPC *banker = entity_list.GetClosestBanker(this, distance);
-			if(!banker || distance > USE_NPC_RANGE2)
+			if(!NmsVaultBankAccess(this) && (!banker || distance > USE_NPC_RANGE2))
 			{
 				auto message = fmt::format(
 					"Player tried to make use of a banker (coin move) but "
@@ -1723,7 +1728,7 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 		{
 			uint32 distance = 0;
 			NPC *banker = entity_list.GetClosestBanker(this, distance);
-			if(!banker || distance > USE_NPC_RANGE2)
+			if(!NmsVaultBankAccess(this) && (!banker || distance > USE_NPC_RANGE2))
 			{
 				auto message = fmt::format(
 					"Player tried to make use of a banker (shared coin move) but banker [{}] is "
@@ -1781,7 +1786,7 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 		{
 			uint32 distance = 0;
 			NPC *banker = entity_list.GetClosestBanker(this, distance);
-			if(!banker || distance > USE_NPC_RANGE2)
+			if(!NmsVaultBankAccess(this) && (!banker || distance > USE_NPC_RANGE2))
 			{
 				auto message = fmt::format(
 					"Player tried to make use of a banker(coin move) but "
@@ -1843,7 +1848,7 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 		{
 			uint32 distance = 0;
 			NPC *banker = entity_list.GetClosestBanker(this, distance);
-			if(!banker || distance > USE_NPC_RANGE2)
+			if(!NmsVaultBankAccess(this) && (!banker || distance > USE_NPC_RANGE2))
 			{
 				auto message = fmt::format(
 					"Player tried to make use of a banker (shared coin move) but banker [{}] is "

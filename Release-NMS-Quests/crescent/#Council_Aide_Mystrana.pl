@@ -57,6 +57,19 @@ sub EVENT_SAY {
       quest::say("Sorry $name, I don't have anything for someone with your abilities.");
     }
   }
+  # Tears of the Betrayed (600568)
+  if ($text=~/tears/i) {
+    if (!quest::istaskactive(600568) && !quest::istaskcompleted(600568)) {
+      quest::say("There is one more matter, $name - the [betrayed] of the farm still weep in the soil. The risen elders and their soldier kin will not stop until someone quiets them.");
+      quest::assigntask(600568);
+    }
+    elsif (quest::istaskactive(600568)) {
+      quest::say("The betrayed, $name. Ten risen elders and eight of their soldiers.");
+    }
+    else {
+      quest::say("The farm is quiet at last. The council notes your service, $name.");
+    }
+  }
 }
 
 sub EVENT_ITEM {

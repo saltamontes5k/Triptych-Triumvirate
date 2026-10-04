@@ -28,6 +28,12 @@ sub EVENT_ENTERZONE {
     # Deity blessing passive (e.g. Tunare's damage shield).
     plugin::BlessingOnEnterZone($client);
 
+    # Delayed philanthropist platinum grants (Ben Affactor / ascendant_philanthropist.pl).
+    eval { plugin::Philanthropist_PickupGrants($client); };
+
+    # April Fools size prank (ascendant_april_fools.pl).
+    eval { plugin::AprilFools_OnZoneIn($client); };
+
     # Catch-up grant for existing Drakkin characters (and re-verifies on every zone).
     plugin::GrantDrakkinBreathWeapon($client);
 
@@ -121,6 +127,9 @@ sub EVENT_CONNECT {
     plugin::CommonCharacterUpdate($client);
     plugin::OnLoginUpdate($client);
 
+    # Delayed philanthropist platinum grants (Ben Affactor / ascendant_philanthropist.pl).
+    eval { plugin::Philanthropist_PickupGrants($client); };
+
     if (!$client->GetBucket("First-Login")) {
         $client->SetBucket("First-Login", 1);
 		$client->SummonItemIntoInventory({ item_id => 18471, charges => -1 }); #A Shimmering Writ
@@ -185,6 +194,9 @@ sub EVENT_TASK_COMPLETE {
 
     # Deity blessing system: rank advancement quest completion (ranks 1-10).
     plugin::BlessingGrantRank($client, $task_id);
+
+    # SoD progression (miscProgression): theme/raid chain flags.
+    plugin::SodOnTaskComplete($client, $task_id);
 }
 
 sub EVENT_DAMAGE_GIVEN {
@@ -288,6 +300,18 @@ sub EVENT_ALT_CURRENCY_MERCHANT_BUY {
         plugin::YellowText("You unpack the bundle of Delivery Vouchers");
         return 1;
     }
+
+    # The temporary reprieve (Bazaar, npc 344045) sells the Ascendant-tier
+    # "Tome of Advancement - <AA>" items for Triune of Fate. The alt-currency
+    # merchant window cannot filter by class, so cancel purchases of a tome
+    # whose class line the buyer does not have before currency is spent.
+    if ($npc_id == 344045) {
+        my $tome_classes = int(quest::getitemstat($item_id, "classes") || 0);
+        if ($tome_classes > 0 && ($client->GetClassesBitmask() & $tome_classes) == 0) {
+            $client->Message(13, "That tome belongs to another class's advancement line. You cannot master it.");
+            return 1;
+        }
+    }
 }
 
 sub EVENT_DISCOVER_ITEM {
@@ -353,6 +377,21 @@ sub EVENT_COMBINE_VALIDATE {
 	return 0;
 }
 
+# Aiden Silverwing - "Lost Heirlooms" / Silverwing Charm tier combines.
+# Each of the nine quest recipes combines a family trinket with a shard in the
+# Silverwing Lockbox (17335); the recipe grants nothing itself (quest=1).
+our %SILVERWING_TIER = (
+    993001 => { melee => 79624, caster => 79625 }, # Shiny / Glinting Loop
+    993002 => { melee => 79628, caster => 79629 }, # Shimmering Circlet / Radiant Band
+    993003 => { melee => 79632, caster => 79633 }, # Blazing Choker / Scintillating Lavaliere
+    993004 => { melee => 79636, caster => 79637 }, # Gleaming Signet / Lustrous Insignia
+    993005 => { melee => 79640, caster => 79641 }, # Shimmering Pauldrons / Radiant Shoulderpads
+    993006 => { melee => 79644, caster => 79645 }, # Shimmerthread Cloak / Pearlthread Drape
+    993007 => { melee => 79648, caster => 79649 }, # Polished Mask / Lustrous Visage
+    993008 => { melee => 79652, caster => 79653 }, # Studded Girdle / Scintillating Sash
+    993009 => { melee => 79655, caster => 79656 }, # Polished / Jeweled Band
+);
+
 sub EVENT_COMBINE_SUCCESS {
     if ($recipe_id =~ /^1090[4-7]$/) {
         $client->Message(1,
@@ -388,6 +427,15 @@ sub EVENT_COMBINE_SUCCESS {
         quest::summonfixeditem($reward{$type}{$recipe_id});
         quest::summonfixeditem(67704); # Item: Vaifan's Clockwork Gemcutter Tools
         $client->Message(1,"Success");
+    }
+    elsif (exists $SILVERWING_TIER{$recipe_id}) {
+        # The nine tier combines are quest recipes (quest=1), so the engine hands
+        # out nothing; give the class-appropriate result of the Silverwing trinket.
+        my $type = plugin::ClassType($class);
+        my $result = ($type eq "melee" || $type eq "hybrid")
+            ? $SILVERWING_TIER{$recipe_id}{melee}
+            : $SILVERWING_TIER{$recipe_id}{caster};
+        quest::summonfixeditem($result);
     }
 }
 

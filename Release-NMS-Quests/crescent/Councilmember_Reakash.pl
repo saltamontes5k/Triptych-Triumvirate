@@ -34,6 +34,19 @@ sub EVENT_SAY {
     quest::say("A sample of the purest water, drawn where the falls strike the pools of the Hollow. A wind chime from Merchant Wyn'las - he asks no charge for one. And the mist of the falls itself, caught in a jar of the windspirit. Go, then; that is the [beginning].");
     quest::assigntask(600246); # Reakash's Serenity
   }
+  # Reakash's Revenge (600565)
+  if ($text=~/revenge/i) {
+    if (!quest::istaskactive(600565) && !quest::istaskcompleted(600565)) {
+      quest::say("Since you mention [vengeance] - the crevice spiderlings of the Hollows nibble at my collections while I meditate. Eight of them, and my collections will know peace.");
+      quest::assigntask(600565);
+    }
+    elsif (quest::istaskactive(600565)) {
+      quest::say("The spiderlings, little one. Eight. My collections demand it.");
+    }
+    else {
+      quest::say("My collections are at peace, thanks to you.");
+    }
+  }
 }
 
 sub EVENT_ITEM {

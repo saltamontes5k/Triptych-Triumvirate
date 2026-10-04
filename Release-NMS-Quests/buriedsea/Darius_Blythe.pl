@@ -6,19 +6,19 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620016 =>
+    625016 =>
         [
          "Aye, that's me.  I'm Darius.  They call me the Entrepreneur, or at least they try to.  Most of the bastards around here can't even say Darius properly, much less Entrepreneur.  But then, that's why I'm the Entrepreneur and they are just sailors.  So, what can I do for you?  You're brave enough to land here, so I'm willing to deal with you.  Perhaps you're wondering what all of us pirates are doing out here, " . quest::saylink("dealing with") . " all of you?  Or perhaps you're just looking for some goods that you might not be able to find elsewhere?  Or are you one of those adventurers that always seem to need work?  If so, I have some " . quest::saylink("jobs") . " you can do.",
          ["Dealing with me?", "Ah, well, this was my idea, really.  We knew that once you landlu. . . er, adventurers heard about the whirlpool you wouldn't be able to stop yerselves from coming to look at it.  Now of course you're not welcome anywhere near our strongholds, but I figured if we made a dock for you and set up some shops out here, we might be able to make some money off of you.  And I've been proven correct!  It also gives me a chance to warn you.  Keep yourself to this section of the beach.  If any Blacksail finds you wandering about the Hook, you'll be cut down for sure."],
          ["What jobs do you have?", "Aye, I have several things that need doing."],
         ],
-    620017 =>
+    625017 =>
         [
          "Aye, that's me.  I'm Darius.  They call me the Entrepreneur, or at least they try to.  Most of the bastards around here can't even say Darius properly, much less Entrepreneur.  But then, that's why I'm the Entrepreneur and they are just sailors.  So, what can I do for you?  You're brave enough to land here, so I'm willing to deal with you.  Perhaps you're wondering what all of us pirates are doing out here, " . quest::saylink("dealing with") . " all of you?  Or perhaps you're just looking for some goods that you might not be able to find elsewhere?  Or are you one of those adventurers that always seem to need work?  If so, I have some " . quest::saylink("jobs") . " you can do.",
          ["Dealing with me?", "Ah, well, this was my idea, really.  We knew that once you landlu. . . er, adventurers heard about the whirlpool you wouldn't be able to stop yerselves from coming to look at it.  Now of course you're not welcome anywhere near our strongholds, but I figured if we made a dock for you and set up some shops out here, we might be able to make some money off of you.  And I've been proven correct!  It also gives me a chance to warn you.  Keep yourself to this section of the beach.  If any Blacksail finds you wandering about the Hook, you'll be cut down for sure."],
          ["What jobs do you have?", "Aye, I have several things that need doing."],
         ],
-    620018 =>
+    625018 =>
         [
          "Aye, that's me.  I'm Darius.  They call me the Entrepreneur, or at least they try to.  Most of the bastards around here can't even say Darius properly, much less Entrepreneur.  But then, that's why I'm the Entrepreneur and they are just sailors.  So, what can I do for you?  You're brave enough to land here, so I'm willing to deal with you.  Perhaps you're wondering what all of us pirates are doing out here, " . quest::saylink("dealing with") . " all of you?  Or perhaps you're just looking for some goods that you might not be able to find elsewhere?  Or are you one of those adventurers that always seem to need work?  If so, I have some " . quest::saylink("jobs") . " you can do.",
          ["Dealing with me?", "Ah, well, this was my idea, really.  We knew that once you landlu. . . er, adventurers heard about the whirlpool you wouldn't be able to stop yerselves from coming to look at it.  Now of course you're not welcome anywhere near our strongholds, but I figured if we made a dock for you and set up some shops out here, we might be able to make some money off of you.  And I've been proven correct!  It also gives me a chance to warn you.  Keep yourself to this section of the beach.  If any Blacksail finds you wandering about the Hook, you'll be cut down for sure."],
@@ -26,7 +26,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620016, 620017, 620018);
+my @mytasks = (625016, 625017, 625018);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

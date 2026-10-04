@@ -78,6 +78,8 @@ Doors::Doors(const DoorsRepository::Doors &door) :
 	m_size                    = door.size;
 	m_invert_state            = door.invert_state;
 
+	m_destination_instance_id = door.dest_instance;
+
 	// if the target zone is the same as the current zone, use the instance of the current zone
 	// if we don't use the same instance_id that the client was sent, the client will forcefully
 	// issue a zone change request when they should be simply moving to a different point in the same zone
@@ -86,7 +88,6 @@ Doors::Doors(const DoorsRepository::Doors &door) :
 		m_destination_instance_id = zone->GetInstanceID();
 	}
 
-	m_destination_instance_id = door.dest_instance;
 	m_is_ldon_door            = door.is_ldon_door;
 	m_dz_switch_id            = door.dz_switch_id;
 	m_client_version_mask     = door.client_version_mask;

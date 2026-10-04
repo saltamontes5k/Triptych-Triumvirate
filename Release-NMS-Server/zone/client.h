@@ -819,6 +819,18 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	float GetItemStatValue(const EQ::ItemData* item);
 	float GetBaseExpValueForKill(int conlevel, int tier, EQ::ItemInstance* upgrade_item);
 	bool AddItemExperience(EQ::ItemInstance* item, int conlevel);
+
+	// Power Source (Energeian orb) purity mechanic
+	uint32 CalcWornPurity();
+	void   AddPowerSourceBonuses(StatBonuses* b);
+	void   TryPowerSourceProc(Mob* on, uint16 hand);
+	void   SendPowerSourceUpdate();
+	void   CalcPowerSourceDrain();
+	void   InitializePowerSourceCharge();
+	uint32 GetPowerSourceCharge(EQ::ItemInstance* item);
+	void   SetPowerSourceCharge(EQ::ItemInstance* item, uint32 charge);
+	bool   IsPowerSourceItem(const EQ::ItemInstance* item);
+
 	bool ConsumeItemOnCursor();
 	bool ConsumeUnspentAA();
 	void EjectItemFromSlot(int16 slot_id);
@@ -1045,6 +1057,13 @@ public:
 	void SetAutoSkillStatus(EQ::skills::SkillType skill_id, bool enabled);
 	const std::vector<EQ::skills::SkillType> GetAutoSkillsList() const;
 	const std::vector<EQ::skills::SkillType> GetAvailableAutoSkills() const;
+
+	inline bool GetNmsVaultBank() const { return m_nms_vault_bank; }
+	inline void SetNmsVaultBank(bool value) { m_nms_vault_bank = value; }
+	inline bool GetNmsVaultMerchant() const { return m_nms_vault_merchant; }
+	inline void SetNmsVaultMerchant(bool value) { m_nms_vault_merchant = value; }
+	inline uint32 GetNmsVaultMerchantId() const { return m_nms_vault_merchant_id; }
+	inline void SetNmsVaultMerchantId(uint32 value) { m_nms_vault_merchant_id = value; }
 
 	uint16 MaxSkill(EQ::skills::SkillType skill_id, uint16 class_id, uint8 level) const;
 	uint16 MaxSkillOriginal(EQ::skills::SkillType skill_id, uint16 class_id, uint16 level) const;
@@ -1351,6 +1370,7 @@ public:
 	int32 GetItemIDAt(int16 slot_id);
 	int32 GetAugmentIDAt(int16 slot_id, uint8 augslot);
 	bool PutItemInInventory(int16 slot_id, const EQ::ItemInstance& inst, bool client_update = false);
+	void RollbackFailedItemPut(int16 slot_id, bool client_update = true);
 	bool PutItemInInventoryWithStacking(EQ::ItemInstance* inst);
 	bool FindNumberOfFreeInventorySlotsWithSizeCheck(std::vector<BuyerLineTradeItems_Struct> items);
 	bool PushItemOnCursor(const EQ::ItemInstance& inst, bool client_update = false);
@@ -2405,6 +2425,10 @@ private:
 
 	// https://github.com/EQEmu/Server/pull/2479
 	bool m_lock_save_position = false;
+
+	bool m_nms_vault_bank = false;
+	bool m_nms_vault_merchant = false;
+	uint32 m_nms_vault_merchant_id = 0;
 public:
 	bool IsLockSavePosition() const;
 	void SetLockSavePosition(bool lock_save_position);
@@ -2482,6 +2506,8 @@ private:
 	Timer proximity_timer;
 	Timer TaskPeriodic_Timer;
 	Timer charm_update_timer;
+	Timer power_source_timer;
+	uint32 m_power_source_save_ticks{0};
 	Timer rest_timer;
 	Timer charm_class_attacks_timer;
 	Timer charm_cast_timer;

@@ -25,10 +25,11 @@ sub _bless_matches_idol {
 
 sub EVENT_SAY {
     my $deity = plugin::BlessingCheckDeity($client);
-    my $dn    = plugin::BlessingDeityName($deity);
     my $rank  = plugin::BlessingRank($client);
     my $task  = plugin::BlessingRank1Task($deity);
     my $status_link = quest::saylink("devotion", 1, "devotion");
+    my $to    = plugin::BlessingDevotionTo($client);   # '' for Agnostic (no god named)
+    my $of    = plugin::BlessingDevotionOf($client);   # '' for Agnostic
     # DEBUG (re-enable): uncomment the password branch below and change the
     # `hail` `if` back to `elsif`.
     # my $debug_pass = plugin::BlessingDebugPassword();
@@ -43,7 +44,7 @@ sub EVENT_SAY {
         # Plane of Tranquility: the higher-ranks keeper (content pending).
         if (!_bless_is_rank1_keeper()) {
             if ($rank >= 1) {
-                plugin::Whisper("The gods have marked you, $name. Your devotion to $dn burns at Rank $rank. The greater trials are not yet ready, but your [$status_link] is recorded.");
+                plugin::Whisper("The gods have marked you, $name. Your devotion$to burns at Rank $rank. The greater trials are not yet ready, but your [$status_link] is recorded.");
             } else {
                 plugin::Whisper("The first spark of devotion is kindled in The Bazaar, $name. Return there to forge your idol. Show me your [$status_link]?");
             }
@@ -52,14 +53,14 @@ sub EVENT_SAY {
 
         # The Bazaar: the Rank I keeper.
         if ($rank >= 1) {
-            plugin::Whisper("The gods have marked you, $name. Your devotion to $dn burns at Rank $rank. Show me your [$status_link]?");
+            plugin::Whisper("The gods have marked you, $name. Your devotion$to burns at Rank $rank. Show me your [$status_link]?");
         } elsif (!$task) {
             plugin::Whisper("Your path is unclear to me, $name.");
         } elsif ($client->IsTaskActive($task)) {
-            plugin::Whisper("Forge a fired idol of $dn and deliver it to me, $name. Your [$status_link] is recorded.");
+            plugin::Whisper("Forge a fired idol$of and deliver it to me, $name. Your [$status_link] is recorded.");
         } else {
             plugin::BlessingAssignRank1($client);
-            plugin::Whisper("Greetings, $name. Prove your devotion to $dn: forge a fired idol of your faith and deliver it to me. I have inscribed your [$status_link] upon your journal.");
+            plugin::Whisper("Greetings, $name. Prove your devotion$to: forge a fired idol of your faith and deliver it to me. I have inscribed your [$status_link] upon your journal.");
         }
     }
     elsif ($text =~ /devotion/i) {
@@ -81,7 +82,7 @@ sub EVENT_ITEM {
     }
 
     my $deity = plugin::BlessingCheckDeity($client);
-    my $dn    = plugin::BlessingDeityName($deity);
+    my $of    = plugin::BlessingDevotionOf($client);   # '' for Agnostic
     my $idol  = plugin::BlessingRank1Idol($deity);
     my $task  = plugin::BlessingRank1Task($deity);
 
@@ -98,7 +99,7 @@ sub EVENT_ITEM {
 
     unless ($handed) {
         if ($client->IsTaskActive($task)) {
-            plugin::Whisper("That is not the idol of your faith, $name. You must forge the fired idol of $dn.");
+            plugin::Whisper("That is not the idol of your faith, $name. You must forge the fired idol$of.");
         } else {
             plugin::Whisper("Speak with me of your [devotion] before presenting an offering, $name.");
         }

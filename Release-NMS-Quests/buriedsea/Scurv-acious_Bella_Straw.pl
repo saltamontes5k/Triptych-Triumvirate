@@ -6,14 +6,14 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620011 =>
+    625011 =>
         [
          "I sure would!  I'd " . quest::saylink("kill a few") . " of those uncouth dogs.  That would teach the rest to respect me and treat me like the delicate and virtuous flower that I am.",
          ["I", "Why, that would be very heroic of you!"],
         ],
 );
 
-my @mytasks = (620011);
+my @mytasks = (625011);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

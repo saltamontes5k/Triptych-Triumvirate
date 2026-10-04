@@ -24,6 +24,7 @@
 #include "worldserver.h"
 #include "titles.h"
 #include "zonedb.h"
+#include "nms_vault.h"
 #include "../common/events/player_event_logs.h"
 #include "bot.h"
 #include "../common/evolving_items.h"
@@ -1236,6 +1237,47 @@ bool Client::PushItemOnCursor(const EQ::ItemInstance& inst, bool client_update)
 	return database.SaveCursor(CharacterID(), s, e);
 }
 
+void Client::RollbackFailedItemPut(int16 slot_id, bool client_update)
+{
+	// PushCursor appends; PutItem writes the slot before Save* returns.
+	// Callers that keep the source on persist failure must drop that clone.
+	if (slot_id == EQ::invslot::slotCursor) {
+		EQ::ItemInstance *clone = m_inv.PopCursorBack();
+		safe_delete(clone);
+		auto s = m_inv.cursor_cbegin(), e = m_inv.cursor_cend();
+		database.SaveCursor(CharacterID(), s, e);
+		if (!client_update) {
+			return;
+		}
+		if (m_inv.CursorEmpty()) {
+			auto outapp = new EQApplicationPacket(OP_DeleteItem, sizeof(DeleteItem_Struct));
+			auto *delitem = (DeleteItem_Struct *) outapp->pBuffer;
+			delitem->from_slot = EQ::invslot::slotCursor;
+			delitem->to_slot = 0xFFFFFFFF;
+			delitem->number_in_stack = 0xFFFFFFFF;
+			QueuePacket(outapp);
+			safe_delete(outapp);
+		} else {
+			SendCursorBuffer();
+		}
+		return;
+	}
+
+	EQ::ItemInstance *clone = m_inv.PopItem(slot_id);
+	safe_delete(clone);
+	database.SaveInventory(CharacterID(), nullptr, slot_id);
+	if (client_update && IsValidSlot(slot_id)) {
+		auto outapp = new EQApplicationPacket(OP_DeleteItem, sizeof(DeleteItem_Struct));
+		auto *delitem = (DeleteItem_Struct *) outapp->pBuffer;
+		delitem->from_slot = slot_id;
+		delitem->to_slot = 0xFFFFFFFF;
+		delitem->number_in_stack = 0xFFFFFFFF;
+		QueuePacket(outapp);
+		safe_delete(outapp);
+	}
+	CalcBonuses();
+}
+
 // Puts an item into the person's inventory
 // Any items already there will be removed from user's inventory
 // (Also saves changes back to the database: this may be optimized in the future)
@@ -1960,7 +2002,7 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 		uint32 distance = 0;
 		NPC *banker = entity_list.GetClosestBanker(this, distance);
 
-		if(!banker || distance > USE_NPC_RANGE2)
+		if(!NmsVaultBankAccess(this) && (!banker || distance > USE_NPC_RANGE2))
 		{
 			auto message = fmt::format(
 				"Player tried to make use of a banker (items) but banker [{}] is "

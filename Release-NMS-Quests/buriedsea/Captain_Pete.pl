@@ -6,14 +6,14 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620040 =>
+    625040 =>
         [
          "Ah $name! I'd heard ye were on this island. Surprised I've heard of ye, eh? In my business it pays to be informed. Well, it used to anyways. Ye see ever since the " . quest::saylink("wreck") . " I've been a bit on the outs with people round here.",
          ["What wreck?", "We was sailin over near the island called Maiden's Grave ye see. There be sirens on that island that got the better o' me and me crew. Most of the crew died when the Wretched Sands went down, but me and a few others managed to make it to shore. If'n ye thought the sirens were bad while ye were on a ship its nothing as to how bad they are if ye set foot on their island. I was the only one to make it offa there alive. And that's what got me inta me present problem. The way I sees it there be only one " . quest::saylink("thing") . " fer me to do."],
          ["What thing?", "Well, there might be " . quest::saylink("two") . ", but I figures I needs to bring the remains of me crew back to their families. If they see I care about me crew, might'n be possible fer me to assemble a new one. Problem is I ain't going back to that island unless I'm dead meself. This is where you come in, if'n ye catch me " . quest::saylink("drift") . "."],
          ["I catch your drift", "Good man! I'll be here when you find their remains. There's no telling what happened to their corpses so ye'll have to search most of the island more than likely. Best of luck to ye me hearty!"],
         ],
-    620041 =>
+    625041 =>
         [
          "Ah $name! I'd heard ye were on this island. Surprised I've heard of ye, eh? In my business it pays to be informed. Well, it used to anyways. Ye see ever since the " . quest::saylink("wreck") . " I've been a bit on the outs with people round here.",
          ["What wreck?", "We was sailin over near the island called Maiden's Grave ye see. There be sirens on that island that got the better o' me and me crew. Most of the crew died when the Wretched Sands went down, but me and a few others managed to make it to shore. If'n ye thought the sirens were bad while ye were on a ship its nothing as to how bad they are if ye set foot on their island. I was the only one to make it offa there alive. And that's what got me inta me present problem. The way I sees it there be only one " . quest::saylink("thing") . " fer me to do."],
@@ -23,7 +23,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620040, 620041);
+my @mytasks = (625040, 625041);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

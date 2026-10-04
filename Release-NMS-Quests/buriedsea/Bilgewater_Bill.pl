@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620010 =>
+    625010 =>
         [
          "Well, hail yerself.  What brings you to this little spot of heaven?  From the look of you, yer not here because you were recruited, like I was.  In fact, you must be a fool to be here at all, especially if you're here by your own choosing.  Me, I'm here because I'm stupid.  I allowed myself to pass out drinking in a dockside bar.  That's stupid.  But coming here?  Amazingly stupid, if you ask me.  Of course you didn't, so I don't know why I'm still talking to you.  I have " . quest::saylink("work") . " to do.",
          ["What work?", "Hah!  Well, I call it work.  You might call it torture.  Why, I don't think someone like you could do what I do every day.  There's no glory in it and there's little enough pay.  But then, I can't spend my pay on anything.  I started by saving my 'pay' hoping that I could buy my way out of this job.  I was an idiot then, I know better now.  In fact, I think I know how I want to spend my money on now.  I'll pay you if you'll " . quest::saylink("do some") . " of my work for me.  Heck, that would be like a vacation for me."],
@@ -14,7 +14,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620010);
+my @mytasks = (625010);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed
