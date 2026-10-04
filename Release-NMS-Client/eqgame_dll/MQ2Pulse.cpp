@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "multi_pet.h"
 #include "pet_window.h"
 #include "waypoint_window.h"
+#include "vault_window.h"
 
 extern FloatingTextManager* g_pFtm;
 BOOL TurnNotDone=FALSE;
@@ -834,6 +835,8 @@ public:
             pw->OnSetGameState((int)GameState);
         if (WaypointsWnd* ww = WaypointsWnd::GetInstance())
             ww->OnSetGameState((int)GameState);
+        if (VaultWnd* vw = VaultWnd::GetInstance())
+            vw->OnSetGameState((int)GameState);
         SetGameState_Trampoline(GameState);
     }
 };

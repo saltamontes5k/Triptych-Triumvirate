@@ -807,6 +807,230 @@ static void ShroudLogCharbase(const char *when);
 static void ShroudDumpRecvPacket(const char *buf, size_t size);
 #endif
 
+// NMS: power-source (Energeian orb) support. The server pushes per-instance
+// charge via OP_PowerSource (0x4c89) as {slot, bag, charge, capacity}; the
+// stock client handler expects a different bulk format, so this dll owns the
+// opcode: it writes capacity into the item template's MaxPower (+0x588) and
+// calls the native CONTENTS::SetPower (0x7B0F70), which clamps and refreshes
+// the power bar. NMS_PS_DIAG additionally logs packet/dump detail to
+// C:\EQS\shroud_dump\client_powersource.log (keep 0 for release).
+#ifndef NMS_PS_DIAG
+#define NMS_PS_DIAG 0
+#endif
+
+static void PSLog(const char *fmt, ...) {
+  FILE *f = fopen("C:\\EQS\\shroud_dump\\client_powersource.log", "a");
+  if (!f)
+    return;
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  fprintf(f, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond,
+          st.wMilliseconds);
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(f, fmt, args);
+  va_end(args);
+  fprintf(f, "\n");
+  fclose(f);
+}
+
+// Shim for reading the item template exactly like the native power setter:
+// calling GetTpl() through a recast pointer dispatches vtbl[2] (thiscall).
+struct PSCtl_Shim {
+  virtual void *shim0();
+  virtual void *shim1();
+  virtual void *GetTpl();
+};
+
+// Shim to call the native CONTENTS::SetPower (eqgame 0x7B0F70, thiscall):
+// clamps the value to [0, template MaxPower] and sets the dirty flag so the
+// power bar UI refreshes.
+struct PSSetPower_Shim {
+  void SetPower(int value);
+};
+
+// NMS: apply a power-source packet {slot, bag, charge, capacity} ourselves.
+// The stock 0x4c89 client handler expects a different (bulk) format and
+// rejects small packets, so we own this opcode end to end.
+static bool PSApplyPowerPacket(char *buf, size_t size) {
+  if (!buf || size < 16)
+    return false;
+  const unsigned slot = *(unsigned *)(buf + 0);
+  const unsigned bag = *(unsigned *)(buf + 4);
+  const unsigned charge = *(unsigned *)(buf + 8);
+  const unsigned capacity = *(unsigned *)(buf + 12);
+  if (slot != 21 || bag != 0 || capacity == 0)
+    return false;
+
+  __try {
+    PCHARINFO2 ci = GetCharInfo2();
+    if (!ci || !ci->pInventoryArray)
+      return false;
+    PCONTENTS ps = ci->pInventoryArray->Inventory.PowerSource;
+    if (!ps)
+      return false;
+
+    // 1) Template MaxPower gates and clamps everything; write it first.
+    PSCtl_Shim *proxy = (PSCtl_Shim *)ps;
+    unsigned char *tpl = (unsigned char *)proxy->GetTpl();
+    if (!tpl)
+      return false;
+    *(unsigned *)(tpl + 0x588) = capacity;
+
+    // 2) Native SetPower (clamps + marks dirty so the bar redraws).
+    union {
+      void (PSSetPower_Shim::*fn)(int);
+      DWORD addr;
+    } u;
+    const DWORD base = (DWORD)GetModuleHandleA(NULL);
+    u.addr = (DWORD)0x7B0F70 - 0x400000 + base;
+    (((PSSetPower_Shim *)ps)->*u.fn)((int)charge);
+
+    static unsigned last_charge = 0xFFFFFFFF;
+    static unsigned last_cap = 0;
+    if (charge != last_charge || capacity != last_cap) {
+      last_charge = charge;
+      last_cap = capacity;
+      PITEMINFO it2 = ps->Item2;
+      PSLog("applied power=%u capacity=%u tpl=%08X tpl_id=%u", charge,
+            capacity, (unsigned)tpl, it2 ? (unsigned)it2->ItemNumber : 0);
+    }
+    return true;
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    PSLog("apply faulted (suppressed)");
+    return false;
+  }
+}
+
+#if NMS_PS_DIAG
+// Dump the local player's power-source slot. Offsets per EQData.h:
+//   CONTENTS::Power     @0x110  (per-instance current charge, 0x4c89 target)
+//   CONTENTS::ItemSlot  @0x0b6  (client's own slot id for this item)
+//   ITEMINFO::MaxPower  @0x588  (from the item packet's iqbs.Power field)
+static void PSDumpContents(const char *when) {
+  // NOTE: GetCharInfo2() dereferences pCharData which is not valid until the
+  // player is fully in game — 0x00d2 also fires at character select, so the
+  // whole body must stay inside the SEH guard.
+  __try {
+    PCHARINFO2 ci = GetCharInfo2();
+    if (!ci || !ci->pInventoryArray) {
+      PSLog("[%s] no charinfo/inventory", when);
+      return;
+    }
+    PCONTENTS ps = ci->pInventoryArray->Inventory.PowerSource;
+    if (!ps) {
+      PSLog("[%s] powersource slot empty", when);
+      return;
+    }
+    PITEMINFO it = ps->Item1;
+    PSLog("[%s] ps=%08X power=%u slot=%u slot2=%04X item=%08X id=%u maxpower=%u name='%s'",
+          when, (unsigned)ps, (unsigned)ps->Power, (unsigned)ps->ItemSlot,
+          (unsigned)ps->ItemSlot2, (unsigned)it,
+          it ? (unsigned)it->ItemNumber : 0, it ? (unsigned)it->MaxPower : 0,
+          it ? it->Name : "");
+
+    // Read the template the way SetPower does: virtual fn vtbl[2] (slot +8)
+    // returns a pointer whose +0x588 is the clamp max. Also dump Item2.
+    __try {
+      PSCtl_Shim *proxy = (PSCtl_Shim *)ps;
+      unsigned char *tpl = proxy ? (unsigned char *)proxy->GetTpl() : 0;
+      unsigned maxp_tpl = tpl ? *(unsigned *)(tpl + 0x588) : 0;
+      PITEMINFO it2 = ps->Item2;
+      PSLog("[%s] vtbltpl=%08X tpl_maxpower=%u | item1=%08X item2=%08X item2_id=%u item2_maxpower=%u",
+            when, (unsigned)tpl, maxp_tpl, (unsigned)ps->Item1,
+            (unsigned)it2, it2 ? (unsigned)it2->ItemNumber : 0,
+            it2 ? (unsigned)it2->MaxPower : 0);
+      // Sentinel probe: hex windows over the template tail (StackSize/MaxPower/
+      // Purity region) and the contents power region.
+      if (tpl) {
+        char hex[200];
+        size_t off = 0;
+        for (int i = 0x570; i < 0x5A8; i += 4) {
+          off += (size_t)sprintf_s(hex + off, sizeof(hex) - off, "%08X ",
+                                   *(unsigned *)(tpl + i));
+        }
+        PSLog("[%s] tpl[0x570..0x5A8]: %s", when, hex);
+      }
+      {
+        char hex[120];
+        size_t off = 0;
+        for (int i = 0x0F8; i < 0x118; i += 4) {
+          off += (size_t)sprintf_s(hex + off, sizeof(hex) - off, "%08X ",
+                                   *(unsigned *)((unsigned char *)ps + i));
+        }
+        PSLog("[%s] ps[0x0F8..0x118]: %s", when, hex);
+      }
+    } __except (EXCEPTION_EXECUTE_HANDLER) {
+      PSLog("[%s] vtbl template read faulted", when);
+    }
+
+    // Equipment binding summary: which slots hold a CONTENTS whose template
+    // failed to bind (Item1 == 0)? Compares the orb against known-good items.
+    {
+      int with_item = 0, unbound = 0;
+      char missing[256];
+      size_t off = 0;
+      missing[0] = '\0';
+      for (int i = 0; i < 23; ++i) {
+        PCONTENTS c = ci->pInventoryArray->InventoryArray[i];
+        if (!c)
+          continue;
+        if (c->Item1) {
+          ++with_item;
+        } else {
+          ++unbound;
+          off += (size_t)sprintf_s(missing + off, sizeof(missing) - off, "%s%d",
+                                   (off ? "," : ""), i);
+        }
+      }
+      PSLog("[%s] bind: ok=%d unbound=%d slots=[%s]", when, with_item,
+            unbound, missing);
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    PSLog("[%s] charinfo/contents read faulted (suppressed)", when);
+  }
+}
+
+// RoF2 OP_ItemPacket (0x368e) wire layout:
+//   [0x00] PacketType u32 (105 = char inventory), [0x04] item serialization
+//   ItemSerializationHeader: +0x04 17-byte uid string, +0x1D slot_type u8,
+//   +0x1E main_slot u16  (i.e. wire offsets 0x19/0x1A inside the serialization)
+static void PSLogItemPacket(const char *buf, size_t size) {
+  if (size < 32)
+    return;
+  unsigned packet_type = (unsigned)*(const uint32_t *)(buf + 0);
+  unsigned main_slot = (unsigned)*(const uint16_t *)(buf + 4 + 26);
+  bool has_orb = false;
+  if (size > 9) {
+    for (size_t i = 0; i + 9 < size; ++i) {
+      if (memcmp(buf + i, "Energeian", 9) == 0) {
+        has_orb = true;
+        break;
+      }
+    }
+  }
+  if (!has_orb && main_slot != 21 && main_slot != 13)
+    return;
+  PSLog("itempacket size=%u type=%u main_slot=%u orb=%s", (unsigned)size,
+        packet_type, main_slot, has_orb ? "yes" : "no");
+  if (!has_orb && main_slot != 13)
+    return;
+  char path[MAX_PATH];
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  sprintf_s(path, sizeof(path),
+            "C:\\EQS\\shroud_dump\\psitem_s%02u_%02u%02u%02u_%03u.bin",
+            main_slot, st.wHour, st.wMinute, st.wSecond,
+            (unsigned)(GetTickCount() % 1000));
+  FILE *f = fopen(path, "wb");
+  if (f) {
+    fwrite(buf, 1, size, f);
+    fclose(f);
+    PSLog("dumped to %s", path);
+  }
+}
+#endif
+
 // Set after the OP_Shroud self-transform completes; consumed by the pulse
 // hook which issues /sit + /stand so the actor rebuilds its pose.
 bool g_shroudPoseFix = false;
@@ -1013,6 +1237,36 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
                                                    unsigned __int32 unk,
                                                    unsigned __int16 opcode,
                                                    char *buf, size_t size) {
+#if NMS_PS_DIAG
+  // RoF2 OP_ItemPacket: log the orb's item serialization (and any slot-21 item)
+  if (opcode == 0x368e) {
+    PSLogItemPacket(buf, size);
+  }
+  // RoF2 OP_PowerSource: fully owned — apply charge/capacity via the native
+  // SetPower and skip the stock handler (it expects a different format).
+  if (opcode == 0x4c89) {
+    PSLog("recv opcode=0x4c89 size=%u [0]=%u [4]=%u [8]=%u [12]=%u",
+          (unsigned)size,
+          size >= 4 ? (unsigned)*(uint32_t *)(buf + 0) : 0,
+          size >= 8 ? (unsigned)*(uint32_t *)(buf + 4) : 0,
+          size >= 12 ? (unsigned)*(uint32_t *)(buf + 8) : 0,
+          size >= 16 ? (unsigned)*(uint32_t *)(buf + 12) : 0);
+    if (PSApplyPowerPacket(buf, size)) {
+      PSDumpContents("after-apply");
+      return 1;
+    }
+    // Fallback: let the native handler see it (it rejects <40-byte packets).
+    unsigned char ps_ret =
+        HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
+    PSDumpContents("after-handler-fallback");
+    return ps_ret;
+  }
+#else
+  // RoF2 OP_PowerSource: apply charge/capacity via the native SetPower; fall
+  // back to the stock handler (which rejects small packets) on any failure.
+  if (opcode == 0x4c89 && PSApplyPowerPacket(buf, size))
+    return 1;
+#endif
   // NMS: shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
   if (opcode == 0x6562) {
 #if NMS_SHROUD_DIAG
@@ -1073,6 +1327,9 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
   // NMS: Hook OP_SendCharInfo (0x4513 / 0x00d2) to read multiclass data (Multiclass way)
   if (opcode == 0x4513 || opcode == 0x00d2) {
     ProcessNMSCharSelect(buf, size);
+#if NMS_PS_DIAG
+    PSDumpContents("charinfo");
+#endif
   }
   {
     WhoMulticlass *wm = WhoMulticlass::GetInstance();
@@ -1162,6 +1419,14 @@ unsigned char __fastcall WorldRoutePacket_Detour(void *thisPtr, void *edx,
       ProcessNMSCharSelect(buf + 2, size - 2);
     }
   }
+#if NMS_PS_DIAG
+  if (opcode == 0x368e && buf && size >= 6) {
+    PSLogItemPacket(buf + 2, size - 2); // strip 2-byte wire opcode prefix
+  }
+  if (opcode == 0x00d2) {
+    PSDumpContents("charinfo-worldroute");
+  }
+#endif
 
   return WorldRoutePacket_Trampoline(thisPtr, edx, connection, buf, size);
 }
@@ -1175,6 +1440,35 @@ unsigned char __fastcall UdpRoutePacket_Detour(void *thisPtr, void *edx,
                                                uint32_t unk,
                                                unsigned __int16 opcode,
                                                char *buf, uint32_t size) {
+#if NMS_PS_DIAG
+  // Temporary: opcode histogram (deduped) so we can see which packets route
+  // through this layer at zone-in.
+  {
+    static unsigned __int16 last_op = 0xFFFF;
+    static uint32_t last_sz = 0;
+    static unsigned rep = 0;
+    static unsigned total = 0;
+    if (total < 4000) {
+      if (opcode == last_op && size == last_sz) {
+        ++rep;
+      } else {
+        if (rep > 0)
+          PSLog("udp op=0x%04x size=%u (x%u)", last_op, (unsigned)last_sz, rep);
+        PSLog("udp op=0x%04x size=%u", opcode, (unsigned)size);
+        last_op = opcode;
+        last_sz = size;
+        rep = 0;
+        ++total;
+      }
+    }
+  }
+  if (opcode == 0x368e && buf) {
+    PSLogItemPacket(buf, size);
+  }
+  if (opcode == 0x00d2) {
+    PSDumpContents("charinfo-udp");
+  }
+#endif
   if (opcode == 0x4513 || opcode == 0x00d2) {
     if (size >= 4) {
       ProcessNMSCharSelect(buf, size);
