@@ -18,6 +18,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - fixed Pojustice mark flagging
 - fixed various glitchy maps (hopefully for real this time)
 - added ascendant shard upgrade and small chance on named raid npcs
+- powersources in and functional, UI is sketch as is method of gaining them. obviously can't level a powersource by having it in your powersource slot
 
 ### This update's changes (9/25)
 - Fabled in (Rockin-Vik)
