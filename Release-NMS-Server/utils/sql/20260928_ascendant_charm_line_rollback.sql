@@ -1,0 +1,7 @@
+-- Rollback for 20260928_ascendant_charm_line.sql
+DELETE FROM items WHERE id IN (121850,121851,121852,121853,121854);
+DELETE FROM titles WHERE id IN (398,399,400,401,402,411,419,421);
+DELETE FROM spawn2 WHERE id = 2141240;
+DELETE FROM spawnentry WHERE spawngroupID = 5004020;
+DELETE FROM spawngroup WHERE id = 5004020;
+DELETE FROM npc_types WHERE id = 344050;

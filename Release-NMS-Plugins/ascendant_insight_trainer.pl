@@ -9,8 +9,9 @@
 
 # ── Server progression constant ──
 # Update this when a new expansion unlocks on the server.
-# Expansion numbers: 0-9=Classic, 10-11=Kunark, 12-14=Velious, 15=Luclin, 16=PoP, 17+=GoD+
-my $CURRENT_MAX_EXPANSION = 16;  # Currently: PoP
+# Expansion numbers: 0-9=Classic, 10-11=Kunark, 12-14=Velious, 15=Luclin, 16=PoP,
+# 17=GoD, 18=OoW, 19=DoN, 20=PoR, 21=TSS (one bucket per expansion past PoP)
+my $CURRENT_MAX_EXPANSION = 21;  # Currently: The Serpent's Spine
 
 # ── Economy constants ──
 # Each tome gives 1 credit of its tier; each AA rank costs 1 credit of its tier
@@ -669,7 +670,7 @@ sub _effective_grant_aa {
 # _duplicate_line_or_cap - pre-purchase guard. Returns 0 if OK,
 # else a reason string. Checks:
 #   - buying a NEW line whose name the player already owns elsewhere
-#   - adding a NEW line at/over the ~240 internal AA-array cap
+#   - adding a NEW line at/over the ~300 internal AA-array cap
 # ============================================================
 sub _duplicate_line_or_cap {
     my ($dbh, $client, $granted_ability_id, $is_new_line) = @_;
@@ -686,7 +687,7 @@ sub _duplicate_line_or_cap {
     }
     if ($is_new_line) {
         my $owned = GetUniqueAACount($client);
-        return "You have reached the ~240 AA-line limit ($owned). Untrain an ability to make room before training new ones." if $owned >= 240;
+        return "You have reached the ~300 AA-line limit ($owned). Untrain an ability to make room before training new ones." if $owned >= 300;
     }
     return 0;
 }
@@ -1023,16 +1024,16 @@ sub HandleSay {
         my %bal = GetAllBalances($client, $trainer_class);
         my $unique_aa_count = GetUniqueAACount($client);
         my $aa_limit_color = '#00FF00';
-        if ($unique_aa_count >= 225) {
+        if ($unique_aa_count >= 285) {
             $aa_limit_color = '#FF4444';
-        } elsif ($unique_aa_count >= 200) {
+        } elsif ($unique_aa_count >= 255) {
             $aa_limit_color = '#FFFF00';
         }
         
         my $popup = "<c \"#00FFFF\">$class_name AA Training</c><br><br>";
         $popup .= "<c \"#FFFF00\">AA Limit Notice:</c><br>";
-        $popup .= "The server can only safely track about <c \"#FFFFFF\">240 unique AA lines</c> per character before the client breaks.<br>";
-        $popup .= "You currently have <c \"$aa_limit_color\">$unique_aa_count / 240</c> unique AA lines.<br>";
+        $popup .= "The server can only safely track about <c \"#FFFFFF\">300 unique AA lines</c> per character before the client breaks.<br>";
+        $popup .= "You currently have <c \"$aa_limit_color\">$unique_aa_count / 300</c> unique AA lines.<br>";
         $popup .= "We are consolidating duplicate and overlapping AA lines to make room while preserving their value.<br><br>";
         $popup .= "<c \"#FFFF00\">How It Works:</c><br>";
         $popup .= "1. Bring me <c \"#FFD700\">illegible $class_name tomes</c> + platinum<br>";
@@ -1219,8 +1220,8 @@ sub ShowUntrainMenu {
     my $class_name = $CLASS_NAMES{$trainer_class} || "Unknown";
     my $class_bitmask = _class_bitmask($trainer_class);
     my $total  = GetUniqueAACount($client);
-    my $limit  = 240;
-    my $count_color = $total >= 225 ? $COLOR_RED : ($total >= 200 ? $COLOR_GOLD : $COLOR_HEADING);
+    my $limit  = 300;
+    my $count_color = $total >= 285 ? $COLOR_RED : ($total >= 255 ? $COLOR_GOLD : $COLOR_HEADING);
 
     my $dbh = plugin::LoadMysql();
     unless ($dbh) {

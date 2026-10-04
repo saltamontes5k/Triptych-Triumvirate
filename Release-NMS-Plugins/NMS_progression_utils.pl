@@ -935,9 +935,16 @@ sub GrantDrakkinBreathWeapon {
         return;
     }
 
-    if ($ranks > 0) {
-        $client->GrantAlternateAdvancementAbility($aa_id, $ranks, 1);
-    }
+    # Ranks 1-13 are now earned by quest: the shared "Strengthening the Blood"
+    # tasks 600500-600512, offered by each drakkin's own ancestor in Crescent
+    # Reach at level 5*N while the character holds rank N-1. The ancestor grants
+    # the rank on the reward hail (see Release-NMS-Quests/crescent/#*_the_*.pl).
+    # Keep the auto-grant disabled so the quest ladder is the real path; if you
+    # want the old auto-grant back, restore the call below.
+    #
+    # if ($ranks > 0) {
+    #     $client->GrantAlternateAdvancementAbility($aa_id, $ranks, 1);
+    # }
 }
 
 sub ConvertFlags {

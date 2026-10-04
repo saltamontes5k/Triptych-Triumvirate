@@ -6,19 +6,19 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620012 =>
+    625012 =>
         [
          "Hello.  I'm Mal.  Welcome to my place of business, friend.  Now, I don't know that I can sell you any of my products.  You see I'm really only allowed to sell to my brothers of the Blacksail.  But I suppose if you're discrete then I might have a thing or two of interest to you.  At the same time you might have " . quest::saylink("some things") . " of use to me as well.",
          ["Some things?", "Well, not things, exactly, more like skills.  Ya see I have a lot of trouble with the locals here, my sworn brothers and sisters.  I'm not exactly the most dangerous pirate to ever join the Blacksail.  Never you mind the name they've given me, they did that to tease me.  Pirates aren't known for their overwhelming respect for others, you know. But I know how to run a business and they need me for some things.  Maybe you can help me with " . quest::saylink("some tasks") . " that I can't do on my own right now, I have to stay here and watch over my goods."],
          ["Some tasks?", "Ay, I have a few things that need doing."],
         ],
-    620013 =>
+    625013 =>
         [
          "Hello.  I'm Mal.  Welcome to my place of business, friend.  Now, I don't know that I can sell you any of my products.  You see I'm really only allowed to sell to my brothers of the Blacksail.  But I suppose if you're discrete then I might have a thing or two of interest to you.  At the same time you might have " . quest::saylink("some things") . " of use to me as well.",
          ["Some things?", "Well, not things, exactly, more like skills.  Ya see I have a lot of trouble with the locals here, my sworn brothers and sisters.  I'm not exactly the most dangerous pirate to ever join the Blacksail.  Never you mind the name they've given me, they did that to tease me.  Pirates aren't known for their overwhelming respect for others, you know. But I know how to run a business and they need me for some things.  Maybe you can help me with " . quest::saylink("some tasks") . " that I can't do on my own right now, I have to stay here and watch over my goods."],
          ["Some tasks?", "Ay, I have a few things that need doing."],
         ],
-    620014 =>
+    625014 =>
         [
          "Hello.  I'm Mal.  Welcome to my place of business, friend.  Now, I don't know that I can sell you any of my products.  You see I'm really only allowed to sell to my brothers of the Blacksail.  But I suppose if you're discrete then I might have a thing or two of interest to you.  At the same time you might have " . quest::saylink("some things") . " of use to me as well.",
          ["Some things?", "Well, not things, exactly, more like skills.  Ya see I have a lot of trouble with the locals here, my sworn brothers and sisters.  I'm not exactly the most dangerous pirate to ever join the Blacksail.  Never you mind the name they've given me, they did that to tease me.  Pirates aren't known for their overwhelming respect for others, you know. But I know how to run a business and they need me for some things.  Maybe you can help me with " . quest::saylink("some tasks") . " that I can't do on my own right now, I have to stay here and watch over my goods."],
@@ -26,7 +26,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620012, 620013, 620014);
+my @mytasks = (625012, 625013, 625014);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

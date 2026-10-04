@@ -30,6 +30,68 @@ sub EVENT_SAY {
   if ($text=~/arms/i) {
     quest::say("For the arms piece, I will need the proper supplies. Bring them to me and I will fashion your armor.");
   }
+  # Task series (tasks 600611-600621): Dromrek set, Centaur Troubles, Soothe.
+  if ($text=~/hail/i) {
+    my %status = (
+      600611 => "The dromrek caves east of the lake. Bashers and hunters - count them, and count them dead.",
+      600612 => "Their [cooks] and [provisioners] keep the camps fed. Four of each.",
+      600613 => "Parlay again, my way. Six bashers, six hunters.",
+      600614 => "Bigone still stomps the flats, with shamans chanting behind him.",
+      600615 => "Their [hunters] scout our roads. Eight of them, less.",
+      600616 => "Dromrek must [die]. All of them you can find.",
+      600617 => "A [beast] has gone savage in the minohten herds. I need pollen and a cull.",
+      600618 => "The centaurs will test you: widows, snakes, and a harpy or two.",
+      600619 => "The Tuffein [thugs] raid centaur lands. Ten fewer would help.",
+      600620 => "The centaur herds sicken. Research the [malady] - dark widows and murkwater oozes.",
+      600621 => "The dromrek shamans brew the sickness. [Remedy] it at the source.",
+    );
+    my @act = grep { quest::istaskactive($_) } (600611..600621);
+    quest::say($status{$act[0]}) if @act && exists $status{$act[0]};
+  }
+  if ($text=~/dromrek/i && !quest::istaskactive(600611) && !quest::istaskcompleted(600611)) {
+    quest::say("Slay six dromrek bashers and four dromrek hunters, then report to me. Their caves lie east of the lake.");
+    quest::assigntask(600611);
+  }
+  if ($text=~/parlay/i && !quest::istaskactive(600612) && !quest::istaskcompleted(600612)) {
+    quest::say("Their supply line is soft. Four Dromrek Cooks and four Dromrek Provisioners. Then we will talk.");
+    quest::assigntask(600612);
+  }
+  if ($text=~/again/i && !quest::istaskactive(600613) && !quest::istaskcompleted(600613)) {
+    quest::say("Six bashers and six hunters. The giants never learn.");
+    quest::assigntask(600613);
+  }
+  if ($text=~/threat/i && !quest::istaskactive(600614) && !quest::istaskcompleted(600614)) {
+    quest::say("Bigone, the great basher, and eight shamans behind him. Break the threat and come back.");
+    quest::assigntask(600614);
+  }
+  if ($text=~/scouts/i && !quest::istaskactive(600615) && !quest::istaskcompleted(600615)) {
+    quest::say("Eight dromrek hunters scout our roads. Un-scout them.");
+    quest::assigntask(600615);
+  }
+  if ($text=~/die/i && !quest::istaskactive(600616) && !quest::istaskcompleted(600616)) {
+    quest::say("Six bashers, six hunters, six shamans. Dromrek must die, and you are the reason why.");
+    quest::assigntask(600616);
+  }
+  if ($text=~/beast/i && !quest::istaskactive(600617) && !quest::istaskcompleted(600617)) {
+    quest::say("Bring refined jumjum pollen from the hive bixies, cull four Minohten guards, and we will soothe the savage beast one way or another.");
+    quest::assigntask(600617);
+  }
+  if ($text=~/centaur/i && !quest::istaskactive(600618) && !quest::istaskcompleted(600618)) {
+    quest::say("Prove yourself to the centaurs: four mesa widows, eight highland snakes, two harpy hunters. Klassr watches from the lake.");
+    quest::assigntask(600618);
+  }
+  if ($text=~/thug/i && quest::istaskcompleted(600618) && !quest::istaskactive(600619) && !quest::istaskcompleted(600619)) {
+    quest::say("Ten Tuffein guards raid the centaur lands. Reduce the menace and Klassr will remember it.");
+    quest::assigntask(600619);
+  }
+  if ($text=~/malady/i && quest::istaskcompleted(600619) && !quest::istaskactive(600620) && !quest::istaskcompleted(600620)) {
+    quest::say("The herds sicken. Six dark widows and six murkwater oozes - bring me word of what spreads it.");
+    quest::assigntask(600620);
+  }
+  if ($text=~/remedy/i && quest::istaskcompleted(600620) && !quest::istaskactive(600621) && !quest::istaskcompleted(600621)) {
+    quest::say("The dromrek shamans brew the malady. Six shamans and six highland snakes, and the cure is as good as brewed.");
+    quest::assigntask(600621);
+  }
 }
 
 sub EVENT_ITEM {

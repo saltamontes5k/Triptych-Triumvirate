@@ -563,6 +563,15 @@ void Client::ResetAA()
 			continue;
 		}
 
+		if (slot_id >= MAX_PP_AA_ARRAY) {
+			LogError(
+				"ResetAA for [{}] exceeded the player profile AA array capacity of [{}], truncating",
+				GetCleanName(),
+				MAX_PP_AA_ARRAY
+			);
+			break;
+		}
+
 		m_pp.aa_array[slot_id].AA      = rank_value.first;
 		m_pp.aa_array[slot_id].value   = rank_value.second.first;
 		m_pp.aa_array[slot_id].charges = rank_value.second.second;
@@ -1146,6 +1155,15 @@ void Client::SendAlternateAdvancementPoints() {
 		if(ranks) {
 			AA::Rank *rank = aa.second->GetRankByPointsSpent(ranks);
 			if(rank) {
+				if (i >= MAX_PP_AA_ARRAY) {
+					LogError(
+						"SendAlternateAdvancementPoints for [{}] exceeded the AA table capacity of [{}], truncating",
+						GetCleanName(),
+						MAX_PP_AA_ARRAY
+					);
+					break;
+				}
+
 				aa2->aa_list[i].AA = rank->id;
 				aa2->aa_list[i].value = rank->total_cost;
 				aa2->aa_list[i].charges = charges;
@@ -1819,6 +1837,15 @@ bool ZoneDatabase::LoadAlternateAdvancement(Client *c) {
 		rank = ability->GetRankByPointsSpent(aa_value);
 
 		if (c->CanUseAlternateAdvancementRank(rank)) {
+			if (slot_id >= MAX_PP_AA_ARRAY) {
+				LogError(
+					"Character [{}] owns more AA ranks than the player profile can hold, truncating at [{}] entries",
+					c->GetCleanName(),
+					MAX_PP_AA_ARRAY
+				);
+				break;
+			}
+
 			c->GetPP().aa_array[slot_id].AA      = aa_id;
 			c->GetPP().aa_array[slot_id].value   = aa_value;
 			c->GetPP().aa_array[slot_id].charges = charges;

@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620044 =>
+    625044 =>
         [
          "Good day [$name].  You look like you are an " . quest::saylink("adventurer") . ".",
          ["I am an adventurer!", "Indeed you are!  And as such a great adventurer, I should think you'd enjoy some challenging work.  Listen here, I am trying to start a business that offers services to trophy hunters -- you know, folk who like to boast of hunting the most rare and dangerous beasts! In this business, though, we do the hunting, they do the bragging! To get started I will need some help collecting some beasts for trophy-making from an island in the " . quest::saylink("Buried Sea") . "."],
@@ -14,7 +14,7 @@ my %chains = (
          ["What island?", "Yes, it's called Monkey Rock, though I hear there is more than monkeys there. In fact, judging by your interest, maybe you can handle several of the " . quest::saylink("tasks") . " I have to complete to get this business off the ground. I will reward you well!"],
          ["What tasks?", "Progress! Now, listen, take one of the ships from here to the Buried Sea. You may have a bit of swimming ahead of you too.  Monkey Rock is far southwest from where the ships docks in the Buried Sea."],
         ],
-    620045 =>
+    625045 =>
         [
          "Good day [$name].  You look like you are an " . quest::saylink("adventurer") . ".",
          ["I am an adventurer!", "Indeed you are!  And as such a great adventurer, I should think you'd enjoy some challenging work.  Listen here, I am trying to start a business that offers services to trophy hunters -- you know, folk who like to boast of hunting the most rare and dangerous beasts! In this business, though, we do the hunting, they do the bragging! To get started I will need some help collecting some beasts for trophy-making from an island in the " . quest::saylink("Buried Sea") . "."],
@@ -22,7 +22,7 @@ my %chains = (
          ["What island?", "Yes, it's called Monkey Rock, though I hear there is more than monkeys there. In fact, judging by your interest, maybe you can handle several of the " . quest::saylink("tasks") . " I have to complete to get this business off the ground. I will reward you well!"],
          ["What tasks?", "Progress! Now, listen, take one of the ships from here to the Buried Sea. You may have a bit of swimming ahead of you too.  Monkey Rock is far southwest from where the ships docks in the Buried Sea."],
         ],
-    620046 =>
+    625046 =>
         [
          "Good day [$name].  You look like you are an " . quest::saylink("adventurer") . ".",
          ["I am an adventurer!", "Indeed you are!  And as such a great adventurer, I should think you'd enjoy some challenging work.  Listen here, I am trying to start a business that offers services to trophy hunters -- you know, folk who like to boast of hunting the most rare and dangerous beasts! In this business, though, we do the hunting, they do the bragging! To get started I will need some help collecting some beasts for trophy-making from an island in the " . quest::saylink("Buried Sea") . "."],
@@ -30,7 +30,7 @@ my %chains = (
          ["What island?", "Yes, it's called Monkey Rock, though I hear there is more than monkeys there. In fact, judging by your interest, maybe you can handle several of the " . quest::saylink("tasks") . " I have to complete to get this business off the ground. I will reward you well!"],
          ["What tasks?", "Progress! Now, listen, take one of the ships from here to the Buried Sea. You may have a bit of swimming ahead of you too.  Monkey Rock is far southwest from where the ships docks in the Buried Sea."],
         ],
-    620047 =>
+    625047 =>
         [
          "Good day [$name].  You look like you are an " . quest::saylink("adventurer") . ".",
          ["I am an adventurer!", "Indeed you are!  And as such a great adventurer, I should think you'd enjoy some challenging work.  Listen here, I am trying to start a business that offers services to trophy hunters -- you know, folk who like to boast of hunting the most rare and dangerous beasts! In this business, though, we do the hunting, they do the bragging! To get started I will need some help collecting some beasts for trophy-making from an island in the " . quest::saylink("Buried Sea") . "."],
@@ -38,7 +38,7 @@ my %chains = (
          ["What island?", "Yes, it's called Monkey Rock, though I hear there is more than monkeys there. In fact, judging by your interest, maybe you can handle several of the " . quest::saylink("tasks") . " I have to complete to get this business off the ground. I will reward you well!"],
          ["What tasks?", "Progress! Now, listen, take one of the ships from here to the Buried Sea. You may have a bit of swimming ahead of you too.  Monkey Rock is far southwest from where the ships docks in the Buried Sea."],
         ],
-    620048 =>
+    625048 =>
         [
          "Good day [$name].  You look like you are an " . quest::saylink("adventurer") . ".",
          ["I am an adventurer!", "Indeed you are!  And as such a great adventurer, I should think you'd enjoy some challenging work.  Listen here, I am trying to start a business that offers services to trophy hunters -- you know, folk who like to boast of hunting the most rare and dangerous beasts! In this business, though, we do the hunting, they do the bragging! To get started I will need some help collecting some beasts for trophy-making from an island in the " . quest::saylink("Buried Sea") . "."],
@@ -48,7 +48,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620044, 620045, 620046, 620047, 620048);
+my @mytasks = (625044, 625045, 625046, 625047, 625048);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

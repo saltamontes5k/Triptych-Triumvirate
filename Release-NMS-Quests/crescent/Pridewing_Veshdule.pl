@@ -1,14 +1,29 @@
 sub EVENT_SAY {
   if ($text=~/hail/i) {
-    quest::say("Vasha, fair $name. Mysaphar, my mother, has granted me the wisdom to know what's right and to act upon it.  In fact, all paladins of the Wings of Virtue are the same. A true heart you must have.");
+    my @chain = (600570);
+    my $talked = 0;
+    foreach my $tsk (@chain) {
+      if ($tsk == 600570 && quest::istaskactive(600570)) { quest::say("Four feathers. The ridge still screams."); $talked = 1; last; }
+    }
+    if (!$talked) {
+      foreach my $tsk (@chain) {
+        if ($tsk == 600570 && !quest::istaskcompleted(600570) && !quest::istaskactive(600570)) { quest::say("Four [feathers] - Griffon Feathers from the ridge griffons of the moors. Mind the beaks."); $talked = 1; last; }
+      }
+    }
+    if (!$talked) { quest::say("Four feathers, well kept. The aviary thanks you."); }
+  }
+  if ($text=~/griffon/i) {
+    if (!quest::istaskactive(600570) && !quest::istaskcompleted(600570)) {
+      quest::say("Four Griffon Feathers from the ridge griffons.");
+      quest::assigntask(600570);
+    }
+    elsif (quest::istaskactive(600570)) { quest::say("Four feathers. The ridge still screams."); }
+    else { quest::say("Four feathers, well kept. The aviary thanks you."); }
   }
 }
 
 sub EVENT_ITEM {
-  if (($class eq "Paladin") && (plugin::check_handin(\%itemcount, 58651 => 1))) { #Crescent Reach Guild Summons
-    quest::say("Karui, friend. I was hoping you would be one to join the Wings of Virtue. We are the paladins of Crescent Reach who seek truth and justice in all we do. You are expected to seek the same in all of your travels. I can train your skills, but not your heart. Take this tunic of our guild and hopefully it will guard you in your travels. I suggest you visit Innkeeper Fathus and Initiate Dakkan as they will have jobs for younglings. Udra, $name.");
-    quest::faction(1129, 100); #Circle of the Crystalwing
-    quest::summonitem(58755); #Wings of Virtue Apprentice Tunic*
-  }
+  if (quest::istaskactive(600570)) { plugin::check_handin(\%itemcount, 16538 => 4); }
+  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

@@ -79,10 +79,12 @@ function event_say(e)
 				)
 			end
 		elseif (e.message:findi("knowledge") ) then
-			local marks = { 31796, 31842, 31844, 31845, 31846 , 31960 }
+			-- Completion is tracked by account flags, not the physical marks,
+			-- as turning a mark in to the Tribunal consumes it.
+			local trials = { "execution", "flame", "hanging", "lashing", "stoning", "torture" }
 			local has_six = 1;
-			for k,v in pairs(marks) do
-				if (not e.other:HasItem(v)) then
+			for k,v in ipairs(trials) do
+				if ((tonumber(e.other:GetAccountBucket(string.format("pop.flags.%s", v))) or 0) == 0) then
 					has_six = 0;
 				end
 			end

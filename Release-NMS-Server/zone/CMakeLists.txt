@@ -103,6 +103,7 @@ SET(zone_sources
     tasks.cpp
     titles.cpp
     nms_waypoints.cpp
+    nms_vault.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp
@@ -465,6 +466,7 @@ set(gm_command_sources
     gm_commands/unscribespells.cpp
     gm_commands/untraindisc.cpp
     gm_commands/untraindiscs.cpp
+    gm_commands/vault.cpp
     gm_commands/wc.cpp
     gm_commands/worldshutdown.cpp
     gm_commands/worldwide.cpp

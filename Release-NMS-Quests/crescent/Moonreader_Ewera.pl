@@ -1,6 +1,19 @@
 sub EVENT_SAY {
   if ($text=~/hail/i) {
-    quest::say("All of nature is precious and we should respect it as such! Embrace the earth, the grass, the trees, the beasts big and small! Guard those innocents as you would your own life.");
+    quest::say("All of nature is precious and we should respect it as such! Embrace the earth, the grass, the trees, the beasts big and small! Guard those innocents as you would your own life. The [sporelings] of the Hollows are innocents too, though misguided ones.");
+  }
+  # Memories of Stillmoon (600566)
+  if ($text=~/sporeling/i || $text=~/stillmoon/i) {
+    if (!quest::istaskactive(600566) && !quest::istaskcompleted(600566)) {
+      quest::say("The [memories] the sporelings carry are older than the Reach itself - echoes of Stillmoon, the moonreader line says. Ten sporelings, and their drowsemaster above them, and I will read what they remember.");
+      quest::assigntask(600566);
+    }
+    elsif (quest::istaskactive(600566)) {
+      quest::say("Ten sporelings, and the drowsemaster. The memories wait.");
+    }
+    else {
+      quest::say("I have read what they remember, friend. Stillmoon is not so far away as we thought.");
+    }
   }
 }
 

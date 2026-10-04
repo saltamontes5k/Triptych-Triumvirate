@@ -952,7 +952,7 @@ static const uint32 MAX_PP_LANGUAGE = 28;
 
 static const uint32 MAX_PP_SKILL		= PACKET_SKILL_ARRAY_SIZE;	// 100 - actual skills buffer size
 static const uint32 MAX_PP_INNATE_SKILL	= 25;
-static const uint32 MAX_PP_AA_ARRAY		= 240;
+	static const uint32 MAX_PP_AA_ARRAY		= 300;
 static const uint32 MAX_GROUP_MEMBERS	= 6;
 static const uint32 MAX_RECAST_TYPES	= 20;
 
@@ -5578,15 +5578,14 @@ struct ShroudUpdateSelectWindow
  * Client request to become (or stop being) a shroud.
  *
  * OpCode: OP_ShroudSelect (and OP_ShroudSelectCancel uses op only)
- * RE-VERIFIED against the RoF2 client binary: the client sends a 6-byte
- * buffer (u16 opcode + u32 value) through its send helper at
- * eqgame+0x413830, so the server-side body is a single uint32 shroud id
- * (0 = remove).
+ * NOTE: the RoF2 payload is not documented by any working server; the layout
+ * below is the working hypothesis and is validated/parsed defensively.
  */
 struct ShroudSelect_Struct
 {
 /*000*/ uint32 shroud_id;   // shroud template id, 0 to cancel
-/*004*/
+/*004*/ uint32 op;         // 0/absent = select, 1 = cancel (unverified)
+/*008*/
 };
 
 struct ApplyPoison_Struct {

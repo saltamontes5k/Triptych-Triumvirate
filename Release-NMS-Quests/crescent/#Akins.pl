@@ -45,6 +45,14 @@ sub EVENT_SAY {
     quest::say("Glowing Glass Shards - bring them, and we may at last understand the blightfire!");
     quest::assigntask(600104);
   }
+  # Akins #6 - Everburning (600578)
+  if ($text=~/everburning/i && quest::istaskcompleted(600104) && !quest::istaskactive(600578) && !quest::istaskcompleted(600578)) {
+    quest::say("One mystery [remains]! The Nokk spiritists carry a flame that never gutters - the everburning fire. Ten of them, and I will finally understand what burns below the Reach!");
+    quest::assigntask(600578);
+  }
+  if ($text=~/remains/i && quest::istaskactive(600578)) {
+    quest::say("The everburning flame, friend! Ten Nokk spiritists from the catacombs!");
+  }
 }
 
 sub EVENT_ITEM {

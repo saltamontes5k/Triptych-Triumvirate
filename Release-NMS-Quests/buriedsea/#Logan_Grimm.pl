@@ -6,34 +6,34 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620024 =>
+    625024 =>
         [
          "Yar! Are ye looking fer some " . quest::saylink("errands") . " to undertake?  There are some things that need doin', and you might be able to do them.  Though I doubt you'd be able to pass as any sort of Blacksail!  You don't look like you could hold up to a light rain on the sea.  But mayhap ye can handle yerself against Sharpeye's worthless scabs.",
          ["What errands?", "There ye be, $name."],
         ],
-    620025 =>
+    625025 =>
         [
          "Yar! Are ye looking fer some " . quest::saylink("errands") . " to undertake?  There are some things that need doin', and you might be able to do them.  Though I doubt you'd be able to pass as any sort of Blacksail!  You don't look like you could hold up to a light rain on the sea.  But mayhap ye can handle yerself against Sharpeye's worthless scabs.",
          ["What errands?", "There ye be, $name."],
         ],
-    620026 =>
+    625026 =>
         [
          "Yar! Are ye looking fer some " . quest::saylink("errands") . " to undertake?  There are some things that need doin', and you might be able to do them.  Though I doubt you'd be able to pass as any sort of Blacksail!  You don't look like you could hold up to a light rain on the sea.  But mayhap ye can handle yerself against Sharpeye's worthless scabs.",
          ["What errands?", "There ye be, $name."],
         ],
-    620027 =>
+    625027 =>
         [
          "Yar! Are ye looking fer some " . quest::saylink("errands") . " to undertake?  There are some things that need doin', and you might be able to do them.  Though I doubt you'd be able to pass as any sort of Blacksail!  You don't look like you could hold up to a light rain on the sea.  But mayhap ye can handle yerself against Sharpeye's worthless scabs.",
          ["What errands?", "There ye be, $name."],
         ],
-    620028 =>
+    625028 =>
         [
          "Yar! Are ye looking fer some " . quest::saylink("errands") . " to undertake?  There are some things that need doin', and you might be able to do them.  Though I doubt you'd be able to pass as any sort of Blacksail!  You don't look like you could hold up to a light rain on the sea.  But mayhap ye can handle yerself against Sharpeye's worthless scabs.",
          ["What errands?", "There ye be, $name."],
         ],
 );
 
-my @mytasks = (620024, 620025, 620026, 620027, 620028);
+my @mytasks = (625024, 625025, 625026, 625027, 625028);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

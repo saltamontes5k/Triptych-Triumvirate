@@ -128,6 +128,8 @@ namespace EQ
 
 		// Add item to cursor queue
 		int16 PushCursor(const ItemInstance& inst);
+		int16 PushCursorFront(const ItemInstance& inst);
+		ItemInstance* PopCursorBack();
 
 		// Get cursor item in front of queue
 		ItemInstance* GetCursorItem();

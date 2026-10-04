@@ -2,7 +2,8 @@
 -- Triptych content health check - verifies the DATA each custom-manifest
 -- version is supposed to deliver, without trusting db_version. Coverage is
 -- full for v18-v42 plus targeted checks for v50 (the alternate-currency
--- self-heal) and v62-v63 (the Fabled season schema).
+-- self-heal), v62-v63 (the Fabled season schema), v71 (blessing renames)
+-- and v93-v96 (the Nautilus Vault).
 --
 -- Why this exists: we have now twice found servers whose custom_version was
 -- stamped PAST an entry whose content never landed (a half-apply healed by a
@@ -11,9 +12,9 @@
 -- expectation - anything that misses its expected value identifies exactly
 -- which payload is absent.
 --
--- Expected custom_version on a fully-booted server: 63. A fresh import only
+-- Expected custom_version on a fully-booted server: 96. A fresh import only
 -- reaches that once the first `world` boot applies the outstanding custom
--- migrations (v35-v63). So "63" is correct only after first boot.
+-- migrations (v35-v96). So "96" is correct only after first boot.
 --
 -- Run (Windows / MariaDB):
 --   "C:\Program Files\MariaDB 12.3\bin\mariadb.exe" -u <user> -p <dbname> < nms_content_health_check.sql
@@ -133,3 +134,51 @@ SELECT 'v63 fabled_season inactive (expect 0)' AS what, active AS value FROM fab
 
 -- ---- v71: bazaar "Echo of X" blessings renamed to "Triune of X" --------------------------
 SELECT 'v71 triune blessings renamed (expect 9)' AS what, COUNT(*) AS value FROM spells_new WHERE id IN (17779,36856,43002,43003,43004,43005,43006,43007,43008) AND `name` LIKE 'Triune of %';
+
+-- ---- v93: Nautilus Vault player table ------------------------------------------------
+SELECT 'v93 character_nms_vault (expect 1)' AS what, COUNT(*) AS value
+  FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'character_nms_vault';
+SELECT 'v93 vault primary key named cols (expect 3)' AS what, COUNT(*) AS value
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 'character_nms_vault'
+    AND index_name = 'PRIMARY'
+    AND column_name IN ('character_id', 'slot', 'bag_slot');
+SELECT 'v93 vault primary key total cols (expect 3)' AS what, COUNT(*) AS value
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 'character_nms_vault'
+    AND index_name = 'PRIMARY';
+SELECT 'v93 vault unique indexes (expect 1)' AS what, COUNT(DISTINCT index_name) AS value
+  FROM information_schema.statistics
+  WHERE table_schema = DATABASE() AND table_name = 'character_nms_vault'
+    AND non_unique = 0;
+
+-- ---- v94: vault per-instance item state -----------------------------------------------
+-- Without these six columns a vault round trip silently returned a different item than the
+-- one deposited (attunement, ornamentation and custom_data were dropped), and every vault
+-- SELECT/REPLACE references them - EnsureTables keeps the vault disabled until they exist.
+SELECT 'v94 vault instance columns (expect 6)' AS what, COUNT(*) AS value
+  FROM information_schema.columns
+  WHERE table_schema = DATABASE() AND table_name = 'character_nms_vault'
+    AND column_name IN ('instnodrop', 'custom_data', 'ornament_icon',
+                        'ornament_idfile', 'ornament_hero_model', 'guid');
+
+-- ---- v95: Nautilus Vault inventory key ----------------------------------------------------
+-- Identity is items.id 9011009. Runtime matching is id >= 9011009 AND id % 1000000 = 11009,
+-- so stock 11013 (Boots of Quickness) is never the vault key. norent must be nonzero (1):
+-- NoRent == 0 is deleted after a long camp.
+SELECT 'v95 vault item (expect 1)' AS what, COUNT(*) AS value
+  FROM items WHERE id = 9011009 AND Name = 'Nautilus Vault';
+SELECT 'v95 vault norent (expect 1)' AS what, norent AS value
+  FROM items WHERE id = 9011009;
+SELECT 'v95 vault nodrop (expect 0)' AS what, nodrop AS value
+  FROM items WHERE id = 9011009;
+SELECT 'v95 vault key contract (expect 1)' AS what, COUNT(*) AS value
+  FROM items WHERE id = 9011009 AND itemclass = 0 AND itemtype = 33 AND bagslots = 0
+    AND bagtype = 0 AND book = 0 AND slots = 0 AND nodrop = 0 AND norent = 1
+    AND notransfer = 1 AND fvnodrop = 1 AND attuneable = 0 AND loregroup = -1
+    AND clicktype = 1 AND clickeffect = 1 AND clickname = 'Open Nautilus Vault'
+    AND casttime = 0 AND maxcharges = -1;
+
+-- ---- v96: NautilusVault rule on ----------------------------------------------------------
+SELECT 'v96 Custom:NautilusVault rule (expect 1)' AS what, COUNT(*) AS value
+  FROM rule_values WHERE rule_name = 'Custom:NautilusVault' AND rule_value IN ('true', '1');

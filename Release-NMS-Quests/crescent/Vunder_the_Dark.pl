@@ -22,6 +22,19 @@ sub EVENT_SAY {
     quest::say("There is a scaleless barbarian that intends to train the drakkin. She has some items and ingredients on her that I need for my studies. You are going to have to [kill] her. There is no other way she will surrender the ingredients. She is in Artisan's Row on the second level of the city. You will need to be sure to kill her before the guards who patrol nearby catch you. They will not look upon a death within the city walls fondly. Then, take her bag of goods and return them to me.");
     quest::assigntask(600252); # A Dark Heart
   }
+  # Sowing Dissent (600579)
+  if ($text=~/sowing/i || $text=~/dissent/i) {
+    if (!quest::istaskactive(600579) && !quest::istaskcompleted(600579)) {
+      quest::say("A different kind of study now - [dissent]. The bixies of Stone Hive tend wasphers and gardeners like slaves. Thin their keepers and the hive will turn on itself. Ten wasphers, ten gardeners.");
+      quest::assigntask(600579);
+    }
+    elsif (quest::istaskactive(600579)) {
+      quest::say("Ten wasphers, ten gardeners. Sow the dissent, friend.");
+    }
+    else {
+      quest::say("The hive quarrels with itself now. Beautiful, is it not?");
+    }
+  }
 }
 
 sub EVENT_ITEM {

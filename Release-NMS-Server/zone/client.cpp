@@ -89,6 +89,7 @@ extern volatile bool RunLoops;
 #include "../common/zone_store.h"
 #include "../common/skill_caps.h"
 #include "client.h"
+#include "nms_vault.h"
 
 
 extern QueryServ* QServ;
@@ -176,6 +177,7 @@ Client::Client() : Mob(
 	proximity_timer(ClientProximity_interval),
 	TaskPeriodic_Timer(RuleI(TaskSystem, PeriodicCheckTimer) * 1000),
 	charm_update_timer(6000),
+	power_source_timer(RuleI(Custom, PowerSourceTickMs)),
 	rest_timer(1),
 	pick_lock_timer(1000),
 	charm_class_attacks_timer(3000),
@@ -489,6 +491,7 @@ Client::Client(EQStreamInterface *ieqs) : Mob(
 	proximity_timer(ClientProximity_interval),
 	TaskPeriodic_Timer(RuleI(TaskSystem, PeriodicCheckTimer) * 1000),
 	charm_update_timer(6000),
+	power_source_timer(RuleI(Custom, PowerSourceTickMs)),
 	rest_timer(1),
 	pick_lock_timer(1000),
 	charm_class_attacks_timer(3000),
@@ -731,6 +734,11 @@ Client::Client(EQStreamInterface *ieqs) : Mob(
 Client::~Client() {
 	entity_list.RemoveMobFromCloseLists(this);
 	m_close_mobs.clear();
+
+	// Despawn the vault merchant and drop this character's cached vault state. Logout and
+	// link-death reach here but not SendMerchantEnd, so without this an invisible merchant
+	// NPC stayed spawned for the life of the zone process.
+	NmsVaultOnClientDestroy(this);
 
 	if (ClientVersion() == EQ::versions::ClientVersion::RoF2 && RuleB (Parcel, EnableParcelMerchants)) {
 		DoParcelCancel();
@@ -15224,6 +15232,7 @@ std::string Client::GetBandolierItemName(uint8 bandolier_slot, uint8 slot_id)
 
 void Client::SendMerchantEnd()
 {
+	NmsVaultOnMerchantEnd(this);
 	SetMerchantSessionEntityID(0);
 
 	if (ClientVersion() == EQ::versions::ClientVersion::RoF2 && RuleB(Parcel, EnableParcelMerchants)) {

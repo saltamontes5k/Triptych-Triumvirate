@@ -1326,6 +1326,7 @@ void SharedDatabase::LoadItems(void *data, uint32 size, int32 items, uint32 max_
 		item.Haste = Strings::ToInt(row[ItemField::haste]);
 		item.HealAmt = Strings::ToInt(row[ItemField::healamt]);
 		item.Purity = Strings::ToUnsignedInt(row[ItemField::purity]);
+		item.PowerSourceCapacity = Strings::ToUnsignedInt(row[ItemField::powersourcecapacity]);
 		item.Shielding = static_cast<int8>(EQ::Clamp(Strings::ToInt(row[ItemField::shielding]), -128, 127));
 		item.SpellDmg = Strings::ToInt(row[ItemField::spelldmg]);
 		item.SpellShield = static_cast<int8>(EQ::Clamp(Strings::ToInt(row[ItemField::spellshield]), -128, 127));
@@ -1553,7 +1554,12 @@ void SharedDatabase::LoadItems(void *data, uint32 size, int32 items, uint32 max_
 	for (uint32 id = 0; id < hash.max_key(); ++id) {
 		if (hash.exists(id) && !hash.exists(id + 1000000)) {
 			auto item = hash.find(id);
-			item->Slots &= ~2097152;
+			// Power Source items (Energeian orbs) keep their power source slot
+			// even without an Enchanted/Legendary tier; they are batteries, not
+			// tiered upgrade items.
+			if (item->PowerSourceCapacity == 0) {
+				item->Slots &= ~2097152;
+			}
 		}
     }
 }

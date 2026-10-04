@@ -6,7 +6,7 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620039 =>
+    625039 =>
         [
          "You there! You will help me finish my " . quest::saylink("maps") . ", or me sword will be finding yer gullet!",
          ["I", "Aye, ye scurvy-riddled landlubber! There be one thing a pirate o' quality like meself needs more than all else -- maps of the sea. Ye can't be expected to get anywhere if yer not knowin' where the reefs be now can ye? Now, I've got me a start on the charts o' this area but there be " . quest::saylink("more") . " I'm needin'."],
@@ -16,7 +16,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620039);
+my @mytasks = (625039);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

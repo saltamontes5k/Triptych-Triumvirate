@@ -240,6 +240,13 @@ int command_init(void)
 		command_add("traindisc", "[level] - Trains all the disciplines usable by the target, up to level specified. (may freeze client for a few seconds)", AccountStatus::GMLeadAdmin, command_traindisc) ||
 		command_add("tim", "Toggle Improved Models", AccountStatus::Player, command_toggleimprovedmodels) ||
 		command_add("tune", "Calculate statistical values related to combat.", AccountStatus::GMAdmin, command_tune) ||
+		command_add("vault_page", "Open a Nautilus Vault page", AccountStatus::Player, command_vault_page) ||
+		command_add("vault_deposit", "Deposit the cursor item into a vault slot", AccountStatus::Player, command_vault_deposit) ||
+		command_add("vault_withdraw", "Withdraw an item from a vault slot", AccountStatus::Player, command_vault_withdraw) ||
+		command_add("vault_bank", "Open the bank from the Nautilus Vault", AccountStatus::Player, command_vault_bank) ||
+		command_add("vault_merchant", "Open a merchant from the Nautilus Vault", AccountStatus::Player, command_vault_merchant) ||
+		command_add("vault_deposit_bagitem_specific", "Deposit the cursor item into a vault bag slot", AccountStatus::Player, command_vault_deposit_bagitem_specific) ||
+		command_add("vault_withdraw_bagitem", "Withdraw an item from a vault bag slot", AccountStatus::Player, command_vault_withdraw_bagitem) ||
 		command_add("undye", "Remove dye from all of your or your target's armor slots", AccountStatus::GMAdmin, command_undye) ||
 		command_add("unmemspell", "[Spell ID] - Unmemorize a Spell by ID for you or your target", AccountStatus::Guide, command_unmemspell) ||
 		command_add("unmemspells", " Unmemorize all spells for you or your target", AccountStatus::Guide, command_unmemspells) ||

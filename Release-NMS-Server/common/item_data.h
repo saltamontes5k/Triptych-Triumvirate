@@ -557,6 +557,7 @@ namespace EQ
 		// Begin SoF Fields
 		int32 SVCorruption {};
 		uint32 Purity {};
+		uint32 PowerSourceCapacity {};
 		uint8 EvolvingItem {};
 		uint32 EvolvingID {};
 		uint8 EvolvingLevel {};

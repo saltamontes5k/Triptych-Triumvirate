@@ -76,7 +76,7 @@ INSERT INTO `items` SELECT * FROM `tmp_item`;
 DROP TEMPORARY TABLE `tmp_item`;
 
 -- ---- repoint references from the retired ids ----
-UPDATE `spells_new` SET `effect_base_value1`=976200 WHERE `id`=50017;
+UPDATE `spells_new` SET `effect_base_value1`=976200 WHERE `id`=44013;
 UPDATE `merchantlist` SET `item`=976201 WHERE `merchantid`=202223 AND `item`=9910019;
 UPDATE `tradeskill_recipe_entries` SET `item_id`=976200 WHERE `item_id`=9910018;
 UPDATE `tradeskill_recipe_entries` SET `item_id`=976202 WHERE `item_id`=9910020;

@@ -1,5 +1,6 @@
 #include "../bot.h"
 #include "../client.h"
+#include "../../common/rulesys.h"
 
 void command_mystats(Client *c, const Seperator *sep)
 {
@@ -46,4 +47,32 @@ void command_mystats(Client *c, const Seperator *sep)
 
 	c->Message(Chat::White, "----- Displaying Stats & Inventory for [%s] -----", c->GetCleanName());
 	c->ShowStats(c);
+
+	// Power Source diagnostics (Energeian orb purity mechanic)
+	c->Message(Chat::White, "----- Power Source -----");
+	auto* ps = c->GetInv().GetItem(EQ::invslot::slotPowerSource);
+	if (!ps || !ps->GetItem()) {
+		c->Message(Chat::White, "No item in the Power Source slot.");
+		return;
+	}
+
+	const auto* ps_data = ps->GetItem();
+	c->Message(
+		Chat::White,
+		"Item [%s] Capacity [%u] Charge [%u] Scaling [%s] Charm [%s]",
+		ps_data->Name,
+		ps_data->PowerSourceCapacity,
+		c->GetPowerSourceCharge(ps),
+		ps_data->PowerSourceCapacity > 0 ? "yes" : "no",
+		ps_data->GetActualCharmFile()
+	);
+
+	const uint32 worn_purity = c->CalcWornPurity();
+	c->Message(
+		Chat::White,
+		"Worn purity [%u]  Factor [%.2f]  (cap %i)",
+		worn_purity,
+		static_cast<double>(worn_purity) / 100.0,
+		RuleI(Custom, PowerSourcePurityCap)
+	);
 }

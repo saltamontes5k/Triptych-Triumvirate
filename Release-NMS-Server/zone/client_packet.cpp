@@ -19,6 +19,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../common/eqemu_logsys.h"
 #include "../common/opcodemgr.h"
 #include "../common/raid.h"
+#include "../common/data_bucket.h"
 
 #include <iomanip>
 #include <iostream>
@@ -64,6 +65,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "gm_commands/door_manipulation.h"
 #include "gm_commands/object_manipulation.h"
 #include "client.h"
+#include "nms_vault.h"
 #include "../common/repositories/account_repository.h"
 #include "../common/repositories/character_corpses_repository.h"
 #include "../common/repositories/guild_tributes_repository.h"
@@ -843,6 +845,8 @@ void Client::CompleteConnect()
 		parse->EventZone(EVENT_ENTER_ZONE, zone, "", 0, &args);
 	}
 
+	NmsVaultOnZoneIn(this);
+
 	DeleteEntityVariable(SEE_BUFFS_FLAG);
 
 	sent_inventory = 0;
@@ -936,6 +940,8 @@ void Client::CompleteConnect()
 
 	CalcItemScale();
 	DoItemEnterZone();
+	InitializePowerSourceCharge();
+	SendPowerSourceUpdate();
 
 	if (zone->GetZoneID() == Zones::GUILDHALL && GuildBanks)
 		GuildBanks->SendGuildBank(this);
@@ -3900,16 +3906,18 @@ void Client::Handle_OP_BankerChange(const EQApplicationPacket *app)
 		return;
 	}
 
-	uint32 distance = 0;
-	NPC *banker = entity_list.GetClosestBanker(this, distance);
+	if (!NmsVaultBankAccess(this)) {
+		uint32 distance = 0;
+		NPC *banker = entity_list.GetClosestBanker(this, distance);
 
-	if (!banker || distance > USE_NPC_RANGE2)
-	{
-		auto message = fmt::format(
-		    "Player tried to make use of a banker(money) but {} is non-existant or too far away ({} units).",
-		    banker ? banker->GetName() : "UNKNOWN NPC", distance);
-		RecordPlayerEventLog(PlayerEvent::POSSIBLE_HACK, PlayerEvent::PossibleHackEvent{.message = message});
-		return;
+		if (!banker || distance > USE_NPC_RANGE2)
+		{
+			auto message = fmt::format(
+			    "Player tried to make use of a banker(money) but {} is non-existant or too far away ({} units).",
+			    banker ? banker->GetName() : "UNKNOWN NPC", distance);
+			RecordPlayerEventLog(PlayerEvent::POSSIBLE_HACK, PlayerEvent::PossibleHackEvent{.message = message});
+			return;
+		}
 	}
 
 	auto outapp = new EQApplicationPacket(OP_BankerChange, nullptr, sizeof(BankerChange_Struct));
@@ -4748,6 +4756,11 @@ void Client::Handle_OP_CastSpell(const EQApplicationPacket *app)
 			if (inst && inst->IsClassCommon())
 			{
 				const EQ::ItemData* item = inst->GetItem();
+				if (NmsVaultTryOpenFromItem(this, item->ID)) {
+					InterruptSpell(castspell->spell_id);
+					SendSpellBarEnable(castspell->spell_id);
+					return;
+				}
 				if (item->Click.Effect != (uint32)castspell->spell_id)
 				{
 					std::string message = fmt::format("OP_CastSpell with item, tried to cast a different spell than what was on item - item spell id [{}] attempted [{}]", item->Click.Effect, (uint32)castspell->spell_id);
@@ -9927,6 +9940,13 @@ void Client::Handle_OP_ItemVerifyRequest(const EQApplicationPacket *app)
 		return;
 	}
 
+	if (NmsVaultTryOpenFromItem(this, item->ID)) {
+		if (item->Click.Effect > 0) {
+			SendSpellBarEnable(item->Click.Effect);
+		}
+		return;
+	}
+
 	spell_id = item->Click.Effect;
 	bool is_casting_bard_song = false;
 
@@ -13931,7 +13951,7 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		!tmp->IsNPC() ||
 		tmp->GetClass() != Class::Merchant ||
 		mp->quantity < 1 ||
-		DistanceSquared(m_Position, tmp->GetPosition()) > USE_NPC_RANGE2
+		(!NmsVaultIsMerchant(this, tmp->GetID()) && DistanceSquared(m_Position, tmp->GetPosition()) > USE_NPC_RANGE2)
 	) {
 		SendMerchantEnd();
 		return;
@@ -13939,6 +13959,7 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 	merchantid = tmp->CastToNPC()->MerchantType;
 
 	uint32 item_id = 0;
+	bool gate_blocked = false;
 	std::list<MerchantList> merlist = zone->merchanttable[merchantid];
 	std::list<MerchantList>::const_iterator itr;
 	for (itr = merlist.begin(); itr != merlist.end(); ++itr) {
@@ -13948,10 +13969,44 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		}
 
 		if (mp->itemslot == ml.slot) {
+			// Enforce the same faction / data-bucket gates the merchant window
+			// applies in BulkSendMerchantInventory — the buy path is authoritative
+			// and must not accept slots the window never offered.
+			int32 fac = tmp->GetPrimaryFaction();
+			if (fac != 0 && GetModCharacterFactionLevel(fac) < ml.faction_required) {
+				gate_blocked = true;
+				break;
+			}
+
+			if (!ml.bucket_name.empty() && !ml.bucket_value.empty()) {
+				DataBucketKey k = GetScopedBucketKeys();
+				k.key = ml.bucket_name;
+
+				auto b = DataBucket::GetData(k);
+				if (b.value.empty() || !zone->CompareDataBucket(ml.bucket_comparison, ml.bucket_value, b.value)) {
+					gate_blocked = true;
+					break;
+				}
+			}
+
 			item_id = ml.item;
 			break;
 		}
 	}
+
+	if (gate_blocked) {
+		auto message = fmt::format(
+			"Vendor Cheat attempted to buy gated itemslot [{}] from merchant [{}] (npc_type [{}]) without meeting the faction/bucket requirement",
+			mp->itemslot,
+			tmp->GetCleanName(),
+			tmp->GetNPCTypeID()
+		);
+		RecordPlayerEventLog(PlayerEvent::POSSIBLE_HACK, PlayerEvent::PossibleHackEvent{.message = message});
+		Message(Chat::Red, "The vendor has nothing to show you in that spot.");
+		SendMerchantEnd();
+		return;
+	}
+
 	const EQ::ItemData* item = nullptr;
 	uint32 prevcharges = 0;
 	if (item_id == 0 && tmp) { //check to see if its on the temporary table
@@ -14178,7 +14233,7 @@ void Client::Handle_OP_ShopPlayerSell(const EQApplicationPacket *app)
 		return;
 
 	//you have to be somewhat close to them to be properly using them
-	if (DistanceSquared(m_Position, vendor->GetPosition()) > USE_NPC_RANGE2)
+	if (!NmsVaultIsMerchant(this, vendor->GetID()) && DistanceSquared(m_Position, vendor->GetPosition()) > USE_NPC_RANGE2)
 		return;
 
 	uint32 price = 0;
@@ -14429,7 +14484,7 @@ void Client::Handle_OP_ShopRequest(const EQApplicationPacket *app)
 	}
 
 	// you have to be somewhat close to them to be properly using them
-	if (DistanceSquared(m_Position, tmp->GetPosition()) > USE_NPC_RANGE2) {
+	if (!NmsVaultIsMerchant(this, tmp->GetID()) && DistanceSquared(m_Position, tmp->GetPosition()) > USE_NPC_RANGE2) {
 		return;
 	}
 

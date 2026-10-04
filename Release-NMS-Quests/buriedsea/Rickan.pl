@@ -6,20 +6,20 @@
 #-----------------------------------------------------------------------------
 
 my %chains = (
-    620019 =>
+    625019 =>
         [
          "Have you any idea, any concept of who you're speaking to, Wolf?  Look a little closer, cur.  It's the scourge of the seas, the blade that bleeds, the smuggler of the Buried Sea.  I am feared by sailors, envied by pirates, and chased by comely wenches.  No doubt you felt my magnanimous presence when you first stepped foot upon Jardel's Hook.  It is I, the " . quest::saylink("legendary") . " Rickan!",
          ["Legendary?", "Yes!  You have heard tell of my grand adventures, to be certain - how I sailed the salty waters of Norrath several times over, fending off attacks from man and beast alike, plundering every port that had the misfortune of appearing on my horizon.  Now go, go and " . quest::saylink("spread the word") . ", $name.  You must be dying to inform your friends that you met the legendary Rickan."],
          ["My appearance?", "Yes, I can tell you've a keen eye.  My " . quest::saylink("armor") . " is in need of a change, something that'd instill thoughts of fear and awe into my enemies.  And my " . quest::saylink("clothing") . " has become tattered and worn from my adventures.  Not to mention the sad state my " . quest::saylink("hat") . " is in.  From what Johnny has spoken about Redfeather Isle, I think it'd be just the place to get what I need."],
          ["What clothing?", "Have yourself a trip to Redfeather Isle and return to me with the pelts and skins of the inhabitants.  With the raw materials I'll have Matilda stitch me up a new outfit."],
         ],
-    620020 =>
+    625020 =>
         [
          "Have you any idea, any concept of who you're speaking to, Wolf?  Look a little closer, cur.  It's the scourge of the seas, the blade that bleeds, the smuggler of the Buried Sea.  I am feared by sailors, envied by pirates, and chased by comely wenches.  No doubt you felt my magnanimous presence when you first stepped foot upon Jardel's Hook.  It is I, the " . quest::saylink("legendary") . " Rickan!",
          ["Legendary?", "Yes!  You have heard tell of my grand adventures, to be certain - how I sailed the salty waters of Norrath several times over, fending off attacks from man and beast alike, plundering every port that had the misfortune of appearing on my horizon.  Now go, go and " . quest::saylink("spread the word") . ", $name.  You must be dying to inform your friends that you met the legendary Rickan."],
          ["My appearance?", "Yes, I can tell you've a keen eye.  My " . quest::saylink("armor") . " is in need of a change, something that'd instill thoughts of fear and awe into my enemies.  And my " . quest::saylink("clothing") . " has become tattered and worn from my adventures.  Not to mention the sad state my " . quest::saylink("hat") . " is in.  From what Johnny has spoken about Redfeather Isle, I think it'd be just the place to get what I need."],
         ],
-    620021 =>
+    625021 =>
         [
          "Have you any idea, any concept of who you're speaking to, Wolf?  Look a little closer, cur.  It's the scourge of the seas, the blade that bleeds, the smuggler of the Buried Sea.  I am feared by sailors, envied by pirates, and chased by comely wenches.  No doubt you felt my magnanimous presence when you first stepped foot upon Jardel's Hook.  It is I, the " . quest::saylink("legendary") . " Rickan!",
          ["Legendary?", "Yes!  You have heard tell of my grand adventures, to be certain - how I sailed the salty waters of Norrath several times over, fending off attacks from man and beast alike, plundering every port that had the misfortune of appearing on my horizon.  Now go, go and " . quest::saylink("spread the word") . ", $name.  You must be dying to inform your friends that you met the legendary Rickan."],
@@ -27,7 +27,7 @@ my %chains = (
         ],
 );
 
-my @mytasks = (620019, 620020, 620021);
+my @mytasks = (625019, 625020, 625021);
 
 sub EVENT_SAY {
   # first task of mine the player has not completed

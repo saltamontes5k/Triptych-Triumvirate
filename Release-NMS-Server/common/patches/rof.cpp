@@ -5584,6 +5584,8 @@ namespace RoF
 
 		iqbs.scriptfileid = item->ScriptFileID;
 		iqbs.quest_item = item->QuestItemFlag;
+		// TODO(PSDIAG): reverted to stock (0); the percentage×1e6 theory did
+		// not render a power bar and the field's real semantics are unknown.
 		iqbs.Power = 0;
 		iqbs.Purity = item->Purity;
 		iqbs.unknown16 = 0;

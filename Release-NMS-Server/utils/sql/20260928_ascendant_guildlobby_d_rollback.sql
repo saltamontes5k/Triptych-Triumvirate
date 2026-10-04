@@ -1,0 +1,6 @@
+-- Rollback for 20260928_ascendant_guildlobby_d.sql
+DELETE FROM spawn2 WHERE id IN (2141246,2141247);
+DELETE FROM spawnentry WHERE spawngroupID IN (5004026,5004027);
+DELETE FROM spawngroup WHERE id IN (5004026,5004027);
+DELETE FROM npc_types WHERE id IN (344047,344048);
+DELETE FROM items WHERE id = 121856;

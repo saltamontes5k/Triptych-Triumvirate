@@ -39,8 +39,25 @@ sub EVENT_SAY {
     quest::setglobal("avellone_jokes_reward", 1, 5, "F");
     quest::say("Scribe this well, enchanter. It will teach you to wear the Drakkin form.");
   }
+
+  # A Taste for Honey (600464)
+  if ($text=~/honey/i) {
+    if (!quest::istaskactive(600464) && !quest::istaskcompleted(600464)) {
+      quest::say("On the subject of the hive - I could use a [taste] of their raw honey for the cultures. Five globs, if you can get them.");
+      quest::assigntask(600464);
+    }
+    elsif (quest::istaskactive(600464)) {
+      quest::say("The raw honey, friend. Five globs from the hive.");
+    }
+    else {
+      quest::say("The cultures took to the honey splendidly. My thanks.");
+    }
+  }
 }
 
 sub EVENT_ITEM {
+  if (quest::istaskactive(600464)) {
+    plugin::check_handin(\%itemcount, 52639 => 5);
+  }
   plugin::return_items(\%itemcount);
 }
