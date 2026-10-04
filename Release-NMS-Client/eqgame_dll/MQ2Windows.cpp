@@ -21,6 +21,7 @@ GNU General Public License for more details.
 
 #include "MQ2Main.h"
 #include "waypoint_window.h"
+#include "vault_window.h"
 #include <map>
 #include <string>
 #include <algorithm>
@@ -210,6 +211,7 @@ void InitializeMQ2Windows()
     int i;
     DebugSpew("Initializing MQ2 Windows");
     WaypointsWnd::Initialize();
+    VaultWnd::Initialize();
 
     //extern PCHAR szItemSlot[];
 
