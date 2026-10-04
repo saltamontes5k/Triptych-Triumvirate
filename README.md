@@ -7,6 +7,18 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 ---
 
+### This update's changes (10/4)
+- Nautilus Vault is in, UI is sketch but its in, proc locker has rule choice to proc locked weapons procs and their augs in addition to procs in held weaps
+- fixed doors to guild lobby for real this time
+- readded tomes to global drops (oops)
+- Tome AA cap raised to 300 again and guards in place, waiting on AA consolidation-dedupe patch
+- boosted augs to match lost soul system
+- extended pet and swarm pet focus and abilities to 85 (some swarm spells still don't work right)
+- more scaffolding up to UF
+- fixed Pojustice mark flagging
+- fixed various glitchy maps (hopefully for real this time)
+- added ascendant shard upgrade and small chance on named raid npcs
+
 ### This update's changes (9/25)
 - Fabled in (Rockin-Vik)
 - more scaffolding, put in expansion tracker npcs, again completion dubious
@@ -197,19 +209,21 @@ sudo apt install build-essential cmake ninja-build git \
 
 Honest state of the world, so you know what you are getting into:
 
-- **Expansion content depth varies a lot.** The DoN, LDoN, PoR, TBS and TSS ranges are
-  scaffold-level — playable in spots, thin almost everywhere else.
+- known critical issue: AA line dupes when spent don't meaningfully contribute when AAs are spent in them,
+  consider them as a visual glitch for now until dedupe/consolidation patch in (Kree for report/examination)
+- **Expansion content depth varies a lot.** The LDoN-UF ranges are scaffold-level — playable in spots, thin almost everywhere else.
 - **Factions are incomplete and sometimes flat-out wrong.** Missing or erroneous faction
-  hooks are one of the biggest gaps in the content.
+  hooks are one of the biggest gaps in the content along with bad hps.
 - **DoN alternate currency** (radiant/ebon crystals) is not implemented yet.
-- **Dynamic zone templates** — only 5 ship with the database; most setups will want 20+
-  for instanced/expedition content.
-- **Shrouds** are still being tuned.
-- known issues;
+- **Shrouds and houses** are still being tuned
 - Shrouds right now are more of a cheaty delevel/plvl method, but you don't fd and lose ui anymore. still be cautious using
-- No way to escape your house except by key or port, so be cautious using.
-- LDON + augs need boosting
+- No way to escape your house except by key or port
 - Deity quests rank 2+ need to be put in
+- Cazic thule 2.0 hail is broken, plan to replace gate of the past npcs with an automatic switch to v1 if you are level 60+
+- Origin AA is broken
+- Many OoW+ AAs don't do anything, there are broken swarm pet spells and broken spells in general
+- merchants LDoN-UF ranges have no or missing stock
+
 
 ---
 
@@ -272,6 +286,8 @@ Source of truth: `deity_blessings.pl` (`%BLESS_PROC`). The "Blessing of the God"
 - More modernization to match more current versions of EQEMU
 - Various changes that catch eye
 - more scaffolding, hope to have progression up to uf at least semi-retail, then after that start filling with custom
+- force lvl 60+ to v1 shards for better compatibility with ldon+ zones
+- proc locker for spell effects, 4 pieces of non visible gear
 - future plans for future xpansions/newbie quests at pok level - revamp these to pop-tier or better, especially zones that get looked over due to server's progression-style (crescent reach, eastern wastes, etc)
 - explorer path scaffold for ldon+ scaffold, only hero available right now
 - more quests for the Blessing of the gods line
