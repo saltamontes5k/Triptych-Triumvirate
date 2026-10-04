@@ -1,5 +1,5 @@
 @echo off
-REM export-client-files.bat — generates the 4 DB-derived client data files
+REM export-client-files.bat - generates the 4 DB-derived client data files
 REM and copies them into <client>\ and <client>\Resources\
 REM Usage: export-client-files.bat ^<your-EQ-client-folder^>
 
@@ -11,18 +11,27 @@ if "%~1"=="" (
 )
 
 set "CLIENT=%~1"
-set "EXE=Release-NMS-Server\Build\bin\Release\export_client_files.exe"
-set "EXPORT=Release-NMS-Server\Build\bin\Release\export"
+set "EXEDIR=%~dp0Release-NMS-Server\bin\Release"
+set "EXPORT=%EXEDIR%\export"
 
-if not exist "!EXE!" (
-    echo ERROR: !EXE! not found. Build the server first.
+if not exist "%EXEDIR%\export_client_files.exe" (
+    echo ERROR: %EXEDIR%\export_client_files.exe not found.
+    echo Build the server first, or confirm Release-NMS-Server\bin\Release exists.
     exit /b 1
 )
 
 echo Running export_client_files.exe...
-"!EXE!"
+rem The exporter must run with its CWD set to the bin directory (it loads eqemu_config.json from there).
+pushd "%EXEDIR%"
+export_client_files.exe
+set "EXERR=%ERRORLEVEL%"
+popd
+if not "%EXERR%"=="0" (
+    echo ERROR: export_client_files.exe failed with code %EXERR% - NOT copying stale exports.
+    exit /b 1
+)
 
-if not exist "!EXPORT!" (
+if not exist "%EXPORT%" (
     echo ERROR: export folder not created.
     exit /b 1
 )
