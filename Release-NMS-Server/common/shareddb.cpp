@@ -1982,6 +1982,17 @@ void SharedDatabase::LoadSpells(void *data, int max_spells) {
 	*static_cast<uint32*>(data) = max_spells;
 	SPDat_Spell_Struct *sp = reinterpret_cast<SPDat_Spell_Struct*>(static_cast<char*>(data) + sizeof(uint32));
 
+	// A SQL NULL reaches this loader as a null pointer, and the string/number
+	// helpers take std::string -- so a NULL column becomes std::string(nullptr),
+	// i.e. strlen(nullptr). That is exactly how shared_memory.exe used to die
+	// (EXCEPTION_ACCESS_VIOLATION in strlen) loading a custom spell whose
+	// typedescnum/effectdescnum were NULL: the crash is in the numeric parse, not
+	// in the copies below, so the real fix is the data. `shroudref/null_columns.py`
+	// reports NULLs per column for any table; run it after editing spells.
+	auto field = [](const char *value) -> const char * {
+		return value ? value : "";
+	};
+
 	const std::string query = "SELECT * FROM spells_new ORDER BY id ASC";
     auto results = QueryDatabase(query);
     if (!results.Success()) {
@@ -2004,14 +2015,14 @@ void SharedDatabase::LoadSpells(void *data, int max_spells) {
 
         ++counter;
         sp[tempid].id = tempid;
-        strn0cpy(sp[tempid].name, row[1], sizeof(sp[tempid].name));
-        strn0cpy(sp[tempid].player_1, row[2], sizeof(sp[tempid].player_1));
-		strn0cpy(sp[tempid].teleport_zone, row[3], sizeof(sp[tempid].teleport_zone));
-		strn0cpy(sp[tempid].you_cast, row[4], sizeof(sp[tempid].you_cast));
-		strn0cpy(sp[tempid].other_casts, row[5], sizeof(sp[tempid].other_casts));
-		strn0cpy(sp[tempid].cast_on_you, row[6], sizeof(sp[tempid].cast_on_you));
-		strn0cpy(sp[tempid].cast_on_other, row[7], sizeof(sp[tempid].cast_on_other));
-		strn0cpy(sp[tempid].spell_fades, row[8], sizeof(sp[tempid].spell_fades));
+        strn0cpy(sp[tempid].name, field(row[1]), sizeof(sp[tempid].name));
+        strn0cpy(sp[tempid].player_1, field(row[2]), sizeof(sp[tempid].player_1));
+		strn0cpy(sp[tempid].teleport_zone, field(row[3]), sizeof(sp[tempid].teleport_zone));
+		strn0cpy(sp[tempid].you_cast, field(row[4]), sizeof(sp[tempid].you_cast));
+		strn0cpy(sp[tempid].other_casts, field(row[5]), sizeof(sp[tempid].other_casts));
+		strn0cpy(sp[tempid].cast_on_you, field(row[6]), sizeof(sp[tempid].cast_on_you));
+		strn0cpy(sp[tempid].cast_on_other, field(row[7]), sizeof(sp[tempid].cast_on_other));
+		strn0cpy(sp[tempid].spell_fades, field(row[8]), sizeof(sp[tempid].spell_fades));
 
 		sp[tempid].range = Strings::ToFloat(row[9]);
 		sp[tempid].aoe_range = Strings::ToFloat(row[10]);

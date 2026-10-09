@@ -2,11 +2,18 @@
 sub EVENT_SPAWN
 {
 	quest::settimer("depop", 120);
+	quest::settimer("fd", 1);
 }
 
 sub EVENT_TIMER
 {
-	quest::depop();
+	if ($timer eq "fd") {
+		$npc->SetAppearance(3); # fallen prone
+		quest::stoptimer("fd");
+	}
+	else {
+		quest::depop();
+	}
 }
 
 sub EVENT_ITEM

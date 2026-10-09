@@ -1476,6 +1476,14 @@ void Client::SetEXP(ExpSource exp_source, uint64 set_exp, uint64 set_aaxp, bool 
 		if(GetMercenaryID())
 			UpdateMercLevel();
 	}
+
+	// NMS: a shroud form must never level off the real character's XP total.
+	// The shroud profile keeps the real XP, so without this the loop above
+	// dings the form straight back up to the real level on the first kill.
+	if (m_shrouded && check_level > GetLevel() + 1) {
+		check_level = GetLevel() + 1;
+	}
+
 	check_level--;
 
 

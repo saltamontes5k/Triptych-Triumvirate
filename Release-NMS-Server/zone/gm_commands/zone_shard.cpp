@@ -1,5 +1,7 @@
 #include "../client.h"
 
+extern Zone* zone;
+
 void command_zone_shard(Client *c, const Seperator *sep)
 {
 	int arguments = sep->argnum;
@@ -208,9 +210,16 @@ void command_zone_shard_new(Client *c, const Seperator *sep)
 		return;
 	}
 
+	// shards inherit the version of the zone the caller is standing in when targeting it,
+	// so a shard made from lavastorm v1 is not silently created as version 0
+	uint32 shard_version = z->version;
+	if (zone_id == c->GetZoneID()) {
+		shard_version = zone->GetInstanceVersion();
+	}
+
 	uint16 new_instance_id = 0;
 	database.GetUnusedInstanceID(new_instance_id);
-	database.CreateInstance(new_instance_id, zone_id, z->version, shard_instance_duration);
+	database.CreateInstance(new_instance_id, zone_id, shard_version, shard_instance_duration);
 	LogZoning(
 		"GM [{}] creating new sharded zone > instance_id [{}] zone [{}] ({}) duration [{}]",
 		c->GetCleanName(),

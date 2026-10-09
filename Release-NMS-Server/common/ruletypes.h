@@ -1199,9 +1199,12 @@ RULE_CATEGORY(Custom)
 RULE_BOOL(Custom, 	ServerAuthStats, 						true, "Enable this rule in order to send explicit client updates. Requires client dll.")
 RULE_BOOL(Custom, 	MulticlassingEnabled, 					true, "Enable this to enable all multiclass-related tweaks. Requires ServerAuthStats and UseDynamicAATimers for full functionality.")
 RULE_BOOL(Custom, 	UseDynamicAATimers, 					true, "Enable using dynamic AA timers. Required to deconflict multiclass AA timers")
+RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that share a name, showing and granting only the strongest line per name.")
 
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
+RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")
+RULE_INT(Custom, 	ShroudMonsterPointScale, 				100, "Percent multiplier applied to the monster-point grant for a shroud form (100 = the live guide's baseline ladder: a 10-point starter below level 20, then 32/36/40/45/50/55 at levels 20-45, 78 at 50, 84 at 55, 91 at 60, 97 at 65, 104 at 70). 0 grants no monster points at all (the guide's strict values, where a low-level form's basics are free); the guide's per-form totals otherwise vary by up to about 40 percent, so raise this if the baseline feels stingy.")
 
 // NMS Options
 RULE_BOOL(Custom, 	SuspendGroupBuffs, 						true, 	"Enable this to cause self buffs and group's buffs to not tick down")
@@ -1245,7 +1248,11 @@ RULE_INT(Custom, 	PowerSourceTickMs, 					6000, "Tick interval, in milliseconds,
 // Nautilus Vault (key item, #vault_* commands, Proc Locker, clicky autoload, vault bank/merchant)
 RULE_BOOL(Custom, 	NautilusVault,						true, "Enable the Nautilus Vault (#vault_*) storage, Proc Locker, clicky autoload, vault bank/merchant, and the Nautilus Vault inventory key. Off = no vault commands, grant, or combat hooks.")
 RULE_BOOL(Custom, 	ProcLockerStacks,					true, "When true, the Nautilus Vault Proc Locker procs independently of the held weapon and its augs (all can proc in one swing). When false, the locker item replaces the held weapon's proc and suppresses its aug procs (reference behavior).")
+RULE_BOOL(Custom, 	ProcLockerModSlots,					true, "When true, Nautilus Vault slots 84-87 (the Foci/Skill Mod placeholders on the Proc Locker page) lend their item's skill mods, instrument mods, and focus effects - never stats or procs. Free-form: any non-container item can be parked, which is how a bard parks a second instrument.")
 RULE_REAL(Custom, 	PowerSourceDrainMultiplier, 		1.0000000000000, "Global multiplier applied to Power Source drain rate (set below 1.0 to slow drain).")
+
+// Level-based zone version routing
+RULE_INT(Custom, 	LevelBasedZoneRouting,					0,		"Route open-world zone-ins by player level using the zone_level_routes table (e.g. level 60+ to a version 1 zone or a replacement zone). Zones with route rows ignore static-global instance attach; toggle takes effect live via #rules reload.")
 
 // General QoL and Customizations
 RULE_BOOL(Custom, 	UseDynamicItemDiscoveryTags, 			true, "Enable appfending Discovered By: items using the charmfile method")

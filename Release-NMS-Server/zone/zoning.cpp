@@ -72,8 +72,6 @@ void Client::Handle_OP_ZoneChange(const EQApplicationPacket *app) {
 		int(zone_mode)
 	);
 
-	WorldContentService::Instance()->HandleZoneRoutingMiddleware(zc);
-
 	uint16 target_zone_id = 0;
 	auto target_instance_id = zc->instanceID;
 	ZonePoint* zone_point = nullptr;
@@ -148,6 +146,19 @@ void Client::Handle_OP_ZoneChange(const EQApplicationPacket *app) {
 				SendZoneCancel(zc);
 				return;
 			}
+		}
+	}
+
+	// level-based zone routing + static-global instance attach (world content middleware);
+	// applied to the resolved target so zone point validation above sees the raw request
+	bool redirected_zone = false;
+	{
+		uint32 routed_zone_id     = target_zone_id;
+		uint32 routed_instance_id = target_instance_id;
+		if (WorldContentService::Instance()->ResolveZoneRouting(routed_zone_id, routed_instance_id, GetLevel())) {
+			redirected_zone    = routed_zone_id != target_zone_id;
+			target_zone_id     = static_cast<uint16>(routed_zone_id);
+			target_instance_id = routed_instance_id;
 		}
 	}
 
@@ -341,6 +352,16 @@ void Client::Handle_OP_ZoneChange(const EQApplicationPacket *app) {
 		default:
 			break;
 	};
+
+	// level routing redirected us to a replacement zone with its own coordinate space
+	// (e.g. nro -> northro): arrival coords from zone points/binds/ports are meaningless
+	// there, so land on the target zone's safe point instead (GM summons keep their coords)
+	if (redirected_zone && zone_mode != GMSummon && zone_mode != GMHiddenSummon) {
+		target_x       = safe_x;
+		target_y       = safe_y;
+		target_z       = safe_z;
+		target_heading = safe_heading;
+	}
 
 	auto zoning_message = ZoningMessage::ZoneSuccess;
 
@@ -774,13 +795,21 @@ void Client::ZonePC(uint32 zoneID, uint32 instance_id, float x, float y, float z
 		pZoneName = strcpy(new char[zd->long_name.length() + 1], zd->long_name.c_str());
 	}
 
-	auto r = WorldContentService::Instance()->FindZone(zoneID, instance_id);
-	if (r.zone_id) {
-		const bool instance_unspecified = (instance_id == 0);
-		zoneID      = r.zone_id;
-		instance_id = r.instance.id;
+	const bool   instance_unspecified = (instance_id == 0);
+	const uint32 pre_routing_zone_id  = zoneID;
+	if (WorldContentService::Instance()->ResolveZoneRouting(zoneID, instance_id, GetLevel())) {
+		if (zoneID != pre_routing_zone_id) {
+			// routed to a different zone, re-resolve the long name sent to the client
+			safe_delete_array(pZoneName);
+			pZoneName = nullptr;
+			zd = GetZoneVersionWithFallback(zoneID, zone->GetInstanceVersion());
+			if (zd) {
+				pZoneName = strcpy(new char[zd->long_name.length() + 1], zd->long_name.c_str());
+			}
+		}
+
 		LogZoning(
-			"Client caught HandleZoneRoutingMiddleware [{}] zone_id [{}] instance_id [{}] x [{}] y [{}] z [{}] heading [{}] ignorerestrictions [{}] zone_mode [{}]",
+			"Client caught zone routing middleware [{}] zone_id [{}] instance_id [{}] x [{}] y [{}] z [{}] heading [{}] ignorerestrictions [{}] zone_mode [{}]",
 			GetCleanName(),
 			zoneID,
 			instance_id,
@@ -933,6 +962,18 @@ void Client::ZonePC(uint32 zoneID, uint32 instance_id, float x, float y, float z
 			LogError("Client::ZonePC() received a reguest to perform an unsupported client zone operation");
 			ReadyToZone = false;
 			break;
+	}
+
+	// level routing redirected us to a replacement zone with its own coordinate space
+	// (e.g. nro -> northro): the destination coords are meaningless there, so land on
+	// the target zone's safe point instead (GM summons keep their coords)
+	if (zd && zoneID != pre_routing_zone_id && zm != GMSummon && zm != GMHiddenSummon) {
+		x                   = zd->safe_x;
+		y                   = zd->safe_y;
+		z                   = zd->safe_z;
+		heading             = zd->safe_heading;
+		m_Position          = glm::vec4(x, y, z, heading);
+		m_ZoneSummonLocation = m_Position;
 	}
 
 	if (ReadyToZone)

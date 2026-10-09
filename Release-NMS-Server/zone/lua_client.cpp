@@ -1630,6 +1630,22 @@ void Lua_Client::RemoveShroud() {
 	self->RemoveShroud();
 }
 
+// NMS: script-side shroud apply (Cake Defense monster mission). Calls the same
+// path as the shroud window; scripts must invoke it only after the client has
+// settled into the zone (the deferred-send window used by LoadAndApplyShroudState).
+void Lua_Client::ApplyShroud(uint32 shroud_id) {
+	Lua_Safe_Call_Void();
+	self->ApplyShroud(shroud_id);
+}
+
+// NMS: silent twin of RemoveShroud for zone-in/death hooks -- restores the real
+// profile without the OP_Shroud/illusion packets (fresh zone-in spawn data
+// already carries it).
+void Lua_Client::RemoveShroudSilent() {
+	Lua_Safe_Call_Void();
+	self->RemoveShroud(false);
+}
+
 void Lua_Client::NotifyNewTitlesAvailable() {
 	Lua_Safe_Call_Void();
 	self->NotifyNewTitlesAvailable();
@@ -4177,7 +4193,9 @@ luabind::scope lua_register_client() {
 	.def("NukeItem", (void(Lua_Client::*)(uint32,int))&Lua_Client::NukeItem)
 	.def("OpenLFGuildWindow", (void(Lua_Client::*)(void))&Lua_Client::OpenLFGuildWindow)
 	.def("OpenShroudWindow", (void(Lua_Client::*)(Lua_Mob))&Lua_Client::OpenShroudWindow)
+	.def("ApplyShroud", (void(Lua_Client::*)(uint32_t))&Lua_Client::ApplyShroud)
 	.def("RemoveShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroud)
+	.def("RemoveShroudSilent", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroudSilent)
 	.def("PlayMP3", (void(Lua_Client::*)(std::string))&Lua_Client::PlayMP3)
 	.def("Popup", (void(Lua_Client::*)(const char*,const char*))&Lua_Client::Popup)
 	.def("Popup", (void(Lua_Client::*)(const char*,const char*,uint32))&Lua_Client::Popup)

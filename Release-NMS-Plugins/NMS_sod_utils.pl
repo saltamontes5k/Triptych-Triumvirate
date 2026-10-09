@@ -6,12 +6,18 @@
 # (is_eligible_for_zone) is untouched and the two systems cannot disagree.
 #
 #   Group chain tasks per theme + raid request tasks:
-#     oceangreen-group  303000-303005     oceangreen-raid  303060
+#     oceangreen-group  303000-303005     oceangreen-raid  303060, 303078
 #     kithicor-group    303010-303012     kithicor-raid    303061
 #     kunark-group      303020-303024     kunark-raid      303062
-#     rathe-group       303030-303036     rathe-raid       303063
+#     rathe-group       303030-303036     rathe-raid       303063, 303079
 #     korafax-kuua      303040-303051     korafax-raid-1/2/3  303064-303066
 #                                         discord-tower    303067
+#
+#   Raid-prereq tasks (v110; no chain flag -- raid requests require them via
+#   %SOD_OFFERS, per the page's "request ..." prerequisite lists):
+#     oceangreen 303070-303073  Queen Malarian path (Cadmael / Jerom Bertrand)
+#     kithicor   303074-303076  Bahgresh paths (Tephys / Firiona / Laarthik)
+#     rathe      303077         Showdown at the Crystal Core path (Ulgin)
 #
 #   Derived (miscProgression rules):
 #     Void version = 1 + themes completed (group OR raid per theme; a theme's
@@ -62,6 +68,7 @@ my %SOD_TASK_FLAG = (
     303062 => 'kunark-raid',      303063 => 'rathe-raid',
     303064 => 'korafax-raid-1',   303065 => 'korafax-raid-2',
     303066 => 'korafax-raid-3',   303067 => 'discord-tower',
+    303078 => 'oceangreen-raid',  303079 => 'rathe-raid',
 );
 
 my %SOD_CHAIN_TASKS = (
@@ -71,14 +78,21 @@ my %SOD_CHAIN_TASKS = (
     'rathe-group'      => [303030, 303031, 303032, 303033, 303034, 303035, 303036],
     'korafax-kuua'     => [303040, 303041, 303042, 303043, 303044, 303045,
                            303046, 303047, 303048, 303049, 303050, 303051],
-    'oceangreen-raid'  => [303060],
+    'oceangreen-raid'  => [303060, 303078],
     'kithicor-raid'    => [303061],
     'kunark-raid'      => [303062],
-    'rathe-raid'       => [303063],
+    'rathe-raid'       => [303063, 303079],
     'korafax-raid-1'   => [303064],
     'korafax-raid-2'   => [303065],
     'korafax-raid-3'   => [303066],
     'discord-tower'    => [303067],
+);
+
+# Chains where ANY completed member sets the flag (a theme with two raids:
+# either one counts as the theme's raid victory).
+my %SOD_CHAIN_ANY = (
+    'oceangreen-raid' => 1,
+    'rathe-raid'      => 1,
 );
 
 my @SOD_THEMES       = ('oceangreen', 'kithicor', 'kunark', 'rathe');
@@ -89,27 +103,40 @@ my $SOD_TOWER_KEY    = 88343;
 # ---------------------------------------------------------------------------
 # Giver offers: npc id => [ [task id, prereq...], ... ]
 # Prereq entries: a task id number, a chain flag name (e.g. 'kunark-group'),
-# or the special string 'korafax' (= SodKorafaxAccess).
+# the special string 'korafax' (= SodKorafaxAccess), the special string
+# 'towerkey' (= a Tower Key 88343 on the character), or an ARRAY reference.
+# An ARRAY prereq is an OR over its elements; an ARRAY element that is itself
+# an ARRAY is an AND over its own entries -- so
+#   [[a, b], [c, d]]  means  (a AND b) OR (c AND d).
+# Raid prereqs mirror the page's "request ..." lists (v110).
 # ---------------------------------------------------------------------------
 my %SOD_OFFERS = (
     # Oceangreen
     466141 => [[303000, ()], [303001, 303000]],                     # Sergeant Bronal Cadran
     466035 => [[303002, ()], [303003, 303002], [303004, 303003]],   # Captain Hiran Tillin
     466160 => [[303005, 303003, 303004]],                           # Raxtor Darkpaw
-    467066 => [[303060, ()]],                                       # Apothecary Cadmael (raid req)
+    467066 => [[303060, 303000, 303001, 303002, 303003, 303004],
+               [303070, ()], [303071, 303070], [303072, 303071],
+               [303078, 303070, 303071, 303072, 303073]],           # Apothecary Cadmael
+    467069 => [[303073, 303072]],                                   # Jerom Bertrand
     # Kithicor
     456178 => [[303010, ()]],                                       # Lanys T`Vyl (Obliteration)
     456174 => [[303011, 303010]],                                   # Commander Barvian (Light)
-    456171 => [[303012, 303011], [303061, ()]],                     # Firiona Vie
+    456172 => [[303074, ()]],                                       # Lord Tephys (Light)
+    456175 => [[303076, 303010]],                                   # Laarthik V`Shin (Obliteration)
+    456171 => [[303012, 303011], [303075, 303074],
+               [303061, [[303074, 303075, 303011, 303012],
+                         [303076, 303010]]]],                       # Firiona Vie
     # Kunark / Field of Scale
     452147 => [[303020, ()], [303021, 303020], [303022, 303021],
                [303023, 303022], [303024, 303023],
-               [303062, ()]],                                       # Jaled`Dar
+               [303062, 303020, 303021, 303022, 303023, 303024]],   # Jaled`Dar
     # Rathe
     476122 => [[303030, ()]],                                       # Sterik Gristmaker
     476115 => [[303031, 303030], [303032, 303031], [303033, 303032]],  # Nedsin Tabbels
+    476041 => [[303077, ()], [303079, 303077]],                     # Ulgin Darkhammer
     476110 => [[303034, 303033], [303035, 303034], [303036, 303035],
-               [303063, ()]],                                       # Ylatra the Vassal
+               [303063, 303031, 303035, 303036]],                   # Ylatra the Vassal
     # Discord / Kuua
     472055 => [[303040, ()]],                                       # General Vurig the Imposing
     474036 => [[303041, 303040]],                                   # Yemall the Arcane
@@ -120,7 +147,7 @@ my %SOD_OFFERS = (
     # Korafax raids + Citadel
     470001 => [[303064, 'korafax-kuua'], [303065, 303064],
                [303066, 303065],
-               [303067, 303064, 303065, 303066]],                   # Herald of Druzzil Ro
+               [303067, 303064, 303065, 303066, 'towerkey']],       # Herald of Druzzil Ro
 );
 
 # ---------------------------------------------------------------------------
@@ -154,11 +181,19 @@ my %SOD_RAIDS = (
     303067 => { name => 'The Mindblight',           zone => 'discordtower',
                 version => 51, zonein => [0, -48, -48],
                 compass => ['discord', -51, 33, 27] },
+    303078 => { name => 'Queen Malarian',           zone => 'oceangreenhills',
+                version => 51, zonein => [-1140, 4542, 73],
+                compass => ['oceangreenhills', -1140, 4542, 73] },
+    303079 => { name => 'Showdown at the Crystal Core', zone => 'korascian',
+                version => 51, zonein => [24, -77, 25],
+                compass => ['korascian', 24, -77, 25] },
 );
 
 # ---------------------------------------------------------------------------
 # Portal clickies: npc id => [kind, dest zone, x, y, z]
-#   kind 'void'    - theme zone -> The Void (version redirect happens there)
+#   kind 'void'    - theme zone / potimea -> The Void. The player lands in
+#                    their EARNED version (thevoida..g); SodGateVoid in each
+#                    <thevoid*>/player.pl guards the zone line itself.
 #   kind 'korafax' - The Void  -> Korafax (gated)
 #   kind 'citadel' - Korafax   -> Citadel of the Worldslayer (gated)
 # ---------------------------------------------------------------------------
@@ -170,6 +205,7 @@ my %SOD_PORTALS = (
     478604 => ['void',    'thevoida',    -79, -158, 33],   # Toskirakk rift
     478605 => ['korafax', 'discord',      28,  -20, -16],   # thevoida Timeshear rift
     478606 => ['citadel', 'discordtower',   0,  -48, -48],   # Korafax Citadel rift
+    478757 => ['void',    'thevoida',    -79, -158, 33],   # potimea entry rift
 );
 
 # ---------------------------------------------------------------------------
@@ -183,7 +219,24 @@ sub _sod_subflag {
 sub _sod_prereq_met {
     my ($client, $pre) = @_;
     return 1 if !defined $pre || $pre eq '';
+    return 1 if $client->GetGM();
     if ($pre eq 'korafax')    { return SodKorafaxAccess($client); }
+    if ($pre eq 'towerkey')   { return ($client->CountItem($SOD_TOWER_KEY) > 0) ? 1 : 0; }
+    if (ref($pre) eq 'ARRAY') {
+        # OR over the alternatives; an ARRAY alternative is an AND.
+        foreach my $alt (@{$pre}) {
+            if (ref($alt) eq 'ARRAY') {
+                my $all = 1;
+                foreach my $p (@{$alt}) {
+                    if (!_sod_prereq_met($client, $p)) { $all = 0; last; }
+                }
+                return 1 if $all;
+            } else {
+                return 1 if _sod_prereq_met($client, $alt);
+            }
+        }
+        return 0;
+    }
     if ($pre =~ /^[A-Za-z]/)  { return _sod_subflag($client, $pre); }
     return $client->IsTaskCompleted($pre) ? 1 : 0;
 }
@@ -249,6 +302,11 @@ sub SodOnTaskComplete {
     my ($client, $task_id) = @_;
     return unless exists $SOD_TASK_FLAG{$task_id};
     my $flag = $SOD_TASK_FLAG{$task_id};
+    # Any-completed chains (themes with two raid victories) set immediately.
+    if ($SOD_CHAIN_ANY{$flag}) {
+        plugin::SetSubflag($client, 'SoD', $flag, 1);
+        return;
+    }
     foreach my $tid (@{$SOD_CHAIN_TASKS{$flag}}) {
         return unless $client->IsTaskCompleted($tid);
     }
@@ -436,6 +494,7 @@ sub SodPortalUse {
     my ($kind, $dest, $x, $y, $z) = @{$portal};
 
     if ($kind eq 'void') {
+        $dest = SodVoidZone(SodVoidVersion($client));
         $client->Message(15, "You step through the timeshear rift...");
         $client->MovePC($dest, $x, $y, $z, 0);
         return 1;

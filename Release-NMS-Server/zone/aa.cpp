@@ -979,9 +979,177 @@ Mob *SwarmPet::GetOwner()
 	return entity_list.GetMobID(owner_id);
 }
 
+// NMS: pick the single best line when multiple abilities share a name.
+// Ranked by cumulative effect strength, then usable rank count, then newest
+// expansion, then lowest ability id (stable tie-break).
+static bool IsBetterAALine(AA::Ability *a, AA::Ability *b, Mob *who)
+{
+	if (!a) {
+		return false;
+	}
+
+	if (!b) {
+		return true;
+	}
+
+	// Prefer lines a player can actually acquire/train (non grant-only) over
+	// grant-only universal lines when both are usable, so native players are
+	// never left with only a line the trainer will no longer sell them.
+	if (a->grant_only != b->grant_only) {
+		return !a->grant_only;
+	}
+
+	auto a_strength = a->GetLineStrength(who);
+	auto b_strength = b->GetLineStrength(who);
+	if (a_strength != b_strength) {
+		return a_strength > b_strength;
+	}
+
+	auto a_ranks = a->GetMaxLevel(who);
+	auto b_ranks = b->GetMaxLevel(who);
+	if (a_ranks != b_ranks) {
+		return a_ranks > b_ranks;
+	}
+
+	auto a_expansion = a->GetMaxExpansion(who);
+	auto b_expansion = b->GetMaxExpansion(who);
+	if (a_expansion != b_expansion) {
+		return a_expansion > b_expansion;
+	}
+
+	return a->id < b->id;
+}
+
+const std::unordered_map<std::string, uint32>& Client::GetAAWinnerMap()
+{
+	uint32 classes = GetClassesBits();
+
+	if (m_aa_winner_valid && m_aa_winner_classes == classes) {
+		return m_aa_winner_map;
+	}
+
+	m_aa_winner_map.clear();
+
+	for (auto &entry : zone->aa_abilities) {
+		AA::Ability *ability = entry.second.get();
+
+		if (!ability || !ability->first) {
+			continue;
+		}
+
+		// only lines this client can actually use are candidates
+		if (!CanUseAlternateAdvancementRank(ability->first)) {
+			continue;
+		}
+
+		auto winner = m_aa_winner_map.find(ability->name);
+		if (winner == m_aa_winner_map.end()) {
+			m_aa_winner_map[ability->name] = ability->id;
+			continue;
+		}
+
+		AA::Ability *current = zone->GetAlternateAdvancementAbility(winner->second);
+		if (IsBetterAALine(ability, current, this)) {
+			m_aa_winner_map[ability->name] = ability->id;
+		}
+	}
+
+	m_aa_winner_classes = classes;
+	m_aa_winner_valid   = true;
+
+	return m_aa_winner_map;
+}
+
+// NMS: fold any owned duplicate lines into their winning line so only one line
+// per name survives. Rank count is carried over (capped at the winner's max).
+void Client::MigrateDuplicateAALines()
+{
+	if (!RuleB(Custom, DedupeAALines) || !zone) {
+		return;
+	}
+
+	const auto &winners = GetAAWinnerMap();
+
+	std::vector<uint32> loser_first_ranks;
+	bool changed = false;
+
+	// snapshot owned ability ids; aa_ranks is mutated below
+	std::vector<uint32> owned;
+	owned.reserve(aa_ranks.size());
+	for (const auto &entry : aa_ranks) {
+		owned.push_back(entry.first);
+	}
+
+	for (uint32 ability_id : owned) {
+		AA::Ability *ability = zone->GetAlternateAdvancementAbility(ability_id);
+		if (!ability) {
+			continue;
+		}
+
+		// Shroud AAs are session-scoped lines, never folded into real lines.
+		if (ability->category == AACategory::ShroudPassive ||
+			ability->category == AACategory::ShroudActive) {
+			continue;
+		}
+
+		auto winner = winners.find(ability->name);
+		if (winner == winners.end() || winner->second == ability_id) {
+			continue; // this line is the winner (or there is no competing line)
+		}
+
+		AA::Ability *winner_ability = zone->GetAlternateAdvancementAbility(winner->second);
+		if (!winner_ability) {
+			continue;
+		}
+
+		auto owned_rank = aa_ranks[ability_id].first;
+		if (owned_rank == 0) {
+			continue;
+		}
+
+		uint32 winner_rank = GetAA(winner_ability->first_rank_id);
+		int    winner_max  = winner_ability->GetMaxLevel(this);
+
+		uint32 new_rank = owned_rank > winner_rank ? owned_rank : winner_rank;
+		if (winner_max >= 0 && new_rank > static_cast<uint32>(winner_max)) {
+			new_rank = static_cast<uint32>(winner_max);
+		}
+
+		if (winner_max > 0 && new_rank > winner_rank) {
+			SetAA(winner_ability->first_rank_id, new_rank);
+		}
+
+		if (static_cast<int>(owned_rank) > winner_max) {
+			LogAA(
+				"Duplicate AA [{}] migrated for [{}]: owned rank [{}] truncated to winner [{}] max rank [{}]",
+				ability->name,
+				GetCleanName(),
+				owned_rank,
+				winner_ability->name,
+				winner_max
+			);
+		}
+
+		loser_first_ranks.push_back(ability->first_rank_id);
+		aa_ranks.erase(ability_id);
+		changed = true;
+	}
+
+	if (!changed) {
+		return;
+	}
+
+	for (uint32 first_rank_id : loser_first_ranks) {
+		RemoveExpendedAA(static_cast<int>(first_rank_id));
+	}
+
+	SaveAA();
+}
+
 //New AA
 void Client::SendAlternateAdvancementTable() {
 	LogDebug("Sending AA Table");
+	InvalidateAAWinnerMap();
 	GetDynamicAATimers();
 	GetAllToggleAAStatus();
 
@@ -1011,6 +1179,18 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 
 	if(!ability) {
 		return;
+	}
+
+	// NMS: suppress duplicate lines - only the winning line for a name is sent
+	// (shroud AAs are exempt: they intentionally mirror real AA names).
+	if (RuleB(Custom, DedupeAALines)
+		&& ability->category != AACategory::ShroudPassive
+		&& ability->category != AACategory::ShroudActive) {
+		const auto &winners = GetAAWinnerMap();
+		auto winner = winners.find(ability->name);
+		if (winner != winners.end() && winner->second != ability->id) {
+			return;
+		}
 	}
 
 	int size = sizeof(AARankInfo_Struct) + (sizeof(AARankEffect_Struct) * rank->effects.size()) + (sizeof(AARankPrereq_Struct) * rank->prereqs.size());
@@ -1044,7 +1224,17 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->desc_sid = rank->desc_sid;
 	aai->cost = rank->cost;
 	aai->seq = aa_id;
+	// NMS: only the current shroud form/level's lines may look like shroud rows to
+	// the client's AA window; the encoder writes this as the per-row shroud byte.
+	aai->shroud_row = IsShroudAbilityForCurrentForm(aa_id) ? 1 : 0;
 	aai->type = ability->type;
+	// Shroud rows send the rank's real spell. It used to be blanked to -1 on the
+	// theory that the client's monster row filter skipped its known-spell check
+	// when the field was empty; that filter turned out to be the client's
+	// 0..49998 id scan plus the "already owned" ownership gate, so blanking the
+	// spell only cost the client the AA's spell data (blank hotbutton label, and
+	// the button briefly reading unavailable). Passives keep spell -1 from the
+	// content row.
 	aai->spell = rank->spell;
 	aai->spell_type = rank->spell_type;
 	aai->spell_refresh = rank->recast_time;
@@ -1107,15 +1297,15 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 			case 586:
 			case 587:
 			case 588:
-			case 589:
+			// 589 (Destruction), 5003 (Frantic Infusion), 7019 (Cataclysm) were
+			// de-listed: they are real purchasable burns again (see
+			// utils/sql/20261004_glyphs_blood_gambler.sql).
 			case 5000:
 			case 5002:
-			case 5003:
 			case 5004:
 			case 7016:
 			case 7017:
 			case 7018:
-			case 7019:
 				aai->grant_only = 1;
 				aai->cost = 0;
 				aai->total_cost = 0;
@@ -1138,7 +1328,10 @@ void Client::SendAlternateAdvancementStats() {
 	auto outapp = new EQApplicationPacket(OP_AAExpUpdate, sizeof(AltAdvStats_Struct));
 	AltAdvStats_Struct *aps = (AltAdvStats_Struct *)outapp->pBuffer;
 	aps->experience = (uint32)(((float)330.0f * (float)m_pp.expAA) / (float)GetRequiredAAExperience());
-	aps->unspent = m_pp.aapoints;
+	// While shrouded in live-like mode the AA window counts monster points.
+	aps->unspent = (IsShrouded() && (RuleI(Custom, ShroudLiveMode) & 4))
+		? GetShroudPoints()
+		: m_pp.aapoints;
 	aps->percentage = m_epp.perAA;
 	QueuePacket(outapp);
 	safe_delete(outapp);
@@ -1150,6 +1343,18 @@ void Client::SendAlternateAdvancementPoints() {
 
 	int i = 0;
 	for(auto &aa : zone->aa_abilities) {
+		// NMS: only report owned ranks for the winning line of each name
+		// (shroud AAs are exempt: they intentionally mirror real AA names).
+		if (RuleB(Custom, DedupeAALines)
+			&& aa.second->category != AACategory::ShroudPassive
+			&& aa.second->category != AACategory::ShroudActive) {
+			const auto &winners = GetAAWinnerMap();
+			auto winner = winners.find(aa.second->name);
+			if (winner != winners.end() && winner->second != aa.second->id) {
+				continue;
+			}
+		}
+
 		uint32 charges = 0;
 		auto ranks = GetAA(aa.second->first_rank_id, &charges);
 		if(ranks) {
@@ -1418,6 +1623,11 @@ void Client::PurchaseAlternateAdvancementRank(int rank_id) {
 	}
 
 	if(!CanPurchaseAlternateAdvancementRank(rank, true, true)) {
+		// Shroud AAs are buyable only while transformed; explain instead of
+		// failing silently when the window is used in a normal form.
+		if (IsShroudAA(rank->base_ability) && !IsShrouded()) {
+			Message(Chat::Yellow, "You must be shrouded to purchase monster abilities.");
+		}
 		return;
 	}
 
@@ -1455,11 +1665,63 @@ bool Client::GrantAlternateAdvancementAbility(int aa_id, int points, bool ignore
 		FinishAlternateAdvancementPurchase(rank, ignore_cost, true);
 	}
 
+	if (ret && RuleB(Custom, DedupeAALines)) {
+		// NMS: fold the granted line into its name's winner immediately so
+		// tome/quest grants show up in the AA window without rezoning.
+		MigrateDuplicateAALines();
+		SendAlternateAdvancementTable();
+		SendAlternateAdvancementPoints();
+		SendAlternateAdvancementStats();
+	}
+
 	return ret;
 }
 
 void Client::FinishAlternateAdvancementPurchase(AA::Rank *rank, bool ignore_cost, bool send_message_and_save) {
 	auto rank_id = rank->base_ability->first_rank_id;
+
+	// Shroud AAs: record the purchase in the in-memory map only (persistence
+	// and display ride the regular AA plumbing via the category 3/4 entries),
+	// pay from the monster-point pool, and never touch the real AA points.
+	if (IsShroudAA(rank->base_ability) && IsClient()) {
+		SetAA(rank_id, rank->current_value, 0);
+
+		const auto cost = !ignore_cost ? rank->cost : 0;
+		if (cost > 0) {
+			m_shroud_points_spent += static_cast<uint32>(cost);
+			m_shroud_points = (m_shroud_points > static_cast<uint32>(cost))
+				? m_shroud_points - static_cast<uint32>(cost)
+				: 0;
+		}
+
+		if (send_message_and_save) {
+			if (cost > 0) {
+				Message(Chat::Yellow, "You spend %u monster points (%u remaining).", cost, m_shroud_points);
+			}
+			ShroudSavePoints();
+
+			auto *shroud_row = zone->GetAlternateAdvancementAbility(rank->base_ability->id);
+			if (shroud_row) {
+				// Recorded per form: re-shrouding the same form restores this spread.
+				database.QueryDatabase(fmt::format(
+					"REPLACE INTO `character_shroud_aa` (`character_id`,`shroud_id`,`aa_id`,`value`) VALUES ({},{},{},{})",
+					CharacterID(),
+					m_shroud_id,
+					shroud_row->id,
+					rank->current_value
+				));
+			}
+
+			if (rank->next) {
+				SendAlternateAdvancementRank(rank->base_ability->id, rank->next->current_value);
+			}
+			SendAlternateAdvancementPoints();
+			SendAlternateAdvancementStats();
+			CalcBonuses();
+		}
+
+		return;
+	}
 
 	if (rank->base_ability->charges) {
 		uint32 charges = 0;
@@ -1976,7 +2238,7 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank)
 		}
 
 		// Restrict Fury of Magic rank 6+ to only be available to Pure Casters
-		if (rank->base_ability->first_rank_id == aaFuryofMagic && rank->id > 772 && rank->id <= 4751) {
+		if (rank->base_ability->first_rank_id == aaFuryofMagic && rank->id > 772) {
 			return (GetClassesBits() & 15906);
 		}
 
@@ -1989,12 +2251,20 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank)
 		}
 	}
 
-	// Passive and Active Shroud AAs, skip for now
-	if (
-		a->category == AACategory::ShroudPassive ||
-		a->category == AACategory::ShroudActive
-	) {
-		return false;
+	// Passive and Active Shroud AAs are live-like monster abilities: usable
+	// only while the client is shrouded and the feature rule is enabled.
+	// Band check (90100-90199) keeps the gate on content rows that use a
+	// normal category so the regular AA window renders them.
+	if (Client::IsShroudAA(a)) {
+		bool ok = IsClient()
+			&& CastToClient()->IsShrouded()
+			&& RuleI(Custom, ShroudLiveMode) != 0;
+		if (IsClient()) {
+			LogInfo("[SHROUD-AA] gate aa [{}] rank [{}] shrouded [{}] rule [{}] -> {}",
+				a->id, rank->id, CastToClient()->IsShrouded() ? 1 : 0,
+				RuleI(Custom, ShroudLiveMode), ok ? 1 : 0);
+		}
+		return ok;
 	}
 
 	//the one titanium hack i will allow
@@ -2012,6 +2282,14 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank)
 		if (rank->expansion > expansion) {
 			return false;
 		}
+	}
+
+	// NMS: expansions above 32 are an intentional hide sentinel (99999999 on
+	// placeholder ranks). Historically these were only hidden because the
+	// expansion-bitmask shift below overflowed; make the gate explicit so the
+	// sentinel survives any future shift fix.
+	if (rank->expansion > 32) {
+		return false;
 	}
 
 
@@ -2124,8 +2402,26 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 
 	//check price, if client
 	if (check_price && IsClient()) {
-		if (rank->cost > CastToClient()->GetAAPoints()) {
+		// Shroud AAs are bought with monster points, not real AA points.
+		const uint32 available = Client::IsShroudAA(a)
+			? CastToClient()->GetShroudPoints()
+			: static_cast<uint32>(CastToClient()->GetAAPoints());
+
+		if (rank->cost > available) {
 			return false;
+		}
+
+		// The guide grants each form/level only so many ranks of a line; the
+		// content mapping caps it. A cap of 0 means "no cap recorded" (the original
+		// hand-made test rows predate the max_rank column), and rows for other
+		// forms are never listed in the first place -- the pane only shows rows
+		// the server marked for the current form -- so an unrecorded cap must not
+		// block a purchase.
+		if (Client::IsShroudAA(a) && CastToClient()->IsShrouded()) {
+			const uint32 cap = CastToClient()->ShroudAbilityMaxRank(a->id);
+			if (cap > 0 && rank->current_value > cap) {
+				return false;
+			}
 		}
 	}
 

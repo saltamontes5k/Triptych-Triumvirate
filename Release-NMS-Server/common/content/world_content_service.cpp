@@ -1,6 +1,7 @@
 #include "world_content_service.h"
 
 #include <utility>
+#include <algorithm>
 #include <glm/vec3.hpp>
 #include "../database.h"
 #include "../rulesys.h"
@@ -185,6 +186,7 @@ void WorldContentService::ReloadContentFlags()
 
 	SetContentFlags(set_content_flags);
 	LoadStaticGlobalZoneInstances();
+	LoadZoneLevelRoutes();
 	ZoneStore::Instance()->LoadZones(*m_content_database);
 }
 
@@ -237,14 +239,121 @@ void WorldContentService::SetContentFlag(const std::string &content_flag_name, b
 	ReloadContentFlags();
 }
 
-void WorldContentService::HandleZoneRoutingMiddleware(ZoneChange_Struct *zc)
+// LoadZoneLevelRoutes loads the level-based zone version routing rows consumed by
+// ResolveZoneRouting. Rows are loaded unconditionally; whether they are enforced is
+// decided by Custom:LevelBasedZoneRouting at resolve time so the rule can be toggled
+// without a content reload.
+WorldContentService *WorldContentService::LoadZoneLevelRoutes()
 {
-	auto r = FindZone(zc->zoneID, zc->instanceID);
-	if (r.zone_id == 0) {
-		return;
+	m_zone_level_routes.clear();
+
+	auto results = GetDatabase()->QueryDatabase(
+		"SELECT zoneidnumber, min_level, max_level, target_zoneidnumber, target_version, enabled FROM zone_level_routes ORDER BY id"
+	);
+	if (!results.Success()) {
+		return this;
 	}
 
-	zc->instanceID = r.instance.id;
+	for (auto row = results.begin(); row != results.end(); ++row) {
+		ZoneLevelRoute r{};
+		r.zoneidnumber        = static_cast<uint32_t>(atoi(row[0]));
+		r.min_level           = static_cast<uint16_t>(atoi(row[1]));
+		r.max_level           = static_cast<uint16_t>(atoi(row[2]));
+		r.target_zoneidnumber = static_cast<uint32_t>(atoi(row[3]));
+		r.target_version      = static_cast<uint16_t>(atoi(row[4]));
+		r.enabled             = atoi(row[5]) != 0;
+		m_zone_level_routes.push_back(r);
+	}
+
+	LogInfo("Loaded [{}] level-based zone routes", m_zone_level_routes.size());
+
+	return this;
+}
+
+const InstanceListRepository::InstanceList *WorldContentService::FindStaticZoneInstance(uint32 zone_id, uint32 version)
+{
+	for (auto &i: m_zone_static_instances) {
+		if (i.zone == zone_id && i.version == version) {
+			return &i;
+		}
+	}
+
+	return nullptr;
+}
+
+bool WorldContentService::ResolveZoneRouting(uint32 &zone_id, uint32 &instance_id, uint16 player_level)
+{
+	if (instance_id != 0) {
+		return false;
+	}
+
+	const bool level_routing_enabled = RuleI(Custom, LevelBasedZoneRouting) != 0 && player_level > 0;
+
+	if (level_routing_enabled) {
+		for (const auto &r: m_zone_level_routes) {
+			if (!r.enabled || r.zoneidnumber != zone_id) {
+				continue;
+			}
+
+			if (player_level < r.min_level || player_level > r.max_level) {
+				continue;
+			}
+
+			const InstanceListRepository::InstanceList *attach = nullptr;
+			if (r.target_version > 0) {
+				auto *target_zone = ZoneStore::Instance()->GetZone(r.target_zoneidnumber, r.target_version);
+				attach            = FindStaticZoneInstance(r.target_zoneidnumber, r.target_version);
+				if (!attach || !target_zone || !DoesZonePassContentFiltering(*target_zone)) {
+					LogError(
+						"Level route for zone [{}] wants version [{}] of zone [{}] but its static global instance or zone row is missing or content filtered, keeping open world",
+						zone_id,
+						r.target_version,
+						r.target_zoneidnumber
+					);
+					return false;
+				}
+			}
+
+			LogInfo(
+				"Level routing player level [{}] from zone [{}] to zone [{}] version [{}] instance_id [{}]",
+				player_level,
+				zone_id,
+				r.target_zoneidnumber,
+				r.target_version,
+				attach ? attach->id : 0
+			);
+
+			zone_id     = r.target_zoneidnumber;
+			instance_id = attach ? attach->id : 0;
+
+			return true;
+		}
+
+		// the zone has route rows but this player does not qualify for any of them:
+		// keep the open-world zone and suppress the legacy static-global attach
+		return false;
+	}
+
+	// zones with route rows are owned by the routing table even when the rule is off,
+	// otherwise their static global instances would attach every player
+	const bool zone_has_routes = std::any_of(
+		m_zone_level_routes.begin(),
+		m_zone_level_routes.end(),
+		[&](const ZoneLevelRoute &r) { return r.zoneidnumber == zone_id; }
+	);
+	if (zone_has_routes) {
+		return false;
+	}
+
+	// legacy static-global instance attach (expansion-style version routing)
+	auto r = FindZone(zone_id, instance_id);
+	if (r.zone_id == 0) {
+		return false;
+	}
+
+	instance_id = r.instance.id;
+
+	return true;
 }
 
 // LoadStaticGlobalZoneInstances loads all static global zone instances

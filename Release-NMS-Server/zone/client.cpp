@@ -986,6 +986,13 @@ void Client::ReportConnectingState() {
 
 bool Client::SaveAA()
 {
+	// Live-like shroud mode: the in-memory map holds session-scoped shroud AA
+	// entries; never persist the shroud session into the real AA table (the
+	// real set is untouched in memory and restored with the real profile).
+	if (m_shrouded && (RuleI(Custom, ShroudLiveMode) & 4)) {
+		return true;
+	}
+
 	std::vector<CharacterAlternateAbilitiesRepository::CharacterAlternateAbilities> v;
 
 	uint32 aa_points_spent = 0;
@@ -14714,6 +14721,8 @@ bool Client::RemoveExtraClass(int class_id) {
     zone->LoadAlternateAdvancement();
 
 	RefundUnusuableAA();
+
+	MigrateDuplicateAALines();
 
     SendClearPlayerAA();
     SendAlternateAdvancementTable();

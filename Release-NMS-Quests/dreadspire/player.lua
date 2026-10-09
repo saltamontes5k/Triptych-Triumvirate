@@ -12,6 +12,7 @@ local dodh = require("dodh_helper")
 
 local AURA_INTERVAL = 30000 -- ms
 local DEMIPLANE_VERSION = 1
+local FORMAL_DINNER_INVITATION = 88043 -- click: teleport into Dreadspire Keep
 
 local function in_demiplane()
 	return eq.get_zone_instance_version() == DEMIPLANE_VERSION
@@ -57,4 +58,14 @@ function event_timer(e)
 	if spell then
 		c:ApplySpell(spell)
 	end
+end
+
+-- Formal Dinner Invitation: skips the Corathus Creep descent into the keep.
+-- Click-cast event so the dummy click spell (clickeffect 1) is suppressed.
+function event_item_click_cast_client(e)
+	if e.item_id == FORMAL_DINNER_INVITATION then
+		dodh.enter_dreadspire(e.self)
+		return 1
+	end
+	return 0
 end

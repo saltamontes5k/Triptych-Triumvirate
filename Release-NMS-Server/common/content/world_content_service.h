@@ -170,8 +170,6 @@ public:
 
 	void SetContentFlag(const std::string &content_flag_name, bool enabled);
 
-	void HandleZoneRoutingMiddleware(ZoneChange_Struct *zc);
-
 	struct FindZoneResult {
 		uint32                               zone_id = 0;
 		InstanceListRepository::InstanceList instance;
@@ -180,6 +178,24 @@ public:
 
 	FindZoneResult FindZone(uint32 zone_id, uint32 instance_id);
 	bool IsInPublicStaticInstance(uint32 instance_id);
+
+	/**
+	 * Resolves the shared/static routing for an open-world zone-in (instance_id == 0).
+	 *
+	 * Level-based routes (Custom:LevelBasedZoneRouting + zone_level_routes table) are
+	 * applied first: a route row matching the zone and player level rewrites zone_id
+	 * (and attaches the target version's static-global instance when target_version > 0).
+	 * Zones that have route rows never fall through to the legacy static-global attach,
+	 * so players that don't qualify keep the open-world zone.
+	 *
+	 * Dynamic instances (instance_id != 0) are never re-routed.
+	 *
+	 * @param zone_id      zone being zoned into, rewritten in place when routed
+	 * @param instance_id  instance being zoned into, rewritten in place when routed
+	 * @param player_level routing player's level, 0 disables level routing (no player context)
+	 * @return true when routing rewrote the zone
+	 */
+	bool ResolveZoneRouting(uint32 &zone_id, uint32 &instance_id, uint16 player_level);
 
 	static WorldContentService* Instance()
 	{
@@ -198,6 +214,20 @@ private:
 	// holds a record of the zone table from the database
 	WorldContentService *LoadStaticGlobalZoneInstances();
 	std::vector<InstanceListRepository::InstanceList> m_zone_static_instances;
+
+	// level-based zone version routes (zone_level_routes table), consumed by ResolveZoneRouting
+	struct ZoneLevelRoute {
+		uint32_t zoneidnumber;
+		uint16_t min_level;
+		uint16_t max_level;
+		uint32_t target_zoneidnumber;
+		uint16_t target_version;
+		bool     enabled;
+	};
+
+	WorldContentService *LoadZoneLevelRoutes();
+	const InstanceListRepository::InstanceList *FindStaticZoneInstance(uint32 zone_id, uint32 version);
+	std::vector<ZoneLevelRoute> m_zone_level_routes;
 };
 
 #endif //EQEMU_WORLD_CONTENT_SERVICE_H

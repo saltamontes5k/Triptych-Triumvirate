@@ -28,6 +28,11 @@ namespace {
 	bool tables_checked = false;
 	bool tables_ready = false;
 
+	struct LockerModItem {
+		uint32 item_id = 0;
+		uint32 aug[6] = {0, 0, 0, 0, 0, 0};
+	};
+
 	struct LockerCache {
 		uint32 primary = 0;
 		uint32 primary_aug[6] = {0, 0, 0, 0, 0, 0};
@@ -37,6 +42,7 @@ namespace {
 		bool   secondary_is_shield = false;
 		uint32 ranged = 0;
 		uint32 ranged_aug[6] = {0, 0, 0, 0, 0, 0};
+		LockerModItem mods[4];
 	};
 
 	std::unordered_map<uint32, LockerCache> locker_cache;
@@ -645,7 +651,7 @@ namespace {
 	void AfterVaultMutation(Client *c, int slot, const std::vector<uint16> &fade_spells)
 	{
 		NmsVaultRefreshCache(c);
-		if (slot >= NMS_VAULT_PROC_PRIMARY && slot <= NMS_VAULT_PROC_RANGED) {
+		if (slot >= NMS_VAULT_PROC_PRIMARY && slot <= NMS_VAULT_SLOT_MAX) {
 			c->CalcBonuses();
 		}
 		FadeClickySpells(c, fade_spells);
@@ -799,6 +805,14 @@ void NmsVaultRefreshCache(Client *c)
 		cache.ranged = row->item_id;
 		for (int i = 0; i < 6; ++i) {
 			cache.ranged_aug[i] = row->aug[i];
+		}
+	}
+	for (int i = 0; i < 4; ++i) {
+		if (const auto *row = NmsVaultFind(items, NMS_VAULT_MOD_BEGIN + i, 0)) {
+			cache.mods[i].item_id = row->item_id;
+			for (int j = 0; j < 6; ++j) {
+				cache.mods[i].aug[j] = row->aug[j];
+			}
 		}
 	}
 	if (const auto *row = NmsVaultFind(items, NMS_VAULT_PROC_SECONDARY, 0)) {
@@ -1067,6 +1081,10 @@ void NmsVaultHandleDeposit(Client *c, int slot)
 		return;
 	}
 	if (RefuseArmoryDeposit(c, cursor)) {
+		return;
+	}
+	if (slot >= NMS_VAULT_MOD_BEGIN && cursor->IsClassBag()) {
+		c->Message(Chat::Red, "[NMS] Cannot deposit a container into that slot.");
 		return;
 	}
 
@@ -1544,8 +1562,16 @@ void NmsVaultOnZoneIn(Client *c)
 	// Only the SECONDARY locker slot feeds NmsVaultApplyLockerBonuses. Primary and ranged
 	// feed NmsVaultProcItem, which is read live on each swing and needs no recalculation.
 	auto cached = locker_cache.find(c->CharacterID());
-	if (cached != locker_cache.end() && cached->second.secondary) {
-		c->CalcBonuses();
+	if (cached != locker_cache.end()) {
+		// The locker cache loads after connect-time CalcBonuses, so any occupied slot
+		// that feeds bonuses (82 shield, 84-87 mods) needs its own recalc here.
+		bool has_bonus_slot = cached->second.secondary != 0;
+		for (int i = 0; i < 4 && !has_bonus_slot; ++i) {
+			has_bonus_slot = cached->second.mods[i].item_id != 0;
+		}
+		if (has_bonus_slot) {
+			c->CalcBonuses();
+		}
 	}
 
 	NmsVaultApplyClickies(c);
@@ -1779,4 +1805,172 @@ void NmsVaultApplyLockerBonuses(Client *c, StatBonuses *b)
 		c->SetShieldEquipped(true);
 	}
 	safe_delete(inst);
+}
+
+// Applies ONLY an item's instrument and skill mods (plus the same from its augs) to b -
+// never stats, resists, or any other SPA. Mirrors the BardType switch and SkillModValue
+// block of AddItemBonuses (bonuses.cpp) so a mod-slot item behaves exactly like its worn
+// counterpart for those two effects and nothing else.
+static void NmsVaultApplyFilteredItemMods(const EQ::ItemInstance *inst, StatBonuses *b, bool is_augment = false)
+{
+	if (!inst || !inst->IsClassCommon()) {
+		return;
+	}
+	if (is_augment && inst->GetAugmentType() == 0) {
+		return;
+	}
+
+	const auto *item = inst->GetItem();
+	if (!item) {
+		return;
+	}
+
+	switch (item->BardType) {
+		case EQ::item::ItemTypeAllInstrumentTypes: {
+			if (item->BardValue > b->singingMod) {
+				b->singingMod = item->BardValue;
+			}
+			if (item->BardValue > b->brassMod) {
+				b->brassMod = item->BardValue;
+			}
+			if (item->BardValue > b->stringedMod) {
+				b->stringedMod = item->BardValue;
+			}
+			if (item->BardValue > b->percussionMod) {
+				b->percussionMod = item->BardValue;
+			}
+			if (item->BardValue > b->windMod) {
+				b->windMod = item->BardValue;
+			}
+			break;
+		}
+		case EQ::item::ItemTypeSinging: {
+			if (item->BardValue > b->singingMod) {
+				b->singingMod = item->BardValue;
+			}
+			break;
+		}
+		case EQ::item::ItemTypeWindInstrument: {
+			if (item->BardValue > b->windMod) {
+				b->windMod = item->BardValue;
+			}
+			break;
+		}
+		case EQ::item::ItemTypeStringedInstrument: {
+			if (item->BardValue > b->stringedMod) {
+				b->stringedMod = item->BardValue;
+			}
+			break;
+		}
+		case EQ::item::ItemTypeBrassInstrument: {
+			if (item->BardValue > b->brassMod) {
+				b->brassMod = item->BardValue;
+			}
+			break;
+		}
+		case EQ::item::ItemTypePercussionInstrument: {
+			if (item->BardValue > b->percussionMod) {
+				b->percussionMod = item->BardValue;
+			}
+			break;
+		}
+	}
+
+	if (item->SkillModValue != 0 && item->SkillModType <= EQ::skills::HIGHEST_SKILL) {
+		if (
+			(item->SkillModValue > 0 && b->skillmod[item->SkillModType] < item->SkillModValue) ||
+			(item->SkillModValue < 0 && b->skillmod[item->SkillModType] > item->SkillModValue)
+			) {
+			b->skillmod[item->SkillModType] = item->SkillModValue;
+		}
+	}
+
+	if (!is_augment) {
+		for (int r = EQ::invaug::SOCKET_BEGIN; r <= EQ::invaug::SOCKET_END; ++r) {
+			const auto *aug_i = inst->GetAugment(r);
+			if (aug_i) {
+				NmsVaultApplyFilteredItemMods(aug_i, b, true);
+			}
+		}
+	}
+}
+
+void NmsVaultApplyModBonuses(Client *c, StatBonuses *b)
+{
+	if (!c || !b || !NmsVaultEnabled() || !RuleB(Custom, ProcLockerModSlots)) {
+		return;
+	}
+
+	auto it = locker_cache.find(c->CharacterID());
+	if (it == locker_cache.end()) {
+		return;
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		const auto &mod = it->second.mods[i];
+		if (!mod.item_id) {
+			continue;
+		}
+
+		auto *inst = database.CreateItem(
+			mod.item_id,
+			1,
+			mod.aug[0],
+			mod.aug[1],
+			mod.aug[2],
+			mod.aug[3],
+			mod.aug[4],
+			mod.aug[5]
+		);
+		if (!inst) {
+			continue;
+		}
+
+		// A parked item lends nothing to a character who could not wear it, and the
+		// stock required-level gate applies (AddItemBonuses hard-skips below ReqLevel).
+		if (!inst->IsEquipable(c->GetBaseRace(), static_cast<uint16>(c->GetClassesBits()))
+			|| c->GetLevel() < inst->GetItemRequiredLevel(true)) {
+			safe_delete(inst);
+			continue;
+		}
+
+		NmsVaultApplyFilteredItemMods(inst, b);
+		safe_delete(inst);
+	}
+}
+
+// Fills out with the mod-slot items (and their augs) that carry a valid focus, for
+// Mob::GetFocusEffect's per-cast scan. Read-only: hash lookups only, no instances.
+int NmsVaultLockerFocusList(Client *c, const EQ::ItemData **out, int max)
+{
+	if (!c || !out || max <= 0 || !NmsVaultEnabled() || !RuleB(Custom, ProcLockerModSlots)) {
+		return 0;
+	}
+
+	auto it = locker_cache.find(c->CharacterID());
+	if (it == locker_cache.end()) {
+		return 0;
+	}
+
+	int count = 0;
+	for (int i = 0; i < 4 && count < max; ++i) {
+		const auto &mod = it->second.mods[i];
+		if (!mod.item_id) {
+			continue;
+		}
+		const auto *item = database.GetItem(mod.item_id);
+		if (item && item->Focus.Type == EQ::item::ItemEffectFocus && item->Focus.Effect > 0 && IsValidSpell(item->Focus.Effect)) {
+			out[count++] = item;
+		}
+		for (int j = 0; j < 6 && count < max; ++j) {
+			if (!mod.aug[j]) {
+				continue;
+			}
+			const auto *aug = database.GetItem(mod.aug[j]);
+			if (aug && aug->Focus.Type == EQ::item::ItemEffectFocus && aug->Focus.Effect > 0 && IsValidSpell(aug->Focus.Effect)) {
+				out[count++] = aug;
+			}
+		}
+	}
+	return count;
 }

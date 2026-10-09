@@ -36,6 +36,13 @@ M.TASK = {
 	BONECOLLECT  = 620009, -- The Bone Collector
 	SCARECROW    = 620010, -- Scarecrow Roundup
 	WITCH        = 620011, -- The Witch's Wishes
+	-- 2009/2010 + Out With the Old (task id block 620012+)
+	HAUNTED      = 620012, -- Haunted Cave (crescent)
+	GRAVES       = 620013, -- Digging Their Graves (PoK, repeatable)
+	MASTER       = 620014, -- The Hunt for Tattooed Flesh (PoK master)
+	TERROR       = 620015, -- Terror of Illis Taberish (PoK + 8 zones)
+	UYS          = 620016, -- Under Your Skin (gfaydark pocket)
+	OWTO         = 620017, -- Out With the Old (kithicor defense event)
 }
 
 M.ITEM = {
@@ -73,12 +80,31 @@ M.ITEM = {
 	MIRROR_PIECES  = 3001004,
 	BROKEN_HORSESHOE = 3001005,
 	WITCH_BREW     = 3001006,
+	-- 2009/2010 + Out With the Old
+	PIRATES_GOLD   = 3001007,
+	EDMUND_SHOVEL  = 3001008, -- click spell 122100 Grave Dig
+	TATTOOED_FLESH = 3001009,
+	FRIGHTENING_WRIT = 3001010, -- /title claim: 'the Gravedigger' (titles.item_id)
+	SKINWALKER_SHARD = 3001011,
+	VIAL_BAT       = 3001012, -- Illusion: Bat (32824)
+	VIAL_MOON      = 3001013, -- Illusion: Werewolf (585)
+	VOID_ARTIFACT  = 3001014,
 }
 
 M.NPC = {
 	WICKED_WINNIE = 202384,
 	SPOOKY_SALLY  = 202386,
 	HAUNTED_JACK  = 202387,
+	-- 2009/2010 + Out With the Old
+	JILIAN        = 1500200032, -- crescent, Haunted Cave
+	EDMUND        = 1500200035, -- poknowledge, Digging Their Graves / master
+	RHAEDA        = 1500200036, -- poknowledge, Under Your Skin
+	ILLIS         = 1500200037, -- poknowledge, Terror of Illis Taberish
+	CATHIL        = 1500200038, -- kithicor, Out With the Old turn-in
+	PUPPET        = 1500200039, -- kithicor, Out With the Old entry
+	DISTURBED_EARTH = 1500200072, -- shovel click target
+	SKINWALKER    = 1500200075, -- gfaydark pocket, Under Your Skin starter
+	VOID_CONTROLLER = 1500200084, -- invisible wave controller
 }
 
 -- True when the Halloween event is toggled on.  Use before assigning tasks.

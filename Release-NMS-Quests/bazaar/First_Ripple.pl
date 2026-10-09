@@ -1,7 +1,7 @@
 sub EVENT_SAY {
   if ($text=~/hail/i) {
     if (!$client->GetBucket('newbieRewardBits')) {
-      quest::emote("ripples softly");
+      quest::emote("shimmers softly");
       quest::say("Oh my, the tides have carried you far from me, haven't they? I could never forget a soul I once walked the deep with. 
                   Hail $name! Let me see that shimmering writ and I'll give you what the current owes you.");
       if (!plugin::check_hasitem($client, 18471)) {
@@ -9,7 +9,7 @@ sub EVENT_SAY {
         $client->Message(263, "You find a water-stained note in your pocket.");
       }
     } else {
-      quest::emote("ripples softly");
+      quest::emote("sparkles softly");
       quest::say("The current brings us back together!");
       RewardItems($client);
     }

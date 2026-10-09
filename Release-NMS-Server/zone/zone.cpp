@@ -1445,9 +1445,18 @@ bool Zone::LoadZoneCFG(const char* filename, uint16 instance_version)
 	}
 
 	// overwrite with our internal variables
-	strcpy(newzone_data.zone_short_name, GetShortName());
-	strcpy(newzone_data.zone_long_name, GetLongName());
-	strcpy(newzone_data.zone_short_name2, GetShortName());
+	// versioned zones advertise the version row's names: the client resolves its zone
+	// geometry file from the short name sent here (e.g. lavastorm1.eqg for lavastorm v1)
+	if (instance_version > 0 && !z->short_name.empty()) {
+		strn0cpy(newzone_data.zone_short_name, z->short_name.c_str(), sizeof(newzone_data.zone_short_name));
+		strn0cpy(newzone_data.zone_long_name, z->long_name.c_str(), sizeof(newzone_data.zone_long_name));
+		strn0cpy(newzone_data.zone_short_name2, z->short_name.c_str(), sizeof(newzone_data.zone_short_name2));
+	}
+	else {
+		strcpy(newzone_data.zone_short_name, GetShortName());
+		strcpy(newzone_data.zone_long_name, GetLongName());
+		strcpy(newzone_data.zone_short_name2, GetShortName());
+	}
 
 	LogInfo(
 		"Successfully loaded zone headers for zone [{}] long_name [{}] version [{}] instance_id [{}]",

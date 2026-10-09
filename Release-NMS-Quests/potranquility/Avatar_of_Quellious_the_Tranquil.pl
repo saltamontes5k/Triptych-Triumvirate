@@ -1,27 +1,31 @@
-# Avatar of Quellious the Tranquil - Plane of Tranquility
-# The Serpent's Spine :: Peace and Understanding - Quellious' Favor (task 600220)
-# Reward: Quellious' Wand of Tranquility 60395
+# the Avatar of Quellious -- Rank II "Deity Favor" giver (blessing tree 210).
+# Task assignment + flavor only: the rank is granted by EVENT_TASK_COMPLETE ->
+# plugin::BlessingGrantRank (single-authority design).
 
-sub EVENT_SAY {
-  if ($text=~/hail/i) {
-    quest::say("Beautiful, isn't it? This little pool. I come here when the weight of mortal quarrels grows heavy. You mean you don't feel it too?");
-  }
-  if ($text=~/feel|quarrel|peace/i) {
-    quest::say("The Fordel and the Midst squabble without end, and their anger spills across the land. Tranquility is so very fleeting. Without constant vigilance, peace would never be maintained. Will you be my [" . quest::saylink("champion") . "]?");
-  }
-  if ($text=~/champion/i) {
-    if (quest::istaskactive(600220)) {
-      quest::say("Go to the Misty Thicket. Quell the drunken miscreants of both clans - not with death, but with a firm hand. Then return to me.");
-    }
-    elsif (quest::istaskcompleted(600220)) {
-      quest::say("You have done well, champion of Tranquility. Take Quellious' wand, and may peace follow wherever you walk.");
-    }
-    else {
-      quest::say("Speak with Atler Flamejabber in Crescent Reach; he knows how the quarrel began.");
-    }
-  }
+my $TREE = 210;
+
+sub _bless_give {
+    my ($client, $item, $charges) = @_;
+    return if $client->GetBucket("bless-gave-$item");
+    $client->SummonItem($item, $charges || 1);
+    $client->SetBucket("bless-gave-$item", 1);
 }
 
-sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+sub EVENT_SAY {
+    my $deity = plugin::BlessingCheckDeity($client);
+    my $rank  = plugin::BlessingRank($client);
+    return unless $text =~ /hail/i;
+    if ($rank < 1) {
+        plugin::Whisper("First kindle your devotion at the Keeper of Devotion in The Bazaar, $name.");
+    } elsif ($rank >= 2) {
+        plugin::Whisper("Peace spreads where patience is sown. Be tranquil, child.");
+    } elsif (!(plugin::BlessingIsAgnostic($deity) || $deity == $TREE)) {
+        plugin::Whisper("The god I serve is not the god that binds you, $name.");
+    } elsif (plugin::BlessingAssignRank2($client, $TREE)) {
+            _bless_give($client, 976213, 1);
+            _bless_give($client, 976221, 12);
+        plugin::Whisper("Anger burns across Norrath. Take my wand and these pies, and bring the hot tempers peace.");
+    } else {
+        plugin::Whisper("Your task is already upon you, $name. See it done.");
+    }
 }

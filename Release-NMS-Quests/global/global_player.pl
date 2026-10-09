@@ -63,6 +63,18 @@ sub EVENT_ENTERZONE {
         UpdateDayNightCycle($zonesn, $instanceid, $zonetime);
         quest::settimer("DayNightTimer", 30);
     }
+
+    # NMS: Cake Defense cleanup. Shroud forms persist across zones by design,
+    # so a cake shroud (race 629) that leaves rivervale v202 -- zone-out,
+    # bind release after a failed defense, instance expiry -- is restored
+    # here. The silent variant writes no packets: the fresh zone-in spawn
+    # data already carries the real form. The sticky icing goes with it.
+    if ($client->GetRace() == 629
+        && !($zonesn eq 'rivervale' && $client->GetZoneInstanceVersion() == 202)) {
+        $client->BuffFadeBySpellID(13836); # Parsing Root: the actual cake root (kept in sync with #Cake_Defense_Baker.lua)
+        $client->BuffFadeBySpellID(121870);
+        $client->RemoveShroudSilent();
+    }
 }
 
 sub EVENT_RESPAWN {

@@ -3507,7 +3507,18 @@ namespace RoF2
 		outapp->WriteUInt32(emu->charges);
 		outapp->WriteSInt32(emu->expansion);
 		outapp->WriteSInt32(emu->category);
-		outapp->WriteUInt8(0); // shroud
+		// NMS: the row's byte 144 is the client's per-row "shroud" flag
+		// (sub_4A1F80 returns *(row+144)). The AA window's monster-mode gate
+		// (sub_4A40F0) accepts a row only when
+		//   (holder->Shrouded == 1 || holder->Shrouded == 2) && row[144] != 0,
+		// so this byte must be set for the rows the *current form* may use. The
+		// decision is made server-side (Client::IsShroudAbilityForCurrentForm,
+		// from the guide mapping) and travels in emu->shroud_row; the classic
+		// ShroudPassive/ShroudActive categories stay accepted so hand-made
+		// category-3/4 content keeps working.
+		const bool is_shroud_row =
+			emu->shroud_row != 0 || emu->category == 3 || emu->category == 4;
+		outapp->WriteUInt8(is_shroud_row ? 1 : 0); // shroud
 		outapp->WriteUInt8(0); // unknown109
 		outapp->WriteUInt8(0); // loh
 		outapp->WriteUInt8(0); // unknown111
@@ -5011,14 +5022,22 @@ namespace RoF2
 		memcpy(buf + offset, &value, sizeof(T));
 	}
 
-	static void BuildShroudProfileBlock(uint8 *buf, const PlayerProfile_Struct &pp)
+	static void BuildShroudProfileBlock(uint8 *buf, const PlayerProfile_Struct &pp, const ShroudSelf_Struct *ext = nullptr)
 	{
 		memset(buf, 0, kShroudProfileBlockSize);
 
-		// The client gates spellbook/inventory on this flag while "shrouded",
-		// which is broken in this client branch; the server tracks the shroud
-		// state itself, so present the form as a normal character.
-		ShroudWrite<uint32>(buf, 0x0000, 0);                                  // Shrouded
+		// Custom:ShroudLiveMode experiment bits (0 = legacy behaviour):
+		// 1 -> write the block 0x00 "Shrouded" flag as 1,
+		// 2 -> write the block 0x4FC0 shroud-state dword as 1,
+		// 4 -> live-like strip: blank gear/spellbook/skills/AA display and
+		//      present monster points + owned shroud AAs instead.
+		const uint32 live_mode = ext ? ext->live_mode : 0;
+		const bool strip = (live_mode & 4) != 0;
+
+		// The client gates spellbook/inventory on this flag while "shrouded";
+		// IDA found no reader of block+0x00 in the applier/handler, so bit 1
+		// exists to A/B that lore. Present 0 (normal character) by default.
+		ShroudWrite<uint32>(buf, 0x0000, (live_mode & 1) ? 1 : 0);            // Shrouded
 		ShroudWrite<uint8>(buf,  0x0008, static_cast<uint8>(pp.gender));
 		ShroudWrite<uint32>(buf, 0x000C, pp.race);
 		ShroudWrite<uint8>(buf,  0x0010, static_cast<uint8>(pp.class_));
@@ -5084,21 +5103,40 @@ namespace RoF2
 		ShroudWrite<uint32>(buf, 0x03D0, pp.AGI);
 		ShroudWrite<uint32>(buf, 0x03D4, pp.WIS);
 
-		for (uint32 i = 0; i < MAX_PP_AA_ARRAY; ++i) {
+		for (uint32 i = 0; i < MAX_PP_AA_ARRAY && !strip; ++i) {
 			const uint32 o = 0x03D8 + i * 12;
 			ShroudWrite<uint32>(buf, o + 0, pp.aa_array[i].AA);
 			ShroudWrite<uint32>(buf, o + 4, pp.aa_array[i].value);
 			ShroudWrite<uint32>(buf, o + 8, pp.aa_array[i].charges);
 		}
+		if (strip && ext) {
+			// Live-like: the block's AA list carries only the shroud session's
+			// purchases (categories 3/4); the real set stays out of the form.
+			for (uint32 n = 0; n < ext->shroud_aa_count && n < ShroudSelf_Struct::kMaxShroudAAs; ++n) {
+				const uint32 o = 0x03D8 + n * 12;
+				ShroudWrite<uint32>(buf, o + 0, ext->shroud_aa_ids[n]);
+				ShroudWrite<uint32>(buf, o + 4, ext->shroud_aa_values[n]);
+			}
+		}
 
+		// Skills belong to the FORM, so they are written in both modes: a live
+		// shroud arrives with its class skills at its own level (a rogue shroud can
+		// Pick Lock, a warrior shroud can Bash/Kick). Leaving this array zeroed in
+		// live mode is what previously left shrouds without class-gated actions.
 		for (uint32 i = 0; i < MAX_PP_SKILL; ++i) {
 			ShroudWrite<uint32>(buf, 0x11E8 + i * 4, pp.skills[i]);
 		}
-		for (uint32 i = 0; i < MAX_PP_INNATE_SKILL; ++i) {
-			ShroudWrite<uint32>(buf, 0x1378 + i * 4, pp.InnateSkills[i]);
-		}
-		for (uint32 i = 0; i < MAX_PP_DISCIPLINES; ++i) {
-			ShroudWrite<uint32>(buf, 0x13DC + i * 4, pp.disciplines.values[i]);
+
+		// Innate skills and disciplines stay out of the live-like form: they follow
+		// the real character's AAs and tomes, and a level 5 shroud must not inherit
+		// a level 65 character's innate run speed or disciplines.
+		if (!strip) {
+			for (uint32 i = 0; i < MAX_PP_INNATE_SKILL; ++i) {
+				ShroudWrite<uint32>(buf, 0x1378 + i * 4, pp.InnateSkills[i]);
+			}
+			for (uint32 i = 0; i < MAX_PP_DISCIPLINES; ++i) {
+				ShroudWrite<uint32>(buf, 0x13DC + i * 4, pp.disciplines.values[i]);
+			}
 		}
 
 		// Recast timers (the other two 20/100 dword timer arrays stay zero).
@@ -5106,15 +5144,18 @@ namespace RoF2
 			ShroudWrite<uint32>(buf, 0x18DC + i * 4, pp.recastTimers[i]);
 		}
 
-		for (uint32 i = 0; i < EQ::spells::SPELLBOOK_SIZE; ++i) {
-			ShroudWrite<uint32>(buf, 0x1ABC + i * 4, pp.spell_book[i]);
-		}
-		for (uint32 i = 0; i < EQ::spells::SPELL_GEM_COUNT; ++i) {
-			ShroudWrite<uint32>(buf, 0x25FC + i * 4, pp.mem_spells[i]);
-		}
-		for (uint32 i = 0; i < 12; ++i) {
-			ShroudWrite<uint32>(buf, 0x263C + i * 4, pp.spellSlotRefresh[i]);
-		}
+		if (!strip) {
+			for (uint32 i = 0; i < EQ::spells::SPELLBOOK_SIZE; ++i) {
+				ShroudWrite<uint32>(buf, 0x1ABC + i * 4, pp.spell_book[i]);
+			}
+			for (uint32 i = 0; i < EQ::spells::SPELL_GEM_COUNT; ++i) {
+				ShroudWrite<uint32>(buf, 0x25FC + i * 4, pp.mem_spells[i]);
+			}
+			for (uint32 i = 0; i < 12; ++i) {
+				ShroudWrite<uint32>(buf, 0x263C + i * 4, pp.spellSlotRefresh[i]);
+			}
+		} // strip: spellbook / gems / refresh stay zeroed (live-like form; live
+		  // shrouds have NO spellbook -- monster abilities are pure AA rows)
 
 		// Buffs: the client stores these as 88-byte (0x58) entries at
 		// 0x2674..0x34E4 (layout per _SPELLBUFF in the client headers).
@@ -5141,28 +5182,43 @@ namespace RoF2
 		}
 
 		// Money.
-		ShroudWrite<uint32>(buf, 0x34E4, pp.platinum);
-		ShroudWrite<uint32>(buf, 0x34E8, pp.gold);
-		ShroudWrite<uint32>(buf, 0x34EC, pp.silver);
-		ShroudWrite<uint32>(buf, 0x34F0, pp.copper);
-		ShroudWrite<uint32>(buf, 0x34F4, pp.platinum_cursor);
-		ShroudWrite<uint32>(buf, 0x34F8, pp.gold_cursor);
-		ShroudWrite<uint32>(buf, 0x34FC, pp.silver_cursor);
-		ShroudWrite<uint32>(buf, 0x3500, pp.copper_cursor);
+		if (!strip) {
+			ShroudWrite<uint32>(buf, 0x34E4, pp.platinum);
+			ShroudWrite<uint32>(buf, 0x34E8, pp.gold);
+			ShroudWrite<uint32>(buf, 0x34EC, pp.silver);
+			ShroudWrite<uint32>(buf, 0x34F0, pp.copper);
+			ShroudWrite<uint32>(buf, 0x34F4, pp.platinum_cursor);
+			ShroudWrite<uint32>(buf, 0x34F8, pp.gold_cursor);
+			ShroudWrite<uint32>(buf, 0x34FC, pp.silver_cursor);
+			ShroudWrite<uint32>(buf, 0x3500, pp.copper_cursor);
+		}
 
 		ShroudWrite<uint32>(buf, 0x3508, 0);                                   // mend cooldown
+
+		// Live-like shroud state (Custom:ShroudLiveMode bit 8): the wire profile
+		// field the applier eqgame+0x5789B0 copies into BaseProfile+0x3408. The
+		// client's real "monster character" switch is BaseProfile+0x340C
+		// (EQData.h: Shrouded / "profileType"), which no server packet can reach
+		// natively -- the applier never writes it. The patched dinput8.dll
+		// retargets that one store (0x00579255: disp 0x3408 -> 0x340C), so this
+		// dword becomes the server-authoritative shroud flag. Left 0 unless the
+		// rule bit is set, which keeps unpatched clients bit-identical to before
+		// (ENCODE(OP_PlayerProfile) also writes 0 here).
+		ShroudWrite<uint32>(buf, 0x350C, (live_mode & 8) ? 1u : 0u);          // shroud-state carrier
+
 		ShroudWrite<uint32>(buf, 0x3510, pp.thirst_level);
 		ShroudWrite<uint32>(buf, 0x3514, pp.hunger_level);
 
-		ShroudWrite<uint32>(buf, 0x3518, pp.aapoints_spent);
-		ShroudWrite<uint32>(buf, 0x3530, pp.aapoints);
+		// Live-like: the AA window's point counter shows the monster pool.
+		ShroudWrite<uint32>(buf, 0x3518, strip && ext ? ext->monster_points_spent : pp.aapoints_spent);
+		ShroudWrite<uint32>(buf, 0x3530, strip && ext ? ext->monster_points : pp.aapoints);
 
 		// Bandolier entries (0x3538, 20 x 320) are client-internal objects
 		// (name is a pointer, not inline text) - zeroed; the bandolier window
 		// will be empty while shrouded. The potion belt (0x4E38, 5 x 72) uses
 		// the wire layout {id, icon, name[64]} with icon -1 for empty slots.
 		static_assert(sizeof(PotionBeltItem_Struct) == 72, "unexpected potion belt item size");
-		for (uint32 i = 0; i < EQ::profile::POTION_BELT_SIZE; ++i) {
+		for (uint32 i = 0; !strip && i < EQ::profile::POTION_BELT_SIZE; ++i) {
 			const uint32 o = 0x4E38 + i * sizeof(PotionBeltItem_Struct);
 			ShroudWrite<uint32>(buf, o + 0, pp.potionbelt.Items[i].ID);
 			ShroudWrite<uint32>(buf, o + 4, pp.potionbelt.Items[i].Icon ? pp.potionbelt.Items[i].Icon : 0xFFFFFFFFu);
@@ -5178,7 +5234,9 @@ namespace RoF2
 		ShroudWrite<uint32>(buf, 0x4FB4, 0x19);                                // base FR
 		ShroudWrite<uint32>(buf, 0x4FB8, 0x19);                                // base MR
 		ShroudWrite<uint32>(buf, 0x4FBC, 0x0f);                                // base DR
-		ShroudWrite<uint32>(buf, 0x4FC0, 0x0f);                                // base PR
+		// 0x4FC0 is the dword the OP_Shroud handler backs up (low byte) and
+		// restores around the apply — the prime "shrouded" state candidate.
+		ShroudWrite<uint32>(buf, 0x4FC0, (live_mode & 2) ? 1 : 0x0f);          // shroud-state probe / base PR
 		ShroudWrite<uint32>(buf, 0x4FC4, 0x0f);                                // base PhR
 		ShroudWrite<uint32>(buf, 0x4FC8, 0x0f);                                // base Corruption
 		ShroudWrite<uint32>(buf, 0x4FE0, 20);                                  // expansion count
@@ -5228,7 +5286,7 @@ namespace RoF2
 		*(uint32 *) buf       = spawn_id;
 		*(uint16 *) (buf + 4) = end_offset;
 		memcpy(buf + 6, spawn_entry->pBuffer, spawn_len);
-		BuildShroudProfileBlock(buf + 6 + spawn_len, emu->profile);
+		BuildShroudProfileBlock(buf + 6 + spawn_len, emu->profile, emu);
 
 #if NMS_SHROUD_DIAG
 		// Full captures of exactly what goes on the wire (profile block +

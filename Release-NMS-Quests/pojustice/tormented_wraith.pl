@@ -1,3 +1,12 @@
+sub EVENT_SAY {
+   if ($npc->GetNPCTypeID() == 201055) {
+      quest::emote("glares at you and does not respond.");
+   }
+   else {
+      quest::emote("wails, sending a chill throughout your bones.");
+   }
+}
+
 sub EVENT_DEATH_COMPLETE {
   my $r_n = int(rand(100));
 

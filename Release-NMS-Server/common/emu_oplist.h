@@ -652,5 +652,7 @@ N(OP_ShroudSelectCancel),
 N(OP_ShroudProgress),
 N(OP_ShroudProgress2),
 N(OP_ShroudRemove),
+N(OP_ShroudPointsUpdate), // 0x2507: unnamed shroud manager opcode {u32,u32} -> UI notify type 3 (monster points?)
+N(OP_ShroudStateUpdate),  // 0x006e: unnamed shroud manager opcode {u32,u32} -> UI notify type 4 (monster points spent?)
 N(OP_PowerSource), // RoF2 client per-instance power source charge (opcode 0x4c89)
 // mail and chat opcodes located in ../mail_oplist.h

@@ -28,7 +28,7 @@ sub EVENT_SAY {
         }  
         plugin::SetSubflag($client, $flag_stage, $flag_name);
 
-        # Optional second flag pair (e.g. Tunat`Muram opens both OoW and DoD on one hail)
+        # Optional second flag pair (one hail can advance two stages' objectives)
         my $flag_stage_2 = $npc->GetEntityVariable("Stage-Name-2");
         my $flag_name_2  = $npc->GetEntityVariable("Flag-Name-2");
         if (defined $flag_stage_2 && defined $flag_name_2 && $flag_stage_2 ne '' && $flag_name_2 ne '') {
