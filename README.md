@@ -6,6 +6,13 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (10/9)
+- Focus locker is in under procs in your nautilus vault, UI is still sketch but its in, also UI now displays corruption resist
+- Deduped and consolidated some AAs, yes there's a bunch of weird AAs now visible
+- Shrouds 80% done, put in a baking skill training quest in bazaar, you must become one with the dough
+- added rank 2 of the god quests, not tested, agnostics have it loccked at pop now and must choose a cause
+- put in halloween quests, again not tested
+- Rog/RNG innate crit and 2hs AA melee boosting
 
 ### This update's changes (10/4)
 - Nautilus Vault is in, UI is sketch but its in, proc locker has rule choice to proc locked weapons procs and their augs in addition to procs in held weaps
@@ -244,43 +251,61 @@ Source of truth: `deity_blessings.pl` (`%BLESS_PROC`). The "Blessing of the God"
 
 ## Per-deity procs
 
-| Deity | Melee hit | Hostile cast | Heal (beneficial cast) | Taken (reflect) | Passive |
-|---|---|---|---|---|---|
-| **Bertoxxulous** (201) | rand Disease/Poison | rand Disease/Poison | — | Disease | — |
-| **Brell Serilis** (202) | Stun | Stun | Group Heal + heal 10% if <50% HP | — | — |
-| **Cazic-Thule** (203) | rand Fear/Root/Poison | rand Fear/Root/Poison | — | Fear + Root + Poison | — |
-| **Erollisi Marr** (204) | Lifetap | Manatap | heal 10% if <50% HP | — | — |
-| **Bristlebane** (205) | pickpocket + illusion (60%) | mimic another god's proc line (40%) — |
-| **Innoruuk** (206) | Lifetap | Lifetap + Manatap + hate +200 | — | — | — |
-| **Karana** (207) | Cast Force (PB AE) | Cast Force (PB AE) | heal 10% if <50% HP | — | — |
-| **Mithaniel Marr** (208) | Stun | Stun | Group Heal + heal 10% if <50% HP | — | — |
-| **Prexus** (209) | Cold | Cold | heal 10% if <50% HP | — | — |
-| **Quellious** (210) | hate −200 + Manatap | hate −200 + Manatap | — | — | — |
-| **Rallos Zek** (211) | Lifetap + hate +150 + flurry | Lifetap + Cast Force + hate +150 | — | — | — |
-| **Rodcet Nife** (212) | heal 5% max HP | *(none)* | Group Heal | — | — |
-| **Solusek Ro** (213) | Fire | **twincast fire** + Fire | — | — | — |
-| **The Tribunal** (214) | tribunal proc | tribunal proc | — | — | — |
-| **Tunare** (215) | Snare + heal 4% | — | heal 8% | — | DS buff |
-| **Veeshan** (216) | rand Fire/Cold/Magic | rand Fire/Cold/Magic | heal 10% if <50% HP | — | — |
-| **Agnostic** (140/396) | *same as Bristlebane*: mimic another god (40%) or pickpocket + illusion (60%) — | — |
+Proc chart by trigger
+Triggers: melee = landed melee/ranged hit · hostile cast = completed damage spell · reflect = incoming melee hit · beneficial = any heal/buff/utility cast · passive = applied on zone-in. All procs share one roll (Rank I = 1%, Rank II = 3%) with a 2-second internal cooldown; hostile triggers require combat; CC casts never proc; "heal if hurt" only fires below 50% HP.
 
-## Special actions
+God	Melee hit	Hostile cast	Reflect	Beneficial cast	Passive
+Bertoxxulous	Disease/Poison nuke (random)	same	Disease	generic self-heal	—
+Brell Serilis	Dyn's Dizzying Draught	Dyn's	—	group heal + 10% if hurt	—
+Cazic-Thule	Fear/Root/Poison (random)	same	Fear + Root + Poison	generic self-heal	—
+Erollisi Marr	lifetap	mana tap	—	10% if hurt	—
+Bristlebane	mischief¹	mischief¹	—	mischief¹	—
+Innoruuk	lifetap	lifetap + mana tap + 200 hate	—	generic self-heal	—
+Karana	weapon twinproc	twincast	—	twincast	—
+Mithaniel Marr	Dyn's	Dyn's	—	group heal + 10% if hurt	—
+Prexus	cold nuke	twincast-cold + cold nuke	—	group heal + 10% if hurt	—
+Quellious	−200 hate + mana tap + rare Dyn's (10% sub-roll)	−200 hate + mana tap + twincast	—	10% self-heal	—
+Rallos Zek	lifetap + 150 hate + flurry	lifetap + twinproc + 150 hate	—	10% if hurt	—
+Rodcet Nife	group heal	group heal	—	group heal	—
+Solusek Ro	fire nuke	twincast-fire + fire nuke	—	twincast	—
+the Tribunal	lifetap-if-hurt-else-nuke	same	—	10% if hurt	—
+Tunare	snare + 4% heal	— (heals only)	—	8% heal	damage shield on zone-in (only passive)
+Veeshan	Fire/Cold/Magic (random)	same	—	10% if hurt	—
+Agnostic (unbound)	mischief¹	mischief¹	—	mischief¹	—
+¹ Mischief = 40% pickpocket + steal victim's appearance, 60% mimicry (copy a random other god's bundle for that trigger; never copies itself or another mimic tree).
 
-- **mimic** / **mimicry** — Bristlebane & Unaligned: copies a random other deity's tree per proc (excludes self, 205, 140, 396).
-- **twincast fire** — Solusek Ro: re-fires the cast spell only if it is an actual fire DD (resisttype 2, negative SPA 0 in `spells_new`).
-- **tribunal** — The Tribunal: lifetap if caster is hurt, otherwise magic shock.
-- **flurry** — Rallos Zek (melee): extra magic nuke.
-- **pickpocket** — on NPC opponent (no owner). **illusion** — random form (ids 581–592).
+Agnostic causes (bind at the PoT Keeper, before Rank I)
+Choosing a cause routes all procs through that god's row above from Rank I onward; the god is never named in game, only the label. Changing cause later severs everything.
 
-## Shared mechanics
+Cause label	Hidden god	Cause label	Hidden god
+Legacy	Bertoxxulous	Adventure	Karana
+Wealth	Brell Serilis	Valor	Mithaniel Marr
+Myself	Cazic-Thule	Glory	Prexus
+Love	Erollisi Marr	Peace	Quellious
+Fun and Games	Bristlebane	Battle	Rallos Zek
+Revenge	Innoruuk	People	Rodcet Nife
+Power	Solusek Ro	Justice	the Tribunal
+Nature	Tunare	Knowledge and Reason	Veeshan
+Rank 2 — the Deity Favors
+Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: cause + blank idol at the PoT keeper only). Rank II = that god's favor quest (agnostics must do all 16 — no royal road; progress shows in the devotion window). Reward per favor: that god's Fireworks Focus; Rank II also grants a Potion of Adventure II.
 
-- Anti-feedback: proc spells fire via `SpellFinished`, never re-enter `EVENT_CAST` (no cast bar, no recursion).
-- Shared internal cooldown: at most one blessing proc per 2s (`bless-proc-ts`), single roll per trigger.
-- Proc chance by rank: 1% / 3% / 5% / 8% / 11% / 15% / 17% / 20% / 22% / 25% (ranks 1–10). 
-- Combat gating: hostile rolls require `IsEngaged` or `GetAggroCount > 0`; heal procs allowed out of combat.
-- Beneficial casts roll HEAL effects only (never hostile). Hostile damage casts roll the offensive + heal bundle in one union (except mimic).
-- CC/utility casts never proc: root(10), calm(30), charm(22), fear(23), mez(31), memblur(63), FD(74).
-- Ranks/tiers: tier 1 = ranks 1–3, tier 2 = 4–6, tier 3 = 7–10; rank 1 via fired-idol task.
+God	Favor quest	Giver — zone
+Bertoxxulous	Culling Fever	Avatar — East Karana gnoll reaver camp
+Brell Serilis	Crafting a Party	Roderik — Butcherblock
+Cazic-Thule	A Taste of Fear	Avatar — Feerrott
+Erollisi Marr	Love, Norrathian Style	Aspect — South Ro coast
+Bristlebane	Party Favor	the Image — Plane of Knowledge
+Innoruuk	The Power of Hatred	evil little imp — Innothule
+Karana	Tears of a God	Avatar — South Karana (Tober in North Karana)
+Mithaniel Marr	Deliver Us from Evil	Avatar — Plane of Tranquility
+Prexus	Fishing for Blessings	Primate — Erud's Crossing
+Quellious	Peace and Understanding	Avatar — Plane of Tranquility
+Rallos Zek	Warrior's Rest	Avatar — Plane of Tranquility (Togg in Lavastorm)
+Rodcet Nife	Healing Touch	Helera Garet — North Qeynos
+Solusek Ro	Bonfires of Vanity	Avatar — North Ro
+the Tribunal	Justice of the Tribunal	Herald — Plane of Tranquility
+Tunare	The Gift of Life	Avatar — Greater Faydark
+Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question trivia)
 
 
 ## Future Plans
@@ -288,11 +313,9 @@ Source of truth: `deity_blessings.pl` (`%BLESS_PROC`). The "Blessing of the God"
 - Various changes that catch eye
 - more scaffolding, hope to have progression up to uf at least semi-retail, then after that start filling with custom
 - force lvl 60+ to v1 shards for better compatibility with ldon+ zones
-- proc locker for spell effects, 4 pieces of non visible gear
 - future plans for future xpansions/newbie quests at pok level - revamp these to pop-tier or better, especially zones that get looked over due to server's progression-style (crescent reach, eastern wastes, etc)
 - explorer path scaffold for ldon+ scaffold, only hero available right now
 - more quests for the Blessing of the gods line
-- heroic (violent) way to raise tradeskills
 - old man mckenzie but different
 - houses visible in sunrise hills that you get  as freebies vs 1M houses you set in open zone of your choice (it'll work like a bind, no house visible) ala old roguelikes
 - marriage system with live eq style con ally to spouse
