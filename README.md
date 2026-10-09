@@ -7,12 +7,13 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 ---
 ### This update's changes (10/9)
-- Focus locker is in under procs in your nautilus vault, UI is still sketch but its in, also UI now displays corruption resist
+- Focus locker is in under procs in your nautilus vault, pick 4 items you want skill/foci/instrumentation bonus of and it'll fire from it, UI is still sketch but its in, also UI now displays corruption resist
 - Deduped and consolidated some AAs, yes there's a bunch of weird AAs now visible
 - Shrouds 80% done, put in a baking skill training quest in bazaar, you must become one with the dough
 - added rank 2 of the god quests, not tested, agnostics have it loccked at pop now and must choose a cause
 - put in halloween quests, again not tested
 - Rog/RNG innate crit and 2hs AA melee boosting
+- Behemoth activates now, keep the spiders away
 
 ### This update's changes (10/4)
 - Nautilus Vault is in, UI is sketch but its in, proc locker has rule choice to proc locked weapons procs and their augs in addition to procs in held weaps
