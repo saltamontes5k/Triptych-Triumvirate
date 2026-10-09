@@ -173,7 +173,7 @@ void VaultWnd::PopulateList() {
 		last = 80;
 	} else {
 		first = 81;
-		last = 83;
+		last = 87;
 	}
 
 	for (int slot = first; slot <= last; ++slot) {
@@ -191,7 +191,11 @@ void VaultWnd::PopulateList() {
 			if (m_open_page == 9) {
 				if (slot == 81) col_name = "<Empty Primary Proc Slot>";
 				else if (slot == 82) col_name = "<Empty Secondary Proc Slot>";
-				else col_name = "<Empty Ranged Proc Slot>";
+				else if (slot == 83) col_name = "<Empty Ranged Proc Slot>";
+				else if (slot == 84) col_name = "<Empty Foci/Skill Mod 1>";
+				else if (slot == 85) col_name = "<Empty Foci/Skill Mod 2>";
+				else if (slot == 86) col_name = "<Empty Foci/Skill Mod 3>";
+				else col_name = "<Empty Foci/Skill Mod 4>";
 			} else {
 				col_name = "<Empty Vault Slot>";
 			}

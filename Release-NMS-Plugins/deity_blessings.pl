@@ -50,9 +50,10 @@ my %BLESS_R1_IDOL = (
 
 # ---------------------------------------------------------------------------
 # Agnostic "cause" system.
-# At Rank II an Agnostic (140/396) chooses a cause; their procs then follow the
-# hidden god's bundles directly. The god is NEVER shown -- only the concept
-# label. All Agnostics still share the Agnostic rank questline.
+# An Agnostic (140/396) chooses a cause BEFORE Rank I (at the Tranquil Keeper,
+# before the blank-idol task); their procs then follow the hidden god's bundles
+# from Rank I onward. The god is NEVER shown -- only the concept label. All
+# Agnostics still share the Agnostic rank questline.
 # ---------------------------------------------------------------------------
 my %BLESS_CAUSE_LABEL = (
     201 => 'Legacy',             202 => 'Wealth',
@@ -74,7 +75,7 @@ my %BLESS_CAUSE_ALIAS = (
 
 # ---------------------------------------------------------------------------
 # Spell palette.
-#   Buff-type effects use custom collision-free spell ids (50018-50022),
+#   Buff-type effects use custom collision-free spell ids (44014-44020),
 #   registered in Spells:AlwaysStackSpells so they never clash with player
 #   spell lines. Instant effects have no buff slot, so base ids are fine.
 # ---------------------------------------------------------------------------
@@ -85,7 +86,7 @@ my $SP_DISEASE  = 44014;  # Blessing: Disease
 my $SP_LIFETAP  = 446;    # Siphon Life (instant)
 my $SP_HEAL     = 12;     # Healing (instant)
 my $SP_GROUPHEAL= 18006;  # Cantata of Rodcet (instant)
-my $SP_STUN     = 216;    # Stun (instant)
+my $SP_DYNSTUN  = 619;    # Dyn's Dizzying Draught (shaman disc stun; instant, unresistable)
 my $SP_FIRE     = 657;    # Flame Shock (instant)
 my $SP_FIRE2    = 6862;   # Flame Shock alt (instant)
 my $SP_MAGIC    = 383;    # Shock of Lightning (instant)
@@ -105,8 +106,12 @@ my $SPELL_UNKNOWN = 0xFFFF;  # melee/ranged/basic-skill damage (EVENT_DAMAGE_GIV
 #   mimic      -> this tree copies a random other tree's effect per proc
 # Actions: {cast=>id,to=>'self'|'opp'}, {rand=>[ids]}, {heal=>pct},
 #          {heal_if_hurt=>pct}, {hate=>amt}, {pickpocket=>1}, {illusion=>1},
-#          {twinproc=>1}, {flurry=>1}, {tribunal=>1}, {twincast_fire=>1},
-#          {mimicry=>1}, {mischief=>1}, {ds_buff=>id}
+#          {twinproc=>1}, {flurry=>1}, {tribunal=>1}, {twincast=>1},
+#          {twincast_fire=>1}, {twincast_cold=>1}, {mimicry=>1}, {mischief=>1},
+#          {ds_buff=>id}
+#   {twincast}: re-cast the spell that triggered the proc (any spell).
+#   {twincast_fire}/{twincast_cold}: same, but only if it was fire/cold.
+#   Any action may carry {chance=>N}: it only runs on a rand(100) < N roll.
 #   {mischief}: mimic-tree caprice -- 40% pickpocket+illusion, else mimicry.
 # ---------------------------------------------------------------------------
 my %BLESS_PROC = (
@@ -116,8 +121,8 @@ my %BLESS_PROC = (
         taken => [ {cast=>$SP_DISEASE, to=>'opp'} ],
     },
     202 => {  # Brell Serilis
-        melee     => [ {cast=>$SP_STUN, to=>'opp'} ],
-        cast      => [ {cast=>$SP_STUN, to=>'opp'} ],
+        melee     => [ {cast=>$SP_DYNSTUN, to=>'opp'} ],
+        cast      => [ {cast=>$SP_DYNSTUN, to=>'opp'} ],
         cast_heal => [ {cast=>$SP_GROUPHEAL, to=>'self'}, {heal_if_hurt=>0.10} ],
     },
     203 => {  # Cazic-Thule
@@ -142,39 +147,44 @@ my %BLESS_PROC = (
     },
     207 => {  # Karana
         melee     => [ {twinproc=>1} ],
-        cast      => [ {twinproc=>1} ],
-        cast_heal => [ {heal_if_hurt=>0.10} ],
+        cast      => [ {twincast=>1} ],
+        cast_heal => [ {twincast=>1} ],
     },
     208 => {  # Mithaniel Marr
-        melee     => [ {cast=>$SP_STUN, to=>'opp'} ],
-        cast      => [ {cast=>$SP_STUN, to=>'opp'} ],
+        melee     => [ {cast=>$SP_DYNSTUN, to=>'opp'} ],
+        cast      => [ {cast=>$SP_DYNSTUN, to=>'opp'} ],
         cast_heal => [ {cast=>$SP_GROUPHEAL, to=>'self'}, {heal_if_hurt=>0.10} ],
     },
     209 => {  # Prexus
         melee     => [ {cast=>$SP_COLD, to=>'opp'} ],
-        cast      => [ {cast=>$SP_COLD, to=>'opp'} ],
-        cast_heal => [ {heal_if_hurt=>0.10} ],
+        cast      => [ {twincast_cold=>1}, {cast=>$SP_COLD, to=>'opp'} ],
+        cast_heal => [ {cast=>$SP_GROUPHEAL, to=>'self'}, {heal_if_hurt=>0.10} ],
     },
     210 => {  # Quellious
-        melee => [ {hate=>-200}, {cast=>$SP_MANATAP, to=>'opp'} ],
-        cast  => [ {hate=>-200}, {cast=>$SP_MANATAP, to=>'opp'} ],
+        melee     => [ {hate=>-200}, {cast=>$SP_MANATAP, to=>'opp'},
+                       {cast=>$SP_DYNSTUN, to=>'opp', chance=>10} ],
+        cast      => [ {hate=>-200}, {cast=>$SP_MANATAP, to=>'opp'}, {twincast=>1} ],
+        cast_heal => [ {heal=>0.10} ],
     },
     211 => {  # Rallos Zek
-        melee => [ {cast=>$SP_LIFETAP,to=>'opp'}, {hate=>150}, {flurry=>1} ],
-        cast  => [ {cast=>$SP_LIFETAP,to=>'opp'}, {twinproc=>1}, {hate=>150} ],
+        melee     => [ {cast=>$SP_LIFETAP,to=>'opp'}, {hate=>150}, {flurry=>1} ],
+        cast      => [ {cast=>$SP_LIFETAP,to=>'opp'}, {twinproc=>1}, {hate=>150} ],
+        cast_heal => [ {heal_if_hurt=>0.10} ],
     },
     212 => {  # Rodcet Nife
-        melee     => [ {heal=>0.05} ],
-        cast      => [ {heal=>0.05} ],   # heal procs on hostile damage casts
+        melee     => [ {cast=>$SP_GROUPHEAL, to=>'self'} ],
+        cast      => [ {cast=>$SP_GROUPHEAL, to=>'self'} ],
         cast_heal => [ {cast=>$SP_GROUPHEAL, to=>'self'} ],
     },
     213 => {  # Solusek Ro
-        melee => [ {cast=>$SP_FIRE, to=>'opp'} ],
-        cast  => [ {twincast_fire=>1}, {cast=>$SP_FIRE2, to=>'opp'} ],
+        melee     => [ {cast=>$SP_FIRE, to=>'opp'} ],
+        cast      => [ {twincast_fire=>1}, {cast=>$SP_FIRE2, to=>'opp'} ],
+        cast_heal => [ {twincast=>1} ],
     },
     214 => {  # The Tribunal
-        melee => [ {tribunal=>1, to=>'opp'} ],
-        cast  => [ {tribunal=>1, to=>'opp'} ],
+        melee     => [ {tribunal=>1, to=>'opp'} ],
+        cast      => [ {tribunal=>1, to=>'opp'} ],
+        cast_heal => [ {heal_if_hurt=>0.10} ],
     },
     215 => {  # Tunare
         melee     => [ {cast=>$SP_SNARE,to=>'opp'}, {heal=>0.04} ],
@@ -203,9 +213,57 @@ my %BLESS_PROC = (
 my @BLESS_CHANCE  = (0, 1, 3, 5, 8, 11, 15, 17, 20, 22, 25);
 my @BLESS_MIMIC_EXCLUDE = (205, 140, 396);
 
-# Highest rank currently obtainable. Ranks 2-10 are authored later; until then
-# only Rank I is reachable, so the status text is capped to match.
-my $BLESS_RANK_CAP = 1;
+# ---------------------------------------------------------------------------
+# Rank II "Deity Favors" (tasks 700100 + treeIndex*9, i.e. 700100-700235).
+# One quest per god; Agnostics must complete ALL 16. Reward per completed
+# favor is its Fireworks Focus; Rank II also grants a Potion of Adventure II.
+# Focus item ids are the live anniversary set (NOT in deity-id order).
+# ---------------------------------------------------------------------------
+my %BLESS_R2_FOCUS = (
+    201 => 42962, 202 => 42963, 203 => 42965, 204 => 42968,
+    205 => 42964, 206 => 42966, 207 => 42967, 208 => 42969,
+    209 => 42970, 210 => 42971, 211 => 42972, 212 => 42973,
+    213 => 42974, 214 => 42975, 215 => 42976, 216 => 42977,
+);
+my $R2_POTION = 40994;   # Potion of Adventure II
+
+sub BlessingRank2Focus { my $d = shift; return $BLESS_R2_FOCUS{$d} || 0; }
+
+# Where each god's Rank II favor is earned (keepers use this to point players
+# instead of leaving the road a mystery).
+my %BLESS_R2_AVATAR = (
+    201 => 'the Avatar of Bertoxxulous, at the gnoll camp in the East Karana',
+    202 => 'Roderik, High Priest of Brell, in the Butcherblock Mountains',
+    203 => 'the Avatar of Cazic-Thule, before his temple in the Feerrott',
+    204 => 'the Aspect of Erollisi Marr, on the South Ro coast',
+    205 => "Bristlebane's Image, in the Plane of Knowledge",
+    206 => 'the evil little imp, in the Innothule Swamp',
+    207 => 'the Avatar of Karana, on the South Karana plains',
+    208 => 'the Avatar of Mithaniel Marr, in the Plane of Tranquility',
+    209 => "the Primate of Prexus, by the dock on Erud's Crossing",
+    210 => 'the Avatar of Quellious, in the Plane of Tranquility',
+    211 => 'the Avatar of Rallos Zek, in the Plane of Tranquility',
+    212 => 'Helera Garet, in North Qeynos',
+    213 => 'the Avatar of Solusek Ro, in the North Ro desert',
+    214 => 'the Herald of Justice Due, in the Plane of Tranquility',
+    215 => 'the Avatar of Tunare, in the Greater Faydark near Felwithe',
+    216 => 'the crystalline avatar, in the Plane of Knowledge',
+);
+
+sub BlessingFavorLocation { my $d = shift; return $BLESS_R2_AVATAR{$d} || "your god's avatar"; }
+
+# Favors of the gods earned so far (Agnostic Rank II progress; trees 0-15 only).
+sub BlessingFavorCount {
+    my $c = shift;
+    my $n = 0;
+    for my $i (0 .. 15) { $n++ if int($c->GetBucket("bless-r2done-$i") || 0); }
+    return $n;
+}
+
+# Highest rank currently obtainable. Rank II = the 16 "Deity Favors" quests
+# (one per god; Agnostics run all 16). Ranks 3-10 are authored later; until
+# then the status text is capped to match.
+my $BLESS_RANK_CAP = 2;
 
 # --- TEMP TEST DEBUG (disabled 2026-09-24; re-enable to test) --------------
 # Self-service 100% proc override. Say the password to a Keeper of Devotion to
@@ -259,12 +317,13 @@ sub BlessingIsAgnostic { my $d = shift; return ($d == 140 || $d == 396) ? 1 : 0;
 sub BlessingCause { my $c = shift; return int($c->GetBucket('bless-cause') || 0); }
 sub BlessingCauseLabel { my $d = shift; return $BLESS_CAUSE_LABEL{$d} || ''; }
 
-# Effective deity used for procs: a Rank II+ Agnostic with a cause follows it.
+# Effective deity used for procs: an Agnostic with a bound cause follows it
+# from Rank I onward.
 sub BlessingEffectiveDeity {
     my $c     = shift;
     my $deity = BlessingCheckDeity($c);
     return $deity unless BlessingIsAgnostic($deity);
-    return $deity if BlessingRank($c) < 2;
+    return $deity if BlessingRank($c) < 1;
     my $cause = BlessingCause($c);
     return $cause if $cause && $BLESS_CAUSE_LABEL{$cause};
     return $deity;
@@ -316,14 +375,15 @@ sub BlessingCauseByKeyword {
     return 0;
 }
 
-# Choose/change the cause. First choice requires Rank II. A different cause
-# severs devotion entirely (same as a change of faith).
+# Choose/change the cause. Available from the very beginning: an Agnostic
+# binds a cause BEFORE Rank I (the Tranquil Keeper requires it before the
+# blank-idol task). A different cause severs devotion entirely (same as a
+# change of faith).
 sub BlessingSetCause {
     my ($c, $cause) = @_;
     return 0 unless $c && $cause && $BLESS_CAUSE_LABEL{$cause};
     my $deity = BlessingCheckDeity($c);
     return 0 unless BlessingIsAgnostic($deity);
-    return 0 if BlessingRank($c) < 2;
     my $cur = BlessingCause($c);
     if ($cur && $cur != $cause) {
         $c->DeleteBucket('bless-rank');
@@ -331,6 +391,7 @@ sub BlessingSetCause {
         $c->DeleteBucket('bless-deity');
         $c->DeleteBucket('bless-r1-claimed');
         $c->DeleteBucket('bless-cause');
+        for my $i (0 .. 15) { $c->DeleteBucket("bless-r2done-$i"); }
         $c->Message(15, "Your change of cause has severed your devotion. Your devotion must be earned anew.");
         return 0;
     }
@@ -363,6 +424,7 @@ sub BlessingCheckDeity {
         $c->DeleteBucket('bless-deity');
         $c->DeleteBucket('bless-r1-claimed');
         $c->DeleteBucket('bless-cause');
+        for my $i (0 .. 15) { $c->DeleteBucket("bless-r2done-$i"); }
         $c->Message(15, "Your change of faith has severed your divine blessings. Your devotion must be earned anew.");
     }
     return $deity;
@@ -423,6 +485,9 @@ sub BlessingTaskRank {
 sub BlessingGrantRank {
     my ($c, $task_id) = @_;
     my $deity = BlessingCheckDeity($c);
+    if (BlessingIsAgnostic($deity)) {
+        return _BlessingGrantRank2Agnostic($c, $task_id);
+    }
     my $r = BlessingTaskRank($deity, $task_id);
     return 0 unless $r;
     # Strictly sequential: only the next rank can be earned.
@@ -431,7 +496,73 @@ sub BlessingGrantRank {
     $c->SetBucket('bless-rank', $r);
     $c->SetBucket('bless-pts', BlessingPoints($c) + 1);
     $c->Message(15, "You have awakened Rank $r of " . BlessingDevotionNoun($c) . ". (1 blessing point)");
+    _BlessingGrantRewards($c, $deity, $r);
     return 1;
+}
+
+# Per-tree done markers for the Agnostic all-16 favor path (trees 0-15 only;
+# the Agnostic tree itself, index 16, never counts).
+sub _BlessingR2Done {
+    my ($c, $tree) = @_;
+    my $i = BlessingTreeIndex($tree);
+    return 0 if $i < 0 || $i > 15;
+    return int($c->GetBucket("bless-r2done-$i") || 0);
+}
+
+# Agnostic Rank II: complete all 16 god favors. Each completed favor pays its
+# Fireworks Focus immediately; the 16th grants Rank II and the potion.
+sub _BlessingGrantRank2Agnostic {
+    my ($c, $task_id) = @_;
+    return 0 if BlessingRank($c) != 1;
+    for my $i (0 .. 15) {
+        my $god = $BLESS_TREES[$i];
+        next unless BlessingRankTask($god, 2) == $task_id;
+        return 0 if _BlessingR2Done($c, $god);
+        $c->SetBucket("bless-r2done-$i", 1);
+        my $focus = $BLESS_R2_FOCUS{$god};
+        $c->SummonItem($focus) if $focus;
+        my $done = BlessingFavorCount($c);
+        if ($done >= 16) {
+            $c->SetBucket('bless-deity', $c->GetDeity());
+            $c->SetBucket('bless-rank', 2);
+            $c->SetBucket('bless-pts', BlessingPoints($c) + 1);
+            $c->SummonItem($R2_POTION);
+            $c->Message(15, "All sixteen favors are yours. You have awakened Rank II of your devotion. (1 blessing point)");
+        } else {
+            $c->Message(15, "Favor earned: $done of 16 favors of the gods are yours.");
+        }
+        return 1;
+    }
+    return 0;
+}
+
+# Rank-2 rewards: the tree's Fireworks Focus + one Potion of Adventure II.
+sub _BlessingGrantRewards {
+    my ($c, $tree, $r) = @_;
+    return unless $r == 2;
+    my $focus = $BLESS_R2_FOCUS{$tree};
+    $c->SummonItem($focus) if $focus;
+    $c->SummonItem($R2_POTION);
+}
+
+# Assign a rank-2 favor quest (called from the favor NPCs, not the keeper).
+# God followers may only take their own god's favor; Agnostics of Rank I may
+# take any of the 16 (they need them all for Rank II).
+sub BlessingAssignRank2 {
+    my ($c, $tree) = @_;
+    return 0 unless $c && $tree && $BLESS_CAUSE_LABEL{$tree};
+    return 0 if BlessingRank($c) != 1;
+    my $deity = BlessingCheckDeity($c);
+    if (BlessingIsAgnostic($deity)) {
+        return 0 if _BlessingR2Done($c, $tree);
+    } else {
+        return 0 if $deity != $tree;
+    }
+    my $task = BlessingRankTask($tree, 2);
+    return 0 unless $task;
+    return 0 if $c->IsTaskActive($task);
+    $c->AssignTask($task);
+    return $task;
 }
 
 # ---------------------------------------------------------------------------
@@ -523,26 +654,28 @@ sub _BlessingIllusion {
     $c->CopyAppearance($opp);
 }
 
-my %FIRE_SPELLS;
-my $FIRE_LOADED = 0;
-sub _BlessingIsFireSpell {
-    my $sid = shift;
+# Offensive direct-damage spell sets by resist type (2 = fire, 3 = cold),
+# memoized per type: resisttype N, HP effect in slot 1, negative base = a nuke.
+my %RESIST_SPELLS;
+my %RESIST_LOADED;
+sub _BlessingInResistSet {
+    my ($sid, $resist) = @_;
     return 0 unless $sid;
-    unless ($FIRE_LOADED) {
-        $FIRE_LOADED = 1;
+    unless ($RESIST_LOADED{$resist}) {
+        $RESIST_LOADED{$resist} = 1;
         my $dbh = plugin::LoadMysql();
         if ($dbh) {
             my $sth = $dbh->prepare(
-                "SELECT id FROM spells_new WHERE resisttype=2 AND effectid1=0 AND effect_base_value1 < 0"
+                "SELECT id FROM spells_new WHERE resisttype=? AND effectid1=0 AND effect_base_value1 < 0"
             );
-            if ($sth && $sth->execute()) {
-                while (my ($id) = $sth->fetchrow_array()) { $FIRE_SPELLS{$id} = 1; }
+            if ($sth && $sth->execute($resist)) {
+                while (my ($id) = $sth->fetchrow_array()) { $RESIST_SPELLS{$resist}{$id} = 1; }
             }
             $sth->finish() if $sth;
             $dbh->disconnect();
         }
     }
-    return $FIRE_SPELLS{$sid} ? 1 : 0;
+    return $RESIST_SPELLS{$resist}{$sid} ? 1 : 0;
 }
 
 sub _BlessingMimicry {
@@ -572,6 +705,7 @@ sub _BlessingRunActions {
     my ($c, $opp, $actions, $cast_spell_id, $trigger) = @_;
     return unless $actions;
     for my $a (@$actions) {
+        next if $a->{chance} && int(rand(100)) >= $a->{chance};
         my $self = ($a->{to} && $a->{to} eq 'self');
         my $mob  = $self ? $c : $opp;
 
@@ -615,8 +749,17 @@ sub _BlessingRunActions {
                 }
             }
         }
+        elsif ($a->{twincast}) {
+            # Re-cast the spell that just triggered the proc (any spell).
+            _BlessingCastOn($c, $cast_spell_id, $opp) if $cast_spell_id && $opp;
+        }
         elsif ($a->{twincast_fire}) {
-            if ($cast_spell_id && _BlessingIsFireSpell($cast_spell_id) && $opp) {
+            if ($cast_spell_id && _BlessingInResistSet($cast_spell_id, 2) && $opp) {
+                _BlessingCastOn($c, $cast_spell_id, $opp);
+            }
+        }
+        elsif ($a->{twincast_cold}) {
+            if ($cast_spell_id && _BlessingInResistSet($cast_spell_id, 3) && $opp) {
                 _BlessingCastOn($c, $cast_spell_id, $opp);
             }
         }
@@ -716,10 +859,19 @@ sub BlessingOnCast {
     if (_BlessingIsDamageSpell($spell)) {
         my $hostile = ($target && $target->IsNPC() && !$target->GetOwnerID());
         if (_BlessingInCombat($c)) {   # DEBUG: was  || _BlessingDebug($c) >= 2
-            # one roll: offensive bundle + heal bundle (heals still fire off damage)
+            # one roll: offensive bundle + heal bundle (heals still fire off damage),
+            # deduped so an action shared with the cast bundle only runs once
             my @union;
-            push @union, @{ $eff->{cast} } if $eff->{cast};
-            push @union, @{ _BlessingHealBundle($eff) } if !$eff->{mimic};
+            my %seen;
+            for my $a (@{ $eff->{cast} || [] }) {
+                push @union, $a;
+                $seen{join(',', %$a)} = 1;
+            }
+            if (!$eff->{mimic}) {
+                for my $a (@{ _BlessingHealBundle($eff) }) {
+                    push @union, $a unless $seen{join(',', %$a)};
+                }
+            }
             _BlessingTryList($c, ($hostile ? $target : undef), \@union, 1, $spell_id, 'cast') if @union;
         } else {
             # out of combat: heals still allowed
@@ -759,13 +911,22 @@ sub BlessingStatusHtml {
     $html .= "<c \"#FFFFFF\">Blessing points:</c> <c \"#FFD700\">$pts</c><br>";
     $html .= "<c \"#FFFFFF\">Proc chance:</c> <c \"#00FF00\">$chance%</c> per trigger<br><br>";
 
-    if (BlessingIsAgnostic($c->GetDeity()) && !BlessingCause($c) && $rank >= 2) {
-        $html .= "<c \"#AAAAAA\">Choose your cause to bind your path.</c><br><br>";
+    my $agnostic = BlessingIsAgnostic($c->GetDeity());
+    if ($agnostic && $rank >= 1) {
+        $html .= "<c \"#FFFFFF\">Favors of the gods:</c> <c \"#00FF00\">" . BlessingFavorCount($c) . " / 16</c><br>";
+        $html .= "<c \"#AAAAAA\">All sixteen are required -- every avatar, every quest. No exceptions.</c><br>";
+    }
+    if ($agnostic && !BlessingCause($c)) {
+        $html .= "<c \"#AAAAAA\">You are unaligned, and the unaligned have no royal road. The Tranquil Keeper in the Plane of Tranquility (by the Plane of Knowledge portal stones) binds your cause.</c><br><br>";
     }
     if ($rank < 1) {
-        $html .= "<c \"#AAAAAA\">Forge a fired idol of your faith and deliver it to the Keeper of Devotion in The Bazaar to awaken Rank I.</c>";
+        $html .= $agnostic
+            ? "<c \"#AAAAAA\">Bind your cause, then forge the blank idol of the Unaligned (potter's wheel and kiln -- the Plane of Knowledge tradeskill buildings will serve) and deliver it to the Tranquil Keeper in the Plane of Tranquility to awaken Rank I.</c>"
+            : "<c \"#AAAAAA\">Forge a fired idol of your faith and deliver it to the Keeper of Devotion in The Bazaar to awaken Rank I.</c>";
     } elsif ($rank < $BLESS_RANK_CAP) {
-        $html .= "<c \"#AAAAAA\">Further ranks are earned through devotion.</c>";
+        $html .= $agnostic
+            ? "<c \"#AAAAAA\">Earn the favor of all sixteen gods to awaken Rank II.</c>"
+            : "<c \"#AAAAAA\">Further ranks are earned through devotion.</c>";
     } else {
         $html .= "<c \"#AAAAAA\">Further ranks are not yet available.</c>";
     }

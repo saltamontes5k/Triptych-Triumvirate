@@ -568,6 +568,25 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	inline bool IsShrouded() const { return m_shrouded; }
 	inline uint32 GetShroudID() const { return m_shroud_id; }
 
+	// Live-like monster points / shroud AAs (see Custom:ShroudLiveMode).
+	inline uint32 GetShroudPoints() const { return m_shroud_points; }
+	inline uint32 GetShroudPointsSpent() const { return m_shroud_points_spent; }
+	static bool IsShroudAA(const AA::Ability *ability);
+	void ShroudGrantPoints(uint32 points, uint32 shroud_id, uint32 level);
+	void ShroudLoadPoints();
+	void ShroudSavePoints();
+	void ShroudEndSession();
+	void ShroudReapplyPurchases(bool spend);
+	void ShroudApplyClassSkills(uint8 shroud_class, uint8 shroud_level);
+	// Guide-content gate: which abilities this form/level may see and how many
+	// ranks of each. `ShroudDefinition` is local to shroud.cpp, hence the scalars.
+	void LoadShroudAbilityCaps(const std::string &progression, const std::string &branch, uint8 level);
+	void ClearShroudAbilityCaps();
+	bool IsShroudAbilityForCurrentForm(uint32 aa_id) const;
+	uint32 ShroudAbilityMaxRank(uint32 aa_id) const;
+	void ShroudPurgeOwnedAAs();
+	void FillShroudTransformExtras(ShroudSelf_Struct *shroud);
+
 	void SetPetCommandState(int button, int state);
 
 	// Pushes petids to the client as OP_PetList. Prefer MarkPetListDirty() so the
@@ -1248,6 +1267,11 @@ public:
 
 	std::unordered_map<int, int> m_aa_timers_cache; // Cache to store AA timers as key-value pairs (aa_id -> timerID)
 
+	// NMS: name -> winning ability id cache for duplicate AA line deconfliction
+	std::unordered_map<std::string, uint32> m_aa_winner_map;
+	uint32 m_aa_winner_classes = 0;
+	bool   m_aa_winner_valid   = false;
+
 	//New AA Methods
 	void SendAlternateAdvancementRank(int aa_id, int level);
 	void SendAlternateAdvancementTable();
@@ -1274,6 +1298,11 @@ public:
 	void GrantAllAAPoints(uint8 unlock_level = 0, bool skip_grant_only = false);
 	bool HasAlreadyPurchasedRank(AA::Rank* rank);
 	void ListPurchasedAAs(Client *to, std::string search_criteria = std::string());
+
+	// NMS: duplicate AA line deconfliction (multiple abilities sharing a name)
+	const std::unordered_map<std::string, uint32>& GetAAWinnerMap();
+	void InvalidateAAWinnerMap() { m_aa_winner_valid = false; }
+	void MigrateDuplicateAALines();
 
 	bool SendGMCommand(std::string message, bool ignore_status = false);
 
@@ -2560,8 +2589,10 @@ private:
 	uint8 npclevel;
 
 	// shrouds
-	bool                 m_shrouded           = false;
-	uint32               m_shroud_id          = 0;
+	bool                 m_shrouded           = false;	uint32               m_shroud_id          = 0;
+	// Guide content for the current form/level: aa_id -> highest rank the guide
+	// grants at or below that level. Empty when nothing is mapped (or unshrouded).
+	std::unordered_map<uint32, uint32> m_shroud_ability_caps;
 	bool                 m_shroud_saved_valid = false;
 	PlayerProfile_Struct m_shroud_saved_pp{};
 	// Base appearance captured when the shroud is applied (the profile only
@@ -2574,6 +2605,11 @@ private:
 	// client is still building the zone crashes its self-spawn re-add.
 	bool                 m_shroud_zonein_pending     = false;
 	uint32               m_shroud_zonein_at          = 0;
+	// Live-like monster points (Custom:ShroudLiveMode bit 4): a separate pool
+	// granted fresh per shroud apply, spent on shroud AAs only, reset on leave.
+	// Kept out of m_pp so the ShroudPersistGuard never sees it.
+	uint32               m_shroud_points             = 0;
+	uint32               m_shroud_points_spent       = 0;
 
 	bool bZoning;
 	bool tgb;

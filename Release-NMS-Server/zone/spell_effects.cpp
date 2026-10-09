@@ -29,6 +29,7 @@
 #include "bot.h"
 #include "pets.h"
 #include "zonedb.h"
+#include "nms_vault.h"
 #include "quest_parser_collection.h"
 #include "lua_parser.h"
 #include "string_ids.h"
@@ -7248,6 +7249,42 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 							UsedItem = TempItem;
 							UsedFocusID = TempItem->Focus.Effect;
 						}
+					}
+				}
+			}
+		}
+
+		if (IsClient()) {
+			// Nautilus Vault mod slots: parked items lend their focus best-wins alongside
+			// everything else. The list is pre-filtered to valid ItemEffectFocus entries.
+			const EQ::ItemData *locker_focus[28] = {};
+			const int locker_count = NmsVaultLockerFocusList(CastToClient(), locker_focus, 28);
+			for (int i = 0; i < locker_count; ++i) {
+				TempItem = locker_focus[i];
+				if (rand_effectiveness) {
+					focus_max = CalcFocusEffect(type, TempItem->Focus.Effect, spell_id, true);
+					if (focus_max > 0 && focus_max_real >= 0 && focus_max > focus_max_real) {
+						focus_max_real = focus_max;
+						UsedItem = TempItem;
+						UsedFocusID = TempItem->Focus.Effect;
+					}
+					else if (focus_max < 0 && focus_max < focus_max_real) {
+						focus_max_real = focus_max;
+						UsedItem = TempItem;
+						UsedFocusID = TempItem->Focus.Effect;
+					}
+				}
+				else {
+					Total = CalcFocusEffect(type, TempItem->Focus.Effect, spell_id);
+					if (Total > 0 && realTotal >= 0 && Total > realTotal) {
+						realTotal = Total;
+						UsedItem = TempItem;
+						UsedFocusID = TempItem->Focus.Effect;
+					}
+					else if (Total < 0 && Total < realTotal) {
+						realTotal = Total;
+						UsedItem = TempItem;
+						UsedFocusID = TempItem->Focus.Effect;
 					}
 				}
 			}

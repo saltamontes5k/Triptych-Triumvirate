@@ -39,6 +39,8 @@ public:
 
 	Rank *GetRankByPointsSpent(int current_level);
 	int GetMaxLevel(Mob *who);
+	int64 GetLineStrength(Mob *who);
+	int GetMaxExpansion(Mob *who);
 
 	uint32 id;
 	std::string name;

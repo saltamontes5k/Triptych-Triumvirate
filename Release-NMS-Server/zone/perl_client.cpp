@@ -1667,6 +1667,27 @@ void Perl_Client_RemoveShroud(Client* self) // @categories Script Utility
 	self->RemoveShroud();
 }
 
+// NMS: script-side shroud apply (Cake Defense monster mission). Scripts must
+// call it only after the client has settled into the zone.
+void Perl_Client_ApplyShroud(Client* self, uint32 shroud_id) // @categories Script Utility
+{
+	self->ApplyShroud(shroud_id);
+}
+
+// NMS: unshroud without sending the OP_Shroud/illusion packets -- for zone-in
+// hooks where the client is still building the zone and the fresh spawn data
+// already carries the real form.
+void Perl_Client_RemoveShroudSilent(Client* self) // @categories Script Utility
+{
+	self->RemoveShroud(false);
+}
+
+// NMS: instance version of the zone this client is in (Cake Defense v202 gating).
+uint32 Perl_Client_GetZoneInstanceVersion(Client* self) // @categories Script Utility
+{
+	return zone ? zone->GetInstanceVersion() : 0;
+}
+
 void Perl_Client_NotifyNewTitlesAvailable(Client* self) // @categories Account and Character
 {
 	self->NotifyNewTitlesAvailable();
@@ -3664,6 +3685,7 @@ void perl_register_client()
 	package.add("ApplySpellRaid", (void(*)(Client*, int, int, int, bool, bool))&Perl_Client_ApplySpellRaid);
 	package.add("ApplySpellRaid", (void(*)(Client*, int, int, int, bool, bool, bool))&Perl_Client_ApplySpellRaid);
 	package.add("AreTasksCompleted", (bool(*)(Client*, perl::array))&Perl_Client_AreTasksCompleted);
+	package.add("ApplyShroud", (void(*)(Client*, uint32))&Perl_Client_ApplyShroud);
 	package.add("AreaTaunt", (void(*)(Client*))&Perl_Client_AreaTaunt);
 	package.add("AreaTaunt", (void(*)(Client*, float))&Perl_Client_AreaTaunt);
 	package.add("AreaTaunt", (void(*)(Client*, float, int))&Perl_Client_AreaTaunt);
@@ -3908,6 +3930,7 @@ void perl_register_client()
 	package.add("GetWeight", &Perl_Client_GetWeight);
 	package.add("GetPEQZoneFlags", &Perl_Client_GetPEQZoneFlags);
 	package.add("GetZoneFlags", &Perl_Client_GetZoneFlags);
+	package.add("GetZoneInstanceVersion", (uint32(*)(Client*))&Perl_Client_GetZoneInstanceVersion);
 	package.add("GoFish", &Perl_Client_GoFish);
 	package.add("GrantAllAAPoints", (void(*)(Client*))&Perl_Client_GrantAllAAPoints);
 	package.add("GrantAllAAPoints", (void(*)(Client*, uint8))&Perl_Client_GrantAllAAPoints);
@@ -4006,6 +4029,7 @@ void perl_register_client()
 	package.add("OpenLFGuildWindow", &Perl_Client_OpenLFGuildWindow);
 	package.add("OpenShroudWindow", &Perl_Client_OpenShroudWindow);
 	package.add("RemoveShroud", &Perl_Client_RemoveShroud);
+	package.add("RemoveShroudSilent", (void(*)(Client*))&Perl_Client_RemoveShroudSilent);
 	package.add("PlayMP3", &Perl_Client_PlayMP3);
 	package.add("Popup2", (void(*)(Client*, const char*, const char*))&Perl_Client_Popup2);
 	package.add("Popup2", (void(*)(Client*, const char*, const char*, uint32))&Perl_Client_Popup2);

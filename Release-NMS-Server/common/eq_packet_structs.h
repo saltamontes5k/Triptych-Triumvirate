@@ -952,7 +952,7 @@ static const uint32 MAX_PP_LANGUAGE = 28;
 
 static const uint32 MAX_PP_SKILL		= PACKET_SKILL_ARRAY_SIZE;	// 100 - actual skills buffer size
 static const uint32 MAX_PP_INNATE_SKILL	= 25;
-	static const uint32 MAX_PP_AA_ARRAY		= 300;
+static const uint32 MAX_PP_AA_ARRAY		= 300;
 static const uint32 MAX_GROUP_MEMBERS	= 6;
 static const uint32 MAX_RECAST_TYPES	= 20;
 
@@ -5359,6 +5359,11 @@ struct AARankInfo_Struct
 	int32 category;
 	uint32 charges;
 	uint8 grant_only;
+	// NMS: 1 when the server decided this row belongs to the *current* shroud
+	// form/level (see Client::IsShroudAbilityForCurrentForm). The RoF2 encoder
+	// writes it as the client's per-row shroud byte, which the AA window's
+	// monster-mode gate requires.
+	uint8 shroud_row;
 	uint32 total_effects;
 	uint32 total_prereqs;
 };
@@ -5541,10 +5546,23 @@ struct spawnShroudOther
 
 // Internal packet used to hand a player's shrouded form to the RoF2 OP_Shroud
 // encoder: the updated spawn plus the profile block the client applies.
+// The trailing fields are NMS extensions consumed by BuildShroudProfileBlock
+// (they never touch the wire directly): the Custom:ShroudLiveMode rule bits
+// and the live-like monster-point / shroud-AA overrides for the profile block.
 struct ShroudSelf_Struct
 {
 	Spawn_Struct         spawn;
 	PlayerProfile_Struct profile;
+
+	// NMS live-like shroud extensions (not part of the wire layout).
+	uint32 live_mode            = 0; // Custom:ShroudLiveMode rule bits
+	uint32 monster_points       = 0; // unspent monster points
+	uint32 monster_points_spent = 0; // spent monster points this session
+	static constexpr uint32 kMaxShroudAAs = 48;
+	uint32 shroud_aa_count      = 0;
+	uint32 shroud_aa_ids[48]    = {};   // ability first_rank_id
+	uint32 shroud_aa_values[48] = {};   // owned rank (points spent)
+	uint32 shroud_aa_spells[48] = {};   // rank spell (scribed into the form's spellbook)
 };
 
 /**

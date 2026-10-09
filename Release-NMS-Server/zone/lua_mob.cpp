@@ -1183,6 +1183,12 @@ void Lua_Mob::Kill() {
 	self->Kill();
 }
 
+// NMS: fade a specific spell's buff on this mob (Cake Defense sticky-icing root).
+void Lua_Mob::BuffFadeBySpellID(uint16 spell_id) {
+	Lua_Safe_Call_Void();
+	self->BuffFadeBySpellID(spell_id);
+}
+
 bool Lua_Mob::CanThisClassDoubleAttack() {
 	Lua_Safe_Call_Bool();
 	return self->CanThisClassDoubleAttack();
@@ -4016,6 +4022,10 @@ luabind::scope lua_register_mob() {
 	.def("IsWarriorClass", &Lua_Mob::IsWarriorClass)
 	.def("IsWisdomCasterClass", &Lua_Mob::IsWisdomCasterClass)
 	.def("Kill", (void(Lua_Mob::*)(void))&Lua_Mob::Kill)
+	// NMS: do NOT register a second BuffFadeBySpellID overload here. The stock
+	// (int) binding above is the only one LuaBridge may see; a uint16 overload
+	// made every scripted BuffFadeBySpellID(id) call fail with "Ambiguous,
+	// candidates" (which silently broke the cake icing/root strip).
 	.def("MassGroupBuff", (void(Lua_Mob::*)(Lua_Mob, uint16))&Lua_Mob::MassGroupBuff)
 	.def("MassGroupBuff", (void(Lua_Mob::*)(Lua_Mob, uint16, bool))&Lua_Mob::MassGroupBuff)
 	.def("Mesmerize", (void(Lua_Mob::*)(void))&Lua_Mob::Mesmerize)

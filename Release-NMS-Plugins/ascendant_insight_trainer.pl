@@ -94,6 +94,21 @@ sub _has_native_access {
     return (($actual_classes & $player_bitmask) > 0) ? 1 : 0;
 }
 
+# Native access can also come from a DIFFERENT ability that shares this AA's
+# name (e.g. a Paladin with "Shield Specialist" 4666 vs mapping original 605).
+# Used for display/labeling so the menu shows the player's real native status;
+# purchase blocking remains ownership-based (_duplicate_line_or_cap).
+sub _has_native_access_by_name {
+    my ($dbh, $aa_name, $player_bitmask) = @_;
+    return 0 unless $dbh && $aa_name && $player_bitmask;
+    my ($count) = $dbh->selectrow_array(
+        "SELECT COUNT(*) FROM aa_ability " .
+        "WHERE name = ? AND enabled = 1 AND grant_only = 0 AND (classes & ?) > 0",
+        undef, $aa_name, $player_bitmask
+    );
+    return $count ? 1 : 0;
+}
+
 # ============================================================
 # GetCreditBalance - Read credit balance for a specific tier + class
 # Key: character-{charid}-{tier}_credits_{class}
@@ -324,6 +339,7 @@ sub ShowTrainingMenu {
         "SELECT acm.universal_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
+        "oa.name AS original_ability_name, " .
         "oa.classes AS original_ability_classes " .
         "FROM aa_custom_mapping acm " .
         "JOIN aa_ability ua ON ua.id = acm.universal_aa_id " .
@@ -391,8 +407,10 @@ sub ShowTrainingMenu {
         my $tier_balance = $bal{$tier} || 0;
 
         # Check if player has native access to determine which first_rank_id to use
-        my $has_native = _has_native_access($aa, $player_bitmask);
-        my $first_rank_id = $has_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
+        my $mapping_native = _has_native_access($aa, $player_bitmask);
+        my $has_native = $mapping_native
+            || _has_native_access_by_name($dbh, $aa->{original_ability_name}, $player_bitmask);
+        my $first_rank_id = $mapping_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
 
         my $current_rank = $client->GetAALevel($first_rank_id);
         my $max_rank = _count_ranks($dbh, $first_rank_id);
@@ -404,11 +422,11 @@ sub ShowTrainingMenu {
             my $can_buy = _check_can_buy($dbh, $client, $first_rank_id, $current_rank, $tier_balance, 1);
 
             my $line = "($tier_name) " . quest::saylink("aainfo $uid", 1, $name) . " $current_rank/$max_rank";
-            if ($native_class) {
-                $line .= " (native)";
-            } elsif ($can_buy) {
-                $line .= " " . quest::saylink("buyaa $uid", 1, "[Buy]");
-            }
+            $line .= " (native)" if ($native_class || $has_native);
+            # Ownership is enforced at confirm time (_duplicate_line_or_cap); only
+            # the player's own class's trainer hard-blocks purchases, so keep the
+            # [Buy] link for name-native players on other trainers' menus.
+            $line .= " " . quest::saylink("buyaa $uid", 1, "[Buy]") if ($can_buy && !$native_class);
             $client->Message($COLOR_HEADING, $line);
         }
     }
@@ -450,6 +468,7 @@ sub ShowAADetail {
         "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
+        "oa.name AS original_ability_name, " .
         "oa.classes AS original_ability_classes " .
         "FROM aa_custom_mapping acm " .
         "JOIN aa_ability ua ON ua.id = acm.universal_aa_id " .
@@ -482,8 +501,7 @@ sub ShowAADetail {
 
     # Native class players use original rank chain; cross-class use universal
     my $player_bitmask = _get_player_bitmask($client);
-    my $has_native = _has_native_access($aa, $player_bitmask);
-    my $first_rank_id = $has_native ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
+    my $first_rank_id = _has_native_access($aa, $player_bitmask) ? $aa->{original_first_rank_id} : $aa->{universal_first_rank_id};
 
     my $current_rank = $client->GetAALevel($first_rank_id);
     my $max_rank = _count_ranks($dbh, $first_rank_id);
@@ -709,9 +727,10 @@ sub ShowBuyConfirmation {
     my $class_bitmask = _class_bitmask($trainer_class);
 
     my $sth = $dbh->prepare(
-        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
+        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
+        "oa.name AS original_ability_name, " .
         "oa.classes AS original_ability_classes " .
         "FROM aa_custom_mapping acm " .
         "JOIN aa_ability ua ON ua.id = acm.universal_aa_id " .
@@ -733,6 +752,15 @@ sub ShowBuyConfirmation {
     # NMS multiclass: block credit purchases of the player's own classes' AAs
     if (_is_native_class($client, $trainer_class)) {
         $client->Message($COLOR_RED, "You are already a $class_name. Native abilities are earned through experience - seek the guild masters of classes you do not yet know.");
+        $dbh->disconnect();
+        return;
+    }
+
+    # Tome-safety: the mapping must be item-backed. Disabled universals already
+    # fail the ua.enabled join above; this catches NULL tome_item_id rows
+    # (audit 2026-10-03: 4 mappings) whose credits could never be earned.
+    unless (defined $aa->{tome_item_id} && $aa->{tome_item_id} > 0) {
+        $client->Message($COLOR_RED, "That tome mapping is not item-backed yet (aa_custom_mapping row for universal AA " . $aa->{universal_aa_id} . " has no tome item).");
         $dbh->disconnect();
         return;
     }
@@ -830,9 +858,10 @@ sub HandleTrainRequest {
 
     # Get mapping info
     my $sth = $dbh->prepare(
-        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, " .
+        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
+        "oa.name AS original_ability_name, " .
         "oa.classes AS original_ability_classes " .
         "FROM aa_custom_mapping acm " .
         "JOIN aa_ability ua ON ua.id = acm.universal_aa_id " .
@@ -861,6 +890,13 @@ sub HandleTrainRequest {
     # NMS multiclass: block credit purchases of the player's own classes' AAs
     if (_is_native_class($client, $trainer_class)) {
         $client->Message($COLOR_RED, "You are already a $class_name. Native abilities are earned through experience - seek the guild masters of classes you do not yet know.");
+        $dbh->disconnect();
+        return 0;
+    }
+
+    # Tome-safety: the mapping must be item-backed (see ShowBuyConfirmation).
+    unless (defined $aa->{tome_item_id} && $aa->{tome_item_id} > 0) {
+        $client->Message($COLOR_RED, "That tome mapping is not item-backed yet (aa_custom_mapping row for universal AA " . $aa->{universal_aa_id} . " has no tome item).");
         $dbh->disconnect();
         return 0;
     }

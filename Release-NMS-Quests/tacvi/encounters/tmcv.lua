@@ -17,9 +17,8 @@ function Tunat_Second_Spawn()
 end
 
 function Tunat_Second_Death(e)
-	-- NMS progression: spawn the progression memory hail mob; one hail sets BOTH
-	-- the OoW and DoD flags (Tunat`Muram is the end boss that opens both).
-	memory.spawn(e, "OoW", "tunat`muram cuu vauax", "DoD", "tunat`muram cuu vauax");
+	-- NMS progression: Tunat`Muram is the GoD end boss that opens OoW.
+	memory.spawn(e, "OoW", "tunat`muram cuu vauax");
 
 	eq.signal(298223, 298055); -- NPC: zone_status
 	eq.signal(298223,2); -- Unlock Doors

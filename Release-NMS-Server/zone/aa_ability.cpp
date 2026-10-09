@@ -56,3 +56,47 @@ int AA::Ability::GetMaxLevel(Mob *who) {
 
 	return max_level;
 }
+
+// NMS: total effect magnitude across every rank the player can use. Used to
+// pick the single best line when multiple abilities share a name (duplicates).
+// Each effect contributes the larger magnitude of base1/base2 so SPAs that carry
+// their value in base2 (e.g. crit damage) are scored correctly.
+int64 AA::Ability::GetLineStrength(Mob *who) {
+	int64 strength = 0;
+
+	Rank *current = first;
+	while (current) {
+		if (!who->CanUseAlternateAdvancementRank(current)) {
+			break;
+		}
+
+		for (const auto &e : current->effects) {
+			int64 b1 = e.base_value < 0 ? -static_cast<int64>(e.base_value) : static_cast<int64>(e.base_value);
+			int64 b2 = e.limit_value < 0 ? -static_cast<int64>(e.limit_value) : static_cast<int64>(e.limit_value);
+			strength += (b1 > b2 ? b1 : b2);
+		}
+
+		current = current->next;
+	}
+
+	return strength;
+}
+
+int AA::Ability::GetMaxExpansion(Mob *who) {
+	int max_expansion = 0;
+
+	Rank *current = first;
+	while (current) {
+		if (!who->CanUseAlternateAdvancementRank(current)) {
+			break;
+		}
+
+		if (current->expansion > max_expansion) {
+			max_expansion = current->expansion;
+		}
+
+		current = current->next;
+	}
+
+	return max_expansion;
+}

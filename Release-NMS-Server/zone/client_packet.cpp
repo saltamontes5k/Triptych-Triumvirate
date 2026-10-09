@@ -1650,6 +1650,8 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 		LogError("Error loading AA points for [{}]", GetName());
 	}
 
+	MigrateDuplicateAALines();
+
 	if (RuleB(Bots, Enabled)) {
 		LoadDefaultBotSettings();
 		database.botdb.LoadBotSettings(this);
@@ -5314,6 +5316,31 @@ void Client::Handle_OP_ClientUpdate(const EQApplicationPacket *app) {
 	// Pure boat updates, and client contolled mob updates are complete.
 	// This can still be tricky.  If ppu->vehicle_id is set, then the client
 	// position is actually an offset from the boat he is inside.
+
+	// NMS: anchored shroud forms (Cake Defense race 629) cannot move. Re-assert
+	// the server position so the rest of this handler still processes heading
+	// and animation and broadcasts the anchored spot to nearby clients.
+	static const uint32 NMS_ANCHORED_SHROUD_RACE = 629;
+	if (m_shrouded && race == NMS_ANCHORED_SHROUD_RACE) {
+		const float nms_drift_x = ppu->x_pos - GetX();
+		const float nms_drift_y = ppu->y_pos - GetY();
+
+		ppu->x_pos   = GetX();
+		ppu->y_pos   = GetY();
+		ppu->z_pos   = GetZ();
+		ppu->delta_x = 0;
+		ppu->delta_y = 0;
+		ppu->delta_z = 0;
+
+		// An SPA 99 root normally makes the client refuse to move, but the
+		// client is authoritative for its own position: if the buff is missing
+		// or ignored it keeps walking and only the server position is pinned.
+		// Push the anchored position back to the client itself (the same
+		// packet GMMove uses) whenever it has drifted from the anchor.
+		if ((nms_drift_x * nms_drift_x + nms_drift_y * nms_drift_y) > 4.0f) {
+			mMovementManager->SendCommandToClients(this, 0.0f, 0.0f, 0.0f, 0.0f, 0, ClientRangeAny);
+		}
+	}
 
 	bool	on_boat = (ppu->vehicle_id != 0);
 

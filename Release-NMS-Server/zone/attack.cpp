@@ -1242,6 +1242,12 @@ int64 Mob::GetWeaponDamage(Mob *against, const EQ::ItemInstance *weapon_item, in
 	if (!against || against->GetInvul() || against->GetSpecialAbility(SpecialAbility::MeleeImmunity))
 		return 0;
 
+	// NMS: shrouded forms use the form's own hands, so drop the real item here
+	// too (kick/bash and any other caller). No inventory change is made.
+	if (IsClient() && CastToClient()->IsShrouded()) {
+		weapon_item = nullptr;
+	}
+
 	// check for items being illegally attained
 	if (weapon_item) {
 		if (!weapon_item->GetItem()) {
@@ -1276,11 +1282,13 @@ int64 Mob::GetWeaponDamage(Mob *against, const EQ::ItemInstance *weapon_item, in
 			}
 		}
 		else {
-			bool MagicGloves = false;
+			// NMS: shrouded form hands are magical (the Glowing Gloves effect),
+			// so a shrouded character can strike magic-immune targets unarmed.
+			bool MagicGloves = IsClient() && CastToClient()->IsShrouded();
 			if (IsClient()) {
 				const EQ::ItemInstance *gloves = CastToClient()->GetInv().GetItem(EQ::invslot::slotHands);
 				if (gloves)
-					MagicGloves = gloves->GetItemMagical(true);
+					MagicGloves = MagicGloves || gloves->GetItemMagical(true);
 			}
 
 			if (HasClass(Class::Monk) || HasClass(Class::Beastlord)) {
@@ -1658,6 +1666,16 @@ bool Mob::Attack(Mob* other, int Hand, bool bRiposte, bool IsStrikethrough, bool
 	else {
 		weapon = (IsClient()) ? GetInv().GetItem(EQ::invslot::slotPrimary) : CastToBot()->GetBotItem(EQ::invslot::slotPrimary);
 		OffHandAtk(false);
+	}
+
+	// NMS: a shrouded form attacks with its own hands/skills, never the
+	// character's real weapons (hidden, and usually unusable at the form's
+	// level/class). We do this as a virtual "magic hands" swap rather than by
+	// moving items into the slots: shroud state persists across camp/zone, so a
+	// real slot swap would be saved and could destroy the player's gear. This
+	// also keeps AttackAnimation on Hand-to-Hand for the form.
+	if (IsClient() && CastToClient()->IsShrouded()) {
+		weapon = nullptr;
 	}
 	if (weapon != nullptr) {
 		if (!weapon->IsWeapon()) {
@@ -5916,9 +5934,7 @@ int Mob::GetBaseCriticalHitChance(EQ::skills::SkillType skill) {
 
     if ((HasClass(Class::Warrior) || HasClass(Class::Berserker)) && GetLevel() >= 12) {
         innate_crit = true;
-    } else if (HasClass(Class::Ranger) && GetLevel() >= 12 && (skill == EQ::skills::SkillArchery || skill == EQ::skills::SkillThrowing)) {
-        innate_crit = true;
-    } else if (HasClass(Class::Rogue) && GetLevel() >= 12 && skill == EQ::skills::SkillThrowing) {
+    } else if ((HasClass(Class::Ranger) || HasClass(Class::Rogue)) && GetLevel() >= 12) {
         innate_crit = true;
     }
 

@@ -201,8 +201,9 @@ sub Philanthropist_HandleItemDonation {
         my $reqlevel = ($row->{reqlevel} || 0);
         my $stat_value = Philanthropist_GearStatValue($row);
 
-        # Reject summoned (e.g. magician conjurations) and temporary items.
-        if ($row->{summonedflag} || $row->{norent} || ($row->{Name} && $row->{Name} =~ /^Summoned:/i)) {
+        # Reject summoned items (e.g. magician conjurations). Note: norent is
+        # unusable here -- nearly every item in this DB has norent=1.
+        if ($row->{summonedflag} || ($row->{Name} && $row->{Name} =~ /^Summoned:/i)) {
             quest::debug("[Philanthropist] Rejecting summoned/temporary item $item_id");
             plugin::Whisper("I can't take summoned or temporary items. Returning your $item_link.");
             for (my $i = 0; $i < $qty; $i++) { $client->SummonItem($item_id); }

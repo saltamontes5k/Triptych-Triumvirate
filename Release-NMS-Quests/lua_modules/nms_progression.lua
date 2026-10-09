@@ -5,7 +5,28 @@
 -- This module reads that same data from Lua so event scripts (e.g. LDoN camp/raid
 -- recruiters) can enforce the per-account expansion gates with one require().
 
+-- The Perl plugin NMS_progression_utils.pl (%STAGE_PREREQUISITES) is the source
+-- of truth for this table; keep the two in sync.
+
 local PREREQ = {
+    -- Ruins of Kunark: Lord Nagafen + Lady Vox
+    RoK = { "lord nagafen", "lady vox" },
+    -- Scars of Velious: the four Kunark dragons
+    SoV = { "trakanon", "gorenaire", "severilous", "talendor" },
+    -- Shadows of Luclin: the Velious dragon ring leaders + Dozekar + Kelorek`Dar
+    SoL = { "klandicar", "zlandicar", "wuoshi", "dozekar the cursed", "kelorek`dar" },
+    -- Planes of Power: five Luclin-era world bosses
+    PoP = {
+        "thought horror overfiend",
+        "the insanity crawler",
+        "grieg veneficus",
+        "xerkizh the creator",
+        "emperor ssraeshza",
+    },
+    -- Gates of Discord: Saryrn
+    GoD = { "saryrn" },
+    -- Omens of War: Tunat`Muram Cuu Vauax, final boss of Tacvi (GoD)
+    OoW = { "tunat`muram cuu vauax" },
     -- Dragons of Norrath / LDoN unlock: all five PoP elemental gods
     DoN = {
         "xegony",
@@ -35,6 +56,14 @@ local PREREQ = {
     SoF = { "mayong mistmoore", "solusek ro" },
     -- Seeds of Destruction: Crystallos Kerafyrm + Sleeper's Tomb 2.0 Kerafyrm
     SoD = { "kerafyrm", "kerafyrm-crystallos" },
+    -- Lost Dungeons of Norrath: opens alongside DoN (same PoP elemental gods)
+    LDoN = {
+        "xegony",
+        "fennin ro the tyrant of fire",
+        "coirnav the avatar of water",
+        "rathe council",
+        "agnarr the storm lord",
+    },
 }
 
 local M = {}

@@ -15,12 +15,15 @@ namespace EQ {
 }
 
 static constexpr int NMS_VAULT_SLOT_MIN = 1;
-static constexpr int NMS_VAULT_SLOT_MAX = 83;
+static constexpr int NMS_VAULT_SLOT_MAX = 87;
 static constexpr int NMS_VAULT_CLICKY_BEGIN = 61;
 static constexpr int NMS_VAULT_CLICKY_END = 80;
 static constexpr int NMS_VAULT_PROC_PRIMARY = 81;
 static constexpr int NMS_VAULT_PROC_SECONDARY = 82;
 static constexpr int NMS_VAULT_PROC_RANGED = 83;
+// Free-form mod slots: a parked item lends only its skill mods, instrument mods, and
+// focus effects - never stats or procs. The Ring/Belt/Neck/Ear placeholders are cosmetic.
+static constexpr int NMS_VAULT_MOD_BEGIN = 84;
 // Fixed page set - NmsVaultPageForSlot only ever returns a value in this range.
 static constexpr int NMS_VAULT_PAGE_MIN = 1;
 static constexpr int NMS_VAULT_PAGE_MAX = 9;
@@ -74,6 +77,8 @@ int NmsVaultProcAugs(Client *c, uint16 hand, const EQ::ItemData **out_augs, int 
 void NmsVaultApplyLockerBonuses(Client *c, StatBonuses *b);
 bool NmsVaultBankAccess(Client *c);
 bool NmsVaultIsMerchant(Client *c, uint16 entity_id);
+void NmsVaultApplyModBonuses(Client *c, StatBonuses *b);
+int NmsVaultLockerFocusList(Client *c, const EQ::ItemData **out, int max);
 int NmsVaultTryDepositInstance(Client *c, EQ::ItemInstance *inst);
 
 #endif

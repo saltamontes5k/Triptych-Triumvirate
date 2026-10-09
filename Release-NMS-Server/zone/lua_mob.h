@@ -267,6 +267,7 @@ public:
 	bool IsStunned();
 	void Spin();
 	void Kill();
+	void BuffFadeBySpellID(uint16 spell_id);
 	bool CanThisClassDoubleAttack();
 	bool CanThisClassDualWield();
 	bool CanThisClassRiposte();

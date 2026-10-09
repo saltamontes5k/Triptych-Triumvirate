@@ -9,6 +9,8 @@ elseif version == instance_version.stillmoon_ascent_storm_dragon_scales then
 	eq.load_encounter("storm_dragon_scales")
 elseif version == instance_version.stillmoon_ascent_sudden_tremors then
 	eq.load_encounter("sudden_tremors")
+elseif version == instance_version.stillmoon_ascent_reflections_of_silver then
+	eq.load_encounter("reflections_of_silver")
 elseif version == 0 then
 	eq.load_encounter("Mask_of_the_Hidden")
 end

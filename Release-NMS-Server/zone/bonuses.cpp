@@ -188,6 +188,7 @@ void Mob::CalcItemBonuses(StatBonuses* b) {
 
 	if (IsClient()) {
 		NmsVaultApplyLockerBonuses(CastToClient(), b);
+		NmsVaultApplyModBonuses(CastToClient(), b);
 		if (CastToClient()->GetPP().tribute_active) {
 			for (auto const &t: CastToClient()->GetPP().tributes) {
 				auto item_id = CastToClient()->LookupTributeItemID(t.tribute, t.tier);
