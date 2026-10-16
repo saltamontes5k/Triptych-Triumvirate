@@ -1,11 +1,24 @@
 # Triptych Triumvirate — LAN server release
 
-A complete, working **multiclass EverQuest server** (EQEmu-based, RoF2 client), released as a
+A complete, working **multiclass EverQuest server** (EQEmu-based, RoF2 client, the steam one), released as a
 LAN-oriented community server. Everything in this repo is tuned for play on a local network.
 
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (10/16)
+-various server side stability fixes
+-fixed shrouds + aggressive dedupe leading to hidden universal AAs (Kree)
+-thezerodivide's Spellbook 720 → 1440 spells, this makes the client req https://ntcore.com/4gb-patch/ to be applied first, been using it about a decade np on other programs
+-Lon card game, requires rof2 steam client version to access, cards/boosters rare drop off mobs and every account gets 5 packs a month as a reward for survival
+-Mercs and they charge
+-Achievements and rewards window, its in, needs work (like more of them for example)
+-fix Sayrn flagging issue, GoD progression confirmed accessible by testers
+-Ornament v glamour divide started, glamors are cosmetic, while ornaments have stats/procs/clickies, eventually will add them in
+-Finally fixed origin and a few AAs
+-Opened up and lowered the level of a ton of AAs, bunch of weird AAs still visible
+-various corpse-mobs actually look dead now
+
 ### This update's changes (10/9)
 - Focus locker is in under procs in your nautilus vault, pick 4 items you want skill/foci/instrumentation bonus of and it'll fire from it, UI is still sketch but its in, also UI now displays corruption resist
 - Deduped and consolidated some AAs, yes there's a bunch of weird AAs now visible
@@ -124,6 +137,11 @@ Each folder has its own README with detailed instructions. Start with the server
 - **Offline bazaar** — offline trader/buyer/barter support
 - **Glamour & languages** — mount glamour merchant, armour glamour, and a languages trainer
 - **Tome trainers** — located in the bazaar backrooms
+- **Legends of Norrath Card Game** - Trading Card game, for nostalgia, has rewards, free 5 packs a month for existing, free drops off mobs, cool prizes**
+- **Achievements ** - Achievements to keep track of what you've done in Norrath
+- **Mercenaries** - Mercs you can hire to help in your higher level adventures
+- **Shrouds** - Shrouds, transform into a different monster-singular class, currently includes one monster quest
+- **Tradeskill by Quest and Raiding** - Tradeskill via Monster quest (well inanimate object quest) and soon raise tradeskills directly via killing of select raid bosses
 - Assorted client-side quality-of-life fixes, shipped as `dinput8.dll`
 
 ---
@@ -218,21 +236,17 @@ sudo apt install build-essential cmake ninja-build git \
 
 Honest state of the world, so you know what you are getting into:
 
-- known critical issue: AA line dupes when spent don't meaningfully contribute when AAs are spent in them,
-  consider them as a visual glitch for now until dedupe/consolidation patch in (Kree for report/examination)
-- **Expansion content depth varies a lot.** The LDoN-UF ranges are scaffold-level — playable in spots, thin almost everywhere else.
+- **Expansion content depth varies a lot.** The OoW-UF ranges are scaffold-level — playable in spots, thin almost everywhere else.
 - **Factions are incomplete and sometimes flat-out wrong.** Missing or erroneous faction
   hooks are one of the biggest gaps in the content along with bad hps.
 - **DoN alternate currency** (radiant/ebon crystals) is not implemented yet.
-- **Shrouds and houses** are still being tuned
-- Shrouds right now are more of a cheaty delevel/plvl method, but you don't fd and lose ui anymore. still be cautious using
+- **Shrouds and houses** are still being tuned, especially houses
+- Benefactor guy is broken and easy to dupe stuff with
 - No way to escape your house except by key or port
-- Deity quests rank 2+ need to be put in
-- Cazic thule 2.0 hail is broken, plan to replace gate of the past npcs with an automatic switch to v1 if you are level 60+
-- Origin AA is broken
+- Deity quests rank 3+ need to be put in
 - Many OoW+ AAs don't do anything, there are broken swarm pet spells and broken spells in general
 - merchants LDoN-UF ranges have no or missing stock
-
+- quest tester went down this week, didn't test Halloween/deity quests yet
 
 ---
 
