@@ -1,11 +1,10 @@
 sub EVENT_CONNECT {
     my $PCRace = $client->GetRace();
-my $PCClass = $client->GetClass();
 
      
     $client->Message(5, "You are unable to play this race/class combination until unlocking the proper expansion!");
     
-if($PCClass == 1){ #War AA
+if($client->HasClassID(1)){ #War AA
 	$waraa = $client->CharacterID() . "war";
 	if (quest::get_data($waraa) == "") {
     quest::set_data($waraa, 1);
@@ -17,7 +16,7 @@ if($PCClass == 1){ #War AA
 }
 }
 
-if($PCClass == 2){ #Clr AA
+if($client->HasClassID(2)){ #Clr AA
 	$clraa = $client->CharacterID() . "clr";
 	if (quest::get_data($clraa) == "") {
     quest::set_data($clraa, 1);
@@ -29,7 +28,7 @@ if($PCClass == 2){ #Clr AA
 }
 }
 
-if($PCClass == 3){ #Pal AA
+if($client->HasClassID(3)){ #Pal AA
 	$palaa = $client->CharacterID() . "pal";
 	if (quest::get_data($palaa) == "") {
     quest::set_data($palaa, 1);
@@ -41,7 +40,7 @@ if($PCClass == 3){ #Pal AA
 }
 }
 
-if($PCClass == 4){ #Rng AA
+if($client->HasClassID(4)){ #Rng AA
 	$rngaa = $client->CharacterID() . "rng";
 	if (quest::get_data($rngaa) == "") {
     quest::set_data($rngaa, 1);
@@ -54,7 +53,7 @@ if($PCClass == 4){ #Rng AA
 }
 }
 
-if($PCClass == 5){ #SK AA
+if($client->HasClassID(5)){ #SK AA
 	$skaa = $client->CharacterID() . "sk";
 	if (quest::get_data($skaa) == "") {
     quest::set_data($skaa, 1);
@@ -66,7 +65,7 @@ if($PCClass == 5){ #SK AA
 }
 }
 
-if($PCClass == 6){ #Dru AA
+if($client->HasClassID(6)){ #Dru AA
 	$druaa = $client->CharacterID() . "dru";
 	if (quest::get_data($druaa) == "") {
     quest::set_data($druaa, 1);
@@ -78,7 +77,7 @@ if($PCClass == 6){ #Dru AA
 }
 }
 
-if($PCClass == 7){ #Monk AA
+if($client->HasClassID(7)){ #Monk AA
 	$mnkaa = $client->CharacterID() . "mnk";
 	if (quest::get_data($mnkaa) == "") {
     quest::set_data($mnkaa, 1);
@@ -90,7 +89,7 @@ if($PCClass == 7){ #Monk AA
 }
 }
 
-if($PCClass == 8){ #Bard AA
+if($client->HasClassID(8)){ #Bard AA
 	$brdaa = $client->CharacterID() . "brd";
 	if (quest::get_data($brdaa) == "") {
     quest::set_data($brdaa, 1);
@@ -107,7 +106,7 @@ if($PCClass == 8){ #Bard AA
 }
 }
 
-if($PCClass == 9){ #Rogue AA
+if($client->HasClassID(9)){ #Rogue AA
 	$rogaa = $client->CharacterID() . "rog";
 	if (quest::get_data($rogaa) == "") {
     quest::set_data($rogaa, 1);
@@ -119,7 +118,7 @@ if($PCClass == 9){ #Rogue AA
 }
 }
 
-if($PCClass == 10){ #Shaman AA
+if($client->HasClassID(10)){ #Shaman AA
 	$shmaa = $client->CharacterID() . "shm";
 	if (quest::get_data($shmaa) == "") {
     quest::set_data($shmaa, 1);
@@ -131,7 +130,7 @@ if($PCClass == 10){ #Shaman AA
 }
 }
 
-if($PCClass == 11){ #Necromancer AA
+if($client->HasClassID(11)){ #Necromancer AA
 	$necaa = $client->CharacterID() . "nec";
 	if (quest::get_data($necaa) == "") {
     quest::set_data($necaa, 1);
@@ -145,7 +144,7 @@ if($PCClass == 11){ #Necromancer AA
 }
 }
 
-if($PCClass == 12){ #Wizard AA
+if($client->HasClassID(12)){ #Wizard AA
 	$wizaa = $client->CharacterID() . "wiz";
 	if (quest::get_data($wizaa) == "") {
     quest::set_data($wizaa, 1);
@@ -160,7 +159,7 @@ if($PCClass == 12){ #Wizard AA
 }
 }
 
-if($PCClass == 13){ #Mage AA
+if($client->HasClassID(13)){ #Mage AA
 	$magaa = $client->CharacterID() . "mag";
 	if (quest::get_data($magaa) == "") {
     quest::set_data($magaa, 1);
@@ -174,7 +173,7 @@ if($PCClass == 13){ #Mage AA
 }
 }
 
-if($PCClass == 14){ #Enchanter AA
+if($client->HasClassID(14)){ #Enchanter AA
 	$encaa = $client->CharacterID() . "enc";
 	if (quest::get_data($encaa) == "") {
     quest::set_data($encaa, 1);
@@ -191,7 +190,7 @@ if($PCClass == 14){ #Enchanter AA
 }
 }
 
-if($PCClass == 15){ #Beastlord AA
+if($client->HasClassID(15)){ #Beastlord AA
 	$blaa = $client->CharacterID() . "bl";
 	if (quest::get_data($blaa) == "") {
     quest::set_data($blaa, 1);
@@ -203,7 +202,7 @@ if($PCClass == 15){ #Beastlord AA
 }
 }
 
-if($PCClass == 16){ #Zerker AA
+if($client->HasClassID(16)){ #Zerker AA
 	$zerkaa = $client->CharacterID() . "zerk";
 	if (quest::get_data($zerkaa) == "") {
     quest::set_data($zerkaa, 1);
@@ -220,11 +219,10 @@ if($PCClass == 16){ #Zerker AA
 sub EVENT_ENTERZONE {
 
 	    my $PCRace = $client->GetRace();
-my $PCClass = $client->GetClass();
 
      $client->Message(5, "You are unable to play this race/class combination until unlocking the proper expansion!");
      
-if($PCClass == 1){ #War AA
+if($client->HasClassID(1)){ #War AA
 	$waraa = $client->CharacterID() . "war";
 	if (quest::get_data($waraa) == "") {
     quest::set_data($waraa, 1);
@@ -236,7 +234,7 @@ if($PCClass == 1){ #War AA
 }
 }
 
-if($PCClass == 2){ #Clr AA
+if($client->HasClassID(2)){ #Clr AA
 	$clraa = $client->CharacterID() . "clr";
 	if (quest::get_data($clraa) == "") {
     quest::set_data($clraa, 1);
@@ -248,7 +246,7 @@ if($PCClass == 2){ #Clr AA
 }
 }
 
-if($PCClass == 3){ #Pal AA
+if($client->HasClassID(3)){ #Pal AA
 	$palaa = $client->CharacterID() . "pal";
 	if (quest::get_data($palaa) == "") {
     quest::set_data($palaa, 1);
@@ -260,7 +258,7 @@ if($PCClass == 3){ #Pal AA
 }
 }
 
-if($PCClass == 4){ #Rng AA
+if($client->HasClassID(4)){ #Rng AA
 	$rngaa = $client->CharacterID() . "rng";
 	if (quest::get_data($rngaa) == "") {
     quest::set_data($rngaa, 1);
@@ -273,7 +271,7 @@ if($PCClass == 4){ #Rng AA
 }
 }
 
-if($PCClass == 5){ #SK AA
+if($client->HasClassID(5)){ #SK AA
 	$skaa = $client->CharacterID() . "sk";
 	if (quest::get_data($skaa) == "") {
     quest::set_data($skaa, 1);
@@ -285,7 +283,7 @@ if($PCClass == 5){ #SK AA
 }
 }
 
-if($PCClass == 6){ #Dru AA
+if($client->HasClassID(6)){ #Dru AA
 	$druaa = $client->CharacterID() . "dru";
 	if (quest::get_data($druaa) == "") {
     quest::set_data($druaa, 1);
@@ -297,7 +295,7 @@ if($PCClass == 6){ #Dru AA
 }
 }
 
-if($PCClass == 7){ #Monk AA
+if($client->HasClassID(7)){ #Monk AA
 	$mnkaa = $client->CharacterID() . "mnk";
 	if (quest::get_data($mnkaa) == "") {
     quest::set_data($mnkaa, 1);
@@ -309,7 +307,7 @@ if($PCClass == 7){ #Monk AA
 }
 }
 
-if($PCClass == 8){ #Bard AA
+if($client->HasClassID(8)){ #Bard AA
 	$brdaa = $client->CharacterID() . "brd";
 	if (quest::get_data($brdaa) == "") {
     quest::set_data($brdaa, 1);
@@ -326,7 +324,7 @@ if($PCClass == 8){ #Bard AA
 }
 }
 
-if($PCClass == 9){ #Rogue AA
+if($client->HasClassID(9)){ #Rogue AA
 	$rogaa = $client->CharacterID() . "rog";
 	if (quest::get_data($rogaa) == "") {
     quest::set_data($rogaa, 1);
@@ -338,7 +336,7 @@ if($PCClass == 9){ #Rogue AA
 }
 }
 
-if($PCClass == 10){ #Shaman AA
+if($client->HasClassID(10)){ #Shaman AA
 	$shmaa = $client->CharacterID() . "shm";
 	if (quest::get_data($shmaa) == "") {
     quest::set_data($shmaa, 1);
@@ -350,7 +348,7 @@ if($PCClass == 10){ #Shaman AA
 }
 }
 
-if($PCClass == 11){ #Necromancer AA
+if($client->HasClassID(11)){ #Necromancer AA
 	$necaa = $client->CharacterID() . "nec";
 	if (quest::get_data($necaa) == "") {
     quest::set_data($necaa, 1);
@@ -364,7 +362,7 @@ if($PCClass == 11){ #Necromancer AA
 }
 }
 
-if($PCClass == 12){ #Wizard AA
+if($client->HasClassID(12)){ #Wizard AA
 	$wizaa = $client->CharacterID() . "wiz";
 	if (quest::get_data($wizaa) == "") {
     quest::set_data($wizaa, 1);
@@ -379,7 +377,7 @@ if($PCClass == 12){ #Wizard AA
 }
 }
 
-if($PCClass == 13){ #Mage AA
+if($client->HasClassID(13)){ #Mage AA
 	$magaa = $client->CharacterID() . "mag";
 	if (quest::get_data($magaa) == "") {
     quest::set_data($magaa, 1);
@@ -393,7 +391,7 @@ if($PCClass == 13){ #Mage AA
 }
 }
 
-if($PCClass == 14){ #Enchanter AA
+if($client->HasClassID(14)){ #Enchanter AA
 	$encaa = $client->CharacterID() . "enc";
 	if (quest::get_data($encaa) == "") {
     quest::set_data($encaa, 1);
@@ -410,7 +408,7 @@ if($PCClass == 14){ #Enchanter AA
 }
 }
 
-if($PCClass == 15){ #Beastlord AA
+if($client->HasClassID(15)){ #Beastlord AA
 	$blaa = $client->CharacterID() . "bl";
 	if (quest::get_data($blaa) == "") {
     quest::set_data($blaa, 1);
@@ -422,7 +420,7 @@ if($PCClass == 15){ #Beastlord AA
 }
 }
 
-if($PCClass == 16){ #Zerker AA
+if($client->HasClassID(16)){ #Zerker AA
 	$zerkaa = $client->CharacterID() . "zerk";
 	if (quest::get_data($zerkaa) == "") {
     quest::set_data($zerkaa, 1);

@@ -95,13 +95,19 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  my $class = $client->GetClass();
+  my $class_bits = $client->GetClassesBitmask() || $client->GetClassBitmask();
 
   # Chest
   if (plugin::check_handin(\%itemcount, 88128 => 1)) {
     my %reward = (1 => 53126, 2 => 53133, 3 => 53140, 4 => 53147, 5 => 53154, 6 => 53161, 7 => 53168, 8 => 53175, 9 => 53182, 10 => 53189, 11 => 53196, 12 => 53203, 13 => 53210, 14 => 53217, 15 => 53224, 16 => 53231);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -113,8 +119,14 @@ sub EVENT_ITEM {
   # Wrist
   if (plugin::check_handin(\%itemcount, 13753 => 5, 13754 => 3, 13755 => 1)) {
     my %reward = (1 => 53123, 2 => 53130, 3 => 53137, 4 => 53144, 5 => 53151, 6 => 53158, 7 => 53165, 8 => 53172, 9 => 53179, 10 => 53186, 11 => 53193, 12 => 53200, 13 => 53207, 14 => 53214, 15 => 53221, 16 => 53228);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -126,8 +138,14 @@ sub EVENT_ITEM {
   # Feet
   if (plugin::check_handin(\%itemcount, 13750 => 5, 13751 => 3, 13752 => 1)) {
     my %reward = (1 => 53125, 2 => 53132, 3 => 53139, 4 => 53146, 5 => 53153, 6 => 53160, 7 => 53167, 8 => 53174, 9 => 53181, 10 => 53188, 11 => 53195, 12 => 53202, 13 => 53209, 14 => 53216, 15 => 53223, 16 => 53230);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -139,8 +157,14 @@ sub EVENT_ITEM {
   # Head
   if (plugin::check_handin(\%itemcount, 13041 => 5, 13417 => 3, 97234 => 1)) {
     my %reward = (1 => 53121, 2 => 53128, 3 => 53135, 4 => 53142, 5 => 53149, 6 => 53156, 7 => 53163, 8 => 53170, 9 => 53177, 10 => 53184, 11 => 53191, 12 => 53198, 13 => 53205, 14 => 53212, 15 => 53219, 16 => 53226);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -152,8 +176,14 @@ sub EVENT_ITEM {
   # Hands
   if (plugin::check_handin(\%itemcount, 97229 => 5, 88121 => 3, 13088 => 1)) {
     my %reward = (1 => 53124, 2 => 53131, 3 => 53138, 4 => 53145, 5 => 53152, 6 => 53159, 7 => 53166, 8 => 53173, 9 => 53180, 10 => 53187, 11 => 53194, 12 => 53201, 13 => 53208, 14 => 53215, 15 => 53222, 16 => 53229);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -165,8 +195,14 @@ sub EVENT_ITEM {
   # Legs
   if (plugin::check_handin(\%itemcount, 88127 => 1)) {
     my %reward = (1 => 53127, 2 => 53134, 3 => 53141, 4 => 53148, 5 => 53155, 6 => 53162, 7 => 53169, 8 => 53176, 9 => 53183, 10 => 53190, 11 => 53197, 12 => 53204, 13 => 53211, 14 => 53218, 15 => 53225, 16 => 53232);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");
@@ -178,8 +214,14 @@ sub EVENT_ITEM {
   # Arms
   if (plugin::check_handin(\%itemcount, 13753 => 5, 13754 => 3, 13750 => 5, 13751 => 3, 88121 => 5, 13067 => 3, 13041 => 5, 13417 => 3)) {
     my %reward = (1 => 53122, 2 => 53129, 3 => 53136, 4 => 53143, 5 => 53150, 6 => 53157, 7 => 53164, 8 => 53171, 9 => 53178, 10 => 53185, 11 => 53192, 12 => 53199, 13 => 53206, 14 => 53213, 15 => 53220, 16 => 53227);
-    if (exists $reward{$class}) {
-      quest::summonitem($reward{$class});
+    my $given = 0;
+    for my $class_id (1 .. 16) {
+      next unless ($class_bits & (1 << ($class_id - 1)));
+      next unless (exists $reward{$class_id});
+      quest::summonitem($reward{$class_id});
+      $given++;
+    }
+    if ($given) {
       quest::say("Well gathered. Here is your armor, scout.");
     } else {
       quest::say("That armor is not for your calling, friend.");

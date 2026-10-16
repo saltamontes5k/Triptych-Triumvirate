@@ -44,13 +44,16 @@ sub EVENT_ITEM {
     # Activity 2 is the final step; hand out the class-appropriate staff.
     if (quest::istaskactivityactive(600252, 2)) {
       quest::updatetaskactivity(600252, 2, 1);
-      my $class = $client->GetClass();
-      if ($class == 1 || $class == 2 || $class == 3 || $class == 4 || $class == 5
-        || $class == 6 || $class == 7 || $class == 15 || $class == 16) {
-        quest::summonitem(54724); # Great Staff of the Dark Apprentice (melee)
-      }
-      else {
-        quest::summonitem(53494); # Staff of the Dark Apprentice (casters)
+      my $class_bits = $client->GetClassesBitmask() || $client->GetClassBitmask();
+      # 54724 = Great Staff of the Dark Apprentice (melee)
+      # 53494 = Staff of the Dark Apprentice (casters)
+      my %melee_staff_classes = map { $_ => 1 } (1, 2, 3, 4, 5, 6, 7, 15, 16);
+      my %granted_staff;
+      for my $class_id (1 .. 16) {
+        next unless ($class_bits & (1 << ($class_id - 1)));
+        my $staff = $melee_staff_classes{$class_id} ? 54724 : 53494;
+        next if $granted_staff{$staff}++;
+        quest::summonitem($staff);
       }
     }
     return;

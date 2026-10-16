@@ -5,7 +5,7 @@ function Juggernaut_Death(e)
      local clist = eq.get_entity_list():GetClientList();
      if ( clist ~= nil ) then
 		 for currclient in clist.entries do
-			if(currclient:GetClass() ==16) then			
+			if(currclient:HasClassID(16)) then			
 				local qglobals = eq.get_qglobals(currclient);
 				if(qglobals["berserk_epic"] == "3" and qglobals["berserker_seb"] == nil) then				
 					eq.spawn2(89194, 0, 0, -225.93, -1556.52, -173.84, 320); -- needs_heading_validation

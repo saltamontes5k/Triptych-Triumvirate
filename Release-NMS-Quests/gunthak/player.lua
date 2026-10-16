@@ -1,5 +1,5 @@
 function event_fish_success(e)
-	if e.self:GetClass() == Class.PALADIN then -- Paladin Only
+	if e.self:HasClassID(Class.PALADIN) then -- Paladin Only
 		local data_bucket = ("Epic-Paladin-"..e.self:CharacterID());
 		local epic_pal_rocleansing_status = tonumber(eq.get_data("Epic-Paladin-RoCleansing-"..e.self:CharacterID())) or 0;
 		local epic_pal_rocompassion_status = tonumber(eq.get_data("Epic-Paladin-RoCompassion-"..e.self:CharacterID())) or 0;

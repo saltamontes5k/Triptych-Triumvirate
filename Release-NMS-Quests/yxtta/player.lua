@@ -82,7 +82,7 @@ function event_click_door(e)
 	-- Zkr Epic 1.5 Ferns
 	if door == 37 or door == 39 or door == 41 then
 		local qglobals = eq.get_qglobals(e.self);
-		if e.self:GetClass() == Class.BERSERKER and qglobals["kt_" .. door .. "fern"] == nil then
+		if e.self:HasClassID(Class.BERSERKER) and qglobals["kt_" .. door .. "fern"] == nil then
 			e.self:SummonItem(16949); --Taelosian Fern Sample 
 			eq.set_global("yx_" .. door .. "fern","1",3,"H1")
 		end

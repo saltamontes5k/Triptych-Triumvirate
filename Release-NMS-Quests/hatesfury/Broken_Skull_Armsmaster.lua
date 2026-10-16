@@ -32,7 +32,7 @@ function event_timer(e)
         if client ~= nil and client.valid then
             local buff_check = client:CastToClient():FindBuff(5028); -- WarCry
             if buff_check then
-                if client:GetClass() == Class.BERSERKER then
+                if client:HasClassID(Class.BERSERKER) then
                     local data_bucket = ("Epic-Berserker-"..client:CastToClient():CharacterID());
             
                     if eq.get_data(data_bucket) ~= "" then

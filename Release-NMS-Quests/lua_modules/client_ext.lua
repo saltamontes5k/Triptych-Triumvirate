@@ -283,10 +283,9 @@ function Client:GetRaidMemberCountInZone()
 end
 
 function Client:IsClass(...)
-    local class = self:GetClass();
-    if class == 17 then return true end;
+    if self:GetClass() == 17 then return true end;
     for i,v in ipairs(arg) do
-        if class == v then
+        if self:HasClassID(v) then
             return true;
         end
     end

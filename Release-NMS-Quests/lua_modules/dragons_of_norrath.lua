@@ -480,8 +480,15 @@ function don.character_state:reward_flag(flag, had_flag)
     self.client:QuestReward(self.client) -- zeroed out packet on live for trumpet sound (not sure if part of AddAAPoints)
 
     -- level 69 class spell reward (live does not reward again if deleted)
+    -- Multiclass: GetClass() is the Bard sentinel, so grant the reward for every
+    -- class the character actually owns.
     if flag == don.flags.t2.complete then
-      self.client:SummonItem(don.spell_rewards[self.client:GetClass()])
+      local class_bits = self.client:GetClassesBitmask()
+      for class_id = 1, 16 do
+        if bit.band(class_bits, bit.lshift(1, class_id - 1)) ~= 0 and don.spell_rewards[class_id] then
+          self.client:SummonItem(don.spell_rewards[class_id])
+        end
+      end
     end
   end
 
