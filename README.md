@@ -7,17 +7,17 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 ---
 ### This update's changes (10/16)
--various server side stability fixes
--fixed shrouds + aggressive dedupe leading to hidden universal AAs (Kree)
--thezerodivide's Spellbook 720 → 1440 spells, this makes the client req https://ntcore.com/4gb-patch/ to be applied first, been using it about a decade np on other programs
--Lon card game, requires rof2 steam client version to access, cards/boosters rare drop off mobs and every account gets 5 packs a month as a reward for survival
--Mercs and they charge
--Achievements and rewards window, its in, needs work (like more of them for example)
--fix Sayrn flagging issue, GoD progression confirmed accessible by testers
--Ornament v glamour divide started, glamors are cosmetic, while ornaments have stats/procs/clickies, eventually will add them in
--Finally fixed origin and a few AAs
--Opened up and lowered the level of a ton of AAs, bunch of weird AAs still visible
--various corpse-mobs actually look dead now
+- various server side stability fixes
+- fixed shrouds + aggressive dedupe leading to hidden universal AAs (Kree)
+- thezerodivide's Spellbook 720 → 1440 spells, this makes the client req https://ntcore.com/4gb-patch/ to be applied first, been using it about a decade np on other programs
+- Lon card game, requires rof2 steam client version to access, cards/boosters rare drop off mobs and every account gets 5 packs a month as a reward for survival
+- Mercs and they charge
+- Achievements and rewards window, its in, needs work (like more of them for example)
+- fix Sayrn flagging issue, GoD progression confirmed accessible by testers
+- Ornament v glamour divide started, glamors are cosmetic, while ornaments have stats/procs/clickies, eventually will add them in
+- Finally fixed origin and a few AAs
+- Opened up and lowered the level of a ton of AAs, bunch of weird AAs still visible
+- various corpse-mobs actually look dead now
 
 ### This update's changes (10/9)
 - Focus locker is in under procs in your nautilus vault, pick 4 items you want skill/foci/instrumentation bonus of and it'll fire from it, UI is still sketch but its in, also UI now displays corruption resist
@@ -137,7 +137,7 @@ Each folder has its own README with detailed instructions. Start with the server
 - **Offline bazaar** — offline trader/buyer/barter support
 - **Glamour & languages** — mount glamour merchant, armour glamour, and a languages trainer
 - **Tome trainers** — located in the bazaar backrooms
-- **Legends of Norrath Card Game** - Trading Card game, for nostalgia, has rewards, free 5 packs a month for existing, free drops off mobs, cool prizes**
+- **Legends of Norrath Card Game** - Trading Card game, for nostalgia, has rewards, free 5 packs a month for existing, packs rare world drop**
 - **Achievements ** - Achievements to keep track of what you've done in Norrath
 - **Mercenaries** - Mercs you can hire to help in your higher level adventures
 - **Shrouds** - Shrouds, transform into a different monster-singular class, currently includes one monster quest
@@ -247,6 +247,8 @@ Honest state of the world, so you know what you are getting into:
 - Many OoW+ AAs don't do anything, there are broken swarm pet spells and broken spells in general
 - merchants LDoN-UF ranges have no or missing stock
 - quest tester went down this week, didn't test Halloween/deity quests yet
+- you have to do everything again for travel achievements
+- achievements hunter system isn't in and nms innate slayer system appears to be too distinct for a clean merge, at best maybe a hybrid system in the future
 
 ---
 
@@ -331,7 +333,8 @@ Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question 
 - future plans for future xpansions/newbie quests at pok level - revamp these to pop-tier or better, especially zones that get looked over due to server's progression-style (crescent reach, eastern wastes, etc)
 - explorer path scaffold for ldon+ scaffold, only hero available right now
 - more quests for the Blessing of the gods line
-- old man mckenzie but different
+- more 'monster' quests to grind tradeskills, also kill select raidbosses to raise skills ala the old non-graphical MUDs that inspired EQ
+- old man mckenzie but different, he barely recalls what game he's supposed to be in
 - houses visible in sunrise hills that you get  as freebies vs 1M houses you set in open zone of your choice (it'll work like a bind, no house visible) ala old roguelikes
 - marriage system with live eq style con ally to spouse
 - nimbus and more illusion prizes
@@ -354,6 +357,7 @@ Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question 
   hawk & animal — 2H damage / #attack fix, permanent glowing hand bug
   riker — dinput8 MQ2 crash fixes
   Rockin-Vik — dinput8 crash patch + NMS_WaypointsWnd.xml fix
+  thezerodivide - 1440 spell expansion
 
 ## Requirements
 
