@@ -1,5 +1,9 @@
+# Defan the Watch Captain - Blightfire Moors (the watchtower)
+# The Serpent's Spine :: the watch bounty board (tasks 600473-600479)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("You stand before the watch captain of the moors. We keep the roads, and the roads need [keeping]. The board is open.");
     my @chain = (600473,600474,600475,600476,600477,600478,600479);
     my $talked = 0;
     foreach my $tsk (@chain) {

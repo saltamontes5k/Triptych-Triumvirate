@@ -1,6 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 SET(world_sources
+    achievement_state_update_manager.cpp
     adventure.cpp
     adventure_manager.cpp
     client.cpp
@@ -18,6 +19,7 @@ SET(world_sources
     lfplist.cpp
     login_server.cpp
     login_server_list.cpp
+    lon_service.cpp
     main.cpp
     queryserv.cpp
     shared_task_manager.cpp
@@ -55,6 +57,7 @@ SET(world_headers
     lfplist.h
     login_server.h
     login_server_list.h
+    lon_service.h
     queryserv.h
     shared_task_manager.h
     shared_task_world_messaging.h

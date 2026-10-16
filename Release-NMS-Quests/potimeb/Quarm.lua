@@ -2,6 +2,8 @@
 --Phase 6 Final Boss
 --potimeb
 
+local memory = require("nms_memory")
+
 local phase = 1;
 
 function event_spawn(e)
@@ -143,6 +145,9 @@ function event_death_complete(e)
         killer:CastToClient():SetBucket('flag-semaphore', '204')
         killer:Signal(100)
     end
+
+	-- NMS progression: Quarm unlocks Fabled Nagafen's Lair (FNagafen).
+	memory.spawn(e, "FNagafen", "quarm")
 end
 
 function event_killed_merit(e)

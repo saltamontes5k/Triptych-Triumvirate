@@ -21,6 +21,23 @@ extern volatile bool is_zone_loaded;
 	#define MercAI_DEBUG_Spells	-1
 #endif
 
+// Mercs should only spend mana on a buff when the target does not already have it
+// and no stronger buff of the same line is already on the target. CanBuffStack with
+// fail_if_overwrite = false returns a slot when the buff stacks or would replace a
+// weaker buff, and -1 when an existing buff is better.
+static bool MercBuffWouldImprove(Mob *target, uint16 spell_id, uint8 caster_level)
+{
+	if (!target) {
+		return false;
+	}
+
+	if (target->FindBuff(spell_id)) {
+		return false;
+	}
+
+	return target->CanBuffStack(spell_id, caster_level, false) >= 0;
+}
+
 Merc::Merc(const NPCType* d, float x, float y, float z, float heading)
 : NPC(d, nullptr, glm::vec4(x, y, z, heading), GravityBehavior::Water, false), endupkeep_timer(1000), rest_timer(1), confidence_timer(6000), check_target_timer(2000)
 {
@@ -1661,11 +1678,15 @@ bool Merc::AICastSpell(int8 iChance, uint32 iSpellTypes) {
 									if(g->members[i] && !g->members[i]->qglobal) {
 										int8 hpr = (int8)g->members[i]->GetHPRatio();
 
-										if(g->members[i]->HasPet() && g->members[i]->GetPet()->GetHPRatio() < checkHPR) {
+										if(g->members[i]->HasPet() && g->members[i]->GetPet()->GetHPRatio() > 0 && g->members[i]->GetPet()->GetHPRatio() < checkHPR) {
 											if(!tar || ((g->members[i]->GetPet()->GetHPRatio() + 25) < tar->GetHPRatio())) {
 												tar = g->members[i]->GetPet();
 												checkPetHPR = g->members[i]->GetPet()->GetHPRatio() + 25;
 											}
+										}
+
+										if (g->members[i]->GetHPRatio() <= 0) { // healer mercs rez the dead instead of trying to heal them
+											continue;
 										}
 
 										if(hpr > checkHPR) {
@@ -1777,7 +1798,7 @@ bool Merc::AICastSpell(int8 iChance, uint32 iSpellTypes) {
 
 									if(spells[selectedMercSpell.spellid].target_type == ST_Self) {
 										if( !IsImmuneToSpell(selectedMercSpell.spellid, this)
-											&& (CanBuffStack(selectedMercSpell.spellid, mercLevel, true) >= 0)) {
+											&& MercBuffWouldImprove(this, selectedMercSpell.spellid, mercLevel)) {
 
 												if( GetArchetype() == Archetype::Melee && IsEffectInSpell(selectedMercSpell.spellid, SE_IncreaseSpellHaste)) {
 													continue;
@@ -1804,7 +1825,7 @@ bool Merc::AICastSpell(int8 iChance, uint32 iSpellTypes) {
 												Mob* tar = g->members[i];
 
 												if( !tar->IsImmuneToSpell(selectedMercSpell.spellid, this)
-													&& (tar->CanBuffStack(selectedMercSpell.spellid, mercLevel, true) >= 0)) {
+													&& MercBuffWouldImprove(tar, selectedMercSpell.spellid, mercLevel)) {
 
 														if( tar->GetArchetype() == Archetype::Melee && IsEffectInSpell(selectedMercSpell.spellid, SE_IncreaseSpellHaste)) {
 															continue;
@@ -1835,7 +1856,7 @@ bool Merc::AICastSpell(int8 iChance, uint32 iSpellTypes) {
 													}
 
 													if(!tar->GetPet()->IsImmuneToSpell(selectedMercSpell.spellid, this)
-														&& (tar->GetPet()->CanBuffStack(selectedMercSpell.spellid, mercLevel, true) >= 0)) {
+														&& MercBuffWouldImprove(tar->GetPet(), selectedMercSpell.spellid, mercLevel)) {
 
 															uint32 TempDontBuffMeBeforeTime = tar->DontBuffMeBefore();
 
@@ -2016,6 +2037,10 @@ bool Merc::AICastSpell(int8 iChance, uint32 iSpellTypes) {
 
 									//CastSpell(selectedMercSpell.spellid, corpse->GetID(), 1, -1, -1, &TempDontRootMeBeforeTime);
 									corpse->SetDontRootMeBefore(TempDontRootMeBeforeTime);
+
+									if (castedSpell) {
+										corpse->SetMercRezOffered(true); // only offer a rez to a given corpse once
+									}
 								}
 
 								break;
@@ -3728,7 +3753,7 @@ Corpse* Merc::GetGroupMemberCorpse() {
 				if(g->members[i] && g->members[i]->IsClient()) {
 					corpse = entity_list.GetCorpseByOwnerWithinRange(g->members[i]->CastToClient(), this, RuleI(Mercs, ResurrectRadius));
 
-					if(corpse && !corpse->IsRezzed()) {
+					if(corpse && !corpse->IsRezzed() && !corpse->MercRezOffered()) {
 						return corpse;
 					}
 				}
@@ -4911,7 +4936,7 @@ bool Client::CheckCanRetainMerc(uint32 upkeep) {
 	Merc* merc = GetMerc();
 
 	//check for sufficient funds
-	if(RuleB(Mercs, ChargeMercPurchaseCost)) {
+	if(RuleB(Mercs, ChargeMercUpkeepCost)) {
 		if(merc) {
 			if(upkeep > 0 && !HasMoney(upkeep * 100)) {
 				SendMercResponsePackets(14);
@@ -4928,6 +4953,15 @@ bool Client::CheckCanSpawnMerc(uint32 template_id) {
 	// Check if mercs are enabled globally
 	if(!RuleB(Mercs, AllowMercs))
 	{
+		return false;
+	}
+
+	// Shrouded players may not use mercenaries (covers hire and unsuspend,
+	// which both route through this check)
+	if(IsShrouded())
+	{
+		SendMercResponsePackets(3);
+		Message(Chat::Red, "You may not use mercenaries while shrouded.");
 		return false;
 	}
 
@@ -5097,6 +5131,13 @@ void Client::SpawnMercOnZone() {
 
 	if(!RuleB(Mercs, AllowMercs))
 		return;
+
+	// Shrouded players may not summon mercenaries on zone-in
+	if(IsShrouded())
+	{
+		Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone skipped, shrouded: %s.", GetName());
+		return;
+	}
 
 	if (GetMerc())
 		return;

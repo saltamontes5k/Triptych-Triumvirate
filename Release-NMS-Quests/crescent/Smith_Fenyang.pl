@@ -1,5 +1,9 @@
+# Smith Fenyang - Crescent Reach (the guardhouse forge)
+# The Serpent's Spine :: guard armor supply (task 600574, 600524)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The watch needs [steel], and the forge needs hands. Fenyang keeps the guardhouse fires, and they never cool.");
     my @chain = (600574,600524);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -35,6 +39,5 @@ sub EVENT_SAY {
 sub EVENT_ITEM {
   if (quest::istaskactive(600574)) { plugin::check_handin(\%itemcount, 10501 => 4); }
   if (quest::istaskactive(600524)) { plugin::check_handin(\%itemcount, 98283 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

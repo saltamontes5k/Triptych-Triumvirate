@@ -1,5 +1,9 @@
+# Fletcher Fenuku - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: fletching supply tasks (600527-600531)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The fletching benches hum from dawn to dark. The watch trains [archers], and archers go through arrows like water.");
     my @chain = (600527,600528,600529,600530,600531);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -68,6 +72,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600529)) { plugin::check_handin(\%itemcount, 98267 => 1); }
   if (quest::istaskactive(600530)) { plugin::check_handin(\%itemcount, 98270 => 1); }
   if (quest::istaskactive(600531)) { plugin::check_handin(\%itemcount, 98271 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

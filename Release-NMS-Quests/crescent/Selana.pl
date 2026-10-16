@@ -1,5 +1,9 @@
+# Selana - Crescent Reach (the potters' wheel)
+# The Serpent's Spine :: clay supply (task 600573)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Clay, clay, and more [clay] - the wheel eats it faster than the miners dig it. Bring me blocks and I will keep the wheel turning.");
     my @chain = (600573);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -24,6 +28,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600573)) { plugin::check_handin(\%itemcount, 16900 => 4); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

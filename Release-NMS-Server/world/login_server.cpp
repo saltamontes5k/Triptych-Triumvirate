@@ -371,6 +371,17 @@ bool LoginServer::Connect()
 		m_legacy_client->OnConnect(
 			[this](EQ::Net::ServertalkLegacyClient *client) {
 				if (client) {
+					if (!ShouldAcceptReconnectAttempt()) {
+						LogWarning(
+							"Loginserver [{0}:{1}] registration is looping; closing this connection "
+							"and waiting for the next window before trying again",
+							m_loginserver_address,
+							m_loginserver_port
+						);
+						CloseRejectedConnection(client->Handle());
+						return;
+					}
+
 					LogInfo(
 						"Connected to Legacy Loginserver: [{0}:{1}]",
 						m_loginserver_address,
@@ -481,6 +492,17 @@ bool LoginServer::Connect()
 		m_client->OnConnect(
 			[this](EQ::Net::ServertalkClient *client) {
 				if (client) {
+					if (!ShouldAcceptReconnectAttempt()) {
+						LogWarning(
+							"Loginserver [{0}:{1}] registration is looping; closing this connection "
+							"and waiting for the next window before trying again",
+							m_loginserver_address,
+							m_loginserver_port
+						);
+						CloseRejectedConnection(client->Handle());
+						return;
+					}
+
 					LogInfo(
 						"Connected to Loginserver [{0}:{1}]",
 						m_loginserver_address,
@@ -578,6 +600,64 @@ bool LoginServer::Connect()
 				std::placeholders::_2
 			)
 		);
+	}
+
+	return true;
+}
+
+// Closing a connection from inside its own OnConnect callback would destroy the
+// ServertalkClient while the callback we are standing in still belongs to it. Hand
+// the socket to a one-shot timer instead, so the body finishes first. We take the
+// connection handle rather than the client: the handle is a shared_ptr we can hold
+// safely, whereas the client itself is owned by a unique_ptr here.
+void LoginServer::CloseRejectedConnection(std::shared_ptr<EQ::Net::TCPConnection> connection)
+{
+	if (!connection) {
+		return;
+	}
+
+	new EQ::Timer(1, false, [connection](EQ::Timer *t) {
+		connection->Disconnect();
+	});
+}
+
+// See the note on ShouldAcceptReconnectAttempt() in login_server.h. Returns false
+// when the loginserver has been re-registering us implausibly often, in which case
+// the caller closes the connection it was just handed instead of sending the world
+// info again. A storm is only ever logged once per window.
+bool LoginServer::ShouldAcceptReconnectAttempt()
+{
+	static constexpr uint32 max_attempts_per_window = 5;
+	static constexpr int  window_seconds           = 10;
+
+	const auto now = std::chrono::steady_clock::now();
+
+	if (m_reconnect_window_start.time_since_epoch().count() == 0 ||
+		now - m_reconnect_window_start >= std::chrono::seconds(window_seconds)) {
+		m_reconnect_window_start = now;
+		m_reconnect_attempts     = 0;
+		m_reconnect_storm_logged = false;
+	}
+
+	++m_reconnect_attempts;
+
+	if (m_reconnect_attempts > max_attempts_per_window) {
+		if (!m_reconnect_storm_logged) {
+			m_reconnect_storm_logged = true;
+
+			LogError(
+				"Loginserver [{0}:{1}] completed [{2}] registrations in under [{3}] seconds -- "
+				"suppressing further attempts until the next window. This normally means the "
+				"loginserver already has a world record under this name and is disconnecting "
+				"the connection we are on (it treats the retry as a duplicate server).",
+				m_loginserver_address,
+				m_loginserver_port,
+				m_reconnect_attempts,
+				window_seconds
+			);
+		}
+
+		return false;
 	}
 
 	return true;

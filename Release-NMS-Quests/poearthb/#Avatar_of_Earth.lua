@@ -1,7 +1,12 @@
+local memory = require("nms_memory")
+
 function event_death_complete(e)
 	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- only pop for non-respawning
 		eq.spawn2(222015, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading()); -- #Essence_of_Earth
 	end
+
+	-- NMS progression: the Avatar of Earth is the Rathe Council clear gating DoN/LDoN.
+	memory.spawn(e, "DoN", "rathe council", "LDoN", "rathe council")
 end
 
 function event_killed_merit(e)

@@ -1327,20 +1327,23 @@ bool Client::TradeskillExecute(DBTradeskillRecipe_Struct *spec) {
 				}
 			}
 			else {
+				// Log() hands its message to EQEmuLogSys::Out, which runs vsnprintf on it. This
+				// was pre-formatting with StringFormat() using %u/%i/%f, so the text ended up
+				// with no substitutions and then got reinterpreted as a printf format. Use the
+				// logger's own placeholders instead.
 				Log(
 					Logs::General,
 					Logs::Tradeskills,
-					StringFormat(
-						"Failure (null item pointer [id: %u, qty: %u]) :: recipe_id:%i tskillid:%i trivial:%i chance:%4.2f  in zoneid:%i instid:%i",
-						itr->first,
-						itr->second,
-						spec->recipe_id,
-						spec->tradeskill,
-						spec->trivial,
-						chance,
-						GetZoneID(),
-						GetInstanceID()
-					).c_str()
+					"Failure (null item pointer [id: {}, qty: {}]) :: recipe_id:{} tskillid:{} "
+					"trivial:{} chance:{:.2f}  in zoneid:{} instid:{}",
+					itr->first,
+					itr->second,
+					spec->recipe_id,
+					spec->tradeskill,
+					spec->trivial,
+					chance,
+					GetZoneID(),
+					GetInstanceID()
 				);
 			}
 
@@ -1350,6 +1353,7 @@ bool Client::TradeskillExecute(DBTradeskillRecipe_Struct *spec) {
 
 			++itr;
 		}
+		UpdateAchievementForTradeskill(spec->recipe_id);
 		return(true);
 	}
 	/* Tradeskill Fail */

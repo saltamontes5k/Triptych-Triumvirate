@@ -58,7 +58,7 @@ local fort = require("sof_fortress")
 local HUTTLE_ID = fort.NPC.huttle
 local TASK_OBSERVE_ACT = 1 -- activity 1 of 300036 (scripted, activitytype 255)
 
-function event_load(e)
+function event_enter_zone(e)
 	eq.set_timer("huttle_watch", 10000)
 end
 

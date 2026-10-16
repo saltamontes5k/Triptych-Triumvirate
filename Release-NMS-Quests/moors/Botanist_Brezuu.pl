@@ -1,5 +1,9 @@
+# Botanist Brezuu - Blightfire Moors (field station by Stone Hive)
+# The Serpent's Spine :: moor botany (tasks 600460-600463)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Vasha! You are just in time - the moors grow things that grow nowhere else, and I [need] samples of all of them.");
     my @chain = (600460,600461,600462,600463);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600461)) { plugin::check_handin(\%itemcount, 54656 => 4); }
   if (quest::istaskactive(600462)) { plugin::check_handin(\%itemcount, 97054 => 5); }
   if (quest::istaskactive(600463)) { plugin::check_handin(\%itemcount, 85758 => 4); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

@@ -1,6 +1,8 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
 SET(common_sources
+    achievement_state_updates.cpp
+    achievements.cpp
     base_packet.cpp
     bazaar.cpp
     bodytypes.cpp
@@ -12,6 +14,7 @@ SET(common_sources
     discord/discord.cpp
     crash.cpp
     crc16.cpp
+    event/freeze_watchdog.cpp
     crc32.cpp
     database/database_dump_service.cpp
     database.cpp
@@ -145,6 +148,13 @@ SET(repositories
     repositories/base/base_aa_ranks_repository.h
     repositories/base/base_aa_rank_effects_repository.h
     repositories/base/base_aa_rank_prereqs_repository.h
+    repositories/base/base_achievement_associations_repository.h
+    repositories/base/base_achievement_cast_requirements_repository.h
+    repositories/base/base_achievement_categories_repository.h
+    repositories/base/base_achievement_category_associations_repository.h
+    repositories/base/base_achievement_components_repository.h
+    repositories/base/base_achievement_criteria_repository.h
+    repositories/base/base_achievements_repository.h
     repositories/base/base_account_repository.h
     repositories/base/base_account_flags_repository.h
     repositories/base/base_account_ip_repository.h
@@ -161,6 +171,13 @@ SET(repositories
     repositories/base/base_blocked_spells_repository.h
     repositories/base/base_books_repository.h
     repositories/base/base_bugs_repository.h
+    repositories/base/base_character_achievement_pending_updates_repository.h
+    repositories/base/base_character_achievement_progress_repository.h
+    repositories/base/base_character_achievement_reward_selections_repository.h
+    repositories/base/base_character_achievement_rewards_repository.h
+    repositories/base/base_character_task_reward_instances_repository.h
+    repositories/base/base_character_task_reward_selections_repository.h
+    repositories/base/base_character_task_rewards_repository.h
     repositories/base/base_bug_reports_repository.h
     repositories/base/base_buyer_repository.h
     repositories/base/base_buyer_trade_items_repository.h
@@ -348,6 +365,13 @@ SET(repositories
     repositories/account_flags_repository.h
     repositories/account_ip_repository.h
     repositories/account_rewards_repository.h
+    repositories/achievement_associations_repository.h
+    repositories/achievement_cast_requirements_repository.h
+    repositories/achievement_categories_repository.h
+    repositories/achievement_category_associations_repository.h
+    repositories/achievement_components_repository.h
+    repositories/achievement_criteria_repository.h
+    repositories/achievements_repository.h
     repositories/adventure_details_repository.h
     repositories/adventure_members_repository.h
     repositories/adventure_stats_repository.h
@@ -510,6 +534,20 @@ SET(repositories
     repositories/saylink_repository.h
     repositories/server_scheduled_events_repository.h
     repositories/shared_tasks_repository.h
+    repositories/character_achievement_pending_updates_repository.h
+    repositories/character_achievement_progress_repository.h
+    repositories/character_achievement_reward_selections_repository.h
+    repositories/character_achievement_rewards_repository.h
+    repositories/character_achievements_repository.h
+    repositories/character_task_reward_instances_repository.h
+    repositories/character_task_reward_selections_repository.h
+    repositories/character_task_rewards_repository.h
+    repositories/reward_option_entries_repository.h
+    repositories/reward_options_repository.h
+    repositories/reward_sets_repository.h
+    repositories/reward_source_entries_repository.h
+    repositories/reward_sources_repository.h
+    repositories/rewards_repository.h
     repositories/shared_task_activity_state_repository.h
     repositories/shared_task_dynamic_zones_repository.h
     repositories/shared_task_members_repository.h

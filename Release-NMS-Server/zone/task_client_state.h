@@ -2,6 +2,7 @@
 #define EQEMU_TASK_CLIENT_STATE_H
 
 #include "tasks.h"
+#include "reward_selection.h"
 #include "../common/types.h"
 #include <list>
 #include <vector>
@@ -67,7 +68,14 @@ public:
 	bool TaskOutOfTime(TaskType task_type, int index);
 	void TaskPeriodicChecks(Client *client);
 	void SendTaskHistory(Client *client, int task_index);
-	void RewardTask(Client* c, const TaskInformation* ti, ClientTaskInformation& client_task);
+	bool RewardTask(Client* c, const TaskInformation* ti, ClientTaskInformation& client_task);
+	void RetryCompletedSelectableRewards(Client *client, bool force = false);
+	void SendRewardSelection(Client *client, uint32_t task_id);
+	void RestorePendingRewardSelection(Client *client);
+	RewardSelectionDeliveryResult ClaimRewardSelection(
+		Client *client,
+		const ResolvedRewardSelectionClaim &claim
+	);
 	void EnableTask(int character_id, int task_count, int *task_list);
 	void DisableTask(int character_id, int task_count, int *task_list);
 	bool IsTaskEnabled(int task_id);
@@ -171,6 +179,7 @@ private:
 	int                                   m_last_completed_task_loaded;
 	std::vector<TaskOffer>                m_last_offers;
 	bool                                  m_has_explore_task = false;
+	Timer                                 m_reward_retry_timer;
 
 	static void ShowClientTaskInfoMessage(ClientTaskInformation *task, Client *c);
 

@@ -1,5 +1,9 @@
+# Dreamseeker Ellowind - Crescent Reach (the grove path)
+# The Serpent's Spine :: flowers for the fallen (task 600572)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The [dreams] tell me of a dragon that fell in the moors long ago - Veldyn, whose bones the hedge devils now crawl over.");
     my @chain = (600572);
     my $talked = 0;
     foreach my $tsk (@chain) {

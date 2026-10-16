@@ -1,4 +1,5 @@
 #include "../common/features.h"
+#include "achievement_state_updates.h"
 
 #ifdef EMBPERL_XS_CLASSES
 
@@ -6,6 +7,35 @@
 #include "../common/global_define.h"
 #include "embperl.h"
 #include "groups.h"
+
+bool Perl_Group_AdvanceAchievementProgress(
+	Group* self,
+	uint32 achievement_id,
+	uint32 component_type,
+	uint32 component_id,
+	uint32 value
+) // @categories Achievements, Group
+{
+	if (component_type > 2) {
+		return false;
+	}
+
+	return AchievementStateUpdates::QueueGroupAdvance(
+		self->GetID(),
+		achievement_id,
+		static_cast<AchievementStateUpdates::ComponentType>(component_type),
+		component_id,
+		value
+	);
+}
+
+bool Perl_Group_CompleteAchievement(Group* self, uint32 achievement_id) // @categories Achievements, Group
+{
+	return AchievementStateUpdates::QueueGroupCompletion(
+		self->GetID(),
+		achievement_id
+	);
+}
 
 void Perl_Group_DisbandGroup(Group* self) // @categories Script Utility, Group
 {
@@ -127,6 +157,16 @@ Client* Perl_Group_GetMember(Group* self, int member_index) // @categories Accou
 	return member ? member->CastToClient() : nullptr;
 }
 
+uint8_t Perl_Group_GetMemberRole(Group* self, Mob* member) // @categories Account and Character, Script Utility, Group
+{
+	return self->GetMemberRole(member);
+}
+
+uint8_t Perl_Group_GetMemberRole(Group* self, const char* name) // @categories Account and Character, Script Utility, Group
+{
+	return self->GetMemberRole(name);
+}
+
 bool Perl_Group_DoesAnyMemberHaveExpeditionLockout(Group* self, std::string expedition_name, std::string event_name)
 {
 	return self->AnyMemberHasDzLockout(expedition_name, event_name);
@@ -152,7 +192,9 @@ void perl_register_group()
 	perl::interpreter perl(PERL_GET_THX);
 
 	auto package = perl.new_class<Group>("Group");
+	package.add("AdvanceAchievementProgress", &Perl_Group_AdvanceAchievementProgress);
 	package.add("CastGroupSpell", &Perl_Group_CastGroupSpell);
+	package.add("CompleteAchievement", &Perl_Group_CompleteAchievement);
 	package.add("DisbandGroup", &Perl_Group_DisbandGroup);
 	package.add("DoesAnyMemberHaveExpeditionLockout", (bool(*)(Group*, std::string, std::string))&Perl_Group_DoesAnyMemberHaveExpeditionLockout);
 	package.add("DoesAnyMemberHaveExpeditionLockout", (bool(*)(Group*, std::string, std::string, int))&Perl_Group_DoesAnyMemberHaveExpeditionLockout);
@@ -163,6 +205,8 @@ void perl_register_group()
 	package.add("GetLeaderName", &Perl_Group_GetLeaderName);
 	package.add("GetLowestLevel", &Perl_Group_GetLowestLevel);
 	package.add("GetMember", &Perl_Group_GetMember);
+	package.add("GetMemberRole", (uint8_t(*)(Group*, Mob*))&Perl_Group_GetMemberRole);
+	package.add("GetMemberRole", (uint8_t(*)(Group*, const char*))&Perl_Group_GetMemberRole);
 	package.add("GetTotalGroupDamage", &Perl_Group_GetTotalGroupDamage);
 	package.add("GroupCount", &Perl_Group_GroupCount);
 	package.add("GroupMessage", (void(*)(Group*, Mob*, const char*))&Perl_Group_GroupMessage);

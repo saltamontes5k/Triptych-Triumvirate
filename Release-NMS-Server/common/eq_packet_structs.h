@@ -1602,6 +1602,29 @@ struct WaypointRequest_Struct
     bool    autoconfirm_selected;
 };
 
+// Server -> client (OP_NMSLoNSession): the Legends of Norrath card game's one-time login
+// token and where the DLL relays the card game to (world's card service, Custom:LoNPort).
+// The DLL hands the token to the card game as --sessionID= and relays its 127.0.0.1:15782.
+struct NMSLoNSession_Struct {
+	char   token[36];      // NUL-terminated, 32 hex characters
+	char   host[128];      // NUL-terminated host or IP
+	uint32 port;           // Custom:LoNPort
+	uint32 link_buttons;   // Custom:LoNLinkButtons: NMS_LONLINK_* bits, set = ON (was 'reserved', always 0)
+};
+static_assert(sizeof(NMSLoNSession_Struct) == 172, "NMSLoNSession_Struct is read by the client DLL -- keep it 172 bytes");
+// The card game's navigator menu items (research/lon_home_screen_and_links.md 1). Off = greyed.
+#define NMS_LONLINK_HELP     1u
+#define NMS_LONLINK_EULA     2u
+#define NMS_LONLINK_FORUMS   4u
+#define NMS_LONLINK_BOARDS   8u    // Leaderboards (and the home screen's View More...)
+#define NMS_LONLINK_WEBSITE 16u
+#define NMS_LONLINK_ALL     31u
+// v2 tail, right after the 172 bytes (DLLs that predate it read only the head: they accept size >= 172):
+// uint32 NMS_LONLINK_MAGIC, then the help, forums, leaderboards and website addresses in that order,
+// each a uint16 length + that many bytes, no NUL, each at most NMS_LONLINK_URL_MAX.
+#define NMS_LONLINK_MAGIC    0x55534D4Eu   // 'NMSU'
+#define NMS_LONLINK_URL_MAX  255
+
 /*
 ** Consider Struct
 */
@@ -2171,6 +2194,7 @@ enum GuildInformationActions
 {
     GuildUpdateURL          = 0,
     GuildUpdateChannel      = 1,
+    GuildUpdateAchievement  = 3,
     GuildUpdateRanks        = 4,
     GuildUpdatePermissions  = 5
 };

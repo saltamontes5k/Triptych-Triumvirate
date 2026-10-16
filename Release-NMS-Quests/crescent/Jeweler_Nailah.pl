@@ -1,5 +1,9 @@
+# Jeweler Nailah - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: jewelcraft supply (task 600525)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Welcome to the jewelers' benches. We [set] stones for half the city - and today, for the charter ceremony itself.");
     my @chain = (600525);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -24,6 +28,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600525)) { plugin::check_handin(\%itemcount, 58112 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

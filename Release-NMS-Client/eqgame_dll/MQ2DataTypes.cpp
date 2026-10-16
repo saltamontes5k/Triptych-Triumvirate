@@ -2802,7 +2802,7 @@ bool MQ2CharacterType::GETMEMBER()
                 // numeric
                 unsigned long nSpell=GETNUMBER()-1;
                 if (nSpell<NUM_BOOK_SLOTS)
-                    if (Dest.Ptr=GetSpellByID(GetCharInfo2()->SpellBook[nSpell]))
+                    if (Dest.Ptr=GetSpellByID(CHAR_SPELLBOOK(GetCharInfo2(), nSpell)))
                     {
                         Dest.Type=pSpellType;
                         return true;
@@ -2812,9 +2812,9 @@ bool MQ2CharacterType::GETMEMBER()
             {
                 // name
                 for (DWORD nSpell=0 ; nSpell < NUM_BOOK_SLOTS ; nSpell++)
-                    if (GetCharInfo2()->SpellBook[nSpell] != 0xFFFFFFFF)
+                    if (CHAR_SPELLBOOK(GetCharInfo2(), nSpell) != 0xFFFFFFFF)
                     {
-                        if (!stricmp(GetSpellNameByID(GetCharInfo2()->SpellBook[nSpell]),GETFIRST()))
+                        if (!stricmp(GetSpellNameByID(CHAR_SPELLBOOK(GetCharInfo2(), nSpell)),GETFIRST()))
                         {
                             Dest.DWord=nSpell+1;
                             Dest.Type=pIntType;

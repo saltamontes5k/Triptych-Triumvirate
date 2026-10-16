@@ -1,3 +1,5 @@
+local memory = require("nms_memory")
+
 function event_spawn(e)
 	eq.set_next_hp_event(98)
 end
@@ -116,6 +118,9 @@ function event_death_complete(e)
 	end
 	eq.disable_spawn2(45107) --muzlakh
 	eq.depop_with_timer(215486)
+
+	-- NMS progression: Xegony is one of the elemental gods gating DoN/LDoN.
+	memory.spawn(e, "DoN", "xegony", "LDoN", "xegony")
 end
 
 function event_killed_merit(e)

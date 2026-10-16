@@ -1,5 +1,9 @@
+# Cook Idriak - Blightfire Moors (the farmstead kitchen)
+# The Serpent's Spine :: the farm kitchen (tasks 600465-600467)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Hmph. You look like you can carry a pot without spilling it. Idriak [needs] ingredients, and the moors provide - if you provide the labor.");
     my @chain = (600465,600466,600467);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -45,6 +49,5 @@ sub EVENT_SAY {
 sub EVENT_ITEM {
   if (quest::istaskactive(600465)) { plugin::check_handin(\%itemcount, 13408 => 6); }
   if (quest::istaskactive(600466)) { plugin::check_handin(\%itemcount, 97305 => 4); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

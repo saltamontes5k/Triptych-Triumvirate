@@ -383,6 +383,34 @@ public:
 	bool IsTaskCompleted(int task_id);
 	bool IsTaskActive(int task);
 	bool IsTaskActivityActive(int task, int activity);
+	bool HasCompletedAchievement(uint32 achievement_id);
+	int GetAchievementStatus(uint32 achievement_id);
+	int64 GetAchievementProgress(
+		uint32 achievement_id,
+		uint32 component_type,
+		uint32 component_id
+	);
+	bool SetAchievementProgress(
+		uint32 achievement_id,
+		uint32 component_type,
+		uint32 component_id,
+		uint32 value
+	);
+	bool SetAchievementProgress(
+		uint32 achievement_id,
+		uint32 component_type,
+		uint32 component_id,
+		uint32 value,
+		bool additive
+	);
+	bool CompleteAchievement(uint32 achievement_id);
+	bool AdvanceSharedTaskAchievementProgress(
+		uint32 achievement_id,
+		uint32 component_type,
+		uint32 component_id,
+		uint32 value
+	);
+	bool CompleteSharedTaskAchievement(uint32 achievement_id);
 	void LockSharedTask(bool lock);
 	void EndSharedTask();
 	void EndSharedTask(bool send_fail);
@@ -546,6 +574,7 @@ public:
 	bool KeyRingCheck(uint32 item_id);
 	bool KeyRingClear();
 	void KeyRingList();
+	void KeyRingList(Lua_Client c);
 	bool KeyRingRemove(uint32 item_id);
 	luabind::object GetKeyRing(lua_State* L);
 	bool CompleteTask(int task_id);

@@ -82,7 +82,7 @@ sub EVENT_SAY {
         if (!_bless_is_rank1_keeper()) {
             if (plugin::BlessingIsAgnostic($deity)) {
                 if (!plugin::BlessingCause($client)) {
-                    plugin::Whisper("You walk alone, $name, yet even the unaligned may be devoted. Name your [$cause_link] and I will bind your path. But hear me: the unaligned have no royal road to self knowledge or of this world.");
+                    plugin::Whisper("You walk alone, $name, yet even the unaligned may be devoted. Name your [$cause_link] and I will bind your path. But hear me: the unaligned have no royal road -- you will earn every inch of it.");
                 } elsif ($rank >= 2) {
                     plugin::Whisper("Your devotion -- " . plugin::BlessingDevotionTitle($client) . " -- burns at Rank $rank. Show me your [$status_link]?");
                 } elsif ($rank >= 1) {
@@ -105,7 +105,7 @@ sub EVENT_SAY {
 
         # The Bazaar: the keeper of the faithful.
         if (plugin::BlessingIsAgnostic($deity)) {
-            plugin::Whisper("You walk alone, $name, and yours is the harder road -- the unaligned have no easy route to devotion. The Tranquil Keeper, by the Plane of Knowledge portal stones in the Plane of Tranquility, binds your cause and takes your blank idol. And know this: Rank II will demand the favor of ALL SIXTEEN gods. Every avatar. Every quest. No exceptions.");
+            plugin::Whisper("You walk alone, $name, and yours is the harder road -- the unaligned have no royal path to devotion. The Tranquil Keeper, by the Plane of Knowledge portal stones in the Plane of Tranquility, binds your cause and takes your blank idol. And know this: Rank II will demand the favor of ALL SIXTEEN gods. Every avatar. Every quest. No exceptions.");
             return;
         }
         if ($rank >= 2) {

@@ -390,12 +390,21 @@ Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
 		database.SaveCursor(c->CharacterID(), start, finish);
 
 		c->CalcBonuses();
-		c->Save();
+		const auto character_saved = c->Save(0, false);
 
 		IsRezzed(false);
 		Save();
 
-		database.TransactionCommit();
+		const bool inventory_committed = database.TransactionCommit().Success();
+		// Reconcile from durable rows after the complete death relocation.
+		// Queue this before level/AA facts so a mixed achievement cannot use
+		// pre-death ownership while evaluating its other criteria.
+		c->UpdateAchievementForOwnItem(0);
+		if (inventory_committed) {
+			if (character_saved) {
+				c->UpdateAchievementForLevel(c->GetLevel());
+			}
+		}
 
 		UpdateEquipmentLight();
 		UpdateActiveLight();
@@ -689,7 +698,10 @@ bool Corpse::Save()
 			ce.entity_variables = "{}";
 		}
 
-		LogCorpses("Corpse entity_variables: %s", ce.entity_variables.c_str());
+		// fmt placeholder, not printf: LogCorpses expands to OutF -> fmt::format, and the
+		// resulting text then reaches EQEmuLogSys::Out, which re-runs vsnprintf on it. A
+		// "%s" here gets read as an argument by the wrong formatter.
+		LogCorpses("Corpse entity_variables: {}", ce.entity_variables);
 	}
 
 	for (auto &item: m_item_list) {
@@ -1705,6 +1717,9 @@ void Corpse::LootCorpseItem(Client *c, const EQApplicationPacket *app)
 		if (RuleB(TaskSystem, EnableTaskSystem) && IsNPCCorpse()) {
 			c->UpdateTasksOnLoot(this, item->ID, count);
 		}
+		if (IsNPCCorpse()) {
+			c->UpdateAchievementForLoot(item->ID, count);
+		}
 
 		/* Remove it from Corpse */
 		if (item_data) {
@@ -2531,7 +2546,9 @@ Corpse *Corpse::LoadCharacterCorpse(
 			}
 		}
 	} catch (const std::exception& ex) {
-		LogError("Failed to parse entity_variables JSON for corpse ID %u: %s", cc.id, ex.what());
+		// fmt placeholders: this alias expands to OutF -> fmt::format, and the result then
+		// reaches EQEmuLogSys::Out, which re-runs vsnprintf on it.
+		LogError("Failed to parse entity_variables JSON for corpse ID {}: {}", cc.id, ex.what());
 	}
 
 	c->IsRezzed(cc.is_rezzed);

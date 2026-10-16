@@ -319,16 +319,19 @@ bool SharedDatabase::SaveCursor(
 	std::list<EQ::ItemInstance*>::const_iterator& end
 )
 {
-	const int deleted = InventoryRepository::DeleteWhere(
+	if (!InventoryRepository::TryDeleteWhere(
 		*this,
 		fmt::format(
-			"`character_id` = {} AND (`slot_id` = {} OR `slot_id` BETWEEN {} AND {})",
+			"`character_id` = {} AND "
+			"(`slot_id` = {} OR `slot_id` BETWEEN {} AND {})",
 			char_id,
 			EQ::invslot::slotCursor,
 			EQ::invbag::CURSOR_BAG_BEGIN,
 			EQ::invbag::CURSOR_BAG_END
 		)
-	);
+	)) {
+		return false;
+	}
 
 	int16 i = EQ::invbag::CURSOR_BAG_BEGIN;
 	for (auto& it = start; it != end; ++it, i++) {
@@ -344,7 +347,13 @@ bool SharedDatabase::SaveCursor(
 		}
 	}
 
-	return true;
+	// The cursor queue has only CURSOR_BAG_COUNT durable positions. Do not
+	// report success after silently omitting overflow entries.
+	const auto complete = start == end;
+	if (!complete) {
+		TransactionFailStrict();
+	}
+	return complete;
 }
 
 bool SharedDatabase::VerifyInventory(uint32 account_id, int16 slot_id, const EQ::ItemInstance* inst)
@@ -392,8 +401,11 @@ bool SharedDatabase::SaveInventory(uint32 char_id, const EQ::ItemInstance* inst,
 		} else {
 			// Needed to clear out bag slots that 'REPLACE' in UpdateSharedBankSlot does not overwrite..otherwise, duplication occurs
 			// (This requires that parent then child items be sent..which should be how they are currently passed)
-			if (EQ::InventoryProfile::SupportsContainers(slot_id)) {
-				DeleteSharedBankSlot(char_id, slot_id);
+			if (
+				EQ::InventoryProfile::SupportsContainers(slot_id) &&
+				!DeleteSharedBankSlot(char_id, slot_id)
+			) {
+				return false;
 			}
 
 			return UpdateSharedBankSlot(char_id, inst, slot_id);
@@ -404,8 +416,11 @@ bool SharedDatabase::SaveInventory(uint32 char_id, const EQ::ItemInstance* inst,
 
 	// Needed to clear out bag slots that 'REPLACE' in UpdateInventorySlot does not overwrite..otherwise, duplication occurs
 	// (This requires that parent then child items be sent..which should be how they are currently passed)
-	if (EQ::InventoryProfile::SupportsContainers(slot_id)) {
-		DeleteInventorySlot(char_id, slot_id);
+	if (
+		EQ::InventoryProfile::SupportsContainers(slot_id) &&
+		!DeleteInventorySlot(char_id, slot_id)
+	) {
+		return false;
 	}
 
 	return UpdateInventorySlot(char_id, inst, slot_id);
@@ -457,7 +472,16 @@ bool SharedDatabase::UpdateInventorySlot(uint32 char_id, const EQ::ItemInstance*
 			i++
 		) {
 			const EQ::ItemInstance* bag_inst = inst->GetItem(i);
-			SaveInventory(char_id, bag_inst, EQ::InventoryProfile::CalcSlotId(slot_id, i));
+			if (
+				bag_inst &&
+				!SaveInventory(
+					char_id,
+					bag_inst,
+					EQ::InventoryProfile::CalcSlotId(slot_id, i)
+				)
+			) {
+				return false;
+			}
 		}
 	}
 
@@ -511,7 +535,16 @@ bool SharedDatabase::UpdateSharedBankSlot(uint32 char_id, const EQ::ItemInstance
 			i++
 		) {
 			const EQ::ItemInstance* bag_inst = inst->GetItem(i);
-			SaveInventory(char_id, bag_inst, EQ::InventoryProfile::CalcSlotId(slot_id, i));
+			if (
+				bag_inst &&
+				!SaveInventory(
+					char_id,
+					bag_inst,
+					EQ::InventoryProfile::CalcSlotId(slot_id, i)
+				)
+			) {
+				return false;
+			}
 		}
 	}
 
@@ -520,31 +553,25 @@ bool SharedDatabase::UpdateSharedBankSlot(uint32 char_id, const EQ::ItemInstance
 
 bool SharedDatabase::DeleteInventorySlot(uint32 char_id, int16 slot_id)
 {
-	const int deleted = InventoryRepository::DeleteWhere(
-		*this,
-		fmt::format(
-			"`character_id` = {} AND `slot_id` = {}",
-			char_id,
-			slot_id
-		)
-	);
-
-	if (!deleted) {
-		return false;
-	}
-
-	// Delete bag slots, if need be
 	if (!EQ::InventoryProfile::SupportsContainers(slot_id)) {
-		return true;
+		return InventoryRepository::TryDeleteWhere(
+			*this,
+			fmt::format(
+				"`character_id` = {} AND `slot_id` = {}",
+				char_id,
+				slot_id
+			)
+		);
 	}
 
 	const int16 base_slot_id = EQ::InventoryProfile::CalcSlotId(slot_id, EQ::invbag::SLOT_BEGIN);
-
-	return InventoryRepository::DeleteWhere(
+	return InventoryRepository::TryDeleteWhere(
 		*this,
 		fmt::format(
-			"`character_id` = {} AND `slot_id` BETWEEN {} AND {}",
+			"`character_id` = {} AND "
+			"(`slot_id` = {} OR `slot_id` BETWEEN {} AND {})",
 			char_id,
+			slot_id,
 			base_slot_id,
 			base_slot_id + (EQ::invbag::SLOT_COUNT - 1)
 		)
@@ -555,30 +582,25 @@ bool SharedDatabase::DeleteSharedBankSlot(uint32 char_id, int16 slot_id)
 {
 	const uint32 account_id = GetAccountIDByChar(char_id);
 
-	const int deleted = SharedbankRepository::DeleteWhere(
-		*this,
-		fmt::format(
-			"`account_id` = {} AND `slot_id` = {}",
-			account_id,
-			slot_id
-		)
-	);
-
-	if (!deleted) {
-		return false;
-	}
-
 	if (!EQ::InventoryProfile::SupportsContainers(slot_id)) {
-		return true;
+		return SharedbankRepository::TryDeleteWhere(
+			*this,
+			fmt::format(
+				"`account_id` = {} AND `slot_id` = {}",
+				account_id,
+				slot_id
+			)
+		);
 	}
 
 	const int16 base_slot_id = EQ::InventoryProfile::CalcSlotId(slot_id, EQ::invbag::SLOT_BEGIN);
-
-	return SharedbankRepository::DeleteWhere(
+	return SharedbankRepository::TryDeleteWhere(
 		*this,
 		fmt::format(
-			"`account_id` = {} AND `slot_id` BETWEEN {} AND {}",
+			"`account_id` = {} AND "
+			"(`slot_id` = {} OR `slot_id` BETWEEN {} AND {})",
 			account_id,
+			slot_id,
 			base_slot_id,
 			base_slot_id + (EQ::invbag::SLOT_COUNT - 1)
 		)

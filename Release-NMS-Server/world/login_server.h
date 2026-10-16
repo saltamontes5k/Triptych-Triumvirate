@@ -23,6 +23,21 @@ public:
 
 	void SendPacket(ServerPacket* pack);
 	void SendAccountUpdate(ServerPacket *pack);
+	// Guards against the loginserver-registration storm. EQ::Net::ServertalkClient
+	// retries its connection on a 100 ms timer, and the loginserver answers a
+	// duplicate world name by destroying the connection the world is currently on
+	// (WorldServerManager::DestroyServerByName -> Disconnect). The world then sees
+	// the drop, reconnects 100 ms later, and lands in the same duplicate state
+	// again -- measured at 9-10 registrations per second for ~25 minutes on
+	// 2026-10-10, accumulating until world.exe faulted. Allowing a fixed number of
+	// attempts per window keeps a transient duplicate (a loginserver that has just
+	// restarted, say) recoverable, but stops the unbounded loop.
+	bool ShouldAcceptReconnectAttempt();
+
+	// Deferred disconnects for a connection we have decided not to use. See the
+	// definitions in login_server.cpp for why this cannot be a direct reset.
+	void CloseRejectedConnection(std::shared_ptr<EQ::Net::TCPConnection> connection);
+
 	bool Connected()
 	{
 		if (m_is_legacy) {
@@ -51,6 +66,11 @@ private:
 	void ProcessLSAccountUpdate(uint16_t opcode, EQ::Net::Packet &p);
 
 	std::unique_ptr<EQ::Timer> m_keepalive;
+
+	// see ShouldAcceptReconnectAttempt()
+	std::chrono::steady_clock::time_point m_reconnect_window_start;
+	uint32                                 m_reconnect_attempts = 0;
+	bool                                   m_reconnect_storm_logged = false;
 
 	std::unique_ptr<EQ::Net::ServertalkClient>       m_client;
 	std::unique_ptr<EQ::Net::ServertalkLegacyClient> m_legacy_client;

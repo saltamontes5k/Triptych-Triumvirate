@@ -129,12 +129,76 @@ private:
 	std::vector<std::string> _lines;
 };
 
+// Formats the faulting address and the (attempted) memory access type for an
+// access violation. Without these two values a crash report can only say "an AV
+// happened somewhere"; with them a raw address can be mapped to a module+RVA
+// (and therefore a function, if a matching PDB is available) after the fact.
+static std::string FormatExceptionRecord(const EXCEPTION_RECORD *record)
+{
+	if (!record) {
+		return "no exception record";
+	}
+
+	switch (record->ExceptionCode) {
+		case EXCEPTION_ACCESS_VIOLATION: {
+			const ULONG_PTR kind = record->NumberParameters >= 1
+				? record->ExceptionInformation[0]
+				: static_cast<ULONG_PTR>(~0ull);
+
+			const ULONG_PTR address = record->NumberParameters >= 2
+				? record->ExceptionInformation[1]
+				: 0;
+
+			const char *kind_text = "unknown";
+			if (kind == 0) {
+				kind_text = "read";
+			}
+			else if (kind == 1) {
+				kind_text = "write";
+			}
+			else if (kind == 8) {
+				kind_text = "DEP/execute";
+			}
+
+			char buffer[160];
+			snprintf(
+				buffer,
+				sizeof(buffer),
+				"access violation: %s of address [0x%llX]",
+				kind_text,
+				static_cast<unsigned long long>(address)
+			);
+			return std::string(buffer);
+		}
+		case EXCEPTION_IN_PAGE_ERROR: {
+			const ULONG_PTR address = record->NumberParameters >= 2
+				? record->ExceptionInformation[1]
+				: 0;
+
+			char buffer[160];
+			snprintf(
+				buffer,
+				sizeof(buffer),
+				"in-page error at address [0x%llX]",
+				static_cast<unsigned long long>(address)
+			);
+			return std::string(buffer);
+		}
+		case EXCEPTION_STACK_OVERFLOW:
+			return "stack overflow -- the address below is the last frame the faulting thread reached; "
+				"callstack unwinding is skipped for this code";
+		default:
+			return "no extra exception detail";
+	}
+}
+
 LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
 {
 	switch(ExceptionInfo->ExceptionRecord->ExceptionCode)
 	{
 		case EXCEPTION_ACCESS_VIOLATION:
 			Log(Logs::General, Logs::Crash, "EXCEPTION_ACCESS_VIOLATION");
+			Log(Logs::General, Logs::Crash, "Fault detail: [{}]", FormatExceptionRecord(ExceptionInfo->ExceptionRecord));
 			break;
 		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
 			Log(Logs::General, Logs::Crash, "EXCEPTION_ARRAY_BOUNDS_EXCEEDED");
@@ -198,6 +262,23 @@ LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
 			break;
 	}
 
+	// Emit the faulting address/access type for every code (the AV case also logs it
+	// early, above, in case unwinding itself faults). This is deliberately before the
+	// stack walk so that the information survives a failed walk.
+	const std::string fault_detail = FormatExceptionRecord(ExceptionInfo->ExceptionRecord);
+
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
+		Log(Logs::General, Logs::Crash, "Fault detail: [{}]", fault_detail);
+	}
+
+	Log(
+		Logs::General,
+		Logs::Crash,
+		"Faulting instruction pointer: [0x{:X}] thread id [{}]",
+		static_cast<unsigned long long>(ExceptionInfo->ContextRecord ? ExceptionInfo->ContextRecord->Rip : 0),
+		GetCurrentThreadId()
+	);
+
 	if(EXCEPTION_STACK_OVERFLOW != ExceptionInfo->ExceptionRecord->ExceptionCode)
 	{
 		EQEmuStackWalker sw;
@@ -205,6 +286,16 @@ LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
 
 		if (RuleB(Analytics, CrashReporting)) {
 			std::string crash_report;
+
+			// Lead with the machine-readable fault facts: the symbolised stack below is
+			// only as good as the PDB that was next to the binary at run time.
+			crash_report += "exception_code: 0x" + fmt::format("{:X}", static_cast<unsigned long>(ExceptionInfo->ExceptionRecord->ExceptionCode)) + "\n";
+			crash_report += "fault_detail: " + fault_detail + "\n";
+			crash_report += fmt::format(
+				"faulting_instruction_pointer: 0x{:X}\n",
+				static_cast<unsigned long long>(ExceptionInfo->ContextRecord ? ExceptionInfo->ContextRecord->Rip : 0)
+			);
+
 			auto& lines = sw.GetLines();
 
 			for (auto& line : lines) {

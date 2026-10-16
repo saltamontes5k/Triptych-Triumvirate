@@ -9,7 +9,7 @@ sub EVENT_SPELL_EFFECT_NPC {
 	}
 }
 
-sub EVENT_SPELL_EFFECT {
+sub EVENT_SPELL_EFFECT_CLIENT {
 	my $client = $entity_list->GetClientByID($caster_id);
 	return unless $client;
 	# Release the captured troublemakers in the Lesser Faydark.

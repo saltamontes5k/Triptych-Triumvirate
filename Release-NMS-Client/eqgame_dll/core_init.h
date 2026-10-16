@@ -1,4 +1,5 @@
 #include "core_bazaar.h"
+#include "core_achievements.h"
 #include "core_map.h"
 #include "core_npc.h"
 #include "core_item.h"
@@ -17,4 +18,5 @@ void InitOptions() {
 	if (isBazaarWindowDisabled) DisableCBazaarSearchWnd();
 	if (isEQGOverrideEnabled) InjectEQGOrderLoading();
 	if (areCustomShieldsEnabled) InjectCustomShields();
+	if (isAchievementRowPoolFixEnabled) EnableAchievementRowPoolFix();
 }

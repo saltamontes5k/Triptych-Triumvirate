@@ -6,5 +6,5 @@
 local memory = require("nms_memory")
 
 function event_death_complete(e)
-	memory.spawn(e, "DoN", "coirnav the avatar of water")
+	memory.spawn(e, "DoN", "coirnav the avatar of water", "LDoN", "coirnav the avatar of water")
 end

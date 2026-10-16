@@ -175,8 +175,9 @@ function Vish_Death(e)
 		eq.depop_all(total_npc_list[i]);
 	end
 
-	-- NMS progression: Vishimtar the Fallen is a Depths of Darkhollow gate
-	memory.spawn(e, "DoD", "vishimtar the fallen");
+	-- NMS progression: Vishimtar the Fallen is a Prophecy of Ro gate (the
+	-- DoD stage opens on Tunat`Muram + Warlord Imal Ojun instead)
+	memory.spawn(e, "PoR", "vishimtar the fallen");
 end
 
 -- Corrupted Drake Functions

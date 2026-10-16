@@ -72,7 +72,7 @@ sub EVENT_ENTERZONE {
     if ($client->GetRace() == 629
         && !($zonesn eq 'rivervale' && $client->GetZoneInstanceVersion() == 202)) {
         $client->BuffFadeBySpellID(13836); # Parsing Root: the actual cake root (kept in sync with #Cake_Defense_Baker.lua)
-        $client->BuffFadeBySpellID(121870);
+        $client->BuffFadeBySpellID(44025);
         $client->RemoveShroudSilent();
     }
 }

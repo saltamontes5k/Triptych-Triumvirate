@@ -1,5 +1,9 @@
+# Alchemist Kili - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: alchemy dye supply (tasks 600540-600543)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The alchemists' benches are a riot of color today - or they would be, if anyone could [brew] a proper dye.");
     my @chain = (600540,600541,600542,600543);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600541)) { plugin::check_handin(\%itemcount, 98269 => 1); }
   if (quest::istaskactive(600542)) { plugin::check_handin(\%itemcount, 98275 => 1); }
   if (quest::istaskactive(600543)) { plugin::check_handin(\%itemcount, 98286 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

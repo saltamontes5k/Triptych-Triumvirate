@@ -760,7 +760,9 @@ typedef struct _AALIST {
 #define      NUM_INV_SLOTS              0x21
 #define      NUM_BANK_SLOTS             0x18
 #define      NUM_SHAREDBANK_SLOTS       0x02
-#define      NUM_BOOK_SLOTS             0x2d0
+#define      NUM_BOOK_SLOTS             0x5a0   // 1440 (was 0x2d0 = 720)
+#define      SPELLBOOK_TAIL_OFFSET      0x9950  // 1440-slot eqgame.exe patch: spellbook is stored after the object
+#define      CHAR_SPELLBOOK(pc,n)       (*(DWORD*)((BYTE*)(pc) + SPELLBOOK_TAIL_OFFSET + (n) * 4))
 #define      NUM_COMBAT_ABILITIES       0x12c
 #define      BAG_SLOT_START             23
 #define ExactLocation                   0
@@ -1013,7 +1015,7 @@ typedef struct _CHARINFO2 {
 /*0x0f30*/   struct     _SPELLBUFF   ShortBuff[0x37];
 /*0x2218*/   DWORD      Unknown0x2218[NUM_BUFF_SLOTS]; // effect IDs
 /*0x239c*/   DWORD      Unknown0x239c[NUM_BUFF_SLOTS];
-/*0x2520*/   DWORD      SpellBook[NUM_BOOK_SLOTS];
+/*0x2520*/   DWORD      OldSpellBook_UNUSED[0x2d0]; // 1440-slot patch: the real spellbook now lives at +0x9950, use CHAR_SPELLBOOK(pc,n)
 /*0x3060*/   DWORD      MemorizedSpells[0x10];
 /*0x30a0*/   DWORD      Skill[0x64];
 /*0x3230*/   DWORD      InnateSkill[0x19];

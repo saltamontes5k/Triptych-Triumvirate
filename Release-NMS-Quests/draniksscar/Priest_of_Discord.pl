@@ -1,31 +1,23 @@
 ############################################
 # ZONE: Dranik's Scar
 # DATABASE: PEQ-Omens of War
-# LAST EDIT DATE: April 25, 2009
-# VERSION: 1.1
+# VERSION: 1.2
 # DEVELOPER: Congdar
+# NMS 2026-10: dialogue per Allakhazam (npc 19682); the Discord gate behind this
+# priest checks the account's OoW progression stage (Tunat`Muram Cuu Vauax,
+# plugin::is_stage_complete, same gate as the PoK Priest of Discord).
+# "go home" stays unconditional so nobody can be stranded in Discord.
 #
 # *** NPC INFORMATION ***
 #
-# NAME: Priest_of_Discord
-# ID: Dranik's Scar
+# NAME: Priest_of_Discord (302044)
 # TYPE: NPC
 # RACE: Human
 # LEVEL: 50
-#
-# *** ITEMS GIVEN OR TAKEN ***
-#
-# *** QUESTS INVOLVED IN ***
-#
-# *** QUESTS AVAILABLE TO ***
-#
 ############################################
 
 sub EVENT_SAY {
-    if($text=~/Hail/i) {
-        quest::say("Should you wish to return from whence you came, tell me you wish to [" . quest::saylink("go home") . "] and I will send you.");
-    }
-
+    # "go home" is a safety return - always available
     if($text=~/home/i) {
         if(defined $qglobals{OOW_PoD_Origin}) {
             quest::say("Very well.  You are now to return from whence you came.");
@@ -94,6 +86,16 @@ sub EVENT_SAY {
             quest::say("I do not know from whence you came."); # Text made up
             quest::movepc(202, 582, 49, 4, 192); # Plane of Knowledge
         }
+        return;
+    }
+
+    if(!$client->GetGM() && !plugin::is_stage_complete($client, 'OoW')) {
+        quest::say("The war beyond the portal is not yours to fight yet. Should you wish to return from whence you came, tell me you wish to [" . quest::saylink("go home") . "] and I will send you."); # Text made up
+        return;
+    }
+
+    if($text=~/hail/i) {
+        quest::say("Should you wish to return from whence you came, tell me you wish to [" . quest::saylink("go home") . "] and I will send you.");
     }
 }
 

@@ -1,5 +1,9 @@
+# Kanazar - Blightfire Moors (the Dark Tower)
+# The Serpent's Spine :: the Dark Tower chain (tasks 600452-600454)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("So you have found the tower. The dead here do not rest, and the lights they carry never gutter. I have [work] for a steady hand.");
     my @chain = (600452,600453,600454);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -45,6 +49,5 @@ sub EVENT_SAY {
 sub EVENT_ITEM {
   if (quest::istaskactive(600452)) { plugin::check_handin(\%itemcount, 10299 => 6); }
   if (quest::istaskactive(600453)) { plugin::check_handin(\%itemcount, 97173 => 4); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

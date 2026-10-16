@@ -207,6 +207,9 @@ const char* QuestEventSubroutines[_LargestEventID] = {
 	"EVENT_AA_LOSS",
 	"EVENT_SPELL_BLOCKED",
 	"EVENT_READ_ITEM",
+	"EVENT_PET_COMMAND",
+	"EVENT_CHARM_START",
+	"EVENT_CHARM_END",
 
 	// Must stay in sync with the tail of QuestEventID in event_codes.h
 	"EVENT_SPELL_EFFECT_BOT",

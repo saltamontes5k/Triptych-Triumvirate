@@ -3,7 +3,7 @@
 -- Wave state machine for the birthday-cake defense:
 --   * shrouds every expedition member who zones in (>= 5s after zone-in, the
 --     client's deferred OP_Shroud window) into the Birthday Cake 25 form, then
---     coats them in "Sticky Icing" (121870, flavour/slow) AND roots them with
+--     coats them in "Sticky Icing" (44025, flavour/slow) AND roots them with
 --     "Parsing Root" (13836) -- the real immobilizer, since a speed debuff is
 --     floored around -85% and cannot actually stop the client. Both are recast
 --     if they ever fade and stripped on win/fail/death,
@@ -25,7 +25,7 @@
 local CAKE_VERSION   = 202
 local CAKE_SHROUD_ID = 500
 local RIVERVALE_ID   = 19 -- zoneidnumber (canonical), not zone.id
-local STICKY_ICING   = 121870
+local STICKY_ICING   = 44025
 -- The actual immobilizer. Sticky Icing is only a -7000% SE_MovementSpeed snare
 -- (SPA 3): mob.cpp _GetRunSpeed floors a snare at -85% and the RoF2 client does
 -- the same, so the cake could still crawl. "Parsing Root" (13836) is a stock

@@ -508,10 +508,9 @@ VOID MemSpell(PSPAWNINFO pChar, PCHAR szLine)
     if (Gem<1 || Gem>NUM_SPELL_GEMS) return;
     Gem--;
 
-    GetCharInfo2()->SpellBook;
     PSPELL pSpell=0;
     for (DWORD N = 0 ; N < NUM_BOOK_SLOTS ; N++)
-        if (PSPELL pTempSpell=GetSpellByID(GetCharInfo2()->SpellBook[N]))
+        if (PSPELL pTempSpell=GetSpellByID(CHAR_SPELLBOOK(GetCharInfo2(), N)))
         {
             // exact name match only
             if (!stricmp(SpellName,pTempSpell->Name))

@@ -1,18 +1,84 @@
 -- corathus/#Treddlehoop.lua
--- Depths of Darkhollow: Dreadspire access giver and Demi-Plane Monocle turn-in.
--- Tasks 505746 "Check Out a Library Book" and 505747 "Eyes Wide Open"; final
+-- Depths of Darkhollow: Dreadspire access giver, Scavenger Hunting, and
+-- Demi-Plane Monocle turn-in.
+-- Tasks 505762 "Scavenger Hunting" (3 loot + 3 deliver -> Signature Monocle),
+-- 505746 "Check Out a Library Book" and 505747 "Eyes Wide Open"; final
 -- Monocle of Blood hand-in (Lens of Eye-Glass + seeing device).
 local dodh = require("dodh_helper");
+
+-- Scavenger Hunting deliver activities: item id -> activity id (loot runs 0-2).
+local SCAVENGER_DELIVER = {
+	[dodh.items.tentacle_cluster] = 3,
+	[dodh.items.silk_gland]       = 4,
+	[dodh.items.chopping_sword]   = 5,
+};
+
+-- Consume exactly the units the task system accepted from this trade (the
+-- engine stamps TaskDeliveredCount on each instance before event_trade).
+-- Returns units kept.
+local function consume_scavenger(e)
+	local handin = {};
+	local insts = {};
+	local kept = 0;
+	local active = e.other:IsTaskActive(dodh.tasks.scavenger_hunting)
+		or e.other:IsTaskCompleted(dodh.tasks.scavenger_hunting);
+
+	for i = 1, 4 do
+		local inst = e.trade["item" .. i];
+		if inst and inst.valid then
+			table.insert(insts, inst);
+			local n = inst:GetTaskDeliveredCount();
+			local activity_id = n and n > 0 and SCAVENGER_DELIVER[inst:GetID()] or nil;
+			if activity_id and active then
+				local id = inst:GetID();
+				handin[tostring(id)] = (handin[tostring(id)] or 0) + n;
+				kept = kept + n;
+			end
+		end
+	end
+
+	if next(handin) == nil then
+		return 0;
+	end
+
+	-- required == handin consumes exactly the delivered quantities.
+	if not e.self:CheckHandin(e.other, handin, handin, insts) then
+		return 0;
+	end
+	return kept;
+end
+
+-- Treddlehoop's Signature Monocle, paid once when the task completes.
+local function pay_scavenger(e)
+	if not e.other:IsTaskCompleted(dodh.tasks.scavenger_hunting) then
+		return;
+	end
+	local flag = "dodh.reward." .. tostring(dodh.tasks.scavenger_hunting);
+	if (tonumber(e.other:GetBucket(flag)) or 0) ~= 0 then
+		return;
+	end
+	e.other:SetBucket(flag, "1");
+	if not e.other:HasItem(dodh.items.monocle_signature) then
+		e.other:SummonFixedItem(dodh.items.monocle_signature);
+	end
+	e.other:Message(15, "You have received Treddlehoop's Signature Monocle.");
+	e.self:Say("Tentacle, silk, and swords - a fine haul! There, ground you a fresh lens for it: my Signature Monocle. Wear it proudly.");
+end
 
 function event_say(e)
 	local t = e.message:lower();
 	if t:find("hail") then
+		if not e.other:IsTaskActive(dodh.tasks.scavenger_hunting) and not e.other:IsTaskCompleted(dodh.tasks.scavenger_hunting) then
+			e.other:AssignTask(dodh.tasks.scavenger_hunting, e.self:GetID());
+		end
 		if not e.other:HasItem(dodh.items.treddlehoop_device) then
 			e.other:SummonFixedItem(dodh.items.treddlehoop_device);
-			e.self:Say("Well now, a fresh face at the crash site! Take my Wonderful Monoculor Seeing Device - it will see you into Dreadspire Keep. There is work for a capable sort, if you have the stomach for it.");
+			e.self:Say("Well now, a fresh face at the crash site! Take my Wonderful Monoculor Seeing Device - it will see you into Dreadspire Keep. I have [scavenger] work besides, if you have the stomach for it.");
 		else
-			e.self:Say("Back again, are you? Dreadspire Keep still stands, and its secrets remain. What do you need?");
+			e.self:Say("Back again, are you? The [scavenger] work still stands, if you want it. Dreadspire Keep still stands, and its secrets remain. What do you need?");
 		end
+	elseif t:find("scavenger") or t:find("curio") then
+		e.self:Say("Tentacles, silk, and steel. Bring me a Shiliskin Tentacle Cluster from the depths of Illsalin, a Drachnid Silk Gland off the drachnids, and two Chopping Swords from the Deep orcs of Stoneroot Falls, and I will grind you my Signature Monocle.");
 	elseif t:find("book") or t:find("library") or t:find("shard") then
 		if e.other:HasItem(dodh.items.shard_mystical_glass) then
 			if not e.other:IsTaskActive(dodh.tasks.library_book) and not e.other:IsTaskCompleted(dodh.tasks.library_book) then
@@ -39,6 +105,16 @@ end
 function event_trade(e)
 	local item_lib = require("items");
 	local c = e.other;
+
+	-- Task 505762 Scavenger Hunting: partial turn-ins, monocle on completion
+	local kept = consume_scavenger(e);
+	if kept > 0 then
+		pay_scavenger(e);
+		if not e.other:IsTaskCompleted(dodh.tasks.scavenger_hunting) then
+			e.self:Say(kept > 1 and (kept .. " curiosities accepted - keep them coming.") or "A curious piece - accepted. The rest, when you find them.");
+		end
+		return;
+	end
 
 	-- Task 505746: Study of Mystical Vision -> Polished Mystical Glass Shard
 	if item_lib.check_turn_in(e.trade, { item1 = dodh.items.study_mystical_vision }) then

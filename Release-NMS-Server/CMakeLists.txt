@@ -50,6 +50,31 @@ IF(MSVC)
 
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
 
+	# -----------------------------------------------------------------------
+	# Symbol emission for the server binaries.
+	#
+	# The crash handler (common/crash.cpp) symbolises a dying zone's stack with
+	# StackWalker, which loads the PDB next to the running executable. The Release
+	# configuration was generating no debug information at all: generated projects
+	# carried an empty <DebugInformationFormat> and
+	# <GenerateDebugInformation>false</GenerateDebugInformation>, so the linker
+	# emitted neither a CodeView record nor a .pdb. That is why the 2026-10-11
+	# codecay crash report lists every zone.exe frame as one exported symbol.
+	#
+	# This sits before any ADD_SUBDIRECTORY so the directory-scope variables reach
+	# every server target (ADD_LINK_OPTIONS in the root directory does NOT).
+	# -----------------------------------------------------------------------
+	# /DEBUG:FULL forces the CodeView record (not just a FastLink checksum);
+	# /OPT:REF /OPT:ICF keep the Release code folding that was already in effect.
+	SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /DEBUG:FULL /OPT:REF /OPT:ICF")
+
+	# Put the linker PDB next to each exe, where StackWalker looks for it.
+	SET(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+	SET(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY_DEBUG "${CMAKE_BINARY_DIR}/bin/Debug")
+	SET(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin/Release")
+	SET(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_BINARY_DIR}/bin/RelWithDebInfo")
+	SET(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY_MINSIZEREL "${CMAKE_BINARY_DIR}/bin/MinSizeRel")
+
 	OPTION(EQEMU_DISABLE_MSVC_WARNINGS "Disable MSVC compile warnings." ON)
 	IF(EQEMU_DISABLE_MSVC_WARNINGS)
 		ADD_DEFINITIONS( "/W0 /D_CRT_SECURE_NO_WARNINGS /wd4005 /wd4996 /nologo /Os")
@@ -492,3 +517,4 @@ ENDIF(EQEMU_BUILD_TESTS)
 IF(EQEMU_BUILD_CLIENT_FILES)
 	ADD_SUBDIRECTORY(client_files)
 ENDIF(EQEMU_BUILD_CLIENT_FILES)
+

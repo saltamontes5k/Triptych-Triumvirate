@@ -1,5 +1,9 @@
+# Potter Subira - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: pottery supply (tasks 600548-600549)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The kiln is hot and the clay is ready. We [fire] for half the city - simple ware first, beauty after.");
     my @chain = (600548,600549);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -35,6 +39,5 @@ sub EVENT_SAY {
 sub EVENT_ITEM {
   if (quest::istaskactive(600548)) { plugin::check_handin(\%itemcount, 98284 => 1); }
   if (quest::istaskactive(600549)) { plugin::check_handin(\%itemcount, 98278 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

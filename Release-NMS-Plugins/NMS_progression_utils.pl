@@ -340,14 +340,14 @@ my %atlas = (
 );
 
 # Global hash of valid stages
-my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD FNagafen);
+my @STAGES = qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD FNagafen UF);
 my %VALID_STAGES = map { $_ => 1 } @STAGES;
 
 # Stages open on NMS (multiclass) servers. Anything not listed here is time-locked
 # regardless of kill flags; unlocking a new expansion is a one-line change here.
 # Stages listed here still require their kill prerequisites (see %STAGE_PREREQUISITES)
 # to be earned per-account before the stage's zones are eligible.
-my %NMS_UNLOCKED_STAGES = map { $_ => 1 } qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD);
+my %NMS_UNLOCKED_STAGES = map { $_ => 1 } qw(RoK SoV SoL PoP GoD OoW DoN LDoN DoD PoR TSS TBS SoF SoD FNagafen UF);
 
 # Global hash of stage prerequisites
 my %STAGE_PREREQUISITES = (
@@ -358,14 +358,15 @@ my %STAGE_PREREQUISITES = (
     'GoD' => ['Saryrn'],
     'OoW' => ['Tunat`Muram Cuu Vauax'],   # final boss of Tacvi (GoD); flag NPC is spawned by tacvi/encounters/tmcv.lua
     'DoN' => ['Xegony', 'Fennin Ro the Tyrant of Fire', 'Coirnav the Avatar of Water', 'Rathe Council', 'Agnarr the Storm Lord'],
-    'DoD' => ['Warlord Imal Ojun', 'Vishimtar the Fallen'],   # Depths of Darkhollow unlocks on the LDoN Rujarkian Hills raid warlord + the DoN Nest raid dragon
-    'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish', 'Mayong Mistmoore Dreadspire'],   # all six MPG chamber Masters + Anguish (OMM) + the Demi-Plane of Blood raid
+    'DoD' => ['Tunat`Muram Cuu Vauax', 'Warlord Imal Ojun'],   # Depths of Darkhollow unlocks on the GoD end boss (same kill that opens OoW) + the LDoN Rujarkian Hills raid warlord
+    'PoR' => ['Master of Hate', 'Master of Weaponry', 'Master of Foresight', 'Master of Specialization', 'Master of Adaptation', 'Master of Destruction', 'Anguish', 'Vishimtar the Fallen', 'Mayong Mistmoore Dreadspire'],   # all six MPG chamber Masters + Anguish (OMM) + the DoN Nest raid dragon + Demi-Plane Mayong (DoDH endboss)
     'TSS' => ['Deathknell'],              # Deathknell, Tower of Dissonance clear
     'TBS' => ['Dyn`Leth'],                # Ashengate Dyn'Leth raid
     'SoF' => ['Solusek Ro', 'Mayong Mistmoore'],   # the two gods in Solteris (TBS-era raid)
     'LDoN' => ['Xegony', 'Fennin Ro the Tyrant of Fire', 'Coirnav the Avatar of Water', 'Rathe Council', 'Agnarr the Storm Lord'],   # opens alongside DoN (same PoP elemental gods)
     'SoD' => ['Kerafyrm', 'Kerafyrm-Crystallos'],   # the Sleeper in both Sleeper's Tomb and Crystallos
     'FNagafen' => ['Quarm'],
+    'UF' => ['The First Creation'],   # Convorteum seven-ward finale (Rasper miscRaidProg)
     # ... and so on for each stage
 );
 
@@ -395,6 +396,7 @@ my %STAGE_DESCRIPTIONS = (
     'SoF' => "Secrets of Faydwer",
     'SoD' => "Seeds of Destruction",
     'FNagafen' => "Fabled Nagafen's Lair",
+    'UF' => "Underfoot",
 );
 
 # Convert to a direct lookup hash
@@ -1166,6 +1168,7 @@ my %MEMORY_CAPSTONES = (
     'xerkizh the creator'          => 'Xerkizh the Creator',
     'emperor ssraeshza'            => 'Emperor Ssraeshza',
     'emperorssraeshza'             => 'Emperor Ssraeshza',
+    'saryrn'                       => 'Saryrn',
     'tunat`muram cuu vauax'        => 'Tunat`Muram Cuu Vauax',
     'anguish'                      => 'Overlord Mata Muram',
     'xegony'                       => 'Xegony',
@@ -1182,6 +1185,7 @@ my %MEMORY_CAPSTONES = (
     'mayong mistmoore'             => 'Mayong Mistmoore',
     'kerafyrm'                     => 'Kerafyrm the Sleeper',
     'kerafyrm-crystallos'          => 'Kerafyrm of Crystallos',
+    'quarm'                        => 'Quarm',
 );
 
 # Resolves the guild id of the player credited with a death for first-kill

@@ -156,7 +156,7 @@ function event_say(e)
 				1, -- trell
 				1, -- tribunal
 				1 -- valor
-			}.
+			},
 			zones = {"poair", "powater", "poeartha"},
 			text = "Reef of Corniav, Vegarlson, and Eryslai"
 		}

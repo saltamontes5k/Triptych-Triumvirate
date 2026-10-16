@@ -14,7 +14,7 @@ function event_say(e)
         e.self:Emote("gets a suspicious look in his eyes.");
         e.self:Say("Ok, I will be honest. I lost the Captain's trinkets. If you [" .. eq.say_link("I will help you.",false, "help") .. "] me find them before his return, I am sure I can track something down that will not be missed. I have access to the treasure room, and there is much there in the way of spoils.");
     elseif(e.message:findi("help")) then
-        e.self:Message(MT.Red,"You sense that when you return you should be ready for a battle, despite Mi`Ta's assurances.");
+        e.other:Message(MT.Red,"You sense that when you return you should be ready for a battle, despite Mi`Ta's assurances.");
         e.self:Say("Excellent! It is not much, I was below deck with his compass, spyglass, ocean map, and a bottle of his favorite spirits. I would be in your debt should you find them for me.");
     end
 end

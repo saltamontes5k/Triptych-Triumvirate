@@ -25,6 +25,8 @@
 #include <tlhelp32.h>
 #include <vector>
 
+#include "nms_lon_link.h"
+
 static MultiPet g_multiPet;
 static PetWindow g_petWindow;
 static WhoMulticlass g_whoMulticlass;
@@ -1244,6 +1246,111 @@ void ShroudStampServerState(const char *when) {
 DWORD g_shroudHotbarNextTick  = 0;
 
 
+// Legends of Norrath (the in-game card game). eqgame hands the card game's DLL
+// --username= and --sessionID= on its command line (setters 0x7A14B0 /
+// 0x7A1460, argv built at 0x7A192E). On live the Station login filled the
+// session id; on our server eqgame always passes "", so the card game fell
+// back to its username/password box. With a session id it logs in by itself
+// (LoginCommand_SendSessionID) as the EQ account -- no box. The card game's
+// service accepts any id; anything of value goes through the zone server.
+//
+// This REPLACES the setter -- the original is never called. Its two copy
+// loops jump back to 0x7A1462, inside the 5 bytes the detour overwrites, so
+// running the trampoline crashed eqgame the moment it set the id at startup.
+// Buffer 0xF800D0 is 0x40 bytes (the next global is 0xF80110).
+DETOUR_TRAMPOLINE_EMPTY(void __cdecl LoNSetSessionID_Tramp(const char *));
+void __cdecl LoNSetSessionID_Detour(const char *session) {
+  // The token zone sent (OP_NMSLoNSession) is the only login world's card service
+  // accepts; until it arrives, a placeholder the service refuses.
+  if (const char *token = NMSLoN::Token()) {
+    session = token;
+  }
+  if (!session || !*session) {
+    session = "NMS";
+  }
+  char *buf = (char *)(((DWORD)0x00F800D0 - 0x400000) + baseAddress);
+  _snprintf_s(buf, 0x40, _TRUNCATE, "--sessionID=%s", session);
+}
+
+// Legends of Norrath: the "Session Login -- Entering main lobby..." box never
+// leaves on its own. WASessionLoginDialog's login-result handler (LoN RVA
+// 0x4A6E50, __thiscall(dialog, event)) only sets that status on success and
+// waits for a screen switch our service never triggers; its failure path closes
+// the box with QWidget::close. So after a successful result, queue the same
+// close for Qt's next pass -- QTimer::singleShot(0, box, SLOT(close())) -- rather
+// than closing the box inside its own handler. Event fields come from LoN RVA
+// 0xACAA0 (__thiscall(event, index)): each field has its type at +8 and value
+// at +4; field 0 = success (type 1, bool), field 1 = reason (type 2, int; 0x4C =
+// "register a username first", which must keep the box).
+typedef const BYTE *(__thiscall *LoNEventArg_t)(void *event, int index);
+typedef void(__cdecl *QtSingleShot_t)(int msec, void *receiver, const char *member);
+typedef void(__fastcall *LoNLoginResult_t)(void *dialog, void *edx, void *event);
+static LoNEventArg_t s_LoNEventArg = nullptr;
+static QtSingleShot_t s_QtSingleShot = nullptr;
+static LoNLoginResult_t s_LoNLoginResult_Tramp = nullptr;
+
+void __fastcall LoNLoginResult_Detour(void *dialog, void *edx, void *event) {
+  if (s_LoNLoginResult_Tramp) {
+    s_LoNLoginResult_Tramp(dialog, edx, event);
+  }
+  if (!dialog || !event || !s_LoNEventArg || !s_QtSingleShot) {
+    return;
+  }
+  const BYTE *ok = s_LoNEventArg(event, 0);
+  const BYTE *why = s_LoNEventArg(event, 1);
+  const bool success = ok && *(const int *)(ok + 8) == 1 && ok[4] != 0;
+  const int reason = (why && *(const int *)(why + 8) == 2) ? *(const int *)(why + 4) : 0;
+  if (success && reason != 0x4C) {
+    s_QtSingleShot(0, dialog, "1close()");
+  }
+}
+
+// Called every frame (MQ2Pulse.cpp). LegendsOfNorrath.dll only loads when the
+// player opens the card game, and closing it UNLOADS it (Qt too); the next open
+// loads a fresh copy, usually at another address. So the hook goes in on every
+// load -- hooking only the first one left the box stuck on every later open until
+// EQ was restarted. Only if the handler's first bytes are the
+// build this was written against.
+//
+// DetourFunction builds a fresh trampoline per hook and keeps no list, so a hook
+// whose DLL has since unloaded is simply forgotten: nothing ever writes into the
+// freed memory (MQ's RemoveOurDetours would, at EQ exit).
+void NMSLoNPulse() {
+  static HMODULE seen = nullptr;
+  HMODULE lon = GetModuleHandleA("LegendsOfNorrath.dll");
+  // Casual PvP host patches: checked every frame, so a copy reloaded at the
+  // same address is patched again too.
+  NMSLoN::PvPHostPulse(lon);
+  // Soundtrack: the 2013 embedded build has no audio of its own (nms_lon_link.cpp).
+  NMSLoN::MusicPulse(lon);
+  if (lon == seen) {
+    return;
+  }
+  seen = lon;
+  s_LoNLoginResult_Tramp = nullptr;  // the previous copy's code is gone
+  s_QtSingleShot = nullptr;
+  s_LoNEventArg = nullptr;
+  if (!lon) {
+    return;
+  }
+  HMODULE qtcore = GetModuleHandleA("QtCore4.dll");
+  const BYTE *handler = (const BYTE *)lon + 0x4A6E50;
+  const BYTE *getter = (const BYTE *)lon + 0xACAA0;
+  if (!qtcore || handler[0] != 0x6A || handler[1] != 0xFF || handler[2] != 0x68 ||
+      getter[0] != 0x56 || getter[1] != 0x8B || getter[2] != 0xF1) {
+    return;  // a different LoN build: leave the box alone
+  }
+  QtSingleShot_t shot = (QtSingleShot_t)GetProcAddress(
+      qtcore, "?singleShot@QTimer@@SAXHPAVQObject@@PBD@Z");
+  if (!shot) {
+    return;
+  }
+  s_QtSingleShot = shot;
+  s_LoNEventArg = (LoNEventArg_t)getter;
+  s_LoNLoginResult_Tramp = (LoNLoginResult_t)DetourFunction((PBYTE)handler, (PBYTE)LoNLoginResult_Detour);
+}
+
+
 unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
                                                    unsigned __int32 unk,
                                                    unsigned __int16 opcode,
@@ -1397,6 +1504,9 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
       WaypointsWnd::OnIncomingPacket(opcode, buf, size);
       return 1; // Suppress from native client
       break;
+  case 0x141C: // OP_NMSLoNSession -- the card game's login token + where to relay it
+      NMSLoN::OnSession(buf, size);
+      return 1; // Suppress: RoF2 knows nothing about this opcode
   case 0x1341:
     // OP_PetList is handled by MultiPet above.
     // This case is kept to avoid routing the opcode elsewhere if
@@ -2309,6 +2419,13 @@ void InitHooks() {
     EzDetour(jmpToDeviceGamma, SetDeviceGammaRamp_Hook,
              SetDeviceGammaRamp_Trampoline);
   }
+
+  // Legends of Norrath: a session id instead of the password box (see
+  // LoNSetSessionID_Detour).
+  var = (((DWORD)0x007A1460 - 0x400000) + baseAddress);
+  EzDetour((DWORD)var, LoNSetSessionID_Detour, LoNSetSessionID_Tramp);
+  // ...and point the card game at our server (nms_lon_link.cpp).
+  NMSLoN::Install(baseAddress);
 
   // EzDetour(0x00537E4B, &Eqmachooks::CEverQuest__StripName_Detour,
   // &Eqmachooks::CEverQuest__StripName_Trampoline); EzDetour(0x00537D39,

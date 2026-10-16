@@ -1,5 +1,9 @@
+# Training Master Nedd - Crescent Reach (the training yard)
+# The Serpent's Spine :: ways of combat (task 600563)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The yard trains every citizen who walks in - but drills are not [combat]. Vermin are. Small ones, for beginners.");
     my @chain = (600563);
     my $talked = 0;
     foreach my $tsk (@chain) {

@@ -1,5 +1,9 @@
+# Brewmaster Teremun - Crescent Reach (the brewery)
+# The Serpent's Spine :: brewing supply tasks (600536-600539)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The vats are bubbling and the orders are stacking. Brewing is patience, friend - and [thirst] is immediate.");
     my @chain = (600536,600537,600538,600539);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600537)) { plugin::check_handin(\%itemcount, 98257 => 1); }
   if (quest::istaskactive(600538)) { plugin::check_handin(\%itemcount, 58144 => 1); }
   if (quest::istaskactive(600539)) { plugin::check_handin(\%itemcount, 58165 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

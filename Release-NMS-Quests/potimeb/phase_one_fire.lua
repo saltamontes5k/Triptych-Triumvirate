@@ -2,6 +2,8 @@
 --Phase 1 - Kazrok of Fire Trial
 --potimeb
 
+local ring = require("potime_ring")
+
 local event_counter = 0;
 local event_mobs = {223088,223089,223128,223095,223234,223235,223236,223237,223090,223094,223163};
 
@@ -38,6 +40,8 @@ function event_enter(e)
 end
 
 function event_timer(e)
+	if ring.handle_timer(e) then return end
+
 	if(e.timer == "Phase1Fire") then
 		-- spawn first wave of 3 #a_flame_mephit
 	    eq.spawn2(223088,0,0,68,573,504,371); -- NPC: #a_flame_mephit
@@ -78,8 +82,8 @@ function event_signal(e)
 			eq.signal(223097,223173); -- Add Loot Lockout for Phase 1 Wing
 			eq.signal(223097,2); -- Increment Phase 1 Wing Counter
 			eq.local_emote({e.self:GetX(), e.self:GetY(), e.self:GetZ()},7,80,"Ethereal mists gather at the far wall, causing it to fade in and out of focus.");
-			-- depop as my job is done.
-			eq.depop();
+			-- hand the wing back to the Ring of Time.
+			ring.finish(e, 20000, min_x, max_x, min_y, max_y);
 		end
 	end
 end

@@ -1,5 +1,9 @@
+# Smithy Drawlyn - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: smithing supply tasks (600520-600523)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Vasha! The forge never cools on Artisans' Row, and the [requests] never stop coming. Can you handle a hammer?");
     my @chain = (600520,600521,600522,600523);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600521)) { plugin::check_handin(\%itemcount, 58090 => 1); }
   if (quest::istaskactive(600522)) { plugin::check_handin(\%itemcount, 58095 => 1); }
   if (quest::istaskactive(600523)) { plugin::check_handin(\%itemcount, 58092 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

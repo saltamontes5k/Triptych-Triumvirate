@@ -82,7 +82,7 @@ sub EVENT_SAY {
         if (!_bless_is_rank1_keeper()) {
             if (plugin::BlessingIsAgnostic($deity)) {
                 if (!plugin::BlessingCause($client)) {
-                    plugin::Whisper("You walk alone, $name, yet even the unaligned may be devoted. Name your [$cause_link] and I will bind your path. But hear me: the unaligned have no royal road to knowledge of the gods or this world.");
+                    plugin::Whisper("You walk alone, $name, yet even the unaligned may be devoted. Name your [$cause_link] and I will bind your path. But hear me: the unaligned have no royal road -- you will earn every inch of it.");
                 } elsif ($rank >= 2) {
                     plugin::Whisper("Your devotion -- " . plugin::BlessingDevotionTitle($client) . " -- burns at Rank $rank. Show me your [$status_link]?");
                 } elsif ($rank >= 1) {

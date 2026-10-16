@@ -1,5 +1,9 @@
+# Ordunn the Miner - Blightfire Moors (Mucktail quarry edge)
+# The Serpent's Spine :: the Mucktail works (tasks 600455-600459)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Hmph. Another soft-handed adventurer. Ordunn needs hard workers - or hard fighters. Same thing down here.");
     my @chain = (600455,600456,600457,600458,600459);
     my $talked = 0;
     foreach my $tsk (@chain) {

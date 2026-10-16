@@ -1150,18 +1150,48 @@ bool Mob::DoCastingChecksOnTarget(bool check_on_casting, int32 spell_id, Mob *sp
 						);
 
 				if (ret == -1) {
-					LogSpells("Adding buff [%d] to target [%s] failed: stacking prevented by spell [%d] "
-							"in slot [%d] with caster level [%d]",
+					// The rejected-stacking path used to hand "%d/%s" to LogSpells and Message().
+					// LogSpells expands to OutF -> fmt::format (which has no %s), so the intended
+					// substitution never happened the way it reads here. The 2026-10-11 14:15
+					// codecay crash dies in exactly this branch, in
+					// vStringFormat <- EQEmuLogSys::Out <- DoCastingChecksOnTarget, inside the
+					// string helper - i.e. reading a %s argument that is not a valid string.
+					// Use fmt placeholders so the name is formatted, not passed as a raw pointer.
+					//
+					// spell_target is also re-resolved: this path is reached from SpellFinished
+					// after the EVENT_CAST_ON script hook, and from weapon procs. If a quest script
+					// removed the target, the pointer we were handed is dangling and GetName()
+					// reads freed (or recycled) memory.
+					Mob *checked_target = entity_list.IsMobInZone(spell_target) ? spell_target : nullptr;
+
+					if (checked_target) {
+						LogSpells(
+							"Adding buff [{}] to target [{}] failed: stacking prevented by spell [{}] "
+							"in slot [{}] with caster level [{}]",
 							spell_id,
-							spell_target->GetName(),
+							checked_target->GetName(),
 							buff_spellid,
 							buffslot,
-							curbuf.casterlevel);
+							curbuf.casterlevel
+						);
+					}
+					else {
+						// Don't go near the name of a target that is no longer in the zone.
+						LogSpells(
+							"Adding buff [{}] failed: stacking prevented by spell [{}] in slot [{}] "
+							"with caster level [{}] (target no longer in zone)",
+							spell_id,
+							buff_spellid,
+							buffslot,
+							curbuf.casterlevel
+						);
+					}
+
 					if (IsClient() && RuleB(Client, UseLiveBlockedMessage)) {
 						Message(Chat::Red,
 								"Your %s did not take hold on %s. (Blocked by %s.)",
 								spells[spell_id].name,
-								spell_target->GetName(),
+								checked_target ? checked_target->GetName() : "your target",
 								spells[buff_spellid].name
 								);
 					}
@@ -6464,7 +6494,7 @@ void Client::UnmemSpellAll(bool update_client)
 }
 
 uint32 Client::GetSpellIDByBookSlot(int book_slot) {
-	if (book_slot <= EQ::spells::SPELLBOOK_SIZE) {
+	if (book_slot < EQ::spells::SPELLBOOK_SIZE) {
 		return GetSpellByBookSlot(book_slot);
 	}
 	return -1;

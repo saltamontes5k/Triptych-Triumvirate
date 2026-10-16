@@ -469,7 +469,13 @@ static void ProcessCommandIgnore(Client *c, std::string Ignoree) {
 Clientlist::Clientlist(int ChatPort) {
 	EQStreamManagerInterfaceOptions chat_opts(ChatPort, false, false);
 	chat_opts.opcode_size = 1;
-	chat_opts.daybreak_options.stale_connection_ms = 600000;
+	// An hour, not ten minutes. The chat client is a black box: when it goes quiet the
+	// manager used to drop the session after ten minutes without telling anyone, which
+	// left the player with "The universal chat service is temporarily unavailable" and
+	// nothing in any log. A reconnect for the same character still replaces the old
+	// connection (Clientlist::CheckForStaleConnections), so this only keeps genuinely
+	// quiet-but-alive sessions around.
+	chat_opts.daybreak_options.stale_connection_ms = 3600000;
 	chat_opts.daybreak_options.resend_delay_ms = RuleI(Network, ResendDelayBaseMS);
 	chat_opts.daybreak_options.resend_delay_factor = RuleR(Network, ResendDelayFactor);
 	chat_opts.daybreak_options.resend_delay_min = RuleI(Network, ResendDelayMinMS);

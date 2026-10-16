@@ -1,6 +1,6 @@
 my %whimsy = ();
 
-sub EVENT_ITEM_ENTERZONE {
+sub EVENT_ITEM_ENTER_ZONE {
   $whimsy{$name} = 0; #Initialize player counter
 }
 

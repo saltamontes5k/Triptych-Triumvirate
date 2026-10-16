@@ -7,7 +7,7 @@ function event_say(e)
 		elder_bucket == 0 and
 		grummus_bucket == 1
 	) then
-		e.self:Message(MT.LightBlue, "Elder Fuirstel slowly turns towards you. You can feel the heat radiating from his face. The warding that envelopes your body reaches out and begins to surround him. You immediately see improvement in his condition. The pus filled sores covering his face and his burning fever start to vanish.")
+		e.other:Message(MT.LightBlue, "Elder Fuirstel slowly turns towards you. You can feel the heat radiating from his face. The warding that envelopes your body reaches out and begins to surround him. You immediately see improvement in his condition. The pus filled sores covering his face and his burning fever start to vanish.")
 		e.other:SetAccountBucket("pop.flags.elder", "1")
 		e.other:Message(MT.LightBlue, "You receive a character flag!")
 	else
@@ -27,7 +27,7 @@ function event_say(e)
 				e.self:Say("It looks like I've helped you all I can.")
 			end
 		else
-			e.other:Say("You must defeat Bertoxxulous!")
+			e.self:Say("You must defeat Bertoxxulous!")
 		end
 	end
 end

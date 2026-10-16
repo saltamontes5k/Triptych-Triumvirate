@@ -1,28 +1,30 @@
 -- dodh_helper.lua - Depths of Darkhollow (Dreadspire / Demi-Plane of Blood) access.
 --
 -- ROUGH FRAMEWORK for the five-task access chain from Bonzz's
--- "Dreadspire, The Demi-Plane of Blood" guide, matching task_sql/dodh_access.sql.
+-- "Dreadspire, The Demi-Plane of Blood" guide, matching dodh_access.sql.
 --
 -- IMPORTANT: item and task ids are the local PEQ ids, not the Allakhazam ids
--- the walkthroughs use. Keep in sync with Release-NMS-Quests/task_sql/dodh_access.sql.
--- (Tasks 505745/505747-505749 and their activities are sourced from
--- utils/sql/peq_sync_B9b_ii_populated_tasks.sql; task 505746 stays a stock PEQ
--- Crescent Reach task, so the library-book step was renumbered to 505760.)
+-- the walkthroughs use. Keep in sync with Release-NMS-Quests/dodh_access.sql.
 
 local dodh = {}
 
 dodh.tasks = {
   frustrated_functionary = 505745, -- Melion Pell (Dreadspire): Dreadspire Library key
-  library_book           = 505760, -- Treddlehoop (Corathus): Study of Mystical Vision
+  library_book           = 505746, -- Treddlehoop (Corathus): Study of Mystical Vision
   eyes_wide_open         = 505747, -- Treddlehoop: Bloody Cloth Eye Patch
   misty_for_you          = 505748, -- Coldwind Blackfoot (Nektulos): Moon-shaped Diamond Pendant
   eye_bound              = 505749, -- Coldwind Blackfoot: Vule's Eye
-  memories_lost          = 505761, -- #Doorman (Dreadspire): Vule expedition access
+  scavenger_hunting      = 505762, -- Treddlehoop (Corathus): Signature Monocle
+  parts_research         = 505763, -- Bellfast caster/research variant (#Bellfast.lua)
 }
 
 dodh.items = {
   -- access chain
   treddlehoop_device    = 88005, -- Treddlehoop's Wonderful Monoculor Seeing Device
+  monocle_signature     = 88001, -- Treddlehoop's Signature Monocle (Scavenger Hunting reward)
+  tentacle_cluster      = 88002, -- Shiliskin Tentacle Cluster (Scavenger Hunting)
+  silk_gland            = 88003, -- Drachnid Silk Gland (Scavenger Hunting)
+  chopping_sword        = 88004, -- Chopping Sword (Scavenger Hunting)
   shard_mystical_glass  = 88006,
   study_mystical_vision = 88007,
   coral_golden_necklace = 88009,

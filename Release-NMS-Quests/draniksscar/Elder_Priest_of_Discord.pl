@@ -1,27 +1,30 @@
 ############################################
 # ZONE: Dranik's Scar
 # DATABASE: PEQ-Omens of War
-# LAST EDIT DATE: April 25, 2009
-# VERSION: 1.1
+# VERSION: 1.2
 # DEVELOPER: Congdar
+# NMS 2026-10: dialogue per Allakhazam (npc 16471); services sit behind the
+# account's OoW progression stage (Tunat`Muram Cuu Vauax, plugin::is_stage_complete,
+# same gate as the PoK Priest of Discord). "go home" stays unconditional so
+# nobody can be stranded in Discord. The spell handin is checked before items
+# are consumed so a gated player's turn-in is returned intact.
 #
 # *** NPC INFORMATION ***
 #
-# NAME: Elder_Priest_of_Discord
-# ID: Dranik's Scar
+# NAME: Elder_Priest_of_Discord (302043)
 # TYPE: NPC
 # RACE: Human
-# LEVEL: 50
+# LEVEL: 70
 #
 # *** ITEMS GIVEN OR TAKEN ***
 #
-# Pure Discordant Blood ID-77767
+# Pure Discordant Blood ID-77767 (x3)
 # Dark Enchanted Scroll ID-77768
-# Spell: Slaughter Gate ID-77754
-# Spell: Translocate: Slaughter ID-77755
-# Spell: Slaughter Portal ID-77756
-# Spell: Circle of Slaughter ID-77757
-# Spell: Ring of Slaughter ID-77758
+# Spell: Slaughter Gate ID-77654 (wizard)
+# Spell: Translocate: Slaughter ID-77655 (wizard)
+# Spell: Slaughter Portal ID-77656 (wizard)
+# Spell: Circle of Slaughter ID-77657 (druid)
+# Spell: Ring of Slaughter ID-77658 (druid)
 #
 # *** QUESTS INVOLVED IN ***
 #
@@ -30,108 +33,117 @@
 # *** QUESTS AVAILABLE TO ***
 #
 # Wizards and Druids
-#
 ############################################
-# items: 77767, 77768, 77654, 77655, 77656, 77657, 77658
 
 sub EVENT_SAY {
-    if($text=~/Hail/i) {
-   quest::say("Should you wish to return from whence you came, tell me you wish to [go home] and I will send you.  I am also able to aid wizards and druids with the ability to [find their way] further into Discord.");
+    # "go home" is a safety return - always available
+    if($text=~/home/i) {
+        if(defined $qglobals{OOW_PoD_Origin}) {
+            quest::say("Very well.  You are now to return from whence you came.");
+            if($qglobals{OOW_PoD_Origin} == 202) { # Plane of Knowledge
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(202, 582, 49, 4, 192); # Zone: poknowledge
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 52) { # Grobb
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(52, 2, 13, 4, 180); # Zone: grobb
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 24) { # Erudin
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(24, 30, -130, 40, 180); # Zone: erudnext
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 41) { # Neriak
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(41, -564, -43, -37, 192); # Zone: neriakb
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 10) { # East Freeport
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(10, -682, 146, -51, 192); # Zone: freporte
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 61) { # Felwithe
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(61, -289, 10, 4, 192); # Zone: felwithea
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 54) { # Kelethin(Greater Faydark)
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(54, 215, 232, 2, 192); # Zone: gfaydark
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 29) { # Halas
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(29, 47, 123, 4, 10); # Zone: halas
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 49) { # Oggok
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(49, 500, 220, 60, 10); # Zone: oggok
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 2) { # Qeynos
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(2, 227, 22, 3, 10); # Zone: qeynos2
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 19) { # Rivervale
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(19, -110, -16, 4, 192); # Zone: rivervale
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 55) { # Ak`Anon
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(55, -153, 500, -18, 66.1); # Zone: akanon
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 60) { # Kaladim
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(60, 26, 38, 4, 65); # Zone: kaladima
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 155) { # Shar Vahl
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(155, 89, -849, -189, 180); # Zone: sharvahl
+            }
+            elsif($qglobals{OOW_PoD_Origin} == 50) { # Gukta(Rathe Mountains)
+                quest::delglobal("OOW_PoD_Origin");
+                quest::movepc(50, 653, -2217, 2, 100); # Zone: rathemtn
+            }
+        }
+        else {
+            quest::say("I do not know from whence you came."); # Text made up
+            quest::movepc(202, 582, 49, 4, 192); # Plane of Knowledge
+        }
+        return;
+    }
+
+    if(!$client->GetGM() && !plugin::is_stage_complete($client, 'OoW')) {
+        quest::say("You have no place further in Discord, child of Order. Should you wish to return from whence you came, tell me you wish to [" . quest::saylink("go home") . "] and I will send you."); # Text made up
+        return;
+    }
+
+    if($text=~/hail/i) {
+        quest::say("Should you wish to return from whence you came, tell me you wish to [" . quest::saylink("go home") . "] and I will send you.  I am also able to aid wizards and druids with the ability to [" . quest::saylink("find their way") . "] further into Discord.");
     }
 
     if($text=~/find/i) {
-   quest::say("If you bring me the right materials -- three samples of pure discordant blood from a dark creature and a rare enchanted scroll, I can help to create teleportation spells.");
-    }
-
-    if($text=~/home/i) {
-   if(defined $qglobals{OOW_PoD_Origin}) {
-       quest::say("Very well.  You are now to return from whence you came.");
-       if($qglobals{OOW_PoD_Origin} == 202) { # Plane of Knowledge
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(202, 582, 49, 4, 192); # Zone: poknowledge
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 52) { # Grobb
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(52, 2, 13, 4, 180); # Zone: grobb
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 24) { # Erudin
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(24, 30, -130, 40, 180); # Zone: erudnext
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 41) { # Neriak
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(41, -564, -43, -37, 192); # Zone: neriakb
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 10) { # East Freeport
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(10, -682, 146, -51, 192); # Zone: freporte
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 61) { # Felwithe
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(61, -289, 10, 4, 192); # Zone: felwithea
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 54) { # Kelethin(Greater Faydark)
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(54, 215, 232, 2, 192); # Zone: gfaydark
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 29) { # Halas
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(29, 47, 123, 4, 10); # Zone: halas
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 49) { # Oggok
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(49, 500, 220, 60, 10); # Zone: oggok
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 2) { # Qeynos
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(2, 227, 22, 3, 10); # Zone: qeynos2
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 19) { # Rivervale
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(19, -110, -16, 4, 192); # Zone: rivervale
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 55) { # Ak`Anon
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(55, -153, 500, -18, 66.1); # Zone: akanon
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 60) { # Kaladim
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(60, 26, 38, 4, 65); # Zone: kaladima
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 155) { # Shar Vahl
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(155, 89, -849, -189, 180); # Zone: sharvahl
-       }
-       elsif($qglobals{OOW_PoD_Origin} == 50) { # Gukta(Rathe Mountains)
-      quest::delglobal("OOW_PoD_Origin");
-      quest::movepc(50, 653, -2217, 2, 100); # Zone: rathemtn
-       }
-   }
-   else {
-       quest::say("I do not know from whence you came."); # Text made up
-       quest::movepc(202, 582, 49, 4, 192); # Plane of Knowledge
-   }
+        quest::say("If you bring me the right materials -- three samples of pure discordant blood from a dark creature and a rare enchanted scroll, I can help to create teleportation spells.");
     }
 }
 
 sub EVENT_ITEM {
-    # Pure Discordant Blood and Dark Enchanted Scroll
-    if(plugin::check_handin(\%itemcount, 77767 => 3, 77768 => 1)) {
-        quest::emote("takes the sickly blood and spreads it across the enchanted scroll. It blends and swims horribly over it. When it settles, the priest hands it to you.");
-        quest::say("You may now travel further into Discord, true power awaits!");
-        if($class eq "Wizard") {
-            quest::summonitem(77654); # Item: Spell: Slaughter Gate
-            quest::summonitem(77655); # Item: Spell: Translocate: Slaughter
-            quest::summonitem(77656); # Item: Spell: Slaughter Portal
+    if($client->GetGM() || plugin::is_stage_complete($client, 'OoW')) {
+        # Pure Discordant Blood and Dark Enchanted Scroll
+        if(plugin::check_handin(\%itemcount, 77767 => 3, 77768 => 1)) {
+            quest::emote("takes the sickly blood and spreads it across the enchanted scroll. It blends and swims horribly over it. When it settles, the priest hands it to you.");
+            quest::say("You may now travel further into Discord, true power awaits!");
+            if($class eq "Wizard") {
+                quest::summonitem(77654); # Item: Spell: Slaughter Gate
+                quest::summonitem(77655); # Item: Spell: Translocate: Slaughter
+                quest::summonitem(77656); # Item: Spell: Slaughter Portal
+            }
+            if($class eq "Druid") {
+                quest::summonitem(77657); # Item: Spell: Circle of Slaughter
+                quest::summonitem(77658); # Item: Spell: Ring of Slaughter
+            }
+            quest::ding();
         }
-        if($class eq "Druid") {
-            quest::summonitem(77657); # Item: Spell: Circle of Slaughter
-            quest::summonitem(77658); # Item: Spell: Ring of Slaughter
-        }
-        quest::ding();
+    }
+    else {
+        quest::say("These are chaos-touched things, but the way further into Discord is not yours to walk yet."); # Text made up
     }
     plugin::return_items(\%itemcount);
 }
 
 #END of FILE Zone:Dranik's Scar  ID:302043 -- Elder_Priest_of_Discord
-

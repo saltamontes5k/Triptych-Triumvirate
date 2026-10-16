@@ -34,6 +34,7 @@
 #include "aa.h"
 #include "client.h"
 #include "entity.h"
+#include "merc.h"
 #include "mob.h"
 #include "zone.h"
 #include "zonedb.h"
@@ -552,6 +553,15 @@ void Client::ApplyShroud(uint32 shroud_id)
 	m_shroud_id = shroud_id;
 	m_shroud_zonein_pending = false;
 
+	// Shrouded players may not use mercenaries: suspend any active merc so it
+	// despawns and stays suspended until the shroud is removed.
+	Merc* active_merc = GetMerc();
+	if (active_merc && GetMercenaryID()) {
+		active_merc->Suspend();
+		Message(Chat::Red, "Your mercenary is suspended while shrouded.");
+		Log(Logs::General, Logs::Mercenaries, "ApplyShroud suspended active merc for %s.", GetName());
+	}
+
 	// Live-like mode: a fresh monster-point grant per shroud apply and any
 	// purchases from a previous session are dropped. The form's catalog rows
 	// are BOUGHT with those points -- they are deliberately not pre-granted.
@@ -820,19 +830,22 @@ bool Client::IsShroudAA(const AA::Ability *ability)
 		return false;
 	}
 
-	// Classic shroud categories, or any line the content mapping references, or
-	// the original hand-made 90100-90199 test band.
+	// Dedicated shroud-only lines: the classic shroud categories, the hand-made
+	// 90100-90199 test band, and the 91000+ catalog band. The content mapping
+	// ALSO references real classic AA lines for a form's granted passives
+	// (Mystical Attuning 334, Mental Clarity 224, Combat Agility 34, Divine Aura
+	// 7108, ...); those are normal AAs. Treating them as shroud-only hid them
+	// from every unshrouded client (the AA window is built from
+	// CanUseAlternateAdvancementRank) and let a shroud session collide with the
+	// real owned rank under the same aa_ranks key. The mapping still drives the
+	// form's own display/cap set via IsShroudAbilityForCurrentForm /
+	// ShroudAbilityMaxRank.
 	if (ability->category == AACategory::ShroudPassive
 		|| ability->category == AACategory::ShroudActive) {
 		return true;
 	}
 
-	const auto &content = ShroudContentIds();
-	if (content.find(ability->id) != content.end()) {
-		return true;
-	}
-
-	return ability->id >= 90100 && ability->id <= 90199;
+	return ability->id >= 90100;
 }
 
 // A shroud's skills belong to the form, not to the player wearing it. The guide

@@ -171,6 +171,7 @@ namespace EQ
 
 			Timestamp m_last_send;
 			Timestamp m_last_recv;
+			bool m_stale_warned = false; // logged the current silence episode once
 			DbProtocolStatus m_status;
 			Timestamp m_hold_time;
 			std::list<DynamicPacket> m_buffered_packets;
@@ -265,6 +266,7 @@ namespace EQ
 				resend_delay_max = 5000;
 				connect_delay_ms = 500;
 				stale_connection_ms = 60000;
+			stale_warn_ms = 120000;
 				connect_stale_ms = 5000;
 				crc_length = 2;
 				max_packet_size = 512;
@@ -291,6 +293,7 @@ namespace EQ
 			size_t connect_delay_ms;
 			size_t connect_stale_ms;
 			size_t stale_connection_ms;
+			size_t stale_warn_ms;
 			size_t crc_length;
 			size_t hold_size;
 			size_t hold_length_ms;

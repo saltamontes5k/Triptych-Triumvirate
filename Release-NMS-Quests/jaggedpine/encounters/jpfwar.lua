@@ -57,6 +57,7 @@ function WarTimer(e)
 		elseif gnollcount == #move_waypoints + 1 then
 			eq.stop_timer("gnollspawn")
 			eq.set_timer("assassins", 2000)
+		end
 		elseif e.timer == "assassins" then
 			for _, coords in ipairs({
 				{2027,1140,-12,0}, {1852,1269,-12,0}, {1794,1042,-12,0}, {2031,1148,-12,0}

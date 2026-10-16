@@ -1,5 +1,9 @@
+# Pridewing Veshdule - Crescent Reach (the aviary)
+# The Serpent's Spine :: griffon feathers (task 600570)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The [griffons] of the ridge molt every season, and their feathers fetch a price in every city of the Spine.");
     my @chain = (600570);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -24,6 +28,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600570)) { plugin::check_handin(\%itemcount, 16538 => 4); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

@@ -50,6 +50,7 @@
 #endif
 
 #include "bot.h"
+#include "achievement_manager.h"
 
 extern Zone *zone;
 extern volatile bool is_zone_loaded;
@@ -4180,6 +4181,51 @@ void EntityList::ReloadAllClientsTaskState(int task_id)
 		}
 		++it;
 	}
+}
+
+bool EntityList::ReloadAchievements(uint32 &failed_client_count)
+{
+	failed_client_count = 0;
+	if (!AchievementManager::Instance().Reload()) {
+		return false;
+	}
+
+	size_t attempted = 0;
+	size_t reloaded = 0;
+	for (const auto &[entity_id, client] : client_list) {
+		(void) entity_id;
+		if (!client || !client->ClientDataLoaded()) {
+			continue;
+		}
+
+		++attempted;
+		if (client->ReloadAchievements()) {
+			++reloaded;
+			continue;
+		}
+
+		++failed_client_count;
+		LogError(
+			"Failed to rebuild achievement state for character [{}] [{}] after "
+			"the achievement content reload; achievement state was disabled for "
+			"this client",
+			client->CharacterID(),
+			client->GetName()
+		);
+	}
+
+	LogInfo(
+		"Rebuilt achievement state for [{}] of [{}] loaded clients after content "
+		"reload; [{}] client rebuilds failed",
+		reloaded,
+		attempted,
+		failed_client_count
+	);
+
+	// The manager swap has already succeeded. An individual client load failure
+	// cannot roll it back and is reported above without making the transport
+	// claim that the previous content snapshot remains active.
+	return true;
 }
 
 bool EntityList::IsMobInZone(Mob *who)

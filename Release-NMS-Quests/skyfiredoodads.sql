@@ -1,1 +1,0 @@
-UPDATE `doors` SET `invert_state`=1 WHERE `id` IN (7477,7478,7479,7480) AND `zone`='skyfire';

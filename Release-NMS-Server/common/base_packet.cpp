@@ -51,6 +51,19 @@ BasePacket::BasePacket(SerializeBuffer &buf)
 	timestamp.tv_sec = 0;
 }
 
+BasePacket::BasePacket(SerializeBuffer &&buf)
+{
+	// We are essentially taking ownership of this serialize buffer.
+	pBuffer = buf.m_buffer;
+	buf.m_buffer = nullptr;
+	size = buf.m_pos;
+	buf.m_pos = 0;
+	buf.m_capacity = 0;
+	_wpos = 0;
+	_rpos = 0;
+	timestamp.tv_sec = 0;
+}
+
 BasePacket::~BasePacket()
 {
 	if (pBuffer)

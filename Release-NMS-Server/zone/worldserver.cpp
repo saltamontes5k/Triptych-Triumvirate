@@ -297,6 +297,17 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 			LogInfo("World assigned Port [{}] for this zone", sci->port);
 			ZoneConfig::SetZonePort(sci->port);
 
+			// Ask for the UCS status again now that the port is ours. The request made at
+			// zone.cpp:171 goes out while Config->ZonePort is still 0 and the world handshake
+			// is not finished, so it is never answered: every zone world auto-assigns a port
+			// to (anything eqlaunch starts) then stays "UCS unavailable" for its whole life,
+			// its clients are never given the chat server address, and the client reports
+			// "The universal chat service is temporarily unavailable". This packet proves the
+			// world link is live and the port is known now, so the request resolves.
+			if (zone) {
+				zone->RequestUCSServerStatus();
+			}
+
 			EQEmuLogSys::Instance()->SetDiscordHandler(&Zone::DiscordWebhookMessageHandler);
 		}
 		break;
@@ -894,6 +905,7 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 	case ServerOP_GuildMemberAdd:
 	case ServerOP_GuildSendGuildList:
 	case ServerOP_GuildMembersList:
+	case ServerOP_GuildAchievement:
 	{
 		guild_mgr.ProcessWorldPacket(pack);
 		break;
@@ -2117,11 +2129,19 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 	{
 		auto ucsss = (UCSServerStatus_Struct *) pack->pBuffer;
 		if (zone) {
+			const bool was_available = zone->IsUCSServerAvailable();
+
 			zone->SetUCSServerAvailable((ucsss->available != 0), ucsss->timestamp);
 			LogInfo("UCS Server is now [{}]", (ucsss->available == 1 ? "online" : "offline"));
 
-			for (auto &e : entity_list.GetClientList()) {
-				e.second->ReconnectUCS();
+			// World sends this packet on every UCS connect/disconnect. Only force the
+			// clients to re-handshake when the availability actually changed, otherwise a
+			// connect/disconnect storm reconnects every client in every zone several times
+			// a second -- which is what "UCS keeps going down" looked like.
+			if (was_available != (ucsss->available != 0)) {
+				for (auto &e : entity_list.GetClientList()) {
+					e.second->ReconnectUCS();
+				}
 			}
 		}
 		break;
@@ -2172,6 +2192,23 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 			}
 		}
 
+		break;
+	}
+	case ServerOP_CZAchievementStateUpdateWake:
+	{
+		if (pack->size != sizeof(ServerCharacterID_Struct)) {
+			LogError(
+				"Received achievement state update wake packet with invalid size [{}]",
+				pack->size
+			);
+			break;
+		}
+
+		ServerCharacterID_Struct wake;
+		std::memcpy(&wake, pack->pBuffer, sizeof(wake));
+		if (auto client = entity_list.GetClientByCharID(wake.char_id)) {
+			client->NotifyAchievementStateUpdatePending();
+		}
 		break;
 	}
 	case ServerOP_CZLDoNUpdate:
@@ -4989,9 +5026,23 @@ void WorldServer::ProcessReload(const ServerReload::Request& request)
 		}
 	}
 
-	zone->SendReloadMessage(ServerReload::GetName(request.type));
+	const bool is_achievement_reload = request.type == ServerReload::Type::Achievements;
+	const bool can_announce_reload = zone && zone->IsLoaded();
+	bool reload_succeeded = true;
+	uint32 achievement_client_failures = 0;
+
+	// Achievement reloads can fail validation without replacing the live data.
+	// Wait for the transactional reload result before announcing success.
+	if (!is_achievement_reload && can_announce_reload) {
+		zone->SendReloadMessage(ServerReload::GetName(request.type));
+	}
 
 	switch (request.type) {
+		case ServerReload::Type::Achievements:
+			reload_succeeded =
+				entity_list.ReloadAchievements(achievement_client_failures);
+			break;
+
 		case ServerReload::Type::AAData:
 			zone->LoadAlternateAdvancement();
 			entity_list.SendAlternateAdvancementStats();
@@ -5172,5 +5223,48 @@ void WorldServer::ProcessReload(const ServerReload::Request& request)
 			break;
 	}
 
-	LogInfo("Reloaded [{}] ({})", ServerReload::GetName(request.type), request.type);
+	if (reload_succeeded) {
+		if (is_achievement_reload && can_announce_reload) {
+			zone->SendReloadMessage(ServerReload::GetName(request.type));
+			if (achievement_client_failures) {
+				const auto warning = fmt::format(
+					"Achievements reloaded for {}, but {} loaded client(s) could not "
+					"rebuild state; those clients must zone, reconnect, or run the "
+					"reload again.",
+					zone->GetZoneDescription(),
+					achievement_client_failures
+				);
+				SendEmoteMessage(
+					0,
+					0,
+					AccountStatus::GMAdmin,
+					Chat::Yellow,
+					"%s",
+					warning.c_str()
+				);
+			}
+		}
+
+		LogInfo("Reloaded [{}] ({})", ServerReload::GetName(request.type), request.type);
+	} else {
+		if (is_achievement_reload && can_announce_reload) {
+			const auto failure = fmt::format(
+				"Achievement reload failed for {}; existing content remains active.",
+				zone->GetZoneDescription()
+			);
+			SendEmoteMessage(
+				0,
+				0,
+				AccountStatus::GMAdmin,
+				Chat::Red,
+				"%s",
+				failure.c_str()
+			);
+		}
+		LogError(
+			"Failed to reload [{}] ({}); existing data remains active",
+			ServerReload::GetName(request.type),
+			request.type
+		);
+	}
 }

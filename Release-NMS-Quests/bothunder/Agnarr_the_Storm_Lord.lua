@@ -1,3 +1,5 @@
+local memory = require("nms_memory")
+
 function event_spawn(e)
 	eq.set_next_hp_event(98)
 end
@@ -50,6 +52,9 @@ function event_death_complete(e)
 		eq.unique_spawn(209114, 0, 0, e.self:GetX(), e.self:GetY(),  e.self:GetZ(),  e.self:GetHeading()) --planar projection
 		eq.unique_spawn(209108, 0, 0, -469, -1754, 2351.2, 395.2) -- Karana upstairs
 	end
+
+	-- NMS progression: Agnarr is one of the elemental gods gating DoN/LDoN.
+	memory.spawn(e, "DoN", "agnarr the storm lord", "LDoN", "agnarr the storm lord")
 end
 
 function event_killed_merit(e)

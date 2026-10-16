@@ -326,7 +326,16 @@ void DatabaseDumpService::DatabaseDump()
 	}
 
 	if (!IsDumpOutputToConsole()) {
-		EQEmuLogSys::Instance()->LoadLogSettingsDefaults();
+		// Restore the caller's logging rather than clobbering it. LoadLogSettingsDefaults()
+		// resets every category to the code default and clears m_file_logs_enabled, which
+		// meant a world that dumped the database while applying a pending migration then
+		// wrote no log file at all -- StartFileLogs() runs after the database update check.
+		if (EQEmuLogSys::Instance()->HasDatabase()) {
+			EQEmuLogSys::Instance()->LoadLogDatabaseSettings();
+		}
+		else {
+			EQEmuLogSys::Instance()->LoadLogSettingsDefaults();
+		}
 	}
 
 	if (!pipe_file.empty()) {

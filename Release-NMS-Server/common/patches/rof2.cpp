@@ -31,6 +31,7 @@
 #include "../strings.h"
 #include "../inventory_profile.h"
 #include "rof2_structs.h"
+#include "../reward_selection.h"
 #include "../rulesys.h"
 #include "../path_manager.h"
 #include "../classes.h"
@@ -2023,6 +2024,97 @@ namespace RoF2
 
 		FINISH_ENCODE();
 	}
+
+	ENCODE(OP_AchievementReward)
+	{
+		constexpr size_t inspect_header_size = sizeof(uint32) * 2;
+		constexpr size_t inspect_internal_size =
+			inspect_header_size + sizeof(EQ::InternalSerializedItem_Struct);
+
+		if ((*p)->size < sizeof(uint32)) {
+			LogNetcode(
+				"Wrong size on outbound OP_AchievementReward: Got [{}], expected at least [{}]",
+				(*p)->size,
+				sizeof(uint32)
+			);
+			safe_delete(*p);
+			return;
+		}
+
+		EQ::RewardSelection::Action action{};
+		memcpy(&action, (*p)->pBuffer, sizeof(action));
+		if (action != EQ::RewardSelection::Action::InspectItem) {
+			// List, claim, and bulk payloads are already serialized for RoF2.
+			dest->FastQueuePacket(p, ack_req);
+			return;
+		}
+
+		if ((*p)->size != inspect_internal_size) {
+			LogNetcode(
+				"Wrong size on outbound OP_AchievementReward item inspection: "
+				"Got [{}], expected [{}]",
+				(*p)->size,
+				inspect_internal_size
+			);
+			safe_delete(*p);
+			return;
+		}
+
+		EQApplicationPacket *in = *p;
+		*p = nullptr;
+		uchar *internal_buffer = in->pBuffer;
+
+		uint32 item_id = 0;
+		memcpy(
+			&item_id,
+			internal_buffer + sizeof(action),
+			sizeof(item_id)
+		);
+		auto internal_item = reinterpret_cast<EQ::InternalSerializedItem_Struct *>(
+			internal_buffer + inspect_header_size
+		);
+		auto instance =
+			static_cast<const EQ::ItemInstance *>(internal_item->inst);
+		if (
+			!instance ||
+			!instance->GetItem() ||
+			instance->GetItem()->ID != item_id
+		) {
+			LogNetcode(
+				"Refusing invalid OP_AchievementReward item inspection for item [{}]",
+				item_id
+			);
+			safe_delete_array(internal_buffer);
+			safe_delete(in);
+			return;
+		}
+
+		EQ::OutBuffer out;
+		out.write(reinterpret_cast<const char *>(&action), sizeof(action));
+		out.write(reinterpret_cast<const char *>(&item_id), sizeof(item_id));
+		const auto item_start = out.tellp();
+		SerializeItem(out, instance, 0, 0, ItemPacketViewLink);
+		if (out.tellp() == item_start) {
+			LogNetcode(
+				"RoF2::ENCODE(OP_AchievementReward) failed to serialize item [{}]",
+				item_id
+			);
+			safe_delete_array(internal_buffer);
+			safe_delete(in);
+			return;
+		}
+
+		in->size = out.size();
+		in->pBuffer = out.detach();
+		safe_delete_array(internal_buffer);
+		dest->FastQueuePacket(&in, ack_req);
+	}
+
+	// RoF2 uses the same Select Reward payloads on two independent managers:
+	// OP_AchievementReward (0x6411) is claim-capable, while
+	// OP_RewardSelection (0x6471) is a read-only preview. Reward providers may
+	// use either manager according to the display's authorization state.
+	ENCODE(OP_RewardSelection) { ENCODE_FORWARD(OP_AchievementReward); }
 
 	ENCODE(OP_ItemLinkResponse) { ENCODE_FORWARD(OP_ItemPacket); }
 
@@ -5145,7 +5237,13 @@ namespace RoF2
 		}
 
 		if (!strip) {
-			for (uint32 i = 0; i < EQ::spells::SPELLBOOK_SIZE; ++i) {
+			// The shroud block mirrors the client's fixed in-memory profile whose
+			// spellbook region stays 720 dwords (0x1ABC..0x25FC, mem_spells follows
+			// at 0x25FC). The live book is now SPELLBOOK_SIZE (1440) and the patched
+			// client keeps that array at +0x9950 -- write only the legacy 720 or we
+			// stomp the shroud form's gems/refresh/buffs. Slots 720+ simply don't
+			// render in shroud form.
+			for (uint32 i = 0; i < 720; ++i) {
 				ShroudWrite<uint32>(buf, 0x1ABC + i * 4, pp.spell_book[i]);
 			}
 			for (uint32 i = 0; i < EQ::spells::SPELL_GEM_COUNT; ++i) {
@@ -6919,7 +7017,7 @@ namespace RoF2
 		hdr.scaled_value   = (inst->IsScaling() ? (inst->GetExp() / 100) : 0);
 		hdr.instance_id    = (inst->GetMerchantSlot() ? inst->GetMerchantSlot() : inst->GetSerialNumber());
 		hdr.parcel_item_id = packet_type == ItemPacketParcel ? inst->GetID() : 0;
-		if (item->EvolvingItem) {
+		if (item->EvolvingItem && packet_type != ItemPacketParcel && packet_type != ItemPacketMerchant) {
 			hdr.instance_id    = inst->GetEvolveUniqueID() & 0xFFFFFFFF; //lower dword
 			hdr.parcel_item_id = inst->GetEvolveUniqueID() >> 32;        //upper dword
 		}
@@ -6938,6 +7036,7 @@ namespace RoF2
 
 		if (item->EvolvingItem > 0) {
 			RoF2::structs::EvolvingItem_Struct evotop;
+			inst->CalculateEvolveProgression();
 
 			evotop.final_item_id    = inst->GetEvolveFinalItemID();
 			evotop.evolve_level     = item->EvolvingLevel;

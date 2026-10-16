@@ -2,6 +2,8 @@
 --Phase 1 - Rythor of The Undead Trial
 --potimeb
 
+local ring = require("potime_ring")
+
 local event_counter = 0;
 local event_mobs = {223105,223116,223121,223122,223149,223129,223150,223152,223103,223239}
 
@@ -38,6 +40,8 @@ function event_enter(e)
 end
 
 function event_timer(e)
+	if ring.handle_timer(e) then return end
+
 	if(e.timer == "Phase1Undead") then
 		-- spawn first wave of 3 an_undead_guardian
 		eq.spawn2(223152,0,0,65.2,1109.7,494.8,371); --Rythor_of_the_Undead (untargetable version)
@@ -98,8 +102,8 @@ function event_signal(e)
 			--eq.signal(223097,223171); -- Add Loot Lockout for Phase 1 Wing
 			--eq.signal(223097,2); -- Increment Phase 1 Wing Counter
 			eq.local_emote({e.self:GetX(), e.self:GetY(), e.self:GetZ()},7,80,"Ethereal mists gather at the far wall, causing it to fade in and out of focus.");
-			-- depop as my job is done.
-			eq.depop();
+			-- hand the wing back to the Ring of Time.
+			ring.finish(e, 20000, min_x, max_x, min_y, max_y);
 		end
 	end
 end

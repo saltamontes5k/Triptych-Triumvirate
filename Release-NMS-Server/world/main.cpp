@@ -46,6 +46,7 @@
 #include "client.h"
 #include "worlddb.h"
 #include "wguild_mgr.h"
+#include "achievement_state_update_manager.h"
 #include "../common/evolving_items.h"
 
 #ifdef _WINDOWS
@@ -76,6 +77,7 @@
 #include "web_interface.h"
 #include "console.h"
 #include "dynamic_zone_manager.h"
+#include "lon_service.h"
 
 #include "world_server_cli.h"
 #include "../common/content/world_content_service.h"
@@ -93,6 +95,7 @@
 #include "fabled_season.h"
 
 GroupLFPList        LFPGroupList;
+AchievementStateUpdateManager achievement_state_update_manager;
 LauncherList        launcher_list;
 volatile bool       RunLoops   = true;
 uint32              numclients = 0;
@@ -129,7 +132,10 @@ int main(int argc, char **argv)
 	PathManager::Instance()->Init();
 
 	if (!WorldBoot::LoadServerConfig()) {
-		return 0;
+		// This runs before the file log is opened, so the console is the only record.
+		// Returning 0 here hid boot failures completely.
+		LogError("World is aborting: could not load the server configuration");
+		return 1;
 	}
 
 	Config = WorldConfig::get();
@@ -285,6 +291,12 @@ int main(int argc, char **argv)
 
 	server_connection->OnConnectionIdentified(
 		"UCS", [](std::shared_ptr<EQ::Net::ServertalkServerConnection> connection) {
+			// A duplicate UCS is refused rather than allowed to evict the live one, so
+			// the zones must not be told that the UCS state changed.
+			if (!UCSConnection::Instance()->SetConnection(connection)) {
+				return;
+			}
+
 			LogInfo(
 				"New UCS Server connection from [{}] at [{}:{}]",
 				connection->Handle()->RemoteIP(),
@@ -292,23 +304,28 @@ int main(int argc, char **argv)
 				connection->GetUUID()
 			);
 
-			UCSConnection::Instance()->SetConnection(connection);
-
 			ZSList::Instance()->UpdateUCSServerAvailable();
 		}
 	);
 
 	server_connection->OnConnectionRemoved(
 		"UCS", [](std::shared_ptr<EQ::Net::ServertalkServerConnection> connection) {
-			LogInfo("Connection lost from UCS Server [{}]", connection->GetUUID());
-
 			auto ucs_connection = UCSConnection::Instance()->GetConnection();
 
-			if (ucs_connection->GetUUID() == connection->GetUUID()) {
-				LogInfo("Removing currently active UCS connection");
-				UCSConnection::Instance()->SetConnection(nullptr);
-				ZSList::Instance()->UpdateUCSServerAvailable(false);
+			// GetConnection() is legitimately null between a UCS dropping and the next one
+			// arriving, and this used to dereference it unconditionally.
+			const bool is_active =
+				ucs_connection && ucs_connection->GetUUID() == connection->GetUUID();
+
+			if (!is_active) {
+				// A refused duplicate going away; the live UCS connection is unaffected.
+				return;
 			}
+
+			LogInfo("Connection lost from UCS Server [{}]", connection->GetUUID());
+			LogInfo("Removing currently active UCS connection");
+			UCSConnection::Instance()->SetConnection(nullptr);
+			ZSList::Instance()->UpdateUCSServerAvailable(false);
 		}
 	);
 
@@ -471,6 +488,8 @@ int main(int argc, char **argv)
 		AdventureManager::Instance()->Process();
 		SharedTaskManager::Instance()->Process();
 		dynamic_zone_manager.Process();
+		LoNService::Process();
+		achievement_state_update_manager.Process();
 
 		if (!RuleB(Logging, PlayerEventsQSProcess)) {
 			if (player_event_log_process.Check()) {
@@ -491,6 +510,9 @@ int main(int argc, char **argv)
 			UpdateWindowTitle(window_title);
 		}
 	};
+
+	// The Legends of Norrath card service (off unless Custom:LoNEnabled).
+	LoNService::Start();
 
 	EQ::Timer process_timer(loop_fn);
 	process_timer.Start(32, true);

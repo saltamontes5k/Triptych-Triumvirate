@@ -17,8 +17,8 @@
 */
 
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include "../common/platform.h"
 #include "../common/path_manager.h"
@@ -46,6 +46,7 @@ int main()
 	try {
 		std::unique_ptr<Test::Output> output(new Test::TextOutput(Test::TextOutput::Verbose));
 		Test::Suite                   tests;
+		tests.add(new AchievementsTest());
 		tests.add(new MemoryMappedFileTest());
 		tests.add(new IPCMutexTest());
 		tests.add(new FixedMemoryHashTest());

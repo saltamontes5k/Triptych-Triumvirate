@@ -412,6 +412,10 @@ public:
 	// database
 	EQEmuLogSys *SetDatabase(Database *db);
 
+	//! True once SetDatabase() has been given a connection, so logging can be reloaded
+	//! from the database instead of falling back to code defaults.
+	[[nodiscard]] bool HasDatabase() const { return m_database != nullptr; }
+
 	[[nodiscard]] const std::string &GetLogPath() const;
 	EQEmuLogSys * SetLogPath(const std::string &log_path);
 

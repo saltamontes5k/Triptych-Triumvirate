@@ -288,7 +288,7 @@ sub EVENT_ITEM {
       quest::summonitem(60165); # Item: Frayed Flesh Scrap
       quest::setglobal("ikky",8,5,"F");
     } else {
-      plugin::returnitems(\%itemcount);
+      plugin::return_items(\%itemcount);
     }
   }
   if (defined($qglobals{ikky}) && ($qglobals{ikky} == 8)) {

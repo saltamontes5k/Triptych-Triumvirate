@@ -1,5 +1,9 @@
+# Buzzazar - Blightfire Moors (Stone Hive fringe)
+# The Serpent's Spine :: the hive story (tasks 600448-600449)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Bzzz. You come to Buzzazar's ground, mon. Buzzazar watches de hive, and de hive watches back.");
     my @chain = (600448,600449);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -34,6 +38,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600449)) { plugin::check_handin(\%itemcount, 54643 => 1, 54644 => 1, 54645 => 1, 54646 => 1, 54647 => 1, 54648 => 1, 54649 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

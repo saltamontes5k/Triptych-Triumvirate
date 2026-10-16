@@ -17,6 +17,7 @@
 */
 
 #include "../common/eqemu_logsys.h"
+#include "achievement_manager.h"
 #include "../common/bodytypes.h"
 #include "../common/classes.h"
 #include "../common/global_define.h"
@@ -861,7 +862,7 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						CastToClient()->AI_Start();
 					} else if(IsNPC()) {
 						CastToNPC()->SetPetSpellID(spell_id);
-						CastToNPC()->ModifyStatsOnCharm(false);
+						CastToNPC()->ModifyStatsOnCharm(false, caster);
 
 						if (GetOwner() && GetOwner()->IsClient() && GetOwner()->CastToClient()->GetActivePetBag(CastToNPC()->GetPetOriginClass())) {
 							if (!EntityVariableExists("is_charmed")) {
@@ -1838,19 +1839,19 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					// Only allow 2 size changes from Base Size
 					float modifyAmount = (static_cast<float>(effect_value) / 100.0f);
 					float maxModAmount = GetBaseSize() * modifyAmount * modifyAmount;
-					LogDebug("SE_ModelSize: modifyAmount: %f, maxModAmount: %f, GetSize: %f, GetBaseSize: %f", modifyAmount, maxModAmount, GetSize(), GetBaseSize());
+					LogDebug("SE_ModelSize: modifyAmount: {}, maxModAmount: {}, GetSize: {}, GetBaseSize: {}", modifyAmount, maxModAmount, GetSize(), GetBaseSize());
 					if ((GetSize() <= GetBaseSize() && GetSize() > maxModAmount) ||
 						(GetSize() >= GetBaseSize() && GetSize() < maxModAmount) ||
 						(GetSize() <= GetBaseSize() && maxModAmount > 1.0f) ||
 						(GetSize() >= GetBaseSize() && maxModAmount < 1.0f))
 					{
-						LogDebug("SE_ModelSize: Setting size to %f", GetSize() * modifyAmount);
+						LogDebug("SE_ModelSize: Setting size to {}", GetSize() * modifyAmount);
 						ChangeSize(GetSize() * modifyAmount);
 					}
 				}
 				//Only applies to SPA 89, max value also likely does something, but unknown.
 				else if (effect == SE_ModelSize && spells[spell_id].limit_value[i]) {
-					LogDebug("SE_ModelSize: Setting size to %f", spells[spell_id].limit_value[i]);
+					LogDebug("SE_ModelSize: Setting size to {}", spells[spell_id].limit_value[i]);
 					ChangeSize(spells[spell_id].limit_value[i]);
 				}
 
@@ -4722,7 +4723,7 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses, bool suppress, uint32 su
 				if(IsNPC())
 				{
 					CastToNPC()->RestoreGuardSpotCharm();
-					CastToNPC()->ModifyStatsOnCharm(true);
+					CastToNPC()->ModifyStatsOnCharm(true, GetOwner());
 				}
 
 				strn0cpy(lastname, "", sizeof(lastname));
@@ -8281,6 +8282,12 @@ bool Mob::PassCastRestriction(int value)
 
 	if (value <= 0) {
 		return true;
+	}
+
+	const auto &achievement_requirements =
+		AchievementManager::Instance().CastRequirements(static_cast<uint32_t>(value));
+	if (!achievement_requirements.empty()) {
+		return IsClient() && CastToClient()->PassAchievementCastRestriction(value);
 	}
 
 	switch(value)

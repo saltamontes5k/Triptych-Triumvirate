@@ -217,7 +217,7 @@ if($PCClass == 16){ #Zerker AA
 }
 
 
-sub EVENT_ENTER_ZONE {
+sub EVENT_ENTERZONE {
 
 	    my $PCRace = $client->GetRace();
 my $PCClass = $client->GetClass();

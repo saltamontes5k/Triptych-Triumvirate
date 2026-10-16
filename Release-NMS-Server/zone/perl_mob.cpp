@@ -3555,7 +3555,15 @@ perl::array Perl_Mob_GetBuffs(Mob* self)
 {
 	perl::array result;
 
-	const auto &buffs = self->GetBuffs();
+	auto *buffs = self->GetBuffs();
+
+	// Mobs that never allocate buff slots leave this null: Mob::InitializeBuffSlots()
+	// defaults it to nullptr and only Client and NPC override it to allocate. Handing
+	// Perl &buffs[i] from a null base produces pointers into low memory, and a quest
+	// script that then calls $buff->GetSpellID() faults in Perl_Buff_GetSpellID.
+	if (!buffs) {
+		return result;
+	}
 
 	for (int slot_id = 0; slot_id < (self->GetMaxBuffSlots() + self->GetMaxSongSlots()); slot_id++) {
 		result.push_back(&buffs[slot_id]);

@@ -1,5 +1,9 @@
+# Zan the Witch Hunter - Blightfire Moors (the witch road)
+# The Serpent's Spine :: the witch hunt (tasks 600451, 600481, 600482)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Keep your wits about you on this road. The witches of the moors do not like [hunters].");
     my @chain = (600451,600482,600481);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -45,6 +49,5 @@ sub EVENT_SAY {
 sub EVENT_ITEM {
   if (quest::istaskactive(600451)) { plugin::check_handin(\%itemcount, 85757 => 6); }
   if (quest::istaskactive(600482)) { plugin::check_handin(\%itemcount, 85754 => 6); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

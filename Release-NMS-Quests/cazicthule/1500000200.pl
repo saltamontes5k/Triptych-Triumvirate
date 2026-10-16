@@ -4,6 +4,8 @@
 use strict;
 use warnings;
 
+our ($client, $npc, $text, $instanceversion);
+
 my $zone_short  = "cazicthule";
 my $version     = 1;
 my $duration    = 6 * 60 * 60;              # expedition lifetime (seconds)

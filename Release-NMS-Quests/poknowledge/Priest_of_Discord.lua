@@ -1,4 +1,4 @@
--- Priest_of_Discord (npc id 202534) - The Plane of Knowledge
+-- Priest_of_Discord (npc id 202340) - The Plane of Knowledge
 -- Stands watch over the way to the Omens of War front. Offers passage to
 -- Dranik's Scar once the account has finished the Omens of War progression
 -- (OoW stage: Tunat`Muram Cuu Vauax in Tacvi) - see lua_modules/nms_progression.lua.

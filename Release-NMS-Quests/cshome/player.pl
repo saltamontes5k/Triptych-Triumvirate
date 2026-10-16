@@ -14,7 +14,7 @@ sub EVENT_CONNECT {
 	}
 }
 
-sub EVENT_TRADE {
+sub EVENT_ITEM {
 	$ssfkey = $client->AccountID() . "ssf";
 	if (quest::get_data($ssfkey) == "1") {
 		plugin::SendToInstance("public", "cshome", 100, 0, 0, 0, "EXP", 604800);

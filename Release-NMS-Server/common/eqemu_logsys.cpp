@@ -171,9 +171,17 @@ void EQEmuLogSys::ProcessLogWrite(
 		char time_stamp[80];
 		EQEmuLogSys::SetCurrentTimeStamp(time_stamp);
 		std::ofstream crash_log;
-		EQEmuLogSys::MakeDirectory("logs/crashes");
+
+		// Resolve the crash directory the same way the process log is resolved. A
+		// cwd-relative path drops crash evidence wherever the process happened to be
+		// started from -- exactly when the evidence matters most.
+		const std::string resolved_log_path = GetLogPath();
+		const std::string crash_dir =
+			resolved_log_path.empty() ? std::string("logs/crashes") : resolved_log_path + "/crashes";
+
+		EQEmuLogSys::MakeDirectory(crash_dir);
 		crash_log.open(
-			StringFormat("logs/crashes/crash_%s_%i.log", m_platform_file_name.c_str(), getpid()),
+			StringFormat("%s/crash_%s_%i.log", crash_dir.c_str(), m_platform_file_name.c_str(), getpid()),
 			std::ios_base::app | std::ios_base::out
 		);
 		crash_log << time_stamp << " " << message << "\n";
@@ -546,6 +554,13 @@ void EQEmuLogSys::StartFileLogs(const std::string &log_name)
 	 * When loading settings, we must have been given a reason in category based logging to output to a file in order to even create or open one...
 	 */
 	if (!m_file_logs_enabled) {
+		// Without this the process runs with no file log at all and nothing says why.
+		LogInfo(
+			"File logging is DISABLED for [{}]: no log category has [log_to_file] "
+			"enabled, so no log file will be created (see the [logsys_categories] "
+			"table). Continuing with console output only.",
+			m_platform_file_name
+		);
 		return;
 	}
 
@@ -571,6 +586,15 @@ void EQEmuLogSys::StartFileLogs(const std::string &log_name)
 			fmt::format("{}/zone/{}_{}.log", GetLogPath(), m_platform_file_name, getpid()),
 			std::ios_base::app | std::ios_base::out
 		);
+
+		if (!process_log.is_open()) {
+			// An unopened stream is falsy, so every later log write is a silent no-op.
+			LogInfo(
+				"FAILED to open the file log [{}/zone/{}_{}.log] -- running with console "
+				"output only; nothing will be written to disk.",
+				GetLogPath(), m_platform_file_name, getpid()
+			);
+		}
 	}
 	else {
 
@@ -586,6 +610,15 @@ void EQEmuLogSys::StartFileLogs(const std::string &log_name)
 			fmt::format("{}/{}_{}.log", GetLogPath(), m_platform_file_name.c_str(), getpid()),
 			std::ios_base::app | std::ios_base::out
 		);
+
+		if (!process_log.is_open()) {
+			// An unopened stream is falsy, so every later log write is a silent no-op.
+			LogInfo(
+				"FAILED to open the file log [{}/{}_{}.log] -- running with console "
+				"output only; nothing will be written to disk.",
+				GetLogPath(), m_platform_file_name, getpid()
+			);
+		}
 	}
 }
 

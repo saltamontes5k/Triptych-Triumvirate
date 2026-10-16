@@ -13,11 +13,21 @@ UCSConnection::UCSConnection()
 	connection = 0;
 }
 
-void UCSConnection::SetConnection(std::shared_ptr<EQ::Net::ServertalkServerConnection> inStream)
+// A UCS that identifies itself while we already hold a live one used to evict the
+// incumbent (the old "Incoming UCS Connection while we were already connected to a
+// UCS" path). Two ucs.exe instances then evicted each other on their 100 ms
+// reconnect timers forever -- measured at ~18 registrations/sec on 2026-10-10/11.
+// Every cycle broadcast a UCS status change to every zone, and the zone handler
+// force-reconnects each client on every one of them, so chat never settled; world
+// also faulted during the storm. Keep the incumbent and reject the newcomer.
+bool UCSConnection::SetConnection(std::shared_ptr<EQ::Net::ServertalkServerConnection> inStream)
 {
-	if (inStream && connection && connection->Handle()) {
-		LogInfo("Incoming UCS Connection while we were already connected to a UCS");
-		connection->Handle()->Disconnect();
+	const bool incumbent_live =
+		connection && connection->Handle() && connection->Handle()->IsConnected();
+
+	if (inStream && incumbent_live) {
+		NoteDuplicateRejection(inStream);
+		return false;
 	}
 
 	connection = inStream;
@@ -30,6 +40,41 @@ void UCSConnection::SetConnection(std::shared_ptr<EQ::Net::ServertalkServerConne
 				std::placeholders::_2
 			)
 		);
+	}
+
+	return true;
+}
+
+void UCSConnection::NoteDuplicateRejection(const std::shared_ptr<EQ::Net::ServertalkServerConnection> &inStream)
+{
+	const auto now = std::chrono::steady_clock::now();
+
+	if (m_duplicate_window_start.time_since_epoch().count() == 0 ||
+		now - m_duplicate_window_start >= std::chrono::seconds(30)) {
+		m_duplicate_window_start = now;
+		m_duplicate_rejections   = 0;
+		m_duplicate_logged       = false;
+	}
+
+	++m_duplicate_rejections;
+
+	if (!m_duplicate_logged) {
+		m_duplicate_logged = true;
+
+		LogError(
+			"Refusing duplicate UCS connection from [{}] -- a UCS is already connected, "
+			"so more than one ucs.exe must be running. Disconnecting the duplicate "
+			"instead of evicting the live connection; refusal [{}] in this 30 second "
+			"window, and further refusals in it are not logged.",
+			(inStream && inStream->Handle()) ? inStream->Handle()->RemoteIP() : "unknown",
+			m_duplicate_rejections
+		);
+	}
+
+	if (inStream && inStream->Handle()) {
+		// TCPConnection::Disconnect only queues uv_close, so this is safe to call from
+		// inside the connection's own identification callback.
+		inStream->Handle()->Disconnect();
 	}
 }
 

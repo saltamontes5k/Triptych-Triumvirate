@@ -166,6 +166,11 @@
     <ClCompile Include="MQ2Windows.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="Text.cpp" />
+    <ClCompile Include="nms_lon_audio.cpp" />
+    <ClCompile Include="nms_lon_link.cpp" />
+    <ClCompile Include="nms_vorbis.c">
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
     <ClCompile Include="vault_window.cpp" />
     <ClCompile Include="waypoint_window.cpp" />
     <ClCompile Include="who_multiclass.cpp" />
@@ -214,6 +219,9 @@
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="TickCount.h" />
+    <ClInclude Include="nms_lon_audio.h" />
+    <ClInclude Include="nms_lon_link.h" />
+    <ClInclude Include="nms_vorbis.h" />
     <ClInclude Include="vault_window.h" />
     <ClInclude Include="waypoint_window.h" />
     <ClInclude Include="who_multiclass.h" />
@@ -225,6 +233,7 @@
   <ItemGroup>
     <None Include="dinput8.def" />
     <None Include="dsetup.def" />
+    <None Include="stb_vorbis.c" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="License.txt" />

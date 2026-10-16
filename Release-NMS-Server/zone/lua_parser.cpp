@@ -189,7 +189,10 @@ const char *LuaEvents[_LargestEventID] = {
 	"event_aa_loss",
 	"event_spell_blocked",
 	"event_read_item",
-	// These three must stay in sync with the tail of QuestEventID in event_codes.h.
+	"event_pet_command",
+	"event_charm_start",
+	"event_charm_end",
+	// These must stay in sync with the tail of QuestEventID in event_codes.h.
 	// The array is sized _LargestEventID; any missing initializer is a nullptr that
 	// gets dereferenced when the event dispatches.
 	"event_spell_effect_bot",
@@ -270,6 +273,8 @@ LuaParser::LuaParser() {
 	NPCArgumentDispatch[EVENT_ENTITY_VARIABLE_SET]    = handle_npc_entity_variable;
 	NPCArgumentDispatch[EVENT_ENTITY_VARIABLE_UPDATE] = handle_npc_entity_variable;
 	NPCArgumentDispatch[EVENT_SPELL_BLOCKED]          = handle_npc_spell_blocked;
+	NPCArgumentDispatch[EVENT_CHARM_START]            = handle_npc_single_mob;
+	NPCArgumentDispatch[EVENT_CHARM_END]              = handle_npc_single_mob;
 
 	PlayerArgumentDispatch[EVENT_SAY]                        = handle_player_say;
 	PlayerArgumentDispatch[EVENT_ENVIRONMENTAL_DAMAGE]       = handle_player_environmental_damage;

@@ -88,6 +88,7 @@ protected:
 	BasePacket() { pBuffer=nullptr; size=0; _wpos = 0; _rpos = 0; }
 	BasePacket(const unsigned char *buf, const uint32 len);
 	BasePacket(SerializeBuffer &buf);
+	BasePacket(SerializeBuffer &&buf);
 };
 
 extern void DumpPacketHex(const BasePacket* app);

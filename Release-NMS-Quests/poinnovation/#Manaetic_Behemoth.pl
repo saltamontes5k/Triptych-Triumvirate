@@ -1,25 +1,26 @@
-# NPCID: 206074 - #Manaetic_Behemoth (targetable, awakened) - Plane of Innovation
 sub EVENT_SPAWN {
-  #if the targetable version has been up too long, depop him and let the dormant one return.
+  #no aggro timer, respawn untargetable.
+  #added this because of the reports of MB going active and despawning on his own.
   quest::settimer(9,1800);
   #leash timer
   quest::settimer(4,1);
 }
 
-sub EVENT_DEATH_COMPLETE {
+sub EVENT_DEATH_COMPLETE    {
   #signal to Giwin to give flags.
   quest::signalwith(206038,1,1); # NPC: Giwin_Mirakon
-  #let the controller bring the dormant behemoth back after a delay.
-  quest::signalwith(206087,10,1); # NPC: spider_controller
 }
 
 sub EVENT_TIMER {
   if($timer == 9) {
-    quest::signalwith(206087,10,1); # NPC: spider_controller
+    #if targetable version has been up 20 minutes depop him.
+    #resest spawn timer on untargetable to respawn it in 5 seconds
+    quest::updatespawntimer(42135,5000);
     quest::depop();
   }
   if($timer == 8) {
-    quest::signalwith(206087,10,1); # NPC: spider_controller
+    #failed. shorten respawn timer to 15 minutes. 
+    quest::updatespawntimer(42135,900000);
     quest::depop();
   }
   if($timer == 4 && ($x < 1010 || $x > 1240)) {

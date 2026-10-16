@@ -1,5 +1,9 @@
+# Baker Sanura - Crescent Reach (the bakery)
+# The Serpent's Spine :: baking supply tasks (600532-600535)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The ovens of the Reach never sleep, and neither do the [orders]. Sanura bakes for the city - help her keep up.");
     my @chain = (600532,600533,600534,600535);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600533)) { plugin::check_handin(\%itemcount, 98260 => 1); }
   if (quest::istaskactive(600534)) { plugin::check_handin(\%itemcount, 98281 => 1); }
   if (quest::istaskactive(600535)) { plugin::check_handin(\%itemcount, 98280 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

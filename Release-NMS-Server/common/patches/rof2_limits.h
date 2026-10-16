@@ -348,7 +348,9 @@ namespace RoF2
 		};
 
 		const int SPELL_ID_MAX = 45000;
-		const int SPELLBOOK_SIZE = 720;
+		const int SPELLBOOK_SIZE = 1440; // was 720; doubled book. NOTE: the shroud
+			// profile block (rof2.cpp BuildShroudProfileBlock) still mirrors the
+			// stock 720-slot in-memory layout and must not grow with this.
 		const int SPELL_GEM_COUNT = static_cast<uint32>(CastingSlot::MaxGems);
 
 		const int LONG_BUFFS = 42;

@@ -410,6 +410,8 @@ void Heartbeat()
         NMSDiscTimers_MaintainBands();
     }
 
+    { extern void NMSLoNPulse(); NMSLoNPulse(); } // NMS: Legends of Norrath -- close the session login box
+
     if (MultiPet* mp = MultiPet::GetInstance())
         mp->OnPulse();
     if (PetWindow* pw = PetWindow::GetInstance())

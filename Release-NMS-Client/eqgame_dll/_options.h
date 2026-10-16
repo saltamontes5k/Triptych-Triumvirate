@@ -38,6 +38,13 @@ bool isMaxHPFixEnabled = false;
 // isPatchmeDisabled if set to true will let you double click eqgame.exe and not get the "Please run EverQuest" message, will start properly
 bool isPatchmeDisabled = true;
 
+// isAchievementRowPoolFixEnabled if set to true raises the RoF2 achievement
+// window's pool of row windows (sub_402F50, 0x402F50). Stock RoF2 sizes that
+// pool from a per-category counter and silently drops every list entry past
+// it, so categories with more than a few achievements render as a short,
+// unscrollable stub. Required for this server's achievement catalog.
+bool isAchievementRowPoolFixEnabled = true;
+
 // isSaylinkFixEnabled if set to true, expands the item/say-link parser from 5 to 8 digit IDs so this
 // server's Bazaar/trader/quest saylinks render as clickable links instead of [00000...] garbage.
 // Required for this server (stock RoF2 only parses 5-digit link IDs); leave true.

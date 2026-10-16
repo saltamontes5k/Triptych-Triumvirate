@@ -6,18 +6,16 @@
 # (is_eligible_for_zone) is untouched and the two systems cannot disagree.
 #
 #   Group chain tasks per theme + raid request tasks:
-#     oceangreen-group  303000-303005     oceangreen-raid  303060, 303078
+#     oceangreen-group  303000-303005,     oceangreen-raid  303060
+#                       303080-303081
 #     kithicor-group    303010-303012     kithicor-raid    303061
 #     kunark-group      303020-303024     kunark-raid      303062
-#     rathe-group       303030-303036     rathe-raid       303063, 303079
+#     rathe-group       303030-303036     rathe-raid       303063
 #     korafax-kuua      303040-303051     korafax-raid-1/2/3  303064-303066
 #                                         discord-tower    303067
-#
-#   Raid-prereq tasks (v110; no chain flag -- raid requests require them via
-#   %SOD_OFFERS, per the page's "request ..." prerequisite lists):
-#     oceangreen 303070-303073  Queen Malarian path (Cadmael / Jerom Bertrand)
-#     kithicor   303074-303076  Bahgresh paths (Tephys / Firiona / Laarthik)
-#     rathe      303077         Showdown at the Crystal Core path (Ulgin)
+#   Theme solo/partisan tasks (v145, no chain membership):
+#     oceangreen 303100-303119, kithicor 303120-303135,
+#     old commonlands 303140-303146
 #
 #   Derived (miscProgression rules):
 #     Void version = 1 + themes completed (group OR raid per theme; a theme's
@@ -28,8 +26,8 @@
 #     chains + a Tower Key (88343) on the character.
 #
 # Mercenary tier unlocks (Oceangreen=T2 .. Rathe=T5) are represented by the
-# theme flags themselves; mercenaries are disabled server-wide, so there is
-# nothing further to unlock (documented simplification).
+# theme flags themselves; mercenaries are enabled server-wide, so the SoD
+# mercenary tasks are authored as standard solo tasks (v145).
 #
 # Zone gates (called from zone player.pl EVENT_ENTERZONE):
 #   plugin::SodGateVoid($client, 'thevoidc')
@@ -64,35 +62,29 @@ my %SOD_TASK_FLAG = (
     303046 => 'korafax-kuua',     303047 => 'korafax-kuua',
     303048 => 'korafax-kuua',     303049 => 'korafax-kuua',
     303050 => 'korafax-kuua',     303051 => 'korafax-kuua',
+    303080 => 'oceangreen-group', 303081 => 'oceangreen-group',
     303060 => 'oceangreen-raid',  303061 => 'kithicor-raid',
     303062 => 'kunark-raid',      303063 => 'rathe-raid',
     303064 => 'korafax-raid-1',   303065 => 'korafax-raid-2',
     303066 => 'korafax-raid-3',   303067 => 'discord-tower',
-    303078 => 'oceangreen-raid',  303079 => 'rathe-raid',
 );
 
 my %SOD_CHAIN_TASKS = (
-    'oceangreen-group' => [303000, 303001, 303002, 303003, 303004, 303005],
+    'oceangreen-group' => [303000, 303001, 303002, 303003, 303004, 303005,
+                           303080, 303081],
     'kithicor-group'   => [303010, 303011, 303012],
     'kunark-group'     => [303020, 303021, 303022, 303023, 303024],
     'rathe-group'      => [303030, 303031, 303032, 303033, 303034, 303035, 303036],
     'korafax-kuua'     => [303040, 303041, 303042, 303043, 303044, 303045,
                            303046, 303047, 303048, 303049, 303050, 303051],
-    'oceangreen-raid'  => [303060, 303078],
+    'oceangreen-raid'  => [303060],
     'kithicor-raid'    => [303061],
     'kunark-raid'      => [303062],
-    'rathe-raid'       => [303063, 303079],
+    'rathe-raid'       => [303063],
     'korafax-raid-1'   => [303064],
     'korafax-raid-2'   => [303065],
     'korafax-raid-3'   => [303066],
     'discord-tower'    => [303067],
-);
-
-# Chains where ANY completed member sets the flag (a theme with two raids:
-# either one counts as the theme's raid victory).
-my %SOD_CHAIN_ANY = (
-    'oceangreen-raid' => 1,
-    'rathe-raid'      => 1,
 );
 
 my @SOD_THEMES       = ('oceangreen', 'kithicor', 'kunark', 'rathe');
@@ -103,40 +95,107 @@ my $SOD_TOWER_KEY    = 88343;
 # ---------------------------------------------------------------------------
 # Giver offers: npc id => [ [task id, prereq...], ... ]
 # Prereq entries: a task id number, a chain flag name (e.g. 'kunark-group'),
-# the special string 'korafax' (= SodKorafaxAccess), the special string
-# 'towerkey' (= a Tower Key 88343 on the character), or an ARRAY reference.
-# An ARRAY prereq is an OR over its elements; an ARRAY element that is itself
-# an ARRAY is an AND over its own entries -- so
-#   [[a, b], [c, d]]  means  (a AND b) OR (c AND d).
-# Raid prereqs mirror the page's "request ..." lists (v110).
+# or the special string 'korafax' (= SodKorafaxAccess).
 # ---------------------------------------------------------------------------
 my %SOD_OFFERS = (
     # Oceangreen
     466141 => [[303000, ()], [303001, 303000]],                     # Sergeant Bronal Cadran
     466035 => [[303002, ()], [303003, 303002], [303004, 303003]],   # Captain Hiran Tillin
-    466160 => [[303005, 303003, 303004]],                           # Raxtor Darkpaw
-    467066 => [[303060, 303000, 303001, 303002, 303003, 303004],
-               [303070, ()], [303071, 303070], [303072, 303071],
-               [303078, 303070, 303071, 303072, 303073]],           # Apothecary Cadmael
+    # Freedom! joins the chain live-faithfully: Raxtor offers it after the
+    # Tillin tasks, and Beat the Blackburrow Boss now requires it plus the
+    # v145 theme tasks Summary Execution (Bracka) and What Evil Lurks
+    # (Fripp) -- the live page's full request gate.
+    466160 => [[303080, 303003, 303004],
+               [303005, 303003, 303004, 303080, 303106, 303107]],  # Raxtor Darkpaw
+    466155 => [[303081, ()], [303109, ()]],                         # Elder Mystic Foppye
+    # Queen Malarian path (v111): Cadmael carries the path and requests the
+    # raid once Jerom's Bubonians task is also done; Stop the Ascension
+    # remains requestable here with no prereqs.
+    467066 => [[303070, ()], [303071, 303070], [303072, 303071],
+               [303078, 303070, 303071, 303072, 303073],
+               [303060, ()]],                                       # Apothecary Cadmael
     467069 => [[303073, 303072]],                                   # Jerom Bertrand
     # Kithicor
     456178 => [[303010, ()]],                                       # Lanys T`Vyl (Obliteration)
     456174 => [[303011, 303010]],                                   # Commander Barvian (Light)
+    # Bahgresh paths (v111): Tephys -> Firiona -> Laarthik gate the raid.
     456172 => [[303074, ()]],                                       # Lord Tephys (Light)
-    456175 => [[303076, 303010]],                                   # Laarthik V`Shin (Obliteration)
     456171 => [[303012, 303011], [303075, 303074],
-               [303061, [[303074, 303075, 303011, 303012],
-                         [303076, 303010]]]],                       # Firiona Vie
+               [303061, 303074, 303075, 303076]],                   # Firiona Vie
+    456175 => [[303076, 303075]],                                   # Laarthik V`Shin (Obliteration)
+    # Crystal Bloom path (v111): Ulgin's task gates the Crystal Core raid.
+    # v150 adds his four themeRathe Darkhammer tasks, gated on the four
+    # Delver Hagorn tasks per the page.
+    476041 => [[303077, ()], [303079, 303077],
+               [303168, 303164, 303165, 303166, 303167],
+               [303169, 303164, 303165, 303166, 303167],
+               [303170, 303164, 303165, 303166, 303167],
+               [303171, 303164, 303165, 303166, 303167]],            # Ulgin Darkhammer
+    # Theme solo/partisan tasks (v145): raspersrealm themeOceangreen /
+    # themeKithicor achievement lists. The Kithicor and Old Commonlands
+    # givers sit behind the %SOD_NECKLACE_GATES necklace check.
+    466042 => [[303100, ()], [303101, 303100]],                     # Garvin Windrunner
+    466120 => [[303102, ()], [303103, ()], [303104, 303103]],       # Kerrin the Unkempt
+    466025 => [[303105, 303104]],                                   # Seradi Stormcaller
+    466154 => [[303106, ()]],                                       # Bracka Darkpaw
+    466157 => [[303107, ()], [303108, 303107]],                     # Fripp Darkpaw
+    466041 => [[303110, ()], [303111, 303110], [303112, 303111]],   # Tabron Caulria
+    466052 => [[303113, 303112, 303001], [303114, 303112, 303001]], # Archon Darianna Althus
+    466014 => [[303115, ()]],                                       # Jeneca Orlofen
+    467060 => [[303117, ()]],                                       # Dan Hearthpride
+    467064 => [[303118, ()]],                                       # Yvette Miller
+    467075 => [[303119, ()]],                                       # Viktor Snowborn
+    468057 => [[303116, ()]],                                       # Guard Ellery
+    456060 => [[303120, ()]],                                       # Diennic Lightheart
+    456059 => [[303121, ()], [303122, 303121], [303123, 303122]],   # Armsmaster Vohlen
+    456067 => [[303124, ()]],                                       # Supplymaster Kibrek
+    456106 => [[303125, ()]],                                       # Banesman Aalthene
+    456066 => [[303126, ()]],                                       # Thanuel Mergon
+    456098 => [[303130, ()]],                                       # Saleb
+    456097 => [[303131, ()], [303132, 303131], [303135, 303132]],   # Andylis V`Shrei
+    456105 => [[303133, ()], [303134, 303133]],                     # Jarik K`Ahndar
+    457195 => [[303140, ()]],                                       # Innkeeper Grang
+    456179 => [[303141, ()]],                                       # Warden Avelyn
+    457197 => [[303142, ()], [303143, ()], [303144, ()],
+               [303145, ()], [303146, ()]],                         # Parthar
     # Kunark / Field of Scale
     452147 => [[303020, ()], [303021, 303020], [303022, 303021],
                [303023, 303022], [303024, 303023],
-               [303062, 303020, 303021, 303022, 303023, 303024]],   # Jaled`Dar
+               [303062, ()]],                                       # Jaled`Dar
     # Rathe
     476122 => [[303030, ()]],                                       # Sterik Gristmaker
     476115 => [[303031, 303030], [303032, 303031], [303033, 303032]],  # Nedsin Tabbels
-    476041 => [[303077, ()], [303079, 303077]],                     # Ulgin Darkhammer
     476110 => [[303034, 303033], [303035, 303034], [303036, 303035],
-               [303063, 303031, 303035, 303036]],                   # Ylatra the Vassal
+               [303063, ()]],                                       # Ylatra the Vassal
+    # Rathe theme solo/partisan/mission tasks (v150): raspersrealm
+    # themeRathe achievement lists. Not chain tasks (no flags). The four
+    # Hagorn tasks gate Ulgin's four (page's full AND prereqs).
+    475008 => [[303147, ()]],                                       # an injured slave
+    475002 => [[303148, 303147], [303149, 303148], [303150, 303149],
+               [303151, 303150]],                                   # Dwerina Feystalker
+    475014 => [[303152, 303147]],                                   # Wazlum
+    475010 => [[303153, ()]],                                       # Jink (group)
+    475003 => [[303154, 303147], [303155, 303154], [303156, ()]],   # Galadvert Nablisten
+    475058 => [[303157, ()]],                                       # Fregg the Tamer
+    475029 => [[303158, ()]],                                       # Blurik the Runner
+    475066 => [[303159, ()]],                                       # Keruk Garrkol, Beetle Herder
+    475005 => [[303160, ()], [303161, ()], [303162, ()]],           # Trilyaris (missions)
+    476113 => [[303163, ()]],                                       # Dalikand Darkhammer
+    476043 => [[303164, 303163], [303165, 303163], [303166, 303163],
+               [303167, 303163]],                                   # Delver Hagorn
+    # Discord theme solo/partisan tasks (v152): raspersrealm themeDiscord
+    # achievement lists. Not chain tasks (no flags); every completion
+    # raises Herald Argoth (1226) via the task faction_reward.
+    472039 => [[303172, ()]],                                       # Noble Yemall the Arcane
+    472057 => [[303173, ()]],                                       # Noble Ramel the Strategist
+    472056 => [[303174, ()]],                                       # Noble Mikuv the Rational
+    472051 => [[303175, ()], [303176, ()], [303177, ()], [303178, ()]],  # Commander Prezul
+    472022 => [[303179, ()]],                                       # Nahsulen the Tactician
+    474016 => [[303180, ()], [303183, ()]],                         # General Azerug the Honorable
+    474005 => [[303181, ()]],                                       # Grithyank Avlonnon
+    474019 => [[303182, ()]],                                       # Ziven
+    474012 => [[303184, ()], [303185, ()]],                         # Citykeeper Nardic the Proud
+    474011 => [[303186, ()]],                                       # Givrund the Devoted
     # Discord / Kuua
     472055 => [[303040, ()]],                                       # General Vurig the Imposing
     474036 => [[303041, 303040]],                                   # Yemall the Arcane
@@ -147,7 +206,33 @@ my %SOD_OFFERS = (
     # Korafax raids + Citadel
     470001 => [[303064, 'korafax-kuua'], [303065, 303064],
                [303066, 303065],
-               [303067, 303064, 303065, 303066, 'towerkey']],       # Herald of Druzzil Ro
+               [303067, 303064, 303065, 303066]],                   # Herald of Druzzil Ro
+);
+
+# ---------------------------------------------------------------------------
+# Necklace gate (Kithicor theme): raspersrealm -- a faction necklace is
+# required to interact with the side givers. Values are any-of item lists:
+# Army of Light Pendant 41118 (Scout Talendien 456002), Army of
+# Obliteration Medallion 41119 (Scout Zialdiruun 456003). The chain givers
+# (Lanys / Barvian / Firiona) stay un-gated.
+# ---------------------------------------------------------------------------
+my %SOD_NECKLACE_GATES = (
+    # Army of Light
+    456060 => [41118],                       # Diennic Lightheart
+    456172 => [41118],                       # Lord Tephys
+    456059 => [41118],                       # Armsmaster Vohlen
+    456067 => [41118],                       # Supplymaster Kibrek
+    456066 => [41118],                       # Thanuel Mergon
+    456106 => [41118],                       # Banesman Aalthene
+    # Army of Obliteration
+    456175 => [41119],                       # Laarthik V`Shin
+    456098 => [41119],                       # Saleb
+    456097 => [41119],                       # Andylis V`Shrei
+    456105 => [41119],                       # Jarik K`Ahndar
+    # Old Commonlands -- either army's colors
+    457197 => [41118, 41119],                # Parthar
+    456179 => [41118, 41119],                # Warden Avelyn
+    457195 => [41118, 41119],                # Innkeeper Grang
 );
 
 # ---------------------------------------------------------------------------
@@ -181,19 +266,18 @@ my %SOD_RAIDS = (
     303067 => { name => 'The Mindblight',           zone => 'discordtower',
                 version => 51, zonein => [0, -48, -48],
                 compass => ['discord', -51, 33, 27] },
+    # v111 miscProgression bonus raids (givers: Cadmael / Ulgin Darkhammer).
     303078 => { name => 'Queen Malarian',           zone => 'oceangreenhills',
                 version => 51, zonein => [-1140, 4542, 73],
-                compass => ['oceangreenhills', -1140, 4542, 73] },
+                compass => ['oceangreenvillage', 362, -2554, 6] },
     303079 => { name => 'Showdown at the Crystal Core', zone => 'korascian',
                 version => 51, zonein => [24, -77, 25],
-                compass => ['korascian', 24, -77, 25] },
+                compass => ['korascian', -2035, 654, -17] },
 );
 
 # ---------------------------------------------------------------------------
 # Portal clickies: npc id => [kind, dest zone, x, y, z]
-#   kind 'void'    - theme zone / potimea -> The Void. The player lands in
-#                    their EARNED version (thevoida..g); SodGateVoid in each
-#                    <thevoid*>/player.pl guards the zone line itself.
+#   kind 'void'    - theme zone -> The Void (version redirect happens there)
 #   kind 'korafax' - The Void  -> Korafax (gated)
 #   kind 'citadel' - Korafax   -> Citadel of the Worldslayer (gated)
 # ---------------------------------------------------------------------------
@@ -205,7 +289,6 @@ my %SOD_PORTALS = (
     478604 => ['void',    'thevoida',    -79, -158, 33],   # Toskirakk rift
     478605 => ['korafax', 'discord',      28,  -20, -16],   # thevoida Timeshear rift
     478606 => ['citadel', 'discordtower',   0,  -48, -48],   # Korafax Citadel rift
-    478757 => ['void',    'thevoida',    -79, -158, 33],   # potimea entry rift
 );
 
 # ---------------------------------------------------------------------------
@@ -219,24 +302,7 @@ sub _sod_subflag {
 sub _sod_prereq_met {
     my ($client, $pre) = @_;
     return 1 if !defined $pre || $pre eq '';
-    return 1 if $client->GetGM();
     if ($pre eq 'korafax')    { return SodKorafaxAccess($client); }
-    if ($pre eq 'towerkey')   { return ($client->CountItem($SOD_TOWER_KEY) > 0) ? 1 : 0; }
-    if (ref($pre) eq 'ARRAY') {
-        # OR over the alternatives; an ARRAY alternative is an AND.
-        foreach my $alt (@{$pre}) {
-            if (ref($alt) eq 'ARRAY') {
-                my $all = 1;
-                foreach my $p (@{$alt}) {
-                    if (!_sod_prereq_met($client, $p)) { $all = 0; last; }
-                }
-                return 1 if $all;
-            } else {
-                return 1 if _sod_prereq_met($client, $alt);
-            }
-        }
-        return 0;
-    }
     if ($pre =~ /^[A-Za-z]/)  { return _sod_subflag($client, $pre); }
     return $client->IsTaskCompleted($pre) ? 1 : 0;
 }
@@ -302,11 +368,6 @@ sub SodOnTaskComplete {
     my ($client, $task_id) = @_;
     return unless exists $SOD_TASK_FLAG{$task_id};
     my $flag = $SOD_TASK_FLAG{$task_id};
-    # Any-completed chains (themes with two raid victories) set immediately.
-    if ($SOD_CHAIN_ANY{$flag}) {
-        plugin::SetSubflag($client, 'SoD', $flag, 1);
-        return;
-    }
     foreach my $tid (@{$SOD_CHAIN_TASKS{$flag}}) {
         return unless $client->IsTaskCompleted($tid);
     }
@@ -418,6 +479,21 @@ sub SodTaskGiver {
         return 1;
     }
 
+    # Necklace gate (Kithicor theme; GMs walk through).
+    my $gate = $SOD_NECKLACE_GATES{$npc_id};
+    if ($gate && !$client->GetGM()) {
+        my $wears = 0;
+        foreach my $item (@{$gate}) {
+            $wears = 1 if $client->CountItem($item) > 0;
+        }
+        if (!$wears) {
+            $client->Message(13, "The armies of Kithicor answer only those "
+                . "bearing their colors. Take a pendant from the scouts by "
+                . "the rift before asking after their work.");
+            return 1;
+        }
+    }
+
     if ($text =~ /ready/i) {
         # zone into a held SoD raid expedition first
         if (SodRaidEnter($client)) { return 1; }
@@ -494,7 +570,6 @@ sub SodPortalUse {
     my ($kind, $dest, $x, $y, $z) = @{$portal};
 
     if ($kind eq 'void') {
-        $dest = SodVoidZone(SodVoidVersion($client));
         $client->Message(15, "You step through the timeshear rift...");
         $client->MovePC($dest, $x, $y, $z, 0);
         return 1;

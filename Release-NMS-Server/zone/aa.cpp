@@ -1130,6 +1130,16 @@ void Client::MigrateDuplicateAALines()
 			);
 		}
 
+		LogAA(
+			"Duplicate AA [{}] folded for [{}]: ability [{}] rank [{}] -> winner ability [{}] rank [{}]",
+			ability->name,
+			GetCleanName(),
+			ability->id,
+			owned_rank,
+			winner_ability->id,
+			new_rank
+		);
+
 		loser_first_ranks.push_back(ability->first_rank_id);
 		aa_ranks.erase(ability_id);
 		changed = true;
@@ -1226,7 +1236,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->seq = aa_id;
 	// NMS: only the current shroud form/level's lines may look like shroud rows to
 	// the client's AA window; the encoder writes this as the per-row shroud byte.
-	aai->shroud_row = IsShroudAbilityForCurrentForm(aa_id) ? 1 : 0;
+	aai->shroud_row = (Client::IsShroudAA(ability) && IsShroudAbilityForCurrentForm(aa_id)) ? 1 : 0;
 	aai->type = ability->type;
 	// Shroud rows send the rank's real spell. It used to be blanked to -1 on the
 	// theory that the client's monster row filter skipped its known-spell check
@@ -2342,6 +2352,14 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 	}
 
 	if (!CanUseAlternateAdvancementRank(rank)) {
+		return false;
+	}
+
+	// While transformed, only the form's own abilities are available. A real
+	// line must not be bought or granted into a shroud session: SaveAA is
+	// suppressed while shrouded, so the change would be lost or collide with
+	// the real owned rank under the same aa_ranks key.
+	if (IsClient() && CastToClient()->IsShrouded() && !Client::IsShroudAA(a)) {
 		return false;
 	}
 

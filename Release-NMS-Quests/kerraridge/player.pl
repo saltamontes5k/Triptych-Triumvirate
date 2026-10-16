@@ -1,4 +1,4 @@
-sub EVENT_ENTER_ZONE {
+sub EVENT_ENTERZONE {
     # Spawn Marl Kastane as needed
     if (plugin::HasClassName($client, "ShadowKnight") && !$entity_list->GetNPCByNPCTypeID(74089)) {
         $faction = $client->GetCharacterFactionLevel(404); # Faction: Truespirit

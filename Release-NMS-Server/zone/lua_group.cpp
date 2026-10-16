@@ -8,9 +8,39 @@
 #include "groups.h"
 #include "masterentity.h"
 #include "lua_group.h"
+#include "achievement_state_updates.h"
 #include "lua_mob.h"
 #include "lua_client.h"
 #include "lua_npc.h"
+
+bool Lua_Group::AdvanceAchievementProgress(
+	uint32 achievement_id,
+	uint32 component_type,
+	uint32 component_id,
+	uint32 value
+) {
+	Lua_Safe_Call_Bool();
+	if (component_type > 2) {
+		return false;
+	}
+
+	return AchievementStateUpdates::QueueGroupAdvance(
+		self->GetID(),
+		achievement_id,
+		static_cast<AchievementStateUpdates::ComponentType>(component_type),
+		component_id,
+		value
+	);
+}
+
+bool Lua_Group::CompleteAchievement(uint32 achievement_id)
+{
+	Lua_Safe_Call_Bool();
+	return AchievementStateUpdates::QueueGroupCompletion(
+		self->GetID(),
+		achievement_id
+	);
+}
 
 void Lua_Group::DisbandGroup() {
 	Lua_Safe_Call_Void();
@@ -122,6 +152,16 @@ Lua_Mob Lua_Group::GetMember(int member_index) {
 	return self->members[member_index];
 }
 
+uint8 Lua_Group::GetMemberRole(Lua_Mob member) {
+	Lua_Safe_Call_Int();
+	return self->GetMemberRole(member);
+}
+
+uint8 Lua_Group::GetMemberRole(const char* name) {
+	Lua_Safe_Call_Int();
+	return self->GetMemberRole(name);
+}
+
 bool Lua_Group::DoesAnyMemberHaveExpeditionLockout(std::string expedition_name, std::string event_name)
 {
 	Lua_Safe_Call_Bool();
@@ -144,7 +184,9 @@ luabind::scope lua_register_group() {
 	.def(luabind::constructor<>())
 	.property("null", &Lua_Group::Null)
 	.property("valid", &Lua_Group::Valid)
+	.def("AdvanceAchievementProgress", &Lua_Group::AdvanceAchievementProgress)
 	.def("CastGroupSpell", (void(Lua_Group::*)(Lua_Mob,int))&Lua_Group::CastGroupSpell)
+	.def("CompleteAchievement", &Lua_Group::CompleteAchievement)
 	.def("DisbandGroup", (void(Lua_Group::*)(void))&Lua_Group::DisbandGroup)
 	.def("DoesAnyMemberHaveExpeditionLockout", (bool(Lua_Group::*)(std::string, std::string))&Lua_Group::DoesAnyMemberHaveExpeditionLockout)
 	.def("DoesAnyMemberHaveExpeditionLockout", (bool(Lua_Group::*)(std::string, std::string, int))&Lua_Group::DoesAnyMemberHaveExpeditionLockout)
@@ -155,6 +197,8 @@ luabind::scope lua_register_group() {
 	.def("GetLeaderName", (const char*(Lua_Group::*)(void))&Lua_Group::GetLeaderName)
 	.def("GetLowestLevel", (uint32(Lua_Group::*)(void))&Lua_Group::GetLowestLevel)
 	.def("GetMember", (Lua_Mob(Lua_Group::*)(int))&Lua_Group::GetMember)
+	.def("GetMemberRole", (uint8(Lua_Group::*)(Lua_Mob))&Lua_Group::GetMemberRole)
+	.def("GetMemberRole", (uint8(Lua_Group::*)(const char*))&Lua_Group::GetMemberRole)
 	.def("GetTotalGroupDamage", (uint32(Lua_Group::*)(Lua_Mob))&Lua_Group::GetTotalGroupDamage)
 	.def("GroupCount", (int(Lua_Group::*)(void))&Lua_Group::GroupCount)
 	.def("GroupMessage", (void(Lua_Group::*)(Lua_Mob,const char*))&Lua_Group::GroupMessage)

@@ -1,3 +1,5 @@
+local memory = require("nms_memory")
+
 function event_spawn(e)
 	eq.set_next_hp_event(98)
 	eq.set_timer("spawnsorrow", 5 * 1000) -- 5 Seconds
@@ -97,6 +99,11 @@ function event_death_complete(e)
 	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- Only spawn in non-respawning dz
 		eq.unique_spawn(218068, 0, 0, e.self:GetX(), e.self:GetY(),  e.self:GetZ(),  e.self:GetHeading()) -- NPC: A_Planar_Projection
 	end
+
+	-- NMS progression: Saryrn is the single objective gating Gates of Discord.
+	-- Spawn the progression memory (global/26000.pl, "Herald of the Deepwater");
+	-- hailing it grants the GoD 'saryrn' subflag and completes the stage.
+	memory.spawn(e, "GoD", "saryrn")
 end
 
 function event_killed_merit(e)

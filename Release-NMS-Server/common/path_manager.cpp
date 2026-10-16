@@ -13,7 +13,14 @@ void PathManager::Init()
 	m_server_path = File::FindEqemuConfigPath();
 
 	if (m_server_path.empty()) {
-		LogInfo("Failed to load server path");
+		// Without a server path there is no log path, so file logging cannot start and
+		// the process runs with no log at all. Say where we looked.
+		LogError(
+			"Failed to locate eqemu_config.json (searched the working directory [{}] and "
+			"its parent). Start the server from its install directory: without this there "
+			"is no log path and no log file will be written.",
+			File::GetCwd()
+		);
 		return;
 	}
 

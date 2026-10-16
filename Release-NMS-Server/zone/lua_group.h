@@ -27,6 +27,8 @@ public:
 		return reinterpret_cast<Group*>(GetLuaPtrData());
 	}
 
+	bool AdvanceAchievementProgress(uint32 achievement_id, uint32 component_type, uint32 component_id, uint32 value);
+	bool CompleteAchievement(uint32 achievement_id);
 	void DisbandGroup();
 	bool IsGroupMember(const char* name);
 	bool IsGroupMember(Lua_Mob c);
@@ -49,6 +51,8 @@ public:
 	void TeleportGroup(Lua_Mob sender, uint32 zone_id, uint32 instance_id, float x, float y, float z, float h);
 	int GetID();
 	Lua_Mob GetMember(int member_index);
+	uint8 GetMemberRole(Lua_Mob member);
+	uint8 GetMemberRole(const char* name);
 	bool DoesAnyMemberHaveExpeditionLockout(std::string expedition_name, std::string event_name);
 	bool DoesAnyMemberHaveExpeditionLockout(std::string expedition_name, std::string event_name, int max_check_count);
 };

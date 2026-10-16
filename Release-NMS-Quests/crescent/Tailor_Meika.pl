@@ -1,5 +1,9 @@
+# Tailor Meika - Crescent Reach (Artisans' Row)
+# The Serpent's Spine :: tailoring supply (task 600526)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("The needles never rest in the tailor stalls. We [stitch] for the whole city - and the militia first of all.");
     my @chain = (600526);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -24,6 +28,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600526)) { plugin::check_handin(\%itemcount, 58086 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

@@ -122,7 +122,7 @@ function event_death_complete(e)
 	-- NMS progression: Xegony is one of the elemental gods gating Dragons of Norrath (and LDoN).
 	-- Spawn the memory NPC (global/26000.pl); hailing it grants the DoN subflag. The Essence of
 	-- Air hail in 215438.lua grants it too, so either path credits the kill.
-	memory.spawn(e, "DoN", "xegony")
+	memory.spawn(e, "DoN", "xegony", "LDoN", "xegony")
 end
 
 function event_killed_merit(e)

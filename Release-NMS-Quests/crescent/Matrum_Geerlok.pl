@@ -1,5 +1,9 @@
+# Matrum Geerlok - Crescent Reach (the tinkering shop)
+# The Serpent's Spine :: Geerlok tinkering supply (tasks 600550-600553)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Tinkering is precision, friend - precision and springs. The [Geerlok] line needs a steady hand, and few have one.");
     my @chain = (600550,600551,600552,600553);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -57,6 +61,5 @@ sub EVENT_ITEM {
   if (quest::istaskactive(600551)) { plugin::check_handin(\%itemcount, 58246 => 1); }
   if (quest::istaskactive(600552)) { plugin::check_handin(\%itemcount, 58247 => 1); }
   if (quest::istaskactive(600553)) { plugin::check_handin(\%itemcount, 58248 => 1); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

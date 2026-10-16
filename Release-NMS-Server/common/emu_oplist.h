@@ -9,6 +9,17 @@ N(OP_AcceptNewTask),
 N(OP_AckPacket),
 N(OP_Action),
 N(OP_Action2),
+N(OP_AchievementCompareRequest),
+N(OP_AchievementComparisonReply),
+N(OP_AchievementReward),
+N(OP_AchievementDefinitions),
+N(OP_AchievementEarned),
+N(OP_AchievementLinkRequest),
+N(OP_AchievementProgress),
+N(OP_AchievementRequest),
+N(OP_AchievementState),
+N(OP_AchievementUpdate),
+N(OP_AchievementWindow),
 N(OP_AddNimbusEffect),
 N(OP_AdventureData),
 N(OP_AdventureDetails),
@@ -454,6 +465,7 @@ N(OP_RemoveTrap),
 N(OP_Report),
 N(OP_ReqClientSpawn),
 N(OP_ReqNewZone),
+N(OP_RewardSelection),
 N(OP_RequestClientZoneChange),
 N(OP_RequestDuel),
 N(OP_RequestGuildTributes),
@@ -655,4 +667,26 @@ N(OP_ShroudRemove),
 N(OP_ShroudPointsUpdate), // 0x2507: unnamed shroud manager opcode {u32,u32} -> UI notify type 3 (monster points?)
 N(OP_ShroudStateUpdate),  // 0x006e: unnamed shroud manager opcode {u32,u32} -> UI notify type 4 (monster points spent?)
 N(OP_PowerSource), // RoF2 client per-instance power source charge (opcode 0x4c89)
+N(OP_NMSLoNSession),       // Server->Client: 0x141C, the card game's one-time login token + where to relay it (world/lon_service.cpp)
+// RoF2 player housing / real estate and /racechange (client->server).
+// Recovered from eqgame.exe build #630 with IDA; upstream EQEmu has no names
+// for these. See docs/rof2-housing-racechange-opcodes.md.
+N(OP_RealEstateRequest),
+N(OP_RealEstatePlotSelect),
+N(OP_RealEstateWindowAction),
+N(OP_RealEstateSearchRequest),
+N(OP_RealEstateDataRequest),
+N(OP_RealEstateNeighborhoodRequest),
+N(OP_RealEstateNameSearch),
+N(OP_RealEstateItemsRequest),
+N(OP_RealEstateItemAction),
+N(OP_RealEstateLayoutSave),
+N(OP_RealEstateManageAction),
+N(OP_RealEstatePlacement),         // 0x626e: house/plot placement, carries world X/Y
+N(OP_RealEstateToggle),
+N(OP_RealEstateItemsAction),
+N(OP_RealEstatePurchaseSelect),    // 0x792c: CRealEstatePurchaseWnd
+N(OP_RealEstatePlotSearchRequest), // 0x796c: CRealEstatePlotSearchWnd
+N(OP_RealEstateManageRequest),     // 0x7ad1: 0x8C struct + world X/Y
+N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h

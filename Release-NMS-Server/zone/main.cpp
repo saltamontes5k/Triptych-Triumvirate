@@ -22,6 +22,7 @@
 #define PLATFORM_ZONE 1
 
 #include "../common/global_define.h"
+#include "achievement_manager.h"
 #include "../common/timer.h"
 #include "../common/eq_packet_structs.h"
 #include "../common/mutex.h"
@@ -34,6 +35,8 @@
 #include "../common/strings.h"
 #include "../common/crash.h"
 #include "../common/memory_mapped_file.h"
+#include "../common/event/freeze_watchdog.h"
+#include "../common/serverinfo.h"
 #include "../common/spdat.h"
 #include "../common/eqemu_logsys.h"
 #include "../common/misc.h"
@@ -442,6 +445,11 @@ int main(int argc, char **argv)
 		TaskManager::Instance()->LoadTasks();
 	}
 
+	if (!AchievementManager::Instance().Load()) {
+		LogError("Achievement system failed to load; refusing to start the zone");
+		return 1;
+	}
+
 	parse = new QuestParserCollection();
 #ifdef LUA_EQEMU
 	parse->RegisterQuestInterface(LuaParser::Instance(), "lua");
@@ -527,7 +535,25 @@ int main(int argc, char **argv)
 	std::chrono::time_point<std::chrono::system_clock> frame_prev = std::chrono::system_clock::now();
 	std::unique_ptr<EQ::Net::WebsocketServer>          ws_server;
 
+	// Watch the main loop. If it stops returning, the process stays up but stops
+	// answering clients -- a lag spike, then a falling connection bar, then an
+	// ICMP disconnect, and on disk a log that just stops mid-write with no crash
+	// report (nothing faulted). See common/event/freeze_watchdog.h.
+	// The id is evaluated only when something actually goes wrong, because a
+	// dynamic zone does not know its short name until world tells it to boot.
+	EQ::FreezeWatchdog::Get().Start(
+		[&zone_name]() {
+			return fmt::format("{}:{} pid {}", zone_name, Config->ZonePort, EQ::GetPID());
+		},
+		15000,
+		5000
+	);
+
 	auto loop_fn = [&](EQ::Timer *t) {
+		// One main-loop tick. If the loop ever fails to reach this point again, the
+		// watchdog reports the stall instead of leaving a log that just stops.
+		EQ::FreezeWatchdog::Get().Heartbeat();
+
 		//Advance the timer to our current point in time
 		Timer::SetCurrentTime();
 

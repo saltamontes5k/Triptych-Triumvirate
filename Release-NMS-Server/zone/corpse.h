@@ -195,6 +195,10 @@ public:
 	bool IsRezzable() { return m_is_rezzable; }
 	void SetRezTimer(bool initial_timer = false);
 
+	// Set once a healer merc has offered this corpse a resurrection.
+	bool MercRezOffered() { return m_merc_rez_offered; }
+	void SetMercRezOffered(bool in_offered) { m_merc_rez_offered = in_offered; }
+
 	/* Corpse: Loot */
 	void QueryLoot(Client *to);
 	bool HasItem(uint32 item_id);
@@ -289,6 +293,7 @@ private:
 	Timer                    m_check_rezzable_timer;
 	uint8                    m_killed_by_type;
 	bool                     m_is_rezzable;
+	bool                     m_merc_rez_offered = false;
 	EQ::TintProfile          m_item_tint;
 	uint32                   m_remaining_rez_time;
 	bool                     m_is_owner_online;

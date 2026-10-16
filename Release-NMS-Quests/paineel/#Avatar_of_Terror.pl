@@ -23,7 +23,7 @@ sub EVENT_ITEM {
     quest::stoptimer("TerrorDepop");
     quest::depop();
   }
-  plugin::returnitems(\%itemcount);
+  plugin::return_items(\%itemcount);
 }
 
 sub EVENT_TIMER {

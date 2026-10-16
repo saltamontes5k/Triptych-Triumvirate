@@ -13,6 +13,7 @@
 --     are dead.
 
 local prog = require("uf_progression")
+local memory = require("nms_memory")
 
 local CTRL = prog.NPC.conv_ctrl
 local STAGES = prog.NPC.stages
@@ -124,5 +125,7 @@ function event_signal(e)
 		eq.set_timer("next", 15000)
 	else
 		eq.zone_emote(15, "All seven wards are broken. The heart of the Underfoot is yours.")
+		-- NMS progression: the Convorteum finale is the Underfoot stage objective.
+		memory.spawn(e, "UF", "the first creation")
 	end
 end

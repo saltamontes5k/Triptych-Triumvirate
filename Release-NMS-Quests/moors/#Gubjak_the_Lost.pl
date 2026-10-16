@@ -1,5 +1,9 @@
+# Gubjak the Lost - Blightfire Moors (the graveyard)
+# The Serpent's Spine :: restless dead of the moors (tasks 600446-600447)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Hnnn. You walk soft among the dead, mon. Gubjak remembers de old ways, and de dead here remember nothin'.");
     my @chain = (600446,600447);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -34,6 +38,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600446)) { plugin::check_handin(\%itemcount, 46286 => 5); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

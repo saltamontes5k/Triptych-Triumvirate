@@ -18,6 +18,13 @@ local FURNITURE = {
 	61800, 61801, 61802, 61803, 61804, 61805, 61806, 61807, 61808, 61809,
 	61810, 61811, 61812, 61813, 61814, 61815, 61816, 61817, 61818, 61819,
 	61820, 61821,
+	-- Legends of Norrath loot-card decor: paintings, idol trophies, building
+	-- blocks and the Estarim banner (see LoN_bundle loot-card audit section 7)
+	54993, 54994, 54995, 54996, 60955, 60956, 64569, 64570, 67718,
+	67906, 67907, 67908, 72277, 72278, 72279, 72280, 72281, 72282, 72283,
+	54997, 60957, 67909, 64571,
+	64593, 64594, 64595, 64596, 64597,
+	67905,
 }
 
 -- slot offsets around the arrival point

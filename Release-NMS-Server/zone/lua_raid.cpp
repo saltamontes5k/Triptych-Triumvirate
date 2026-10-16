@@ -7,9 +7,39 @@
 
 #include "masterentity.h"
 #include "lua_raid.h"
+#include "achievement_state_updates.h"
 #include "lua_mob.h"
 #include "lua_client.h"
 #include "lua_npc.h"
+
+bool Lua_Raid::AdvanceAchievementProgress(
+	uint32 achievement_id,
+	uint32 component_type,
+	uint32 component_id,
+	uint32 value
+) {
+	Lua_Safe_Call_Bool();
+	if (component_type > 2) {
+		return false;
+	}
+
+	return AchievementStateUpdates::QueueRaidAdvance(
+		static_cast<int32_t>(self->GetID()),
+		achievement_id,
+		static_cast<AchievementStateUpdates::ComponentType>(component_type),
+		component_id,
+		value
+	);
+}
+
+bool Lua_Raid::CompleteAchievement(uint32 achievement_id)
+{
+	Lua_Safe_Call_Bool();
+	return AchievementStateUpdates::QueueRaidCompletion(
+		static_cast<int32_t>(self->GetID()),
+		achievement_id
+	);
+}
 
 bool Lua_Raid::IsRaidMember(const char *name) {
 	Lua_Safe_Call_Bool();
@@ -171,8 +201,10 @@ luabind::scope lua_register_raid() {
 	.def(luabind::constructor<>())
 	.property("null", &Lua_Raid::Null)
 	.property("valid", &Lua_Raid::Valid)
+	.def("AdvanceAchievementProgress", &Lua_Raid::AdvanceAchievementProgress)
 	.def("BalanceHP", (void(Lua_Raid::*)(int,uint32))&Lua_Raid::BalanceHP)
 	.def("CastGroupSpell", (void(Lua_Raid::*)(Lua_Mob,int,uint32))&Lua_Raid::CastGroupSpell)
+	.def("CompleteAchievement", &Lua_Raid::CompleteAchievement)
 	.def("DoesAnyMemberHaveExpeditionLockout", (bool(Lua_Raid::*)(std::string, std::string))&Lua_Raid::DoesAnyMemberHaveExpeditionLockout)
 	.def("DoesAnyMemberHaveExpeditionLockout", (bool(Lua_Raid::*)(std::string, std::string, int))&Lua_Raid::DoesAnyMemberHaveExpeditionLockout)
 	.def("GetClientByIndex", (Lua_Client(Lua_Raid::*)(int))&Lua_Raid::GetClientByIndex)

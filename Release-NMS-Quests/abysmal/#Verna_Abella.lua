@@ -33,6 +33,6 @@ function event_trade(e)
     item_lib.return_items(e.self, e.other, e.trade)
 end
 
-function event_singal(e)
+function event_signal(e)
     e.self:Say("Well, don't ye look lovely today! Why, I can 'ardly think of what I want ta drink with ye distractin' me. 'ow about a light beer for now. I'll surely be orderin' more as long as yer on duty!")
 end

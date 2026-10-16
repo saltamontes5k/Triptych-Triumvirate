@@ -1,5 +1,9 @@
+# Brewmaster Ishaq - Crescent Reach (the brewery)
+# The Serpent's Spine :: brewing skills (task 600576)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("Ishaq tests every brewer who claims the [craft]. Few pass. Will you try?");
     my @chain = (600576);
     my $talked = 0;
     foreach my $tsk (@chain) {
@@ -24,6 +28,5 @@ sub EVENT_SAY {
 
 sub EVENT_ITEM {
   if (quest::istaskactive(600576)) { plugin::check_handin(\%itemcount, 98290 => 2); }
-  plugin::return_items(\%itemcount);
   plugin::return_items(\%itemcount);
 }

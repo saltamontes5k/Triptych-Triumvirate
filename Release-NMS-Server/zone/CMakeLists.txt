@@ -3,6 +3,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 SET(zone_sources
     aa.cpp
     aa_ability.cpp
+    achievement_manager.cpp
+    achievement_state_updates.cpp
     aggro.cpp
     aggromanager.cpp
     api_service.cpp
@@ -16,6 +18,7 @@ SET(zone_sources
     botspellsai.cpp
     cheat_manager.cpp
     client.cpp
+    client_achievements.cpp
     client_evolving_items.cpp
     client_bot.cpp
     client_mods.cpp
@@ -87,6 +90,8 @@ SET(zone_sources
     quest_db.cpp
     quest_parser_collection.cpp
     raids.cpp
+    reward_selection.cpp
+    reward_selection_catalog.cpp
     raycast_mesh.cpp
     sidecar_api/sidecar_api.cpp
     sidecar_api/loot_simulator_controller.cpp
@@ -104,6 +109,7 @@ SET(zone_sources
     titles.cpp
     nms_waypoints.cpp
     nms_vault.cpp
+    nms_lon_session.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp
@@ -319,6 +325,7 @@ set(gm_command_sources
     command.cpp
     bot_command.cpp
     gm_commands/acceptrules.cpp
+    gm_commands/achievement.cpp
     gm_commands/advnpcspawn.cpp
     gm_commands/aggrozone.cpp
     gm_commands/ai.cpp

@@ -97,6 +97,38 @@ void PlayerEventQueueListener() {
 	}
 }
 
+/**
+ * Can this process own the chat port?
+ *
+ * The chat listener binds with UV_UDP_REUSEADDR (DaybreakConnectionManager::Attach), which
+ * on Windows lets a second ucs.exe bind the same port. The two then split client chat
+ * datagrams -- clients report the chat server being down while world still believes UCS is
+ * connected -- and they fight over world's single UCS slot. This probe deliberately binds
+ * WITHOUT the reuse flag, so a plain bind fails while another ucs.exe holds the port.
+ *
+ * Returns true when it cannot tell, so a probe failure never blocks a legitimate start.
+ */
+static bool ChatPortIsAvailable(int port)
+{
+	auto *probe = new uv_udp_t;
+
+	if (uv_udp_init(EQ::EventLoop::Get().Handle(), probe) != 0) {
+		delete probe;
+		return true;
+	}
+
+	sockaddr_in addr{};
+	uv_ip4_addr("0.0.0.0", port, &addr);
+
+	const bool available = uv_udp_bind(probe, reinterpret_cast<const sockaddr *>(&addr), 0) == 0;
+
+	uv_close(reinterpret_cast<uv_handle_t *>(probe), [](uv_handle_t *handle) {
+		delete reinterpret_cast<uv_udp_t *>(handle);
+	});
+
+	return available;
+}
+
 int main() {
 	RegisterExecutablePlatform(ExePlatformUCS);
 	EQEmuLogSys::Instance()->LoadLogSettingsDefaults();
@@ -159,6 +191,18 @@ int main() {
 	EQ::InitializeDynamicLookups();
 
 	database.ExpireMail();
+
+	// Refuse to start a second UCS instance: the chat listener binds with SO_REUSEADDR, so
+	// a duplicate would start happily and steal client chat traffic from the live instance
+	// instead of failing, and the two would fight over world's single UCS slot.
+	if (!ChatPortIsAvailable(Config->GetUCSPort())) {
+		LogError(
+			"Chat port [{}] is already in use -- another ucs.exe is running. Refusing to "
+			"start so this instance cannot steal client chat traffic.",
+			Config->GetUCSPort()
+		);
+		return 1;
+	}
 
 	g_Clientlist = new Clientlist(Config->GetUCSPort());
 

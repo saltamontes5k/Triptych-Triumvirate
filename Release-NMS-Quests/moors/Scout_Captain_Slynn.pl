@@ -1,5 +1,9 @@
+# Scout Captain Slynn - Blightfire Moors (the outpost)
+# The Serpent's Spine :: bounty board of the outpost (tasks 600443-600445, 600468-600472, 600484)
+
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    quest::say("New blood, eh? The outpost pays for work done. Plenty of [work] - and only some of it pretty.");
     my @chain = (600443,600444,600445,600468,600469,600470,600471,600472,600484);
     my $talked = 0;
     foreach my $tsk (@chain) {

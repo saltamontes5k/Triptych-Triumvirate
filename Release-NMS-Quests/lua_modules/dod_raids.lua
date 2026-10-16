@@ -4,12 +4,15 @@
 	Each parent zone has an "a_sealed_portal" NPC that maps its NPC type id to a
 	raid key below and calls M.entry(e, key).
 
-	The boss bodies for these raids are placed by spawn2 in the named instance
-	version (see quests/task_sql/dod_raids.sql), so the encounter scripts attach
-	directly to them.
+	Entry is gated by the NMS progression DoD stage (Tunat`Muram Cuu Vauax +
+	Warlord Imal Ojun); GMs pass. The boss bodies for these raids are placed by
+	spawn2 in the named instance version (see quests/task_sql/dod_raids.sql), so
+	the encounter scripts attach directly to them.
 --]]
 
 local M = {}
+
+local prog = require("nms_progression")
 
 local DURATION = eq.seconds("6h")
 
@@ -91,6 +94,14 @@ M.defs = {
 function M.entry(e, key)
 	local def = M.defs[key]
 	if not def then
+		return
+	end
+
+	-- NMS progression gate: the Darkhollow seals open only to accounts that
+	-- have unlocked the DoD stage (GMs pass inside gate_stage).
+	if not prog.gate_stage(e.other, "DoD",
+		"The seal holds fast against you. The Darkhollow raids open only to those who have felled Tunat`Muram Cuu Vauax and Warlord Imal Ojun.")
+	then
 		return
 	end
 
