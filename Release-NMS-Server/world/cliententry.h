@@ -85,6 +85,7 @@ public:
 	inline uint16 instance() const { return m_instance; }
 	inline uint8 level() const { return m_level; }
 	inline uint8 class_() const { return m_class_; }
+	inline uint32 classes_bits() const { return m_classes_bits; }
 	inline uint16 race() const { return m_race; }
 	inline uint8 Anon() { return m_anon; }
 	inline uint8 TellsOff() const { return m_tells_off; }
@@ -145,6 +146,7 @@ private:
 	char   m_char_name[64]{};
 	uint8  m_level{};
 	uint8  m_class_{};
+	uint32 m_classes_bits{};
 	uint16 m_race{};
 	uint8  m_anon{};
 	uint8  m_tells_off{};

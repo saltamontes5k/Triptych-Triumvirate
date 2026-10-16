@@ -24,6 +24,7 @@
 #include "../common/types.h"
 #include "../common/random.h"
 #include "../common/strings.h"
+#include <atomic>
 #include <deque>
 #include "zonedb.h"
 #include "../common/zone_store.h"
@@ -558,6 +559,7 @@ private:
 	bool      m_idle_when_empty;
 	uint32    m_seconds_before_idle;
 	bool      m_save_zone_state;
+	std::atomic<bool> m_shutdown_claimed = false;
 
 	GlobalLootManager                   m_global_loot;
 	LinkedList<ZoneClientAuth_Struct *> client_auth_list;

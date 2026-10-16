@@ -798,26 +798,93 @@ void Zone::SaveZoneState()
 		spawns.emplace_back(z);
 	}
 
-	ZoneStateSpawnsRepository::DeleteWhere(
-		database,
+	// delete + insert must land as one atomic unit, otherwise an interruption between the two
+	// persists a truncated/zeroed zone state (observed as nexus 304 -> 0 on a killed process)
+	auto begin_result = database.TransactionBegin();
+	if (!begin_result.Success()) {
+		LogError(
+			"Zone state save aborted (begin failed) zone [{}] instance [{}] error [{}] - previous state preserved",
+			GetZoneID(),
+			GetInstanceID(),
+			begin_result.ErrorMessage()
+		);
+		return;
+	}
+
+	auto delete_result = database.QueryDatabase(
 		fmt::format(
-			"`zone_id` = {} AND `instance_id` = {}",
+			"DELETE FROM {} WHERE `zone_id` = {} AND `instance_id` = {}",
+			ZoneStateSpawnsRepository::TableName(),
 			GetZoneID(),
 			GetInstanceID()
 		)
 	);
 
+	if (!delete_result.Success()) {
+		database.TransactionRollback();
+
+		LogError(
+			"Zone state save aborted (delete failed) zone [{}] instance [{}] error [{}] - previous state preserved",
+			GetZoneID(),
+			GetInstanceID(),
+			delete_result.ErrorMessage()
+		);
+		return;
+	}
+
+	const char *clear_reason = nullptr;
+
 	if (!IsZoneStateValid(spawns)) {
-		LogInfo("No valid zone state data to save");
+		clear_reason = "No valid zone state data to save";
+	}
+	else if (spawns.empty()) {
+		clear_reason = "No zone state data to save";
+	}
+
+	if (clear_reason) {
+		LogInfo("{}", clear_reason);
+
+		auto clear_commit = database.TransactionCommit();
+		if (!clear_commit.Success()) {
+			database.TransactionRollback();
+
+			LogError(
+				"Zone state clear aborted (commit failed) zone [{}] instance [{}] error [{}] - previous state preserved",
+				GetZoneID(),
+				GetInstanceID(),
+				clear_commit.ErrorMessage()
+			);
+		}
+
 		return;
 	}
 
-	if (spawns.empty()) {
-		LogInfo("No zone state data to save");
+	auto inserted_rows = ZoneStateSpawnsRepository::InsertMany(database, spawns);
+	if (inserted_rows != static_cast<int>(spawns.size())) {
+		database.TransactionRollback();
+
+		LogError(
+			"Zone state save aborted (inserted [{}] of [{}]) zone [{}] instance [{}] - previous state preserved",
+			Strings::Commify(static_cast<int64>(inserted_rows)),
+			Strings::Commify(static_cast<int64>(spawns.size())),
+			GetZoneID(),
+			GetInstanceID()
+		);
 		return;
 	}
 
-	ZoneStateSpawnsRepository::InsertMany(database, spawns);
+	auto commit_result = database.TransactionCommit();
+	if (!commit_result.Success()) {
+		database.TransactionRollback();
+
+		LogError(
+			"Zone state save aborted (commit failed) zone [{}] instance [{}] error [{}] - previous state preserved",
+			GetZoneID(),
+			GetInstanceID(),
+			commit_result.ErrorMessage()
+		);
+		return;
+	}
 
 	LogInfo("Saved [{}] zone state spawns", Strings::Commify(spawns.size()));
 }

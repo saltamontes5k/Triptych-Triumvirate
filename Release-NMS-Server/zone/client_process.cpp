@@ -2146,7 +2146,7 @@ void Client::OPGMTrainSkill(const EQApplicationPacket *app)
 
 		if (skilllevel == 0) {
 			//this is a new skill..
-			uint16 t_level = GetSkillTrainLevel(skill, GetClass());
+			uint16 t_level = GetSkillTrainLevel(skill, trains_class);
 
 			if ((GetClassesBits() & GetPlayerClassBit(trains_class)) == 0) {
 				LogSkills("Tried to train a new skill [{}] which is invalid for this race/class.", skill);

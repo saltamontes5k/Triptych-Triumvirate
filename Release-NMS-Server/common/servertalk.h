@@ -602,6 +602,9 @@ struct ServerClientList_Struct {
 	uint8	LFGToLevel;
 	bool	LFGMatchFilter;
 	char	LFGComments[64];
+	// NMS: owned-class bitmask (any owned class matches). Appended so existing
+	// packed field offsets are unchanged; the consumer validates the packet size.
+	uint32	classes_bits;
 };
 
 struct ServerClientListKeepAlive_Struct {

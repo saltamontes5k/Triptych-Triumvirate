@@ -193,6 +193,7 @@ void ClientListEntry::Update(ZoneServer *iZS, ServerClientList_Struct *scl, CLE_
 	m_admin                = scl->Admin;
 	m_level                = scl->level;
 	m_class_               = scl->class_;
+	m_classes_bits         = scl->classes_bits;
 	m_race                 = scl->race;
 	m_anon                 = scl->anon;
 	m_tells_off            = scl->tellsoff;
@@ -252,6 +253,7 @@ void ClientListEntry::ClearVars(bool iAll)
 	memset(m_char_name, 0, sizeof(m_char_name));
 	m_level          = 0;
 	m_class_         = 0;
+	m_classes_bits   = 0;
 	m_race           = 0;
 	m_anon           = 0;
 	m_tells_off      = 0;

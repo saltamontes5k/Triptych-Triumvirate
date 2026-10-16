@@ -4921,6 +4921,19 @@ void EntityList::ZoneWho(Client *c, Who_All_Struct *Who)
 	uint8 WhomLength = strlen(Who->whom);
 
 	std::list<Client *> client_sub_list;
+	// NMS: /who filters on the owned-class mask, not on GetClass(). With
+	// Custom:MulticlassingEnabled, GetClass() returns the Bard sentinel for every
+	// character, so an ID comparison matches every Bard and no other class.
+	// Shared by the count and emit passes so the two cannot diverge; diverging
+	// would desynchronise Entries/PacketLength from the emitted records.
+	// The full-width wclass is range checked before narrowing so a malformed
+	// value such as 257 cannot alias onto a real class ID.
+	auto who_class_match = [Who](Client *entry) {
+		if (Who->wclass < Class::Warrior || Who->wclass > Class::Berserker) {
+			return false;
+		}
+		return entry->HasClass(static_cast<uint8>(Who->wclass));
+	};
 	auto it = client_list.begin();
 	while (it != client_list.end()) {
 		Client *ClientEntry = it->second;
@@ -4931,7 +4944,7 @@ void EntityList::ZoneWho(Client *c, Who_All_Struct *Who)
 				continue;
 			if ((Who->wrace != 0xFFFFFFFF) && (ClientEntry->GetRace() != Who->wrace))
 				continue;
-			if ((Who->wclass != 0xFFFFFFFF) && (ClientEntry->GetClass() != Who->wclass))
+			if ((Who->wclass != 0xFFFFFFFF) && !who_class_match(ClientEntry))
 				continue;
 			if ((Who->lvllow != 0xFFFFFFFF) && (ClientEntry->GetLevel() < Who->lvllow))
 				continue;
@@ -4997,7 +5010,7 @@ void EntityList::ZoneWho(Client *c, Who_All_Struct *Who)
 				continue;
 			if ((Who->wrace != 0xFFFFFFFF) && (ClientEntry->GetRace() != Who->wrace))
 				continue;
-			if ((Who->wclass != 0xFFFFFFFF) && (ClientEntry->GetClass() != Who->wclass))
+			if ((Who->wclass != 0xFFFFFFFF) && !who_class_match(ClientEntry))
 				continue;
 			if ((Who->lvllow != 0xFFFFFFFF) && (ClientEntry->GetLevel() < Who->lvllow))
 				continue;

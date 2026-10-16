@@ -947,7 +947,7 @@ void Corpse::RemoveItemByID(uint32 item_id, int quantity)
 	}
 
 	int       removed_count = 0;
-	for (auto current_item  = m_item_list.begin(); current_item != m_item_list.end(); ++current_item) {
+	for (auto current_item  = m_item_list.begin(); current_item != m_item_list.end();) {
 		LootItem *sitem = *current_item;
 		if (removed_count == quantity) {
 			break;
@@ -958,7 +958,11 @@ void Corpse::RemoveItemByID(uint32 item_id, int quantity)
 			if ((removed_count + stack_size) <= quantity) {
 				removed_count += stack_size;
 				m_is_corpse_changed = true;
-				m_item_list.erase(current_item);
+				// erase() frees the node and invalidates current_item; capture its
+				// return (the next element) instead of letting the for-increment
+				// dereference the dangling iterator (SIGSEGV on a real removal).
+				current_item = m_item_list.erase(current_item);
+				continue;
 			}
 			else {
 				int amount_left = (quantity - removed_count);
@@ -970,11 +974,14 @@ void Corpse::RemoveItemByID(uint32 item_id, int quantity)
 					}
 					else if (stack_size == amount_left) {
 						removed_count += amount_left;
-						m_item_list.erase(current_item);
+						current_item = m_item_list.erase(current_item);
+						continue;
 					}
 				}
 			}
 		}
+
+		++current_item;
 	}
 }
 

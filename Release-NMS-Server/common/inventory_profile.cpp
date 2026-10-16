@@ -389,7 +389,7 @@ bool EQ::InventoryProfile::SwapItem(
 				return false;
 			}
 
-			if (race_id && class_id && !destination_item->IsEquipable(race_id, class_id)) {
+			if (race_id && class_id && !destination_item->IsEquipable(race_id, classes_bits)) {
 				fail_state = swapRaceClass;
 				return false;
 			}

@@ -1478,7 +1478,7 @@ void Mob::TuneCommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraA
 
 	// BER weren't parsing the halving
 	if (hit.skill == EQ::skills::SkillArchery ||
-		(hit.skill == EQ::skills::SkillThrowing && GetClass() != Class::Berserker))
+		(hit.skill == EQ::skills::SkillThrowing && !HasClass(Class::Berserker)))
 		hit.damage_done /= 2;
 
 	if (hit.damage_done < 1)

@@ -5438,8 +5438,24 @@ int64 Mob::CalcAAFocus(focusType type, const AA::Rank &rank, uint16 spell_id, bo
 			case SE_LimitClass:
 				// Do not use this limit more then once per spell. If multiple class, treat value like items
 				// would.
-				if (!PassLimitClass(base_value, GetClass())) {
-					LimitFailure = true;
+				if (IsClient() && RuleB(Custom, MulticlassingEnabled)) {
+					bool any_class_passes = false;
+					uint32 owned_classes = CastToClient()->GetClassesBits();
+					for (const auto& class_bitmask : player_class_bitmasks) {
+						uint8 class_id = class_bitmask.first;
+						uint16 class_bit = class_bitmask.second;
+						if ((owned_classes & class_bit) && PassLimitClass(base_value, class_id)) {
+							any_class_passes = true;
+							break;
+						}
+					}
+					if (!any_class_passes) {
+						LimitFailure = true;
+					}
+				} else {
+					if (!PassLimitClass(base_value, GetClass())) {
+						LimitFailure = true;
+					}
 				}
 				break;
 
@@ -6155,8 +6171,24 @@ int64 Mob::CalcFocusEffect(focusType type, uint16 focus_id, uint16 spell_id, boo
 			case SE_LimitClass:
 				// Do not use this limit more then once per spell. If multiple class, treat value like items
 				// would.
-				if (!PassLimitClass(focus_spell.base_value[i], GetClass())) {
-					return 0;
+				if (IsClient() && RuleB(Custom, MulticlassingEnabled)) {
+					bool any_class_passes = false;
+					uint32 owned_classes = CastToClient()->GetClassesBits();
+					for (const auto& class_bitmask : player_class_bitmasks) {
+						uint8 class_id = class_bitmask.first;
+						uint16 class_bit = class_bitmask.second;
+						if ((owned_classes & class_bit) && PassLimitClass(focus_spell.base_value[i], class_id)) {
+							any_class_passes = true;
+							break;
+						}
+					}
+					if (!any_class_passes) {
+						return 0;
+					}
+				} else {
+					if (!PassLimitClass(focus_spell.base_value[i], GetClass())) {
+						return 0;
+					}
 				}
 				break;
 
@@ -6228,8 +6260,26 @@ int64 Mob::CalcFocusEffect(focusType type, uint16 focus_id, uint16 spell_id, boo
 			case SE_Ff_CasterClass: {
 
 				// Do not use this limit more then once per spell. If multiple class, treat value like items would.
-				if (caster && !PassLimitClass(focus_spell.base_value[i], caster->GetClass())) {
-					return 0;
+				if (caster) {
+					if (caster->IsClient() && RuleB(Custom, MulticlassingEnabled)) {
+						bool any_class_passes = false;
+						uint32 owned_classes = caster->CastToClient()->GetClassesBits();
+						for (const auto& class_bitmask : player_class_bitmasks) {
+							uint8 class_id = class_bitmask.first;
+							uint16 class_bit = class_bitmask.second;
+							if ((owned_classes & class_bit) && PassLimitClass(focus_spell.base_value[i], class_id)) {
+								any_class_passes = true;
+								break;
+							}
+						}
+						if (!any_class_passes) {
+							return 0;
+						}
+					} else {
+						if (!PassLimitClass(focus_spell.base_value[i], caster->GetClass())) {
+							return 0;
+						}
+					}
 				}
 				break;
 			}
@@ -8445,7 +8495,7 @@ bool Mob::PassCastRestriction(int value)
 			break;
 
 		case IS_CLASS_MELEE_THAT_CAN_BASH_OR_KICK_EXCEPT_BARD:
-			if ((GetClass() != Class::Bard) && (GetClass() != Class::Rogue) && IsFighterClass(GetClass()))
+			if (HasAnyClass({ Class::Warrior, Class::Paladin, Class::Ranger, Class::ShadowKnight, Class::Monk, Class::Beastlord, Class::Berserker }))
 				return true;
 			break;
 
@@ -8455,12 +8505,12 @@ bool Mob::PassCastRestriction(int value)
 			break;
 
 		case IS_CLASS_PURE_CASTER:
-			if (IsINTCasterClass(GetClass()))
+			if (HasAnyClass({ Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter }))
 				return true;
 			break;
 
 		case IS_CLASS_HYBRID_CLASS:
-			if (IsHybridClass(GetClass()))
+			if (HasAnyClass({ Class::Paladin, Class::Ranger, Class::ShadowKnight, Class::Bard, Class::Beastlord }))
 				return true;
 			break;
 
@@ -8541,12 +8591,12 @@ bool Mob::PassCastRestriction(int value)
 			break;
 
 		case IS_CLASS_CLR_SHM_DRU:
-			if (IsWISCasterClass(GetClass()))
+			if (HasAnyClass({ Class::Cleric, Class::Druid, Class::Shaman }))
 				return true;
 			break;
 
 		case IS_CLASS_NOT_WAR_PAL_SK:
-			if ((GetClass() != Class::Warrior) && (GetClass() != Class::Paladin) && (GetClass() != Class::ShadowKnight))
+			if (!HasAnyClass({ Class::Warrior, Class::Paladin, Class::ShadowKnight }))
 				return true;
 			break;
 
@@ -8833,12 +8883,12 @@ bool Mob::PassCastRestriction(int value)
 			break;
 
 		case IS_CLASS_KNIGHT_HYBRID_MELEE:
-			if (IsHybridClass(GetClass()) || IsNonSpellFighterClass(GetClass()))
+			if (HasAnyClass({ Class::Warrior, Class::Paladin, Class::Ranger, Class::ShadowKnight, Class::Monk, Class::Bard, Class::Rogue, Class::Beastlord, Class::Berserker }))
 				return true;
 			break;
 
 		case IS_CLASS_WARRIOR_CASTER_PRIEST:
-			if (IsCasterClass(GetClass()) || HasClass(Class::Warrior))
+			if (HasAnyClass({ Class::Warrior, Class::Cleric, Class::Druid, Class::Shaman, Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter }))
 				return true;
 			break;
 
@@ -9001,12 +9051,12 @@ bool Mob::PassCastRestriction(int value)
 		}
 
 		case IS_CLIENT_AND_MALE_PLATE_USER:
-			if (IsClient() && GetGender() == Gender::Male && IsPlateClass(GetClass()))
+			if (IsClient() && GetGender() == Gender::Male && HasAnyClass({Class::Warrior, Class::Cleric, Class::Paladin, Class::ShadowKnight, Class::Bard}))
 				return true;
 			break;
 
 		case IS_CLEINT_AND_MALE_DRUID_ENCHANTER_MAGICIAN_NECROANCER_SHAMAN_OR_WIZARD:
-			if (IsClient() && GetGender() == Gender::Male && (IsCasterClass(GetClass()) && GetClass() != Class::Cleric))
+			if (IsClient() && GetGender() == Gender::Male && HasAnyClass({Class::Druid, Class::Shaman, Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter}))
 				return true;
 			break;
 
@@ -9017,12 +9067,12 @@ bool Mob::PassCastRestriction(int value)
 			break;
 
 		case IS_CLIENT_AND_FEMALE_PLATE_USER:
-			if (IsClient() && GetGender() == Gender::Female && IsPlateClass(GetClass()))
+			if (IsClient() && GetGender() == Gender::Female && HasAnyClass({Class::Warrior, Class::Cleric, Class::Paladin, Class::ShadowKnight, Class::Bard}))
 				return true;
 			break;
 
 		case IS_CLIENT_AND_FEMALE_DRUID_ENCHANTER_MAGICIAN_NECROANCER_SHAMAN_OR_WIZARD:
-			if (IsClient() && GetGender() == Gender::Female && (IsCasterClass(GetClass()) && GetClass() != Class::Cleric))
+			if (IsClient() && GetGender() == Gender::Female && HasAnyClass({Class::Druid, Class::Shaman, Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter}))
 				return true;
 			break;
 
@@ -9064,7 +9114,7 @@ bool Mob::PassCastRestriction(int value)
 
 
 		case IS_CLASS_CASTER_PRIEST:
-			if (IsCasterClass(GetClass()))
+			if (HasAnyClass({ Class::Cleric, Class::Druid, Class::Shaman, Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter }))
 				return true;
 			break;
 
@@ -9101,7 +9151,7 @@ bool Mob::PassCastRestriction(int value)
 		}
 
 		case IS_NOT_CLASS_BARD:
-			if (GetClass() != Class::Bard)
+			if (!HasClass(Class::Bard))
 				return true;
 			break;
 

@@ -880,6 +880,10 @@ bool Zone::IsLoaded() {
 
 void Zone::Shutdown(bool quiet)
 {
+	if (m_shutdown_claimed.exchange(true, std::memory_order_acq_rel)) {
+		return;
+	}
+
 	if (!is_zone_loaded) {
 		return;
 	}

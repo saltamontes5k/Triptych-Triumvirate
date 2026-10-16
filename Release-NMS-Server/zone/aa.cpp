@@ -1548,7 +1548,7 @@ int Client::SetDynamicAATimer(int aa_id) {
         m_aa_timers_cache[aa_id] = id;
 
         if (id >= 100) {
-            LogError("WARNING: Out-of-Range AA Timer ID [{}] assigned to character [{}] ([{}]) for AA [{}] -> Classes [{}]",
+            LogDebugDetail("Dynamic AA Timer ID [{}] assigned to character [{}] ([{}]) for AA [{}] -> Classes [{}]",
                      id, GetCleanName(), CharacterID(), aa_id, GetClassesBits());
         }
 

@@ -880,7 +880,7 @@ void GuildBankManager::SendGuildBank(Client *c)
 					outapp->WriteUInt32(1);
 					outapp->WriteUInt8(0);
 				}
-				outapp->WriteUInt8(item->IsEquipable(c->GetBaseRace(), c->GetBaseClass()) ? 1 : 0);
+				outapp->WriteUInt8(item->IsEquipable(c->GetBaseRace(), c->GetClassesBits()) ? 1 : 0);
 				outapp->WriteString(item->Name);
 			}
 			else {
@@ -992,7 +992,7 @@ void GuildBankManager::SendGuildBank(Client *c)
 				continue;
 			}
 
-			bool useable = item->IsEquipable(c->GetBaseRace(), c->GetBaseClass());
+			bool useable = item->IsEquipable(c->GetBaseRace(), c->GetClassesBits());
 			auto outapp  = new EQApplicationPacket(OP_GuildBank, sizeof(GuildBankItemUpdate_Struct));
 			auto gbius   = (GuildBankItemUpdate_Struct *) outapp->pBuffer;
 
@@ -1839,7 +1839,7 @@ void GuildBankManager::SendGuildBankItemUpdate(uint32 guild_id, int32 slot_id, u
 	gbius.icon_id     = item_data ? item_data->Icon : 0;
 	gbius.display     = display;
 	gbius.allow_merge = item_data ? item_data->Stackable : false;
-	gbius.is_useable  = item_data ? item_data->IsEquipable(c->GetRace(), c->GetClass()) : false;
+	gbius.is_useable  = item_data ? item_data->IsEquipable(c->GetRace(), c->GetClassesBits()) : false;
 	gbius.quantity    = item.quantity;
 
 	strn0cpy(gbius.item_name, item_data ? item_data->Name : "", sizeof(gbius.item_name));
