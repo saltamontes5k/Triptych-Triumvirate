@@ -568,9 +568,19 @@ void Clientlist::CheckForStaleConnectionsAll()
 {
 	LogDebug("Checking for stale connections");
 
+	// Top up only the sessions that have gone quiet. The chat client drops a connection
+	// it has heard nothing on for roughly half a minute, so silence has to be filled --
+	// but a fixed-rate ping on every open session is pure noise when the player is
+	// actively chatting, because their own traffic already keeps the connection alive.
+	// With a 10s tick and a 20s threshold a quiet client sees one keepalive every ~20-30
+	// seconds and a busy one sees none.
+	const auto now = Timer::GetCurrentTime();
 	auto it = ClientChatConnections.begin();
 	while (it != ClientChatConnections.end()) {
-		(*it)->SendKeepAlive();
+		if (now - (*it)->LastActivity >= 20000) {
+			(*it)->SendKeepAlive();
+			(*it)->LastActivity = now;
+		}
 		++it;
 	}
 }
@@ -649,6 +659,7 @@ void Clientlist::Process()
 		bool KeyValid = true;
 
 		while (KeyValid && !(*it)->GetForceDisconnect() && (app = (*it)->ClientStream->PopPacket())) {
+			(*it)->LastActivity = Timer::GetCurrentTime();
 			EmuOpcode opcode = app->GetOpcode();
 
 			auto o = (*it)->ClientStream->GetOpcodeManager();

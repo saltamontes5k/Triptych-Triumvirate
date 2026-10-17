@@ -87,6 +87,8 @@ public:
 	~Client();
 
 	std::shared_ptr<EQStreamInterface> ClientStream;
+	// Last time this client sent us anything, so keepalives only go to quiet sessions.
+	uint32 LastActivity = 0;
 	void AddCharacter(int CharID, const char *CharacterName, int Level);
 	void ClearCharacters() { Characters.clear(); }
 	void SendMailBoxes();
