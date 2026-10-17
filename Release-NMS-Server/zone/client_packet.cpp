@@ -370,6 +370,11 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RaidDelegateAbility] = &Client::Handle_OP_RaidDelegateAbility;
 	ConnectedOpcodes[OP_RaidClearNPCMarks] = &Client::Handle_OP_RaidClearNPCMarks;
 	ConnectedOpcodes[OP_RandomReq] = &Client::Handle_OP_RandomReq;
+	ConnectedOpcodes[OP_RealEstateNeighborhoodRequest] = &Client::Handle_OP_RealEstateNeighborhoodRequest;
+	ConnectedOpcodes[OP_RealEstatePlacement] = &Client::Handle_OP_RealEstatePlacement;
+	ConnectedOpcodes[OP_RealEstatePlotSelect] = &Client::Handle_OP_RealEstatePlotSelect;
+	ConnectedOpcodes[OP_RealEstateRequest] = &Client::Handle_OP_RealEstateRequest;
+	ConnectedOpcodes[OP_RealEstateSearchRequest] = &Client::Handle_OP_RealEstateSearchRequest;
 	ConnectedOpcodes[OP_ReadBook] = &Client::Handle_OP_ReadBook;
 	ConnectedOpcodes[OP_RecipeAutoCombine] = &Client::Handle_OP_RecipeAutoCombine;
 	ConnectedOpcodes[OP_RecipeDetails] = &Client::Handle_OP_RecipeDetails;
@@ -691,6 +696,7 @@ void Client::CompleteConnect()
 	// fresh chat session per zone-in as a result; UCS replaces the previous session for
 	// the same character (Clientlist::CheckForStaleConnections).
 	if (zone->IsUCSServerAvailable()) {
+		LogInfo("Pushing chat server information to [{}] after connect", GetName());
 		ReconnectUCS();
 	}
 	hpupdate_timer.Start();
@@ -5492,6 +5498,10 @@ void Client::Handle_OP_CAuth(const EQApplicationPacket *app) {
 			// The Legends of Norrath card game logs in with a token only our
 			// dinput8 receives; CAuth is that DLL's once-per-zone-in report.
 			SendLoNSession();
+
+			// The client refuses every real-estate action until it is told this zone
+			// is a neighborhood; that is what OP_RealEstateZone carries.
+			SendRealEstateIdentity();
 		}
 
 		if (!CHacker && buf->unk) {

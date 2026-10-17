@@ -139,7 +139,15 @@ int main() {
 	// Check every minute for unused channels we can delete
 	//
 	Timer ChannelListProcessTimer(60000);
-	Timer ClientConnectionPruneTimer(60000);
+	// The chat client gives up on its connection when it hears nothing for about a minute,
+	// and it does not retry: it reports "The universal chat service is temporarily
+	// unavailable" and stops sending. A 60s keepalive interval left no margin -- a
+	// client that connected just after a tick got no keepalive before it timed out, which
+	// is exactly what 10-16 22:45:40-22:46:57 shows: Judy's session logged zero
+	// OP_SessionReady packets and her client gave up 71s after the last real traffic.
+	// Keepalives go out every 15s now, which also refreshes the manager's receive timer
+	// for genuinely idle-but-alive sessions.
+	Timer ClientConnectionPruneTimer(15000);
 
 	Timer keepalive(INTERSERVER_TIMER); // does auto-reconnect
 
