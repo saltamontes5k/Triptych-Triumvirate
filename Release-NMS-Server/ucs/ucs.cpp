@@ -139,11 +139,11 @@ int main() {
 	// Check every minute for unused channels we can delete
 	//
 	Timer ChannelListProcessTimer(60000);
-	// The chat client drops a connection it has heard nothing on for about half a minute.
-	// Clientlist::CheckForStaleConnectionsAll only pings sessions that have been quiet for
-	// 20s, so this tick decides how promptly a *newly* quiet session gets topped up; the
-	// steady-state cost for a client that is actually chatting is zero.
-	Timer ClientConnectionPruneTimer(10000);
+	// The chat client drops a connection it has heard nothing from us on for about half a
+	// minute. Clientlist::CheckForStaleConnectionsAll pings any session we have not sent
+	// to in 15s, so this tick bounds the worst-case server silence at ~15-20s; sessions
+	// we are actively delivering to get no extra packets at all.
+	Timer ClientConnectionPruneTimer(5000);
 
 	Timer keepalive(INTERSERVER_TIMER); // does auto-reconnect
 

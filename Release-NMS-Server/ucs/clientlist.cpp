@@ -564,22 +564,24 @@ void Client::CloseConnection() {
 	ClientStream->ReleaseFromUse();
 }
 
+void Client::QueuePacket(const EQApplicationPacket *p, bool ack_req) {
+	ClientStream->QueuePacket(p, ack_req);
+	LastSend = Timer::GetCurrentTime();
+}
+
 void Clientlist::CheckForStaleConnectionsAll()
 {
 	LogDebug("Checking for stale connections");
 
-	// Top up only the sessions that have gone quiet. The chat client drops a connection
-	// it has heard nothing on for roughly half a minute, so silence has to be filled --
-	// but a fixed-rate ping on every open session is pure noise when the player is
-	// actively chatting, because their own traffic already keeps the connection alive.
-	// With a 10s tick and a 20s threshold a quiet client sees one keepalive every ~20-30
-	// seconds and a busy one sees none.
+	// The chat client drops a connection when it has heard nothing from *us* for roughly
+	// half a minute -- traffic the client sends does not help it. So keepalives are timed
+	// from our last send to that client: a session we are actively delivering to gets
+	// none, and a quiet one gets a one-byte OP_SessionReady every ~15-20s.
 	const auto now = Timer::GetCurrentTime();
 	auto it = ClientChatConnections.begin();
 	while (it != ClientChatConnections.end()) {
-		if (now - (*it)->LastActivity >= 20000) {
+		if (now - (*it)->LastSend >= 15000) {
 			(*it)->SendKeepAlive();
-			(*it)->LastActivity = now;
 		}
 		++it;
 	}
@@ -659,7 +661,7 @@ void Clientlist::Process()
 		bool KeyValid = true;
 
 		while (KeyValid && !(*it)->GetForceDisconnect() && (app = (*it)->ClientStream->PopPacket())) {
-			(*it)->LastActivity = Timer::GetCurrentTime();
+
 			EmuOpcode opcode = app->GetOpcode();
 
 			auto o = (*it)->ClientStream->GetOpcodeManager();
