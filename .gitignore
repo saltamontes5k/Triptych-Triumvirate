@@ -55,3 +55,40 @@ everquest1-mcp/.git/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# --- Local-only: harness config, internal docs, reference, tooling ---
+/AGENTS.md
+/agents/
+/Release-NMS-Deploy/
+/reference/
+/eqemu_docs/
+/shroudref/
+/race_content/
+/tools/
+/CLIENTF
+/.zcode/
+
+# --- Local ops scripts / scratch (never published) ---
+/*.bat
+/*.py
+/shroud_state.py
+/tmp/
+/tmp_housing_ida/
+/tmp_housing_shots/
+
+# --- Server runtime (bin is a junction to Build/bin/Release) ---
+/Release-NMS-Server/bin/
+/Release-NMS-Server/shared/
+
+# --- Exported client data / build logs ---
+Release-NMS-Client/ClientFiles/*.txt
+Release-NMS-Client/ClientFiles/*.dll
+Release-NMS-Client/*.log
+*.log
+
+# --- Local-only MCP servers / patch scratch ---
+/eqemu-mcp-server/
+/everquest1-mcp/
+/*.patch
+Release-NMS-Client/ClientFiles/Resources/*.txt
+
