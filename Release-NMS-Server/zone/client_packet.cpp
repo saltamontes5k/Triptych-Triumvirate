@@ -687,18 +687,6 @@ void Client::CompleteConnect()
 
 	SendAllPackets();
 
-	// Push the chat server address on every completed connect. The client asks for it
-	// only once per launch (Handle_OP_QueryUCSServerStatus), so if its chat session is
-	// dropped later there is nothing to tell it where chat lives and the player is stuck
-	// with "The universal chat service is temporarily unavailable" until the client is
-	// restarted. An unsolicited push is what the zone already sends when UCS availability
-	// changes (ServerOP_UCSServerStatusReply), so clients handle it. The client may open a
-	// fresh chat session per zone-in as a result; UCS replaces the previous session for
-	// the same character (Clientlist::CheckForStaleConnections).
-	if (zone->IsUCSServerAvailable()) {
-		LogInfo("Pushing chat server information to [{}] after connect", GetName());
-		ReconnectUCS();
-	}
 	hpupdate_timer.Start();
 	autosave_timer.Start();
 	SetDuelTarget(0);
