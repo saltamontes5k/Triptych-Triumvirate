@@ -371,8 +371,12 @@ sub ShowTrainingMenu {
     # Get player class for native access check
     my $player_bitmask = _get_player_bitmask($client);
 
-    # Only hide AAs where the next rank requires level > 60.
-    # Maxed AAs and prereq-blocked AAs always remain visible.
+    # Only hide AAs whose next rank is past the server's level cap. Maxed and
+    # prereq-blocked AAs always stay visible. The old hardcoded 60 hid every
+    # partially-trained line the moment its next rank needed 65+ (Recourse of
+    # Life rank 11 at character level 60 vanished from the trainer).
+    my $level_cap = int(quest::get_rule("Character:MaxLevel") || 85);
+    $level_cap = 85 if $level_cap <= 0;
     @all_aas = grep {
         my $frid = _has_native_access($_, $player_bitmask)
                    ? $_->{original_first_rank_id}
@@ -385,7 +389,7 @@ sub ShowTrainingMenu {
             my ($req) = $dbh->selectrow_array(
                 "SELECT level_req FROM aa_ranks WHERE id = ?", undef, $next_rank_id
             );
-            !$req || $req == 0 || $req <= 60;  # hide only if level_req > 60
+            !$req || $req == 0 || $req <= $level_cap;
         }
     } @all_aas;
 
@@ -727,7 +731,7 @@ sub ShowBuyConfirmation {
     my $class_bitmask = _class_bitmask($trainer_class);
 
     my $sth = $dbh->prepare(
-        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, " .
+        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, acm.notes, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
         "oa.name AS original_ability_name, " .
@@ -756,11 +760,12 @@ sub ShowBuyConfirmation {
         return;
     }
 
-    # Tome-safety: the mapping must be item-backed. Disabled universals already
-    # fail the ua.enabled join above; this catches NULL tome_item_id rows
-    # (audit 2026-10-03: 4 mappings) whose credits could never be earned.
-    unless (defined $aa->{tome_item_id} && $aa->{tome_item_id} > 0) {
-        $client->Message($COLOR_RED, "That tome mapping is not item-backed yet (aa_custom_mapping row for universal AA " . $aa->{universal_aa_id} . " has no tome item).");
+    # Grant-only lines are handed out by the cross-tome path; selling them
+    # here would double-grant. A NULL tome_item_id is NOT a block by itself:
+    # 282 enabled mappings have no merchant tome item, and the item is only
+    # used by Haliax's buyback, never by this credit-grant path.
+    if (($aa->{notes} || '') =~ /grant-only/i) {
+        $client->Message($COLOR_RED, "That ability is granted through the cross-tome path and cannot be bought with credits.");
         $dbh->disconnect();
         return;
     }
@@ -858,7 +863,7 @@ sub HandleTrainRequest {
 
     # Get mapping info
     my $sth = $dbh->prepare(
-        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, " .
+        "SELECT acm.universal_aa_id, acm.original_aa_id, acm.aa_name, acm.tier, acm.original_classes, acm.tome_item_id, acm.notes, " .
         "ua.first_rank_id AS universal_first_rank_id, " .
         "oa.first_rank_id AS original_first_rank_id, " .
         "oa.name AS original_ability_name, " .
@@ -894,9 +899,9 @@ sub HandleTrainRequest {
         return 0;
     }
 
-    # Tome-safety: the mapping must be item-backed (see ShowBuyConfirmation).
-    unless (defined $aa->{tome_item_id} && $aa->{tome_item_id} > 0) {
-        $client->Message($COLOR_RED, "That tome mapping is not item-backed yet (aa_custom_mapping row for universal AA " . $aa->{universal_aa_id} . " has no tome item).");
+    # Grant-only lines cannot be bought with credits (see ShowBuyConfirmation).
+    if (($aa->{notes} || '') =~ /grant-only/i) {
+        $client->Message($COLOR_RED, "That ability is granted through the cross-tome path and cannot be bought with credits.");
         $dbh->disconnect();
         return 0;
     }
@@ -1210,11 +1215,15 @@ sub _count_ranks {
     my $safety = 0;
 
     while ($current && $current > 0 && $safety < 100) {
-        $count++;
         my ($next) = $dbh->selectrow_array(
             "SELECT next_id FROM aa_ranks WHERE id = ?", undef, $current
         );
-        last unless $next && $next > 0;
+        # A dangling next_id ends the chain: upstream data leaves links to rank
+        # rows that do not exist (Rampage 30578 -> 36003). Counting one added a
+        # phantom last rank the core could never grant ("hidden requirement").
+        last unless defined $next;
+        $count++;
+        last unless $next > 0;
         $current = $next;
         $safety++;
     }
@@ -1234,6 +1243,11 @@ sub _get_nth_rank_id {
             "SELECT next_id FROM aa_ranks WHERE id = ?", undef, $current
         );
         return undef unless $next && $next > 0;
+        # Only follow a link that resolves to a real rank row.
+        my ($exists) = $dbh->selectrow_array(
+            "SELECT 1 FROM aa_ranks WHERE id = ?", undef, $next
+        );
+        return undef unless $exists;
         $current = $next;
     }
     return $current;
