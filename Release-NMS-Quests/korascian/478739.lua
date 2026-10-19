@@ -5,6 +5,7 @@
 -- Rasper: miscProgression.html.
 
 local raid = require("sod_raids")
+local ach = require("achievement_flags")
 local EVENT = raid.EVENT.CORE
 local CHEST = raid.CHEST.CORE
 
@@ -23,5 +24,6 @@ function event_signal(e)
 		if exp.valid and not exp:HasLockout(EVENT) then
 			exp:AddLockout(EVENT, eq.seconds("72h"))
 		end
+		ach.set_zone(1647640, 1, 1647640)
 	end
 end

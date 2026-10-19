@@ -10,7 +10,7 @@
 --   * waits indefinitely -- there is no prep timer; the defense starts when a
 --     member says "I am delicious" (rivervale/player.lua forwards the phrase),
 --   * then sends three waves of hungry adventurers in a ring around the cakes
---     (four per wave for a solo cake, +1 per extra cake; npc_aggro 1 makes
+--     (three per wave for a solo cake, +1 per extra cake; npc_aggro 1 makes
 --     them charge and the poll re-fixates as a backup), with a one-minute
 --     pause between waves,
 --   * all three waves cleared = victory (18h replay lockout, +30 baking skill
@@ -40,8 +40,8 @@ local CAKE_ROOT      = 13836 -- Parsing Root (beneficial unresistable perma-root
 local CAKE_CENTER = { x = -134, y = -61, z = 3 } -- outside the Fool's Gold
 
 local WAVE_NPC_IDS = { 1520001810, 1520001811, 1520001812 } -- peckish/famished/ravenous
-local WAVE_SIZE_BASE = 3          -- base adventurers per wave = 3 + cakes present
-local WAVE_SIZE_MULT = 1          -- tuned: 4 adventurers for a solo cake
+local WAVE_SIZE_BASE = 2          -- base adventurers per wave = 2 + cakes present
+local WAVE_SIZE_MULT = 1          -- 3 adventurers for a solo cake
 local RING_OFFSETS   = {
 	{  35,   0 }, {   0,  35 }, { -35,   0 }, {   0, -35 },
 	{  25,  25 }, { -25,  25 }, {  25, -25 }, { -25, -25 },
@@ -55,7 +55,7 @@ local SEND_HOME_MS = eq.seconds("10s") * 1000
 
 local BAZAAR_ID     = 151
 local BAZAAR_HOME   = { x = 185, y = -835, z = 4, h = 390 }
-local BAKING_SKILL  = 56
+local BAKING_SKILL  = 60 -- 60 = Baking (56 is Make Poison)
 local BAKING_CAP    = 300
 
 -- Maxed-baker booby prize: the skill reward is capped, so a master baker
@@ -145,6 +145,16 @@ local function spawn_wave()
 	end
 end
 
+-- Monster missions dismiss pets: a level-62 pet would solo the mission,
+-- and the shroud form is not supposed to have one. RemovePet() only
+-- detaches the owner, so depop the pet mob itself.
+local function dismiss_pets(client)
+	local pet = client:GetPet()
+	if pet and pet.valid then
+		pet:Depop()
+	end
+end
+
 local function strip_icing(client)
 	client:BuffFadeBySpellID(CAKE_ROOT)
 	client:BuffFadeBySpellID(STICKY_ICING)
@@ -155,19 +165,18 @@ end
 local function fail_defense()
 	state = "failed"
 	cleanup_waves()
-	eq.zone_emote(15, "A cake has been eaten. The Fool's Gold Cake Defense is LOST -- the hungry adventurers of Rivervale drag the crumbs off toward the tavern.")
+	-- Defeat must be unmissable: red zone text, a red marquee on every cake,
+	-- a sound, and then a hard boot from the expedition.
+	eq.zone_emote(MT.Red, "The last cake crumbles into crumbs. The Fool's Gold Cake Defense has FAILED.")
 	for _, client in ipairs(members_in_zone()) do
-		-- Deliver the failure first: RemoveShroud re-sends the profile and can
-		-- wipe chat that is still pending for a client that just died.
-		client:Message(15, "The Cake Defense has FAILED -- a cake has been eaten. There is no replay lockout this time; regroup, rebuy your abilities and try again.")
+		client:SendMarqueeMessage(MT.Red, 255, 1000, 1500, 4000, "THE CAKE DEFENSE HAS FAILED")
+		client:Message(MT.Red, "THE CAKE DEFENSE HAS FAILED.")
+		client:Message(MT.Red, "The hungry adventurers of the Vale have eaten their fill. You are cast out of the expedition.")
+		client:SendSound()
 		strip_icing(client)
 		client:RemoveShroud()
 	end
-	eq.set_timer("cake_send_home", SEND_HOME_MS)
-	local exp = eq.get_expedition()
-	if exp.valid then
-		exp:SetLocked(true, 2) -- lock so late joiners can't wander in
-	end
+	eq.set_timer("cake_fail_kick", 5000)
 end
 
 function event_spawn(e)
@@ -223,10 +232,13 @@ function event_timer(e)
 		for cid in pairs(prepared) do if not present[cid] then prepared[cid] = nil end end
 
 		for _, client in ipairs(members) do
+			-- No pets in the mission, including ones summoned after the shroud.
+			dismiss_pets(client)
 			local id = client:CharacterID()
 			if client:GetRace() ~= 629 then
 				if seen_unshrouded[id] then
 					client:ApplyShroud(CAKE_SHROUD_ID)
+					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's buffs
 					-- (their damage shields / haste / speed buffs would ride
 					-- along otherwise), then the icing goes on alone.
@@ -237,7 +249,7 @@ function event_timer(e)
 					eq.debug(string.format("[cake] fresh %s: icing=%s root=%s castIcing=%s castRoot=%s",
 						client:GetName(), tostring(client:FindBuff(STICKY_ICING)), tostring(client:FindBuff(CAKE_ROOT)),
 						tostring(ok_icing), tostring(ok_root)))
-					client:Message(15, "Sugar crust hardens over you. You are the cake now -- delicious, immobile, and defended only by your wits. Take your time buying abilities; when your party is ready, say 'I am delicious' and the feast begins.")
+					client:Message(15, "Sugar crust hardens over you. You are the cake now -- delicious, immobile, and defended only by your wits. Take your time buying abilities; when your party is ready, every cake says 'I am delicious' and the feast begins.")
 					seen_unshrouded[id] = nil
 				else
 					seen_unshrouded[id] = true
@@ -250,6 +262,7 @@ function event_timer(e)
 					-- apply path above never runs. Strip the real buffs and coat/
 					-- root here so a persisted cake is prepared exactly once.
 					prepared[id] = true
+					dismiss_pets(client)
 					client:BuffFadeAll()
 					local ok_icing = e.self:CastSpell(STICKY_ICING, client:GetID())
 					local ok_root  = e.self:CastSpell(CAKE_ROOT, client:GetID())
@@ -307,8 +320,13 @@ function event_timer(e)
 						local skill = cake:GetSkill(BAKING_SKILL)
 						if skill < BAKING_CAP then
 							local gain = math.min(30, BAKING_CAP - skill)
-							cake:IncreaseSkill(BAKING_SKILL, gain)
-							cake:Message(15, string.format("Wendel's voice echoes from the Bazaar: 'Magnificent! You have learned %d points of baking you will never get from a book.'", gain))
+							local newvalue = skill + gain
+							-- SetSkill saves character_skills and sends OP_SkillUpdate; the
+							-- old IncreaseSkill was an inline that did neither, so the reward
+							-- silently vanished on zone.
+							cake:SetSkill(BAKING_SKILL, newvalue)
+							eq.debug(string.format("[cake] reward %s: skill %d (Baking) %d -> %d", cake:GetName(), BAKING_SKILL, skill, newvalue))
+							cake:Message(15, string.format("Wendel's voice echoes from the Bazaar: 'Magnificent! You have learned %d points of Baking (now %d/%d) -- knowledge no book will give you.'", gain, newvalue, BAKING_CAP))
 						else
 							-- Maxed baking: the skill reward is capped, so hand out the booby
 							-- prize instead -- an ability point and a full stack of a random
@@ -336,6 +354,15 @@ function event_timer(e)
 	elseif e.timer == "cake_send_home" then
 		cleanup_waves()
 		send_home(members_in_zone())
+		eq.depop()
+	elseif e.timer == "cake_fail_kick" then
+		-- Hard boot: removing every member tears the expedition down and the
+		-- dynamic zone teleports the clients out to the safe return.
+		local exp = eq.get_expedition()
+		if exp.valid then
+			exp:SetLocked(true, 2)
+			exp:RemoveAllMembers()
+		end
 		eq.depop()
 	end
 end

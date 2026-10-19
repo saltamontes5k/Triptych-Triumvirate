@@ -91,6 +91,13 @@ por.items = {
   -- "The Corruption of Ro" (task 3398, Tunare's Shrine)
   chalice_of_life     = 85085,
   the_chalice_of_life = 85670,
+
+  -- "Mark of the Spirits" turn-ins (Spirit Hunter Elijo, task 3031)
+  mark_of_okahn       = 85606,
+  mark_of_ravenglass  = 85607,
+  mark_of_stillwillow = 85608,
+  mark_of_xanzerok    = 85609,
+  mark_of_oroshar     = 85610,
 }
 
 -- Entity ids for the Prophecy of Ro content added by the phase-6 SQL.
@@ -115,6 +122,10 @@ por.inspirations = { 52595, 52594, 52598, 52596, 52597, 52599 }
 
 -- The five sandstone tablet pieces (The Key to the Past)
 por.sandstone_tablets = { 36135, 36136, 36137, 36138, 36139 }
+
+-- Task 3031 - Mark of the Spirits (Spirit Hunter Elijo)
+por.mark_of_the_spirits_task = 3031
+por.spirit_marks = { 85606, 85607, 85608, 85609, 85610 }
 
 por.tasks = {
   saga_skins               = 3000,
@@ -142,6 +153,7 @@ por.tasks = {
   exploring_arcstone       = 3028,
   heroes_challenge         = 3029,
   arena_champions_badge    = 3030,
+  mark_of_the_spirits      = 3031,
   -- Raid keys / raid tasks
   entrance_to_daosheen_chamber = 3379,
   corruption_of_ro             = 3398,

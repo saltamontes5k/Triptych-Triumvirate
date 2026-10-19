@@ -4,9 +4,10 @@
 -- End state
 --   aa_ability 31082  "Manifest Experience" -> "Origin", all classes / races /
 --                     deities, activated, not grant-only.
---   aa_ranks   41000  points at the new spell 121861, 1080s (18 minute) reuse,
---                     cost 0, level 5, single rank.
---   spells_new 121861 new "Origin" spell whose first effect is
+--   aa_ranks   41000  points at the new spell 44021, 1080s (18 minute) reuse,
+--                     cost 0, level 5, single rank; lower_hotkey_sid -1 so the
+--                     one-word name draws as "Origin" (no db_str type 3).
+--   spells_new 44021 new "Origin" spell whose first effect is
 --                     SE_GateToHomeCity (322). zone/spell_effects.cpp handles
 --                     that SPA with Client::GoToBind(4), i.e. bind slot 4 --
 --                     the character's home city, which is what /charinfo
@@ -22,14 +23,21 @@
 --   retired Lucky Coin ability 31082 is repurposed in place.
 --
 --   Which number to activate
---   The AA window button always sends the *rank* id, which is 41000, and the
---   server resolves activation through aa_ranks (Client::Handle_OP_AAAction ->
---   ActivateAlternateAdvancementAbility -> Zone::GetAlternateAdvancementRank), so
---   "/alt activate 41000" is what actually works. The retail db_str strings
---   advertise the ability id instead (e.g. AA 35 "Mass Group Buff" says
---   /alt activate 35 while its rank is 128, and aa_ranks has an unrelated id 35),
---   so that wording is stale flavor text and does not resolve server side.
---   The AA title below therefore says 41000, not 31082.
+--   Two different numbers are in play and they are not interchangeable:
+--
+--   * The AA window button / hotbutton sends OP_AAAction carrying the *rank*
+--     id (41000); the server resolves that through aa_ranks
+--     (Client::Handle_OP_AAAction -> ActivateAlternateAdvancementAbility ->
+--     Zone::GetAlternateAdvancementRank).
+--   * "/alt activate <n>" is resolved by the CLIENT against the ability id it
+--     received on the wire (SendAA_Struct.seq == aa_ability.id == 31082): it
+--     looks through the owned abilities for one whose ID field equals <n>
+--     (eqgame sub_4A3D70) and then sends *that* ability's rank id. So the
+--     number the description must advertise is 31082. "/alt activate 41000"
+--     matches no ability and silently does nothing.
+--
+--   export_client_files derives the advertised number from aa_ability.id, which
+--   is why the db_str text below carries no number of its own.
 --
 -- Why a new spell instead of reusing 121860
 --   spell 121860 ("Transmute Experience") is owned by the Lucky Coin AA and was
@@ -60,7 +68,18 @@
 --   dbstr_us.txt, so this migration also rewrites db_str (the export source)
 --   for rank 41000. Run `export-client-files.bat <EQ-client-folder>` from the
 --   repo root afterwards to regenerate dbstr_us.txt AND spells_us.txt -- the
---   latter is what teaches the client about the new spell 121861.
+--   latter is what teaches the client about the new spell 44021.
+--
+-- Two-line name (hotkey sids)
+--   The selected-ability header in the AA window and the hotbutton label are
+--   built as GetString(upper_hotkey_sid, 2) + " " + GetString(lower_hotkey_sid, 3)
+--   (eqgame sub_608AC0 / sub_60AA80), and the second half is skipped only while
+--   lower_hotkey_sid <= 0. The base "Manifest Experience" row is a two-word
+--   name, so it carries lower_hotkey_sid = 41000 and db_str type 3 'Experience'.
+--   "Origin" is one word: this migration clears lower_hotkey_sid to -1 (exactly
+--   like the other one-word activated AAs: Exodus, Escape, ...) and leaves type 3
+--   absent. Leaving it at 41000 with no type-3 row makes the client draw
+--   "Unknown DB String 41000-3" everywhere that two-part name appears.
 --
 -- Note on db_str id 41000
 --   41000 is also a real spell id, so its db_str type 6 row is the description
@@ -90,7 +109,7 @@ INSERT INTO spells_new (
     buffdurationformula, buffduration, teleport_zone, goodEffect, ResistDiff,
     mana, can_mgb, reflectable
 ) VALUES (
-    121861, 'Origin', 'PLAYER_1', 322, 100, 6, 5000,
+    44021, 'Origin', 'PLAYER_1', 322, 100, 6, 0,
     0, 0, '', 1, 0,
     0, 0, 0
 ) ON DUPLICATE KEY UPDATE
@@ -99,7 +118,7 @@ INSERT INTO spells_new (
     effectid1           = 322,
     effect_base_value1  = 100,
     targettype          = 6,
-    cast_time           = 5000,
+    cast_time           = 0,
     buffdurationformula = 0,
     buffduration        = 0,
     teleport_zone       = '',
@@ -117,7 +136,7 @@ SET effectid2  = 254, effectid3  = 254, effectid4  = 254,
     effectid5  = 254, effectid6  = 254, effectid7  = 254,
     effectid8  = 254, effectid9  = 254, effectid10 = 254,
     effectid11 = 254, effectid12 = 254
-WHERE id = 121861;
+WHERE id = 44021;
 
 -- ---------------------------------------------------------------------------
 -- 2. aa_ability 31082: Manifest Experience -> Origin
@@ -145,16 +164,21 @@ WHERE id = 31082;
 --    Ascendant ranks on this server follow (ranks 40000-40006, 41000).
 -- ---------------------------------------------------------------------------
 UPDATE aa_ranks
-SET spell       = 121861,
-    spell_type  = 121861,
-    cost        = 0,
-    level_req   = 5,
-    recast_time = 1080,   -- 18 minutes, in seconds (cf. Lay on Hands 4320 = 72 min)
-    expansion   = 0,
-    prev_id     = -1,
-    next_id     = -1,
-    title_sid   = 41000,
-    desc_sid    = 41000
+SET spell            = 44021,
+    spell_type       = 44021,
+    cost             = 0,
+    level_req        = 5,
+    recast_time      = 1080,   -- 18 minutes, in seconds (cf. Lay on Hands 4320 = 72 min)
+    expansion        = 0,
+    prev_id          = -1,
+    next_id          = -1,
+    -- "Origin" is one word: keep the first half of the two-part short name
+    -- (type 2 -> 'Origin') and clear the second half so the client never asks
+    -- for the deleted db_str type 3. See the header note on hotkey sids.
+    upper_hotkey_sid = 41000,
+    lower_hotkey_sid = -1,
+    title_sid        = 41000,
+    desc_sid         = 41000
 WHERE id = 41000;
 
 -- ---------------------------------------------------------------------------
@@ -174,12 +198,20 @@ WHERE id = 1371;
 
 -- ---------------------------------------------------------------------------
 -- 5. Client AA strings for the repurposed rank (title_sid = desc_sid = 41000)
---    db_str types: 1 = AA title, 2 = first line of the 2-line spell name,
---    3 = second line of that name, 4 = AA description.
---    Type 3 is deleted rather than blanked because "Origin" is a one-line name.
+--    db_str types: 1 = AA list/tooltip title, 2 = first half of the two-part
+--    short name drawn in the AA header and on the hotbutton, 3 = second half of
+--    that short name, 4 = AA description.
+--    Type 3 is intentionally absent: "Origin" is one word and lower_hotkey_sid
+--    is -1 above, so the client never asks for it.
+--
+--    Type 4 is the bare description. export_client_files prepends the class tag
+--    and "[/alt activate <aa_ability.id>]" itself
+--    (DbStrRepository::GetDBStrFileLinesMulticlass), so a prefix hardcoded here
+--    only double-prints -- and the only number that works in that prefix is the
+--    ability id 31082, not the rank id 41000 (see the header note).
 -- ---------------------------------------------------------------------------
 DELETE FROM db_str WHERE id = 41000 AND type IN (1, 2, 3, 4);
 INSERT INTO db_str (id, type, value) VALUES
     (41000, 1, 'Origin'),
     (41000, 2, 'Origin'),
-    (41000, 4, '(ALL) [/alt activate 31082]<br>This ability, when activated, transports you back to your starting city.  You can check your origin location using the command /charinfo.');
+    (41000, 4, 'This ability, when activated, transports you back to your starting city.  You can check your origin location using the command /charinfo.');

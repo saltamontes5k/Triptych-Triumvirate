@@ -11,6 +11,7 @@
 -- and the trial_decon flag for surviving raiders.
 
 local prog = require("uf_progression")
+local ach = require("achievement_flags")
 
 local CONSTRUCT_A = 490121
 local CONSTRUCT_B = 490122
@@ -113,6 +114,7 @@ function event_death_complete(e)
 	end
 	for _, c in ipairs(prog.alive_clients(e.self:GetX(), e.self:GetY(), 300)) do
 		prog.set(c, prog.FLG.trial_decon, 1)
+		ach.set(c, 1749004, 1, 1349004)
 		c:Message(15, "You have passed the Trial of Deconstruction.")
 	end
 end

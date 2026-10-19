@@ -100,6 +100,7 @@ task_ids = {
   por_exploring_arcstone = 3028,
   por_heroes_challenge = 3029,
   por_arena_champions_badge = 3030,
+  por_mark_of_the_spirits = 3031,
 };
 
 return task_ids

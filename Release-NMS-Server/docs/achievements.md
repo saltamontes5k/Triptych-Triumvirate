@@ -674,6 +674,28 @@ require a removed exact-name child are pruned recursively. Optional removed
 children do not prune a parent. Guild Lobby and Guild Hall zones 344 and 345
 remain in the DoN slice.
 
+The Underfoot profile applies the same filter with its own reviewed ceiling:
+Traveler zone IDs above 495 are removed, along with their structural ID
+families, newer enhanced availability rows, and required parents whose
+exact-name child was removed. Underfoot files its 13 Travelers with a `...05`
+achievement suffix and a component id exactly 600000 below the achievement id;
+that shape is recognized only with both values pinned, so an unrelated
+later-client suffix is rejected rather than guessed. House of Thule and later
+zones begin at 700, so the ceiling cleanly separates the UF slice. Housing and
+Guild Hall Travelers decode to zones 700+ and are removed by the ceiling; the
+Wedding Chapel, Dragon Crypt, Freeport Sewers, and Commonlands Travelers are
+in-era and remain in the UF slice.
+
+A current live client resource snapshot validates as 296 categories, 6,574
+achievements, 6,642 category associations, 32,206 components, and 4,475
+displayed counts. It reproduces the audited DoN reviewed coverage exactly (510
+native / 214 quest-manual / 20 presentation / 330 unavailable components, with
+no coverage rejection). Through Underfoot it selects 1,689 definitions and
+enables the complete 421-achievement, 6,380-point Depths of Darkhollow-through-
+Underfoot roster; the boundary removes 17 later or outlier definitions. Its
+dangling references are one missing category, 11 missing association
+achievements, and 12 missing component achievements.
+
 The supplied ToB set currently validates as 286 categories, 6,203
 achievements, 6,358 associations, 30,939 components, and 3,953 displayed
 counts. Through DoN it selects 982 definitions and emits 4,658 fixed criteria

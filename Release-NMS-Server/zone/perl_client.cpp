@@ -751,6 +751,11 @@ bool Perl_Client_IsBecomeNPC(Client* self) // @categories Account and Character
 	return self->IsBecomeNPC();
 }
 
+bool Perl_Client_IsShrouded(Client* self) // @categories Account and Character
+{
+	return self->IsShrouded();
+}
+
 int Perl_Client_GetBecomeNPCLevel(Client* self) // @categories Experience and Level
 {
 	return self->GetBecomeNPCLevel();
@@ -4087,6 +4092,7 @@ void perl_register_client()
 	package.add("IsAutoAttackEnabled", &Perl_Client_IsAutoAttackEnabled);
 	package.add("IsAutoFireEnabled", &Perl_Client_IsAutoFireEnabled);
 	package.add("IsBecomeNPC", &Perl_Client_IsBecomeNPC);
+	package.add("IsShrouded", &Perl_Client_IsShrouded);
 	package.add("IsCrouching", &Perl_Client_IsCrouching);
 	package.add("IsDueling", &Perl_Client_IsDueling);
 	package.add("IsEXPEnabled", &Perl_Client_IsEXPEnabled);

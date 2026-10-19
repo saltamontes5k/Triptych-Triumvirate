@@ -7305,7 +7305,7 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 			}
 		}
 
-		if (IsClient()) {
+		if (IsClient() && !CastToClient()->IsShrouded()) {
 			// Nautilus Vault mod slots: parked items lend their focus best-wins alongside
 			// everything else. The list is pre-filtered to valid ItemEffectFocus entries.
 			const EQ::ItemData *locker_focus[28] = {};

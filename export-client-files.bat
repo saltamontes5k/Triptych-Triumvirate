@@ -1,5 +1,5 @@
 @echo off
-REM export-client-files.bat - generates the 4 DB-derived client data files
+REM export-client-files.bat — generates the 4 DB-derived client data files
 REM and copies them into <client>\ and <client>\Resources\
 REM Usage: export-client-files.bat ^<your-EQ-client-folder^>
 
@@ -11,12 +11,11 @@ if "%~1"=="" (
 )
 
 set "CLIENT=%~1"
-set "EXEDIR=%~dp0Release-NMS-Server\bin\Release"
+set "EXEDIR=%~dp0Release-NMS-Server\Build\bin\Release"
 set "EXPORT=%EXEDIR%\export"
 
 if not exist "%EXEDIR%\export_client_files.exe" (
-    echo ERROR: %EXEDIR%\export_client_files.exe not found.
-    echo Build the server first, or confirm Release-NMS-Server\bin\Release exists.
+    echo ERROR: %EXEDIR%\export_client_files.exe not found. Build the server first.
     exit /b 1
 )
 

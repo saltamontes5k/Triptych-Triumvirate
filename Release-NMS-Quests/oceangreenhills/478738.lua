@@ -5,6 +5,7 @@
 -- Rasper: miscProgression.html.
 
 local raid = require("sod_raids")
+local ach = require("achievement_flags")
 local EVENT = raid.EVENT.MALARIAN
 local CHEST = raid.CHEST.MALARIAN
 
@@ -23,5 +24,7 @@ function event_signal(e)
 		if exp.valid and not exp:HasLockout(EVENT) then
 			exp:AddLockout(EVENT, eq.seconds("72h"))
 		end
+		ach.set_zone(1646940, 1, 1646940)
+		ach.set_zone(1600030, 1, 1600231)
 	end
 end

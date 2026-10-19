@@ -221,8 +221,9 @@ INSERT INTO ground_spawns (id,zoneid,version,max_x,max_y,max_z,min_x,min_y,headi
 (460003,123,0,145.0,-1815.0,-258.0,105.0,-1855.0,0,'','84081',1,'Bone Collector: Dragon Skull Fragments (Dragon Necropolis)',300,1,-1,-1,'peq_halloween','');
 
 -- --- Tasks -----------------------------------------------------------------
-DELETE FROM task_activities WHERE taskid BETWEEN 620004 AND 620099;
-DELETE FROM tasks           WHERE id     BETWEEN 620004 AND 620099;
+-- (range narrowed to the 2005-2008 block; 620012-620017 are deleted in Phase 5)
+DELETE FROM task_activities WHERE taskid BETWEEN 620004 AND 620011;
+DELETE FROM tasks           WHERE id     BETWEEN 620004 AND 620011;
 INSERT INTO tasks (id,type,duration,duration_code,title,description,reward_text,reward_id_list,cash_reward,exp_reward,reward_method,reward_points,min_level,max_level,level_spread,repeatable,completion_emote,enabled) VALUES
 (620004,0,0,0,'Skeleton Zapping','Destroy ten skeletons with the Scythe of Skeletal Expulsion.','',NULL,0,0,0,0,0,0,0,1,'',1),
 (620005,0,0,0,'Troublemakers in Faydark','Capture ten faerie and pixie troublemakers, then release them in Lesser Faydark.','',NULL,0,0,0,0,0,0,0,1,'',1),
@@ -287,5 +288,367 @@ INSERT INTO lootdrop_entries (lootdrop_id,item_id,item_charges,equip_item,chance
 INSERT INTO loottable_entries (loottable_id,lootdrop_id,multiplier,droplimit,mindrop,probability) VALUES
 (200001,200001,1,0,2,100);
 UPDATE npc_types SET loottable_id = 200001 WHERE id = 1500200026;
+
+COMMIT;
+
+-- ===========================================================================
+-- Phase 5 — Nights of the Dead 2009/2010 + Out With the Old (tasks 620012-620017)
+-- Sources: bonzz.com/nightsofthedead.htm (#hauntedcave #diggraves #tattooed
+--          #terror #underskin) and bonzz.com/bonemask.htm (#5).
+-- Adaptations vs live (documented in the quest scripts too):
+--   * "Out With the Old" monster mission -> scripted Void Legion defense
+--     event in kithicor (no monster-mission tech on this server).  Entry
+--     consumes Bristlebane's Ticket of Admission (85062, reward of 620008).
+--   * "Under Your Skin" runs in a remote gfaydark pocket (eastkorlacha /
+--     Snarlstone Dens is dz-instanced only here); the true Skinwalker is a
+--     zone qglobal (notd_uys_true) picked when the encounter starts.
+--   * "Digging Their Graves" 14h lockout and the master-quest 5x counter are
+--     character buckets: notd_graves_last / notd_graves_count /
+--     notd_master_prog (see poknowledge/Edmund_Strangeways.pl).
+--   * "the Gravedigger" suffix title rides on titles.item_id (Frightening
+--     Writ, 3001010) - claim with /title.
+-- Zones for digging sites / skinwalker hunts (zoneidnumber):
+--   nektulos 25, lakeofillomen 85, firiona 84, emeraldjungle 94, mesa 397,
+--   barren 422, steppes 399, lopingplains 443, buriedsea 423,
+--   oldfieldofbone 452 (Field of Scale), crescent 394, kithicor 20,
+--   poknowledge 202, gfaydark 54.
+-- ===========================================================================
+START TRANSACTION;
+
+-- --- Items ------------------------------------------------------------------
+DELETE FROM items WHERE id BETWEEN 3001007 AND 3001014;
+INSERT INTO items (id,Name,lore,itemtype,slots,stackable,nodrop,magic,weight,price,icon,idfile,clickeffect,clicktype,casttime,recastdelay,maxcharges,reqlevel,classes,races,size,bagtype,bagslots,bagsize,bagwr,loregroup,questitemflag,norent,astr,acha,awis,aint,hp,mana)
+VALUES
+(3001007,'Pirate''s Gold','Pirate''s Gold',11,0,0,0,1,0.2,0,632,'IT63',-1,0,0,0,0,0,65535,65535,1,0,0,0,0,0,1,0,6,3,8,8,70,60),
+(3001008,'Edmund''s Shovel','Edmund''s Shovel',11,0,0,1,0,1.5,0,789,'IT63',122100,5,8000,5,-1,0,65535,65535,1,0,0,0,0,0,1,1,0,0,0,0,0,0),
+(3001009,'Intricately Tattooed Flesh','Intricately Tattooed Flesh',11,0,1,1,0,0.1,0,832,'IT63',-1,0,0,0,0,0,65535,65535,1,0,0,0,0,0,1,1,0,0,0,0,0,0),
+(3001010,'Frightening Writ','Frightening Writ',11,0,0,0,1,0.1,0,1233,'IT63',-1,0,0,0,0,0,65535,65535,1,0,0,0,0,0,1,0,0,0,0,0,0,0),
+(3001011,'Skinwalker''s Soul Shard','Skinwalker''s Soul Shard',11,0,1,1,1,0.1,0,788,'IT63',-1,0,0,0,0,0,65535,65535,1,0,0,0,0,0,1,1,0,0,0,0,0,0),
+(3001012,'Vial of Chiropteranform','Vial of Chiropteranform',21,0,0,0,1,0.3,0,519,'IT63',32824,3,1500,5,10,1,65535,65535,1,0,0,0,0,0,1,0,0,0,0,0,0,0),
+(3001013,'Vial of the Wild Moon','Vial of the Wild Moon',21,0,0,0,1,0.3,0,519,'IT63',585,3,1500,5,10,1,65535,65535,1,0,0,0,0,0,1,0,0,0,0,0,0,0),
+(3001014,'Void Artifact','Void Artifact',11,0,0,1,1,1.0,0,1233,'IT63',-1,0,0,0,0,0,65535,65535,1,0,0,0,0,0,1,1,0,0,0,0,0,0);
+
+-- --- Grave Dig spell (shovel click, target the disturbed earth) --------------
+DELETE FROM spells_new WHERE id = 122100;
+INSERT INTO spells_new (id, name, player_1, effectid1, effect_base_value1,
+                        targettype, cast_time, buffdurationformula, buffduration,
+                        teleport_zone, goodEffect, ResistDiff, mana, can_mgb, reflectable)
+VALUES (122100,'Grave_Dig','PLAYER_1',254,0,5,2000,0,0,'',1,0,0,0,0);
+UPDATE spells_new SET effectid2=254, effectid3=254, effectid4=254, effectid5=254,
+  effectid6=254, effectid7=254, effectid8=254, effectid9=254, effectid10=254,
+  effectid11=254, effectid12=254 WHERE id = 122100;
+
+-- --- New NPCs ----------------------------------------------------------------
+DELETE FROM npc_types WHERE id BETWEEN 1500200032 AND 1500200099;
+INSERT INTO npc_types (id,name,lastname,level,race,class,bodytype,hp,mana,gender,texture,helmtexture,size,loottable_id,merchant_id,npc_spells_id,npc_faction_id,mindmg,maxdmg,attack_count,npcspecialattks,special_abilities,aggroradius,assistradius,runspeed,MR,CR,DR,FR,PR,Corrup,PhR,qglobal,AC,npc_aggro,attack_speed,attack_delay,findable,STR,STA,DEX,AGI,_INT,WIS,CHA,see_invis,see_invis_undead,trackable,ATK,slow_mitigation,version,maxlevel,scalerate,isquest) VALUES
+-- Haunted Cave (Crescent Reach)
+(1500200032,'Jilian_Florantine','',60,1,1,1,200000,0,1,0,0,6.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+(1500200033,'Ghost_of_All_Hallows_Eve','',60,67,1,3,30000,0,0,0,0,6.00,0,0,0,0,30,120,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,60,0,0),
+(1500200034,'Shadow_of_All_Hallows_Eve','',62,67,1,3,42000,0,0,1,0,6.00,0,0,0,0,40,150,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,90,1,0,30,1,130,130,130,130,130,130,130,0,0,1,0,0,0,62,0,0),
+-- Digging Their Graves / Hunt for Tattooed Flesh (PoK)
+(1500200035,'Edmund_Strangeways','',60,1,1,1,200000,0,0,0,0,6.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+-- Terror of Illis Taberish giver (PoK)
+(1500200037,'Illis_Taberish','',60,1,1,1,200000,0,0,0,0,6.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+-- Under Your Skin (PoK giver + gfaydark pocket encounter)
+(1500200036,'Rhaeda_Evel','',60,21,1,1,200000,0,1,0,0,6.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+(1500200075,'Skinwalker','',70,253,1,1,200000,0,0,0,0,6.00,0,0,0,0,0,0,0,'','',0,0,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,70,0,1),
+(1500200076,'a_revealed_skinwalker','',72,253,1,1,90000,0,0,0,0,6.00,0,0,0,0,150,380,1,'Z','',0,0,1.25,15,15,15,15,15,0,0,0,150,1,0,30,0,200,200,200,200,200,200,200,0,0,1,0,0,0,72,0,0),
+(1500200077,'a_revealed_skinwalker','',72,253,1,1,90000,0,0,1,0,6.00,0,0,0,0,150,380,1,'Z','',0,0,1.25,15,15,15,15,15,0,0,0,150,1,0,30,0,200,200,200,200,200,200,200,0,0,1,0,0,0,72,0,0),
+(1500200078,'a_revealed_skinwalker','',72,253,1,1,90000,0,0,2,0,6.00,0,0,0,0,150,380,1,'Z','',0,0,1.25,15,15,15,15,15,0,0,0,150,1,0,30,0,200,200,200,200,200,200,200,0,0,1,0,0,0,72,0,0),
+(1500200079,'Elder_Ritualist_Longshadow','',70,3,1,1,200000,0,0,0,0,6.00,0,0,0,0,0,0,0,'','',0,0,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,70,0,1),
+-- Out With the Old (kithicor Void Legion defense)
+(1500200038,'Cathil','',60,1,1,1,200000,0,1,0,0,6.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+(1500200039,'A_Silly_Puppet','',60,41,1,1,200000,0,0,0,0,3.00,0,0,0,0,0,0,0,'','',70,70,1.25,15,15,15,15,15,0,0,0,50,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+(1500200084,'#Void_Defense_Controller','',80,127,1,11,32767,0,0,0,0,6.00,0,0,0,0,0,0,0,'','',0,0,1.25,15,15,15,15,15,0,0,0,0,0,0,30,0,100,100,100,100,100,100,100,0,0,0,0,0,0,0,0,1),
+(1500200080,'The_Legion_Commander_of_the_Void','',78,1,1,1,450000,0,0,3,3,8.00,200004,0,0,0,400,900,1,'Z','',70,70,1.25,15,15,15,15,15,0,0,0,250,1,0,30,1,250,250,250,250,250,250,250,0,0,1,0,0,0,78,0,0),
+(1500200081,'a_void_legionnaire','',72,1,1,1,120000,0,0,3,0,6.00,0,0,0,0,200,420,1,'Z','',70,70,1.25,15,15,15,15,15,0,0,0,220,1,0,30,0,220,220,220,220,220,220,220,0,0,1,0,0,0,72,0,0),
+(1500200082,'a_void_bloodmage','',73,1,1,1,100000,60000,0,3,0,6.00,0,0,0,0,180,380,1,'Z','',70,70,1.25,15,15,15,15,15,0,0,0,200,1,0,30,0,210,210,210,210,210,210,210,0,0,1,0,0,0,73,0,0),
+(1500200083,'a_void_ravager','',74,1,1,1,140000,0,0,3,0,7.00,0,0,0,0,250,450,1,'Z','',70,70,1.25,15,15,15,15,15,0,0,0,240,1,0,30,0,230,230,230,230,230,230,230,0,0,1,0,0,0,74,0,0),
+-- Grave-dig site objects and spawns
+(1500200072,'a_disturbed_earth','',60,56,1,66,32767,0,0,2,0,5.00,0,0,0,0,0,0,0,'','',0,0,1.25,15,15,15,15,15,0,0,0,0,0,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,60,0,1),
+(1500200073,'a_disturbed_spirit','',55,67,1,3,25000,0,0,0,0,6.00,0,0,0,0,30,110,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,55,0,0),
+(1500200074,'a_tattooed_zombie','',60,2,1,3,35000,0,0,0,0,6.00,200002,0,0,0,35,130,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,90,1,0,30,1,140,140,140,140,140,140,140,0,0,1,0,0,0,60,0,0),
+-- Terror of Illis Taberish: 32 skinwalker nameds, 4 per band
+(1500200040,'Lorna_Sheecot','',10,30,1,1,4000,0,0,0,0,6.00,200003,0,0,0,15,40,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,40,1,0,30,1,80,80,80,80,80,80,80,0,0,1,0,0,0,10,0,0),
+(1500200041,'Petra_Grenal','',10,30,1,1,4000,0,1,0,0,6.00,200003,0,0,0,15,40,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,40,1,0,30,1,80,80,80,80,80,80,80,0,0,1,0,0,0,10,0,0),
+(1500200042,'Piolo_Meesker','',10,30,1,1,4000,0,0,1,0,6.00,200003,0,0,0,15,40,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,40,1,0,30,1,80,80,80,80,80,80,80,0,0,1,0,0,0,10,0,0),
+(1500200043,'Saldis_Oro','',10,30,1,1,4000,0,0,2,0,6.00,200003,0,0,0,15,40,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,40,1,0,30,1,80,80,80,80,80,80,80,0,0,1,0,0,0,10,0,0),
+(1500200044,'Kano_Burber','',20,30,1,1,9000,0,0,0,0,6.00,200003,0,0,0,25,80,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,60,1,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,20,0,0),
+(1500200045,'Lendal_Fobins','',20,30,1,1,9000,0,1,0,0,6.00,200003,0,0,0,25,80,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,60,1,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,20,0,0),
+(1500200046,'Liskard','',20,30,1,1,9000,0,0,1,0,6.00,200003,0,0,0,25,80,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,60,1,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,20,0,0),
+(1500200047,'Shay_Talgot','',20,30,1,1,9000,0,0,2,0,6.00,200003,0,0,0,25,80,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,60,1,0,30,1,100,100,100,100,100,100,100,0,0,1,0,0,0,20,0,0),
+(1500200048,'Igo_Pho','',30,30,1,1,16000,0,0,0,0,6.00,200003,0,0,0,40,120,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,30,0,0),
+(1500200049,'Meego_Battledrum','',30,30,1,1,16000,0,1,0,0,6.00,200003,0,0,0,40,120,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,30,0,0),
+(1500200050,'Schalter_Gringham','',30,30,1,1,16000,0,0,1,0,6.00,200003,0,0,0,40,120,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,30,0,0),
+(1500200051,'Tenos_Aryvin','',30,30,1,1,16000,0,0,2,0,6.00,200003,0,0,0,40,120,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,80,1,0,30,1,120,120,120,120,120,120,120,0,0,1,0,0,0,30,0,0),
+(1500200052,'Hael_Nebur','',40,30,1,1,25000,0,0,0,0,6.00,200003,0,0,0,55,160,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,100,1,0,30,1,140,140,140,140,140,140,140,0,0,1,0,0,0,40,0,0),
+(1500200053,'Jolee_Winger','',40,30,1,1,25000,0,1,0,0,6.00,200003,0,0,0,55,160,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,100,1,0,30,1,140,140,140,140,140,140,140,0,0,1,0,0,0,40,0,0),
+(1500200054,'Pas_Neep_Arda','',40,30,1,1,25000,0,0,1,0,6.00,200003,0,0,0,55,160,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,100,1,0,30,1,140,140,140,140,140,140,140,0,0,1,0,0,0,40,0,0),
+(1500200055,'Salohcin_Bilox','',40,30,1,1,25000,0,0,2,0,6.00,200003,0,0,0,55,160,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,100,1,0,30,1,140,140,140,140,140,140,140,0,0,1,0,0,0,40,0,0),
+(1500200056,'Aliq_Reet','',50,30,1,1,40000,0,0,0,0,6.00,200003,0,0,0,70,200,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,120,1,0,30,1,160,160,160,160,160,160,160,0,0,1,0,0,0,50,0,0),
+(1500200057,'Nonnahs_Sernwall','',50,30,1,1,40000,0,1,0,0,6.00,200003,0,0,0,70,200,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,120,1,0,30,1,160,160,160,160,160,160,160,0,0,1,0,0,0,50,0,0),
+(1500200058,'Rasco_Gundar','',50,30,1,1,40000,0,0,1,0,6.00,200003,0,0,0,70,200,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,120,1,0,30,1,160,160,160,160,160,160,160,0,0,1,0,0,0,50,0,0),
+(1500200059,'Thob_Runtskil','',50,30,1,1,40000,0,0,2,0,6.00,200003,0,0,0,70,200,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,120,1,0,30,1,160,160,160,160,160,160,160,0,0,1,0,0,0,50,0,0),
+(1500200060,'Amoro_Bosckillio','',60,30,1,1,60000,0,0,0,0,6.00,200003,0,0,0,90,240,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,140,1,0,30,1,180,180,180,180,180,180,180,0,0,1,0,0,0,60,0,0),
+(1500200061,'Fellot_Newten','',60,30,1,1,60000,0,1,0,0,6.00,200003,0,0,0,90,240,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,140,1,0,30,1,180,180,180,180,180,180,180,0,0,1,0,0,0,60,0,0),
+(1500200062,'Kellar_Dinit','',60,30,1,1,60000,0,0,1,0,6.00,200003,0,0,0,90,240,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,140,1,0,30,1,180,180,180,180,180,180,180,0,0,1,0,0,0,60,0,0),
+(1500200063,'Onda_Granst','',60,30,1,1,60000,0,0,2,0,6.00,200003,0,0,0,90,240,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,140,1,0,30,1,180,180,180,180,180,180,180,0,0,1,0,0,0,60,0,0),
+(1500200064,'Djando_Kordisan','',70,30,1,1,90000,0,0,0,0,6.00,200003,0,0,0,110,300,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,170,1,0,30,1,200,200,200,200,200,200,200,0,0,1,0,0,0,70,0,0),
+(1500200065,'Jaecen_Oel','',70,30,1,1,90000,0,1,0,0,6.00,200003,0,0,0,110,300,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,170,1,0,30,1,200,200,200,200,200,200,200,0,0,1,0,0,0,70,0,0),
+(1500200066,'Nella_Vond','',70,30,1,1,90000,0,0,1,0,6.00,200003,0,0,0,110,300,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,170,1,0,30,1,200,200,200,200,200,200,200,0,0,1,0,0,0,70,0,0),
+(1500200067,'Trawets_Deeve','',70,30,1,1,90000,0,0,2,0,6.00,200003,0,0,0,110,300,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,170,1,0,30,1,200,200,200,200,200,200,200,0,0,1,0,0,0,70,0,0),
+(1500200068,'Allistan_Fenner','',80,30,1,1,120000,0,0,0,0,6.00,200003,0,0,0,140,380,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,200,1,0,30,1,220,220,220,220,220,220,220,0,0,1,0,0,0,80,0,0),
+(1500200069,'Calaen_Demre','',80,30,1,1,120000,0,1,0,0,6.00,200003,0,0,0,140,380,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,200,1,0,30,1,220,220,220,220,220,220,220,0,0,1,0,0,0,80,0,0),
+(1500200070,'Jar_Hunol','',80,30,1,1,120000,0,0,1,0,6.00,200003,0,0,0,140,380,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,200,1,0,30,1,220,220,220,220,220,220,220,0,0,1,0,0,0,80,0,0),
+(1500200071,'Wendel_Mummershen','',80,30,1,1,120000,0,0,2,0,6.00,200003,0,0,0,140,380,1,'Z','',40,40,1.25,15,15,15,15,15,0,0,0,200,1,0,30,1,220,220,220,220,220,220,220,0,0,1,0,0,0,80,0,0);
+
+-- --- Spawn groups / entries / points ----------------------------------------
+DELETE FROM spawnentry WHERE spawngroupID BETWEEN 60020032 AND 60020089;
+DELETE FROM spawn2      WHERE id BETWEEN 45020038 AND 45020099;
+DELETE FROM spawngroup  WHERE id BETWEEN 60020032 AND 60020089;
+
+INSERT INTO spawngroup (id,name,spawn_limit,dist,max_x,min_x,max_y,min_y,delay,mindelay,despawn,despawn_timer,wp_spawns) VALUES
+(60020032,'notd_Jilian_Florantine',0,0,0,0,0,0,0,0,0,0,0),
+(60020033,'notd_Ghost_All_Hallows',0,0,0,0,0,0,0,0,0,0,0),
+(60020034,'notd_Shadow_All_Hallows',0,0,0,0,0,0,0,0,0,0,0),
+(60020035,'notd_Edmund_Strangeways',0,0,0,0,0,0,0,0,0,0,0),
+(60020036,'notd_Rhaeda_Evel',0,0,0,0,0,0,0,0,0,0,0),
+(60020037,'notd_Illis_Taberish',0,0,0,0,0,0,0,0,0,0,0),
+(60020038,'notd_Cathil',0,0,0,0,0,0,0,0,0,0,0),
+(60020039,'notd_A_Silly_Puppet',0,0,0,0,0,0,0,0,0,0,0),
+(60020040,'notd_Void_Defense_Controller',0,0,0,0,0,0,0,0,0,0,0),
+(60020041,'notd_Lorna_Sheecot',0,0,0,0,0,0,0,0,0,0,0),
+(60020042,'notd_Petra_Grenal',0,0,0,0,0,0,0,0,0,0,0),
+(60020043,'notd_Piolo_Meesker',0,0,0,0,0,0,0,0,0,0,0),
+(60020044,'notd_Saldis_Oro',0,0,0,0,0,0,0,0,0,0,0),
+(60020045,'notd_Kano_Burber',0,0,0,0,0,0,0,0,0,0,0),
+(60020046,'notd_Lendal_Fobins',0,0,0,0,0,0,0,0,0,0,0),
+(60020047,'notd_Liskard',0,0,0,0,0,0,0,0,0,0,0),
+(60020048,'notd_Shay_Talgot',0,0,0,0,0,0,0,0,0,0,0),
+(60020049,'notd_Igo_Pho',0,0,0,0,0,0,0,0,0,0,0),
+(60020050,'notd_Meego_Battledrum',0,0,0,0,0,0,0,0,0,0,0),
+(60020051,'notd_Schalter_Gringham',0,0,0,0,0,0,0,0,0,0,0),
+(60020052,'notd_Tenos_Aryvin',0,0,0,0,0,0,0,0,0,0,0),
+(60020053,'notd_Hael_Nebur',0,0,0,0,0,0,0,0,0,0,0),
+(60020054,'notd_Jolee_Winger',0,0,0,0,0,0,0,0,0,0,0),
+(60020055,'notd_Pas_Neep_Arda',0,0,0,0,0,0,0,0,0,0,0),
+(60020056,'notd_Salohcin_Bilox',0,0,0,0,0,0,0,0,0,0,0),
+(60020057,'notd_Aliq_Reet',0,0,0,0,0,0,0,0,0,0,0),
+(60020058,'notd_Nonnahs_Sernwall',0,0,0,0,0,0,0,0,0,0,0),
+(60020059,'notd_Rasco_Gundar',0,0,0,0,0,0,0,0,0,0,0),
+(60020060,'notd_Thob_Runtskil',0,0,0,0,0,0,0,0,0,0,0),
+(60020061,'notd_Amoro_Bosckillio',0,0,0,0,0,0,0,0,0,0,0),
+(60020062,'notd_Fellot_Newten',0,0,0,0,0,0,0,0,0,0,0),
+(60020063,'notd_Kellar_Dinit',0,0,0,0,0,0,0,0,0,0,0),
+(60020064,'notd_Onda_Granst',0,0,0,0,0,0,0,0,0,0,0),
+(60020065,'notd_Djando_Kordisan',0,0,0,0,0,0,0,0,0,0,0),
+(60020066,'notd_Jaecen_Oel',0,0,0,0,0,0,0,0,0,0,0),
+(60020067,'notd_Nella_Vond',0,0,0,0,0,0,0,0,0,0,0),
+(60020068,'notd_Trawets_Deeve',0,0,0,0,0,0,0,0,0,0,0),
+(60020069,'notd_Allistan_Fenner',0,0,0,0,0,0,0,0,0,0,0),
+(60020070,'notd_Calaen_Demre',0,0,0,0,0,0,0,0,0,0,0),
+(60020071,'notd_Jar_Hunol',0,0,0,0,0,0,0,0,0,0,0),
+(60020072,'notd_Wendel_Mummershen',0,0,0,0,0,0,0,0,0,0,0),
+(60020073,'notd_a_disturbed_earth',0,0,0,0,0,0,0,0,0,0,0),
+(60020074,'notd_a_disturbed_spirit',0,0,0,0,0,0,0,0,0,0,0),
+(60020075,'notd_a_tattooed_zombie',0,0,0,0,0,0,0,0,0,0,0),
+(60020076,'notd_Skinwalker_uys',0,0,0,0,0,0,0,0,0,0,0),
+(60020077,'notd_revealed_1',0,0,0,0,0,0,0,0,0,0,0),
+(60020078,'notd_revealed_2',0,0,0,0,0,0,0,0,0,0,0),
+(60020079,'notd_revealed_3',0,0,0,0,0,0,0,0,0,0,0),
+(60020080,'notd_Longshadow',0,0,0,0,0,0,0,0,0,0,0),
+(60020081,'notd_void_commander',0,0,0,0,0,0,0,0,0,0,0),
+(60020082,'notd_void_legionnaire',0,0,0,0,0,0,0,0,0,0,0),
+(60020083,'notd_void_bloodmage',0,0,0,0,0,0,0,0,0,0,0),
+(60020084,'notd_void_ravager',0,0,0,0,0,0,0,0,0,0,0);
+
+INSERT INTO spawnentry (spawngroupID,npcID,chance,min_time,max_time,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+(60020032,1500200032,100,0,0,-1,-1,'',''),
+(60020033,1500200033,100,0,0,-1,-1,'',''),
+(60020034,1500200034,100,0,0,-1,-1,'',''),
+(60020035,1500200035,100,0,0,-1,-1,'',''),
+(60020036,1500200036,100,0,0,-1,-1,'',''),
+(60020037,1500200037,100,0,0,-1,-1,'',''),
+(60020038,1500200038,100,0,0,-1,-1,'',''),
+(60020039,1500200039,100,0,0,-1,-1,'',''),
+(60020040,1500200084,100,0,0,-1,-1,'',''),
+(60020041,1500200040,100,0,0,-1,-1,'',''),
+(60020042,1500200041,100,0,0,-1,-1,'',''),
+(60020043,1500200042,100,0,0,-1,-1,'',''),
+(60020044,1500200043,100,0,0,-1,-1,'',''),
+(60020045,1500200044,100,0,0,-1,-1,'',''),
+(60020046,1500200045,100,0,0,-1,-1,'',''),
+(60020047,1500200046,100,0,0,-1,-1,'',''),
+(60020048,1500200047,100,0,0,-1,-1,'',''),
+(60020049,1500200048,100,0,0,-1,-1,'',''),
+(60020050,1500200049,100,0,0,-1,-1,'',''),
+(60020051,1500200050,100,0,0,-1,-1,'',''),
+(60020052,1500200051,100,0,0,-1,-1,'',''),
+(60020053,1500200052,100,0,0,-1,-1,'',''),
+(60020054,1500200053,100,0,0,-1,-1,'',''),
+(60020055,1500200054,100,0,0,-1,-1,'',''),
+(60020056,1500200055,100,0,0,-1,-1,'',''),
+(60020057,1500200056,100,0,0,-1,-1,'',''),
+(60020058,1500200057,100,0,0,-1,-1,'',''),
+(60020059,1500200058,100,0,0,-1,-1,'',''),
+(60020060,1500200059,100,0,0,-1,-1,'',''),
+(60020061,1500200060,100,0,0,-1,-1,'',''),
+(60020062,1500200061,100,0,0,-1,-1,'',''),
+(60020063,1500200062,100,0,0,-1,-1,'',''),
+(60020064,1500200063,100,0,0,-1,-1,'',''),
+(60020065,1500200064,100,0,0,-1,-1,'',''),
+(60020066,1500200065,100,0,0,-1,-1,'',''),
+(60020067,1500200066,100,0,0,-1,-1,'',''),
+(60020068,1500200067,100,0,0,-1,-1,'',''),
+(60020069,1500200068,100,0,0,-1,-1,'',''),
+(60020070,1500200069,100,0,0,-1,-1,'',''),
+(60020071,1500200070,100,0,0,-1,-1,'',''),
+(60020072,1500200071,100,0,0,-1,-1,'',''),
+(60020073,1500200072,100,0,0,-1,-1,'',''),
+(60020074,1500200073,100,0,0,-1,-1,'',''),
+(60020075,1500200074,100,0,0,-1,-1,'',''),
+(60020076,1500200075,100,0,0,-1,-1,'',''),
+(60020077,1500200076,100,0,0,-1,-1,'',''),
+(60020078,1500200077,100,0,0,-1,-1,'',''),
+(60020079,1500200078,100,0,0,-1,-1,'',''),
+(60020080,1500200079,100,0,0,-1,-1,'',''),
+(60020081,1500200080,100,0,0,-1,-1,'',''),
+(60020082,1500200081,100,0,0,-1,-1,'',''),
+(60020083,1500200082,100,0,0,-1,-1,'',''),
+(60020084,1500200083,100,0,0,-1,-1,'','');
+
+INSERT INTO spawn2 (id,spawngroupID,zone,version,x,y,z,heading,respawntime,variance,pathgrid,path_when_zone_idle,_condition,cond_value,animation,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+-- Haunted Cave (Crescent Reach: river bank + the two caves)
+(45020038,60020032,'crescent',0,-2125.0,315.0,-95.88,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020039,60020033,'crescent',0,-2380.0,680.0,-71.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020040,60020034,'crescent',0,-2410.0,600.0,-71.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020041,60020034,'crescent',0,-2430.0,560.0,-71.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- PoK givers (evil quarter / bank trees)
+(45020042,60020035,'poknowledge',0,185.0,650.0,-155.50,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020043,60020036,'poknowledge',0,325.0,300.0,-126.71,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020044,60020037,'poknowledge',0,330.0,250.0,-125.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- Out With the Old (kithicor, near the Rivervale trail)
+(45020045,60020038,'kithicor',0,1068.0,1228.0,97.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020046,60020039,'kithicor',0,1092.0,1228.0,97.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020047,60020040,'kithicor',0,1040.0,1250.0,97.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- Skinwalker nameds: nektulos (10)
+(45020048,60020041,'nektulos',0,-637.0,-581.0,-34.75,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020049,60020042,'nektulos',0,-760.0,-480.0,-34.75,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020050,60020043,'nektulos',0,-510.0,-700.0,-34.75,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020051,60020044,'nektulos',0,-820.0,-650.0,-34.75,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- lakeofillomen (20)
+(45020052,60020045,'lakeofillomen',0,-2773.0,-1780.0,101.40,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020053,60020046,'lakeofillomen',0,-2900.0,-1650.0,101.40,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020054,60020047,'lakeofillomen',0,-2650.0,-1900.0,101.40,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020055,60020048,'lakeofillomen',0,-2550.0,-1700.0,101.40,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- firiona (30)
+(45020056,60020049,'firiona',0,1466.0,-4566.0,-140.90,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020057,60020050,'firiona',0,1600.0,-4450.0,-140.90,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020058,60020051,'firiona',0,1330.0,-4700.0,-140.90,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020059,60020052,'firiona',0,1250.0,-4470.0,-140.90,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- emeraldjungle (40)
+(45020060,60020053,'emeraldjungle',0,2580.0,1849.0,-340.38,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020061,60020054,'emeraldjungle',0,2720.0,1960.0,-340.38,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020062,60020055,'emeraldjungle',0,2440.0,1740.0,-340.38,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020063,60020056,'emeraldjungle',0,2360.0,1960.0,-340.38,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- mesa (50)
+(45020064,60020057,'mesa',0,-13.0,-1720.0,68.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020065,60020058,'mesa',0,150.0,-1600.0,68.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020066,60020059,'mesa',0,-180.0,-1840.0,68.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020067,60020060,'mesa',0,250.0,-1900.0,-6.50,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- barren (60)
+(45020068,60020061,'barren',0,-549.0,-179.0,-5.50,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020069,60020062,'barren',0,-420.0,-100.0,-5.50,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020070,60020063,'barren',0,-680.0,-260.0,-5.50,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020071,60020064,'barren',0,-300.0,-40.0,4.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- steppes (70)
+(45020072,60020065,'steppes',0,-784.0,-1897.0,9.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020073,60020066,'steppes',0,-650.0,-1780.0,9.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020074,60020067,'steppes',0,-920.0,-2000.0,9.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020075,60020068,'steppes',0,-1055.0,-1859.0,4.13,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- lopingplains (80)
+(45020076,60020069,'lopingplains',0,1770.0,2057.0,289.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020077,60020070,'lopingplains',0,1900.0,1950.0,289.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020078,60020071,'lopingplains',0,1640.0,2160.0,289.25,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020079,60020072,'lopingplains',0,1451.0,2559.0,239.88,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- Disturbed earth dig sites (10 zones, one each)
+(45020080,60020073,'nektulos',0,-637.0,-581.0,-34.75,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020081,60020073,'lakeofillomen',0,-2975.0,-1694.0,102.10,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020082,60020073,'firiona',0,1489.0,-4464.0,-62.35,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020083,60020073,'emeraldjungle',0,2880.0,1474.0,-340.60,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020084,60020073,'mesa',0,250.0,-1948.0,-6.50,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020085,60020073,'barren',0,-58.0,-151.0,4.00,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020086,60020073,'steppes',0,-900.0,-1950.0,9.00,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020087,60020073,'lopingplains',0,1650.0,2300.0,260.00,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020088,60020073,'buriedsea',0,845.0,385.0,300.00,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020089,60020073,'oldfieldofbone',0,1315.0,300.0,-25.00,0.0,120,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+-- Under Your Skin pocket (gfaydark far east)
+(45020090,60020076,'gfaydark',0,4440.0,1869.0,5.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween',''),
+(45020091,60020080,'gfaydark',0,4455.0,1890.0,5.00,0.0,640,0,0,0,0,1,0,-1,-1,'peq_halloween','');
+
+-- --- Loot --------------------------------------------------------------------
+DELETE FROM loottable_entries WHERE loottable_id BETWEEN 200002 AND 200004;
+DELETE FROM loottable         WHERE id BETWEEN 200002 AND 200004;
+DELETE FROM lootdrop_entries  WHERE lootdrop_id BETWEEN 200002 AND 200004;
+DELETE FROM lootdrop          WHERE id BETWEEN 200002 AND 200004;
+INSERT INTO loottable (id,name,mincash,maxcash,avgcoin,done,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+(200002,'notd_tattooed_zombie',0,0,0,0,-1,-1,'peq_halloween',''),
+(200003,'notd_skinwalker_named',0,0,0,0,-1,-1,'peq_halloween',''),
+(200004,'notd_void_commander',0,0,0,0,-1,-1,'peq_halloween','');
+INSERT INTO lootdrop (id,name,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+(200002,'notd_tattooed_zombie',-1,-1,'peq_halloween',''),
+(200003,'notd_skinwalker_named',-1,-1,'peq_halloween',''),
+(200004,'notd_void_commander',-1,-1,'peq_halloween','');
+INSERT INTO lootdrop_entries (lootdrop_id,item_id,item_charges,equip_item,chance,disabled_chance,trivial_min_level,trivial_max_level,multiplier,npc_min_level,npc_max_level,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+(200002,3001009,1,0,100,0,0,0,1,0,0,-1,-1,'',''),
+(200003,3001011,1,0,100,0,0,0,1,0,0,-1,-1,'',''),
+(200004,3001014,1,0,100,0,0,0,1,0,0,-1,-1,'','');
+INSERT INTO loottable_entries (loottable_id,lootdrop_id,multiplier,droplimit,mindrop,probability) VALUES
+(200002,200002,1,0,1,100),
+(200003,200003,1,0,1,100),
+(200004,200004,1,0,1,100);
+
+-- --- Tasks -------------------------------------------------------------------
+DELETE FROM task_activities WHERE taskid BETWEEN 620012 AND 620017;
+DELETE FROM tasks           WHERE id     BETWEEN 620012 AND 620017;
+INSERT INTO tasks (id,type,duration,duration_code,title,description,reward_text,reward_id_list,cash_reward,exp_reward,reward_method,reward_points,min_level,max_level,level_spread,repeatable,completion_emote,enabled) VALUES
+(620012,0,0,0,'Haunted Cave','Explore the haunted caves of Crescent Reach for Jilian Florantine.','Pirate''s Gold','3001007',0,0,0,0,0,0,0,1,'',1),
+(620013,0,0,0,'Digging Their Graves','Dig up a grave with Edmund''s Shovel and slay whatever rises.','',NULL,0,0,0,0,0,0,0,1,'',1),
+(620014,0,0,0,'The Hunt for Tattooed Flesh','Edmund needs five more burial duties done. Report back after each.','Frightening Writ','3001010',0,0,0,0,0,0,0,0,'',1),
+(620015,0,0,0,'Terror of Illis Taberish','Slay four skinwalkers and bring their soul shards to Illis Taberish.','Vial of Chiropteranform','3001012',0,0,0,0,0,0,0,1,'',1),
+(620016,0,0,0,'Under Your Skin','Enter the hiding spot in far Greater Faydark and root out the true Skinwalker.','Vial of the Wild Moon','3001013',0,0,0,0,0,0,0,1,'',1),
+(620017,0,0,0,'Out With the Old','Hand A Silly Puppet Bristlebane''s Ticket of Admission and defend Kithicor from the Void Legion.','',NULL,0,0,0,0,0,0,0,1,'',1);
+
+INSERT INTO task_activities (taskid,activityid,req_activity_id,step,activitytype,target_name,goalmethod,goalcount,description_override,npc_match_list,item_id_list,item_list,zones,zone_version,optional,list_group) VALUES
+-- 620012 Haunted Cave
+(620012,0,-1,1,0,'Ghost_of_All_Hallows_Eve',0,1,'Slay the Ghost of All Hallows Eve in the Nokk cave.','','','','394',-1,0,0),
+(620012,1,-1,2,0,'Shadow_of_All_Hallows_Eve',0,2,'Slay 2 Shadows of All Hallows Eve in the undead cave.','','','','394',-1,0,0),
+(620012,2,-1,3,255,'',0,1,'Return to Jilian Florantine.','','','','394',-1,0,0),
+-- 620013 Digging Their Graves
+(620013,0,-1,1,1,'',0,1,'Take Intricately Tattooed Flesh from a Tattooed Zombie.','','3001009','','',-1,0,0),
+(620013,1,-1,2,255,'',0,1,'Return the flesh and Edmund''s Shovel to Edmund Strangeways.','','','','202',-1,0,0),
+-- 620014 Hunt for Tattooed Flesh (master)
+(620014,0,-1,1,255,'',0,1,'Complete a burial duty and report to Edmund (1/5).','','','','202',-1,0,0),
+(620014,1,-1,2,255,'',0,1,'Complete a burial duty and report to Edmund (2/5).','','','','202',-1,0,0),
+(620014,2,-1,3,255,'',0,1,'Complete a burial duty and report to Edmund (3/5).','','','','202',-1,0,0),
+(620014,3,-1,4,255,'',0,1,'Complete a burial duty and report to Edmund (4/5).','','','','202',-1,0,0),
+(620014,4,-1,5,255,'',0,1,'Complete a burial duty and report to Edmund (5/5).','','','','202',-1,0,0),
+-- 620015 Terror of Illis Taberish
+(620015,0,-1,1,0,'',0,4,'Slay 4 skinwalkers near your level band.','','1500200040|1500200041|1500200042|1500200043|1500200044|1500200045|1500200046|1500200047|1500200048|1500200049|1500200050|1500200051|1500200052|1500200053|1500200054|1500200055|1500200056|1500200057|1500200058|1500200059|1500200060|1500200061|1500200062|1500200063|1500200064|1500200065|1500200066|1500200067|1500200068|1500200069|1500200070|1500200071','','25|85|84|94|397|422|399|443',-1,0,0),
+(620015,1,-1,2,255,'',0,1,'Deliver four Skinwalker''s Soul Shards to Illis Taberish in the Plane of Knowledge.','','','','202',-1,0,0),
+-- 620016 Under Your Skin
+(620016,0,-1,1,255,'',0,1,'Find and hail the Skinwalker hiding at the far east edge of Greater Faydark.','','','','54',-1,0,0),
+(620016,1,-1,2,255,'',0,1,'Slay the true Skinwalker (fakes collapse into mist; only the true one falls).','','','','54',-1,0,0),
+(620016,2,-1,3,255,'',0,1,'Hail Elder Ritualist Longshadow.','','','','54',-1,0,0),
+-- 620017 Out With the Old
+(620017,0,-1,1,255,'',0,1,'Repel the first wave of the Void Legion.','','','','20',-1,0,0),
+(620017,1,-1,2,255,'',0,1,'Repel the second wave of the Void Legion.','','','','20',-1,0,0),
+(620017,2,-1,3,0,'The_Legion_Commander_of_the_Void',0,1,'Slay The Legion Commander of the Void.','','','','20',-1,0,0),
+(620017,3,-1,4,255,'',0,1,'Give the Void Artifact to Cathil.','','','','20',-1,0,0);
+
+-- --- Gravedigger title (claim with /title while holding the Frightening Writ) -
+DELETE FROM titles WHERE title_set = 300140;
+INSERT INTO titles (skill_id,min_skill_value,max_skill_value,min_aa_points,max_aa_points,class,gender,char_id,status,item_id,prefix,suffix,title_set)
+VALUES (-1,-1,-1,-1,-1,-1,-1,0,0,3001010,'','the Gravedigger',300140);
 
 COMMIT;

@@ -206,15 +206,20 @@ sub EVENT_ITEM {
         }
     }
 
-    # Build per-item attuned map from exported trade-slot variables
+    # Build per-item attuned/charges maps from exported trade-slot variables
     my %attuned;
+    my %charges;
     $attuned{$item1} = $item1_attuned if $item1;
     $attuned{$item2} = $item2_attuned if $item2;
     $attuned{$item3} = $item3_attuned if $item3;
     $attuned{$item4} = $item4_attuned if $item4;
+    $charges{$item1} = $item1_charges if $item1;
+    $charges{$item2} = $item2_charges if $item2;
+    $charges{$item3} = $item3_charges if $item3;
+    $charges{$item4} = $item4_charges if $item4;
 
     # Handle item donations (parcel to eligible newbies or return)
-    plugin::Philanthropist_HandleItemDonation($client, \%itemcount, \%attuned);
+    plugin::Philanthropist_HandleItemDonation($client, \%itemcount, \%attuned, \%charges);
 
     plugin::return_items(\%itemcount);
 }

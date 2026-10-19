@@ -7,6 +7,7 @@
 -- killable and count). Win: Treasure_of_the_Council chest + 72h lockout.
 
 local raid = require("sod_raids")
+local ach = require("achievement_flags")
 
 local COUNCIL = { 478707, 478708, 478709, 478710, 478711, 478712, 478713, 478714 }
 
@@ -68,5 +69,7 @@ function event_signal(e)
 			exp:AddLockout(raid.EVENT.COUNCIL, eq.seconds("72h"))
 		end
 		raid.spawn_chest(e, raid.CHEST.COUNCIL)
+		ach.set_zone(1645340, 1, 1645340)
+		ach.set_zone(1600030, 1, 1600252)
 	end
 end

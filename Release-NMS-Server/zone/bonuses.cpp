@@ -71,9 +71,15 @@ void NPC::CalcBonuses()
 void Client::CalcBonuses()
 {
 	memset(&itembonuses, 0, sizeof(StatBonuses));
-	CalcItemBonuses(&itembonuses);
-	CalcHeroicBonuses(&itembonuses);
-	CalcEdibleBonuses(&itembonuses);
+	// NMS: a shroud form is its own creature. The character's real gear must not
+	// lend it stats, focus or weapon procs -- only the form's own AAs (below) and
+	// spells. Skipping the item pass is what stops a level-25 cake from hitting
+	// with a level-85 weapon's proc suite.
+	if (!m_shrouded) {
+		CalcItemBonuses(&itembonuses);
+		CalcHeroicBonuses(&itembonuses);
+		CalcEdibleBonuses(&itembonuses);
+	}
 	CalcSpellBonuses(&spellbonuses);
 	CalcAABonuses(&aabonuses);
 
@@ -610,12 +616,21 @@ void Mob::CalcAABonuses(StatBonuses *newbon)
 {
 	memset(newbon, 0, sizeof(StatBonuses)); // start fresh
 
+	// NMS: while shrouded, only the form's own catalog AAs apply. Otherwise the
+	// character's real passives and tomes (e.g. Touch of the Cursed) keep
+	// firing procs through a cake punch.
+	const bool nms_shroud_form = IsClient() && CastToClient()->IsShrouded();
+
 	for (const auto &aa : aa_ranks) {
 		auto ability_rank = zone->GetAlternateAdvancementAbilityAndRank(aa.first, aa.second.first);
 		auto ability = ability_rank.first;
 		auto rank = ability_rank.second;
 
 		if (!ability) {
+			continue;
+		}
+
+		if (nms_shroud_form && !Client::IsShroudAA(ability)) {
 			continue;
 		}
 

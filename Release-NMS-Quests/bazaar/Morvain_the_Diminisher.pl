@@ -1,6 +1,6 @@
-# Morvain the Diminisher - Item Tier Downgrade NPC (Guild Lobby)
+# Morvain the Diminisher - Item Tier Downgrade NPC (Bazaar)
 # Adapted for Triptych/EQS from Ascendant-Server
-#   (server/quests/guildlobby/Morvain_the_Diminisher.pl).
+#   (server/quests/bazaar/Morvain_the_Diminisher.pl).
 #
 # Strips an Enchanted or Legendary item back to its base form using the EQS
 # tier layout from plugins/NMS_item_utils.pl:
@@ -80,7 +80,9 @@ sub EVENT_ITEM {
     }
 
     $npc->Emote("drains the ascendant power away, leaving only the item's original form.");
-    $client->SummonItem($base_id, -1, $attune);
+    # SummonFixedItem is the no-upgrade summon. SummonItem would route through
+    # SummonApocItem and immediately add a tier back to the base item.
+    $client->SummonFixedItem($base_id, -1, $attune);
     plugin::Whisper("Done. Your item has been restored.");
 }
 

@@ -8,6 +8,8 @@ local adds = 0;
 
 
 function event_spawn(e)
+	-- camp cleared: the Lord of Krendic wakes and lets the desert know
+	e.self:Shout("You come to Krendic's sand thinking the tribe sleeps? We have waited three ages for something worth killing. Let the desert drink its fill.");
 eq.set_timer('depop', 3600 * 1000);
 end
 

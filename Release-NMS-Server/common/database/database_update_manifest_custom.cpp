@@ -19987,43 +19987,6 @@ UPDATE `items` o
 	// The all-class Celestial Fists (1683) is included alongside the Monk 1.0 target (36224) to match
 	// the importer's name join; titles.cpp excludes all-class duplicates, the achievement path does not.
 	// Idempotent: the anti-join skips alternatives that already exist.
-	ManifestEntry{
-		.version = 156,
-		.description = "20261013_achievement_duplicate_item_alternatives",
-		.check = "SELECT 1 FROM `achievement_criteria` c JOIN `items` t ON t.`id` = c.`target_id` JOIN `items` alt ON LOWER(alt.`Name`) = LOWER(t.`Name`) AND alt.`id` <> t.`id` LEFT JOIN `achievement_criteria` e ON e.`achievement_id` = c.`achievement_id` AND e.`component_type` = c.`component_type` AND e.`component_id` = c.`component_id` AND e.`event_type` = c.`event_type` AND e.`target_id` = alt.`id` AND e.`target_id2` = c.`target_id2` WHERE c.`enabled` = 1 AND c.`event_type` = 7 AND e.`id` IS NULL LIMIT 1",
-		.condition = "not_empty",
-		.match = "",
-		.sql = R"ACHDUP156(
-INSERT INTO `achievement_criteria` (
-  `achievement_id`, `component_type`, `component_sequence`, `component_id`,
-  `event_type`, `progress_mode`, `behavior`, `target_id`, `target_id2`,
-  `target_value`, `required_count`, `enabled`
-)
-SELECT
-  c.`achievement_id`, c.`component_type`, c.`component_sequence`, c.`component_id`,
-  c.`event_type`, c.`progress_mode`, c.`behavior`, alt.`id`, c.`target_id2`,
-  c.`target_value`, c.`required_count`, c.`enabled`
-FROM `achievement_criteria` c
-JOIN `items` t ON t.`id` = c.`target_id`
-JOIN `items` alt ON LOWER(alt.`Name`) = LOWER(t.`Name`) AND alt.`id` <> t.`id`
-LEFT JOIN `achievement_criteria` e
-  ON e.`achievement_id` = c.`achievement_id`
- AND e.`component_type` = c.`component_type`
- AND e.`component_id` = c.`component_id`
- AND e.`event_type` = c.`event_type`
- AND e.`target_id` = alt.`id`
- AND e.`target_id2` = c.`target_id2`
-WHERE c.`enabled` = 1 AND c.`event_type` = 7 AND e.`id` IS NULL
-ON DUPLICATE KEY UPDATE
-  `component_sequence` = VALUES(`component_sequence`),
-  `progress_mode` = VALUES(`progress_mode`),
-  `behavior` = VALUES(`behavior`),
-  `target_value` = VALUES(`target_value`),
-  `required_count` = VALUES(`required_count`),
-  `enabled` = VALUES(`enabled`);
-)ACHDUP156",
-		.content_schema_update = false,
-	},
 
 	// ------------------------------------------------------------------
 	// SoD Discord theme completion (themeDiscord page: Argoth/Druzzil Ro faction split,
@@ -20754,9 +20717,6 @@ ON DUPLICATE KEY UPDATE
 		.condition = "not_empty",
 		.match = "",
 		.sql = R"DODHCHAIN154(
-DELETE FROM `task_activities` WHERE `taskid` IN (505762, 505763);
-DELETE FROM `tasks`           WHERE `id`      IN (505762, 505763);
-
 INSERT INTO `tasks`
   (`id`,`type`,`duration`,`duration_code`,`title`,`description`,`reward_text`,
    `cash_reward`,`exp_reward`,`reward_method`,`min_level`,`max_level`,
@@ -20776,25 +20736,25 @@ INSERT INTO `task_activities`
    `min_x`,`min_y`,`min_z`,`max_x`,`max_y`,`max_z`,
    `skill_list`,`spell_list`,`zones`,`zone_version`,`optional`,`list_group`)
 VALUES
-  (505762,0,-1,1,3,'',0,1,'Loot 1 Shiliskin Tentacle Cluster from the depths of Illsalin','','88002','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505762,1,-1,2,3,'',0,1,'Loot 1 Drachnid Silk Gland from the drachnids of the Creep and the Hive','','88003','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505762,2,-1,3,3,'',0,2,'Loot 2 Chopping Swords from the Deep orcs of Stoneroot Falls','','88004','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505762,3,-1,4,1,'',0,1,'Deliver 1 Shiliskin Tentacle Cluster to Treddlehoop','365284','88002','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505762,4,-1,5,1,'',0,1,'Deliver 1 Drachnid Silk Gland to Treddlehoop','365284','88003','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505762,5,-1,6,1,'',0,2,'Deliver 2 Chopping Swords to Treddlehoop','365284','88004','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,0,-1,1,4,'',0,1,'Find Merchant Model CGXIV at the camp of Expedition 328 and buy a Spell Research Kit','365276','','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,1,-1,2,4,'',0,1,'Report back to Bellfast','365286','','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,2,-1,3,6,'',0,1,'Use spell research to combine the first three Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33296','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,3,-1,3,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the second page of Scrindite''s manual','365286','33296','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,4,-1,4,6,'',0,1,'Use spell research to combine the next four Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33297','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,5,-1,4,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the third page of Scrindite''s manual','365286','33297','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,6,-1,5,6,'',0,1,'Use spell research to combine the last three Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33298','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,7,-1,5,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the fourth page of Scrindite''s manual','365286','33298','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,8,-1,6,3,'',0,5,'Loot 5 Clockwork Pinion Gears','','32684','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,9,-1,7,3,'',0,2,'Loot 2 Clockwork Gears','','32683','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,10,-1,8,1,'',0,5,'Deliver 5 Clockwork Pinion Gears to Bellfast','365286','32684','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,11,-1,8,1,'',0,2,'Deliver 2 Clockwork Gears to Bellfast for the fifth page of Scrindite''s manual','365286','32683','',0,0,0,0,0,0,0,'',0,'',-1,0,0),
-  (505763,12,-1,9,6,'',0,1,'Combine Scrindite''s five Manual Pages with spell research into the finished Mechanoinstruction Manual','','33295','',0,0,0,0,0,0,0,'',0,'',-1,0,0);
+  (505762,0,-1,1,3,'',0,1,'Loot 1 Shiliskin Tentacle Cluster from the depths of Illsalin','','88002','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505762,1,-1,2,3,'',0,1,'Loot 1 Drachnid Silk Gland from the drachnids of the Creep and the Hive','','88003','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505762,2,-1,3,3,'',0,2,'Loot 2 Chopping Swords from the Deep orcs of Stoneroot Falls','','88004','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505762,3,-1,4,1,'',0,1,'Deliver 1 Shiliskin Tentacle Cluster to Treddlehoop','365284','88002','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505762,4,-1,5,1,'',0,1,'Deliver 1 Drachnid Silk Gland to Treddlehoop','365284','88003','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505762,5,-1,6,1,'',0,2,'Deliver 2 Chopping Swords to Treddlehoop','365284','88004','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,0,-1,1,4,'',0,1,'Find Merchant Model CGXIV at the camp of Expedition 328 and buy a Spell Research Kit','365276','','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,1,-1,2,4,'',0,1,'Report back to Bellfast','365286','','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,2,-1,3,6,'',0,1,'Use spell research to combine the first three Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33296','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,3,-1,3,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the second page of Scrindite''s manual','365286','33296','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,4,-1,4,6,'',0,1,'Use spell research to combine the next four Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33297','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,5,-1,4,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the third page of Scrindite''s manual','365286','33297','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,6,-1,5,6,'',0,1,'Use spell research to combine the last three Mechanoinstruction Scraps into a Tattered Mechanoinstruction','','33298','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,7,-1,5,1,'',0,1,'Deliver the Tattered Mechanoinstruction to Bellfast for the fourth page of Scrindite''s manual','365286','33298','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,8,-1,6,3,'',0,5,'Loot 5 Clockwork Pinion Gears','','32684','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,9,-1,7,3,'',0,2,'Loot 2 Clockwork Gears','','32683','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,10,-1,8,1,'',0,5,'Deliver 5 Clockwork Pinion Gears to Bellfast','365286','32684','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,11,-1,8,1,'',0,2,'Deliver 2 Clockwork Gears to Bellfast for the fifth page of Scrindite''s manual','365286','32683','','',0,0,0,0,0,0,0,'0','',-1,0,0),
+  (505763,12,-1,9,6,'',0,1,'Combine Scrindite''s five Manual Pages with spell research into the finished Mechanoinstruction Manual','','33295','','',0,0,0,0,0,0,0,'0','',-1,0,0);
 
 DELETE FROM `tradeskill_recipe_entries` WHERE `recipe_id` IN (938046, 938047);
 
@@ -20811,757 +20771,847 @@ VALUES
   (938047, 32737, 0, 0, 1, 0, 0),
   (938047, 33297, 1, 0, 0, 0, 0);
 
-DELETE FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 1520007506;
-DELETE FROM `tradeskill_recipe`         WHERE `id`          = 1520007506;
-
 INSERT INTO `tradeskill_recipe`
   (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,
    `quest`,`enabled`,`min_expansion`,`max_expansion`)
 VALUES
-  (1520007506, 'Tattered Mechanoinstruction', 58, 0, 15, 1, 0, 0, 1, -1, -1);
+  (938048, 'Tattered Mechanoinstruction', 58, 0, 15, 1, 0, 0, 1, -1, -1);
 
 INSERT INTO `tradeskill_recipe_entries`
   (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
 VALUES
-  (1520007506, 32738, 0, 0, 1, 0, 0),
-  (1520007506, 32739, 0, 0, 1, 0, 0),
-  (1520007506, 32740, 0, 0, 1, 0, 0),
-  (1520007506, 33298, 1, 0, 0, 0, 0);
+  (938048, 32738, 0, 0, 1, 0, 0),
+  (938048, 32739, 0, 0, 1, 0, 0),
+  (938048, 32740, 0, 0, 1, 0, 0),
+  (938048, 33298, 1, 0, 0, 0, 0);
 )DODHCHAIN154",
 		.content_schema_update = false,
 	},
-	// ------------------------------------------------------------------------------------------------
-	// DoDH static zone-line web (v0 zone_points). The PEQ import only ever shipped the four
-	// main corridors (nektulos-corathus-undershore-stoneroot-hive); the raid sub-zones, the
-	// satellites, and Dreadspire Keep itself had no lines - Dreadspire's only outbound rows
-	// were dead 0,0,0 imports (numbers 30-80) and nothing targeted 351. Wires 8 bidirectional
-	// edges / 16 rows: hive<->dreadspire (map POIs), corathus<->corathusa, undershore<->
-	// snarlstone, stoneroot<->manor, stoneroot<->korlach-lair, illsalin<->nargil-pits,
-	// undershore<->korlach-temple, hive<->sendaii-lair (dod_raids compass/zonein anchors;
-	// portal-NPC src rows offset +12 x). Left unwired for lack of any coordinate source:
-	// dreadspire<->stoneroot, illsalin<->marketplace, undershore<->shadowspine,
-	// nektulos<->shadowed-grove, stoneroot<->caverns-of-the-lost, hive->hatchery->cocoons,
-	// corathus<->mines; corathus's pre-existing client-side break is untouched.
-	// Twin content of utils/sql/20261013_dodh_zone_links.sql (keep in sync).
-	// Rollback = utils/sql/20261013_dodh_zone_links_rollback.sql.
-	// Idempotent: DELETE prelude keyed on (zone, version=0, number).
-	// ------------------------------------------------------------------------------------------------
+
+	// Player housing (RoF2 native real-estate windows)
 	ManifestEntry{
-		.version = 155,
-		.description = "20261013_dodh_zone_links",
-		.check = "SELECT 1 FROM (SELECT 1) x WHERE (SELECT COUNT(*) FROM `zone_points` WHERE `version` = 0 AND `zone` = 'dreadspire' AND `number` = 90) = 0",
-		.condition = "not_empty",
+		.version = 161,
+		.description = "20261019_housing_schema",
+		.check = "SHOW TABLES LIKE 'nms_neighborhood'",
+		.condition = "empty",
 		.match = "",
-		.sql = R"DODHLINKS155(
-DELETE FROM `zone_points`
-WHERE `version` = 0 AND `zone` = 'dreadspire'
-  AND `number` IN (30, 40, 50, 60, 70, 80);
+		.sql = R"HOUSING161(
+CREATE TABLE IF NOT EXISTS `nms_neighborhood` (
+  `id`               int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name`             varchar(64)      NOT NULL,
+  `guild_id`         int(10) unsigned NOT NULL DEFAULT 0,
+  `max_player_plots` int(10) unsigned NOT NULL DEFAULT 0,
+  `max_guild_plots`  int(10) unsigned NOT NULL DEFAULT 0,
+  `zone`             varchar(32)      NOT NULL DEFAULT 'neighborhood',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-DELETE FROM `zone_points`
-WHERE `version` = 0 AND (
-       (`zone` = 'drachnidhive'  AND `number` IN (50, 60))
-    OR (`zone` = 'dreadspire'    AND `number` = 90)
-    OR (`zone` = 'corathus'      AND `number` = 40)
-    OR (`zone` = 'corathusa'     AND `number` = 10)
-    OR (`zone` = 'eastkorlach'   AND `number` IN (60, 70))
-    OR (`zone` = 'eastkorlacha'  AND `number` = 10)
-    OR (`zone` = 'westkorlach'   AND `number` IN (50, 60))
-    OR (`zone` = 'westkorlacha'  AND `number` = 10)
-    OR (`zone` = 'westkorlachc'  AND `number` = 10)
-    OR (`zone` = 'illsalin'      AND `number` = 10)
-    OR (`zone` = 'illsalinc'     AND `number` = 10)
-    OR (`zone` = 'illsalinb'     AND `number` = 10)
-    OR (`zone` = 'drachnidhivec' AND `number` = 10));
+CREATE TABLE IF NOT EXISTS `nms_plot` (
+  `id`                int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `neighborhood_id`   int(10) unsigned NOT NULL,
+  `door_id`           int(10) unsigned NOT NULL,
+  `plot_type`         tinyint(3) unsigned NOT NULL DEFAULT 0,
+  `owner_char_id`     int(10) unsigned NOT NULL DEFAULT 0,
+  `owner_guild_id`    int(10) unsigned NOT NULL DEFAULT 0,
+  `house_id`          int(10) unsigned NOT NULL DEFAULT 0,
+  `house_zone`        varchar(32)      NOT NULL DEFAULT '',
+  `purchased_at`      datetime         DEFAULT NULL,
+  `upkeep_paid_until` datetime         DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `door_id` (`door_id`),
+  KEY `neighborhood_id` (`neighborhood_id`),
+  KEY `owner_char_id` (`owner_char_id`),
+  KEY `owner_guild_id` (`owner_guild_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-INSERT INTO `zone_points`
-  (`zone`,`version`,`number`,`x`,`y`,`z`,`heading`,
-   `target_x`,`target_y`,`target_z`,`target_heading`,
-   `zoneinst`,`target_zone_id`,`target_instance`,`buffer`,
-   `min_expansion`,`max_expansion`,`is_virtual`,`height`,`width`)
-VALUES
-  ('drachnidhive', 0, 50, -1106,   -282,  452, 0, -1350, 1031, -575, 0, 0, 351, 0, 0, -1, -1, 0, 0, 0),
-  ('dreadspire',   0, 90, -1350,   1031, -575, 0, -1106, -282,  452, 0, 0, 354, 0, 0, -1, -1, 0, 0, 0),
-  ('corathus',     0, 40,    28,   -337,  -46, 0,   117,   89,  168, 0, 0, 366, 0, 0, -1, -1, 0, 0, 0),
-  ('corathusa',    0, 10,   117,     89,  168, 0,    16, -337,  -46, 0, 0, 365, 0, 0, -1, -1, 0, 0, 0),
-  ('eastkorlach',  0, 60, -941.87, -1128.98, 184.13, 0, 1455, 502, -82, 0, 0, 363, 0, 0, -1, -1, 0, 0, 0),
-  ('eastkorlacha', 0, 10,  1455,    502,  -82, 0, -953.87, -1128.98, 184.13, 0, 0, 362, 0, 0, -1, -1, 0, 0, 0),
-  ('westkorlach',  0, 50, -1718,   -337,    4, 0,  -503, -201,  12, 0, 0, 359, 0, 0, -1, -1, 0, 0, 0),
-  ('westkorlacha', 0, 10,  -503,   -201,   12, 0, -1730, -337,   4, 0, 0, 358, 0, 0, -1, -1, 0, 0, 0),
-  ('westkorlach',  0, 60, -2217,    395,  895, 0,   -34, 1868,  84, 0, 0, 361, 0, 0, -1, -1, 0, 0, 0),
-  ('westkorlachc', 0, 10,   -34,   1868,   84, 0, -2229,  395, 895, 0, 0, 358, 0, 0, -1, -1, 0, 0, 0),
-  ('illsalin',     0, 10,   320,   -182,  -32, 0,    -6, -664, -111, 0, 0, 350, 0, 0, -1, -1, 0, 0, 0),
-  ('illsalinc',    0, 10,    -6,   -664, -111, 0,   308, -182, -32, 0, 0, 347, 0, 0, -1, -1, 0, 0, 0),
-  ('eastkorlach',  0, 70,  -988,  -1250,  184, 0,  -207, -171, -21, 0, 0, 349, 0, 0, -1, -1, 0, 0, 0),
-  ('illsalinb',    0, 10,  -207,   -171,  -21, 0, -1000, -1250, 184, 0, 0, 362, 0, 0, -1, -1, 0, 0, 0),
-  ('drachnidhive', 0, 60,  487.91, 202.56, 161.39, 0, 4, -8, -747, 0, 0, 357, 0, 0, -1, -1, 0, 0, 0),
-  ('drachnidhivec',0, 10,     4,     -8, -747, 0, 475.91, 202.56, 161.39, 0, 0, 354, 0, 0, -1, -1, 0, 0, 0);
-)DODHLINKS155",
+INSERT IGNORE INTO `nms_neighborhood` (`name`, `guild_id`, `max_player_plots`, `max_guild_plots`, `zone`)
+VALUES ('Sunrise Hills', 0, 0, 0, 'neighborhood');
+
+INSERT IGNORE INTO `nms_plot` (`neighborhood_id`, `door_id`, `plot_type`)
+SELECT nb.`id`, d.`doorid`, 0
+FROM `doors` d
+JOIN `nms_neighborhood` nb ON nb.`name` = 'Sunrise Hills'
+WHERE d.`zone` = 'neighborhood'
+  AND d.`name` = 'OBP_LOTSQUARE'
+  AND d.`version` = 0;
+
+UPDATE `nms_neighborhood` nb
+SET nb.`max_player_plots` = (
+      SELECT COUNT(*) FROM `nms_plot` p
+      WHERE p.`neighborhood_id` = nb.`id` AND p.`plot_type` = 0
+    ),
+    nb.`max_guild_plots` = (
+      SELECT COUNT(*) FROM `nms_plot` p
+      WHERE p.`neighborhood_id` = nb.`id` AND p.`plot_type` = 1
+    )
+WHERE nb.`name` = 'Sunrise Hills';
+)HOUSING161",
 		.content_schema_update = false,
 	},
 
-	// Cazic-Thule v1 (cazicthule version 1) corrections:
-	//   faction   - 20002 'cazicthule' pointed at faction_list 5017
-	//               (Murrissa Sandwhisper, base 0) so every v1 mob was indifferent;
-	//               repointed at 5013 (KOS, base -1000) as the Al'Kabor reference has.
-	//   loot      - the 52 rare v1 npcs used raw Al'Kabor loottable ids
-	//               (91975 / 96762..96811) which collide with unrelated PEQ tables,
-	//               so they dropped wolf skins, rusty weapons, gnoll teeth and
-	//               Blightfire patterns. Re-staged into 300043+ / 400038+.
-	//   scales    - Tae Ew drop Pristine Tae Ew Scale / Flawless Tae Ew Hide, not the
-	//               generic Shiny / Polished Lizard Scale.
-	//   charm     - non-named tiger raptors (race 163) and gorillas (race 41) lost
-	//               SpecialAbility 14 (Immune to Charm).
+	// Arcstone (Prophecy of Ro) content gap closure: the nine missing named
+	// rares, the Mark of Oroshar turn-in, Zomm the Seventh Born's loottable,
+	// the Colossus Shard Earring drop and its "a_Colossus_shard" NPC, and the
+	// "Mark of the Spirits" task for Spirit Hunter Elijo. Standalone copy:
+	// utils/sql/20261020_arcstone_content_gaps.sql
 	ManifestEntry{
-		.version = 157,
-		.description = "20261014_ct_v1_faction_loot_charm",
-		.check = "SELECT 1 FROM loottable WHERE id = 300043",
+		.version = 162,
+		.description = "20261020_arcstone_content_gaps",
+		.check = "SELECT 1 FROM npc_types WHERE id = 369110",
 		.condition = "empty",
 		.match = "",
-		.sql = R"CT157(
--- Custom migration 157: Cazic-Thule v1 (cazicthule version 1) corrections
---   1. faction:  npc_faction 20002 'cazicthule' pointed at faction_list 5017
---      (Murrissa Sandwhisper, base 0, no mods) so every v1 mob conned indifferent.
---      The reference (EQMacEmu Al'Kabor, npc_faction 1410 'cazicthule') is primary
---      'KOS' base -1500; this db's KOS is faction_list 5013 base -1000.
---   2. loot:     the 52 rare v1 npcs used raw Al'Kabor loottable ids
---      (91975/96762..96811) which collide with unrelated PEQ (Blightfire era)
---      tables, so they dropped wolf skins, rusty/bronze weapons, gnoll teeth and
---      Blightfire patterns. Re-staged from the Al'Kabor dump into free ids.
---   3. scales:   every cazicthule v1 lizard (race 51) drops Pristine Tae Ew Scale
---      and Flawless Tae Ew Hide at 4x the old generic-scale rate (100% / 4%); the
---      generic Shiny / Polished Lizard Scale drop is removed from the Tae Ew
---      (the three raptor tables keep it).
---   4. charm:    the v1 animals carried SpecialAbility 14 (Immune to Charm);
---      non-named tiger raptors and gorillas should be charmable.
+		.sql = R"ARCSTONE162(
 SET NAMES utf8mb4;
 
--- 1. faction ------------------------------------------------------------------
-UPDATE npc_faction SET primaryfaction = 5013 WHERE id = 20002;
-UPDATE npc_faction_entries SET faction_id = 5013 WHERE npc_faction_id = 20002 AND faction_id = 5017;
+-- 1. Nine missing named rares + the Colossus shard (npc_types 369110-369119).
+-- Cloned from in-zone kin so they inherit valid model/stat/faction defaults.
+DROP TEMPORARY TABLE IF EXISTS tmp_arc_npc;
+CREATE TEMPORARY TABLE tmp_arc_npc AS SELECT * FROM npc_types WHERE id = 0;
 
--- 2. rare npc loot (Al'Kabor) -------------------------------------------------
-INSERT INTO loottable VALUES (300043,'CTv1 cazicthule #a_Thul_Tae_Ew_High_Priest',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300044,'CTv1 cazicthule #an_envenomed_hunter',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300045,'CTv1 cazicthule #an_enraged_jungle_raptor',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300046,'CTv1 cazicthule #an_enraged_tiger_raptor',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300047,'CTv1 cazicthule #an_enraged_Amygdalan',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300048,'CTv1 cazicthule #an_enraged_disciple',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300049,'CTv1 cazicthule #a_Tae_Ew_aggressor',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300050,'CTv1 cazicthule cazicthule a_Tae_Ew_trapper',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300051,'CTv1 cazicthule #a_Tae_Ew_prophet',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300052,'CTv1 cazicthule #a_Tae_Ew_convert',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300053,'CTv1 cazicthule #a_Tae_Ew_bloodfiend',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300054,'CTv1 cazicthule #a_Tae_Ew_spear_fisher',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300055,'CTv1 cazicthule #a_Tae_Ew_warlord',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300056,'CTv1 cazicthule #a_Tae_Ew_warmaster',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300057,'CTv1 cazicthule #a_swirling_black_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300058,'CTv1 cazicthule #a_swirling_red_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300059,'CTv1 cazicthule #a_swirling_green_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300060,'CTv1 cazicthule #a_quivering_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300061,'CTv1 cazicthule #a_gyrating_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300062,'CTv1 cazicthule #a_crystaline_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300063,'CTv1 cazicthule #a_gelatinous_mass',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300064,'CTv1 cazicthule #a_Thul_Tae_Ew_adept',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300065,'CTv1 cazicthule #a_Thul_Tae_Ew_crusader',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300066,'CTv1 cazicthule #a_Thul_Tae_Ew_despoiler',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300067,'CTv1 cazicthule #a_Thul_Tae_Ew_ritualist',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300068,'CTv1 cazicthule #a_Thul_Tae_Ew_spiritcaller',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300069,'CTv1 cazicthule #a_Thul_Tae_Ew_torturer',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300070,'CTv1 cazicthule #a_disciple_of_Thule',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300071,'CTv1 cazicthule #a_blood_claw_raptor',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300072,'CTv1 cazicthule #a_virulent_mosquito',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300073,'CTv1 cazicthule #a_graystriped_mosquito',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300074,'CTv1 cazicthule #a_diseased_mosquito',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300075,'CTv1 cazicthule #Dreadfang',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300076,'CTv1 cazicthule #Dismay',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300077,'CTv1 cazicthule #Frightchaser',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300078,'CTv1 cazicthule #Silverfang',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300079,'CTv1 cazicthule #Soul_Siphon',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300080,'CTv1 cazicthule #Terrorclaw',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300081,'CTv1 cazicthule #Toxiferious',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300082,'CTv1 cazicthule #a_razor_fin_piranha',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300083,'CTv1 cazicthule #a_razor_tooth_piranha',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300084,'CTv1 cazicthule #a_blood_fin_piranha',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300085,'CTv1 cazicthule #a_diamond_scale_piranha',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300086,'CTv1 cazicthule #a_barbed_scale_piranha',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300087,'CTv1 cazicthule #an_ooze_covered_ritualist',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300088,'CTv1 cazicthule #a_toxic_jungle_hunter',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300089,'CTv1 cazicthule #a_poisonstrand_hunter',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300090,'CTv1 cazicthule #a_noxious_jungle_spider',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300091,'CTv1 cazicthule #a_silverflank_shiverback',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300092,'CTv1 cazicthule #a_frenzied_shiverback',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300093,'CTv1 cazicthule #a_rotting_horror',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable VALUES (300094,'CTv1 cazicthule #a_rotting_shiverback',0,0,0,0,-1,-1,NULL,NULL);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369099;
+UPDATE tmp_arc_npc SET id=369110, name='Bristlebark', level=70, race=494, bodytype=25, hp=6000,
+  mindmg=170, maxdmg=700, attack_delay=30, size=8.0, loottable_id=1520008492,
+  npcspecialattks='', special_abilities='';
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
-INSERT INTO lootdrop VALUES (400038,'CTv1 cazicthule books',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400039,'CTv1 #a_Thul_Tae_Ew_High_Priest',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400040,'CTv1 cazicthule meat',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400041,'CTv1 #an_envenomed_hunter',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400042,'CTv1 #an_enraged_jungle_raptor',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400043,'CTv1 #an_enraged_tiger_raptor',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400044,'CTv1 #an_enraged_Amygdalan',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400045,'CTv1 #an_enraged_disciple',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400046,'CTv1 #a_Tae_Ew_aggressor',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400047,'CTv1 #a_Tae_Ew_trapper',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400048,'CTv1 #a_Tae_Ew_prophet',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400049,'CTv1 cazicthule bone shield',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400050,'CTv1 #a_Tae_Ew_convert',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400051,'CTv1 cazicthule tribal shield',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400052,'CTv1 #a_Tae_Ew_bloodfiend',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400053,'CTv1 #a_Tae_Ew_spear_fisher',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400054,'CTv1 #a_Tae_Ew_warlord',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400055,'CTv1 #a_Tae_Ew_warmaster',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400056,'CTv1 #a_swirling_black_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400057,'CTv1 #a_swirling_red_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400058,'CTv1 #a_swirling_green_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400059,'CTv1 #a_quivering_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400060,'CTv1 #a_gyrating_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400061,'CTv1 #a_crystaline_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400062,'CTv1 #a_gelatinous_mass',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400063,'CTv1 cazicthule junk weapons',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400064,'CTv1 #a_Thul_Tae_Ew_adept',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400065,'CTv1 #a_Thul_Tae_Ew_crusader',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400066,'CTv1 #a_Thul_Tae_Ew_despoiler',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400067,'CTv1 cazicthule Black Powdered Incense',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400068,'CTv1 cazicthule Flesh Bound Tome',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400069,'CTv1 #a_Thul_Tae_Ew_ritualist',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400070,'CTv1 #a_Thul_Tae_Ew_spiritcaller',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400071,'CTv1 #a_Thul_Tae_Ew_torturer',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400072,'CTv1 #a_disciple_of_Thule',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400073,'CTv1 #a_blood_claw_raptor',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400074,'CTv1 #a_virulent_mosquito',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400075,'CTv1 #a_graystriped_mosquito',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400076,'CTv1 #a_diseased_mosquito',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400077,'CTv1 #Dreadfang',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400078,'CTv1 #Dismay',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400079,'CTv1 #Frightchaser',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400080,'CTv1 #Silverfang',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400081,'CTv1 #Soul_Siphon',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400082,'CTv1 #Terrorclaw',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400083,'CTv1 #Toxiferious',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400084,'CTv1 #a_razor_fin_piranha',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400085,'CTv1 #a_razor_tooth_piranha',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400086,'CTv1 #a_blood_fin_piranha',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400087,'CTv1 #a_diamond_scale_piranha',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400088,'CTv1 #a_barbed_scale_piranha',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400089,'CTv1 #an_ooze_covered_ritualist',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400090,'CTv1 #a_toxic_jungle_hunter',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400091,'CTv1 #a_poisonstrand_hunter',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400092,'CTv1 #a_noxious_jungle_spider',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400093,'CTv1 #a_silverflank_shiverback',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400094,'CTv1 #a_frenzied_shiverback',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400095,'CTv1 #a_rotting_horror',-1,-1,NULL,NULL);
-INSERT INTO lootdrop VALUES (400096,'CTv1 #a_rotting_shiverback',-1,-1,NULL,NULL);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369037;
+UPDATE tmp_arc_npc SET id=369111, name='Champion_Ultharas', level=70, race=491, bodytype=3, hp=6500,
+  mindmg=180, maxdmg=750, attack_delay=29, size=7.0, loottable_id=1520008493;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
-INSERT INTO loottable_entries VALUES (300043,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300043,400039,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300043,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300044,400041,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300045,400042,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300046,400043,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300047,400044,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300048,400045,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300049,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300049,400046,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300049,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300050,400047,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300050,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300051,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300051,400048,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300051,400049,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300052,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300052,400049,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300052,400050,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300052,400051,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300053,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300053,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300053,400052,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300054,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300054,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300054,400053,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300055,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300055,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300055,400054,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300056,400040,1,0,0,100);
-)CT157" R"CT157(
-INSERT INTO loottable_entries VALUES (300056,400055,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300057,400056,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300058,400057,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300059,400058,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300060,400059,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300061,400060,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300062,400061,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300063,400062,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300064,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300064,400063,2,0,0,100);
-INSERT INTO loottable_entries VALUES (300064,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300064,400064,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300065,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300065,400065,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300066,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300066,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300066,400066,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300066,400067,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400068,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400069,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300068,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400049,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400051,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400070,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300069,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300069,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300069,400071,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300070,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300070,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300070,400049,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300070,400072,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300071,400073,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300072,400074,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300073,400075,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300074,400076,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300075,400077,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300076,400078,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300077,400079,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300078,400080,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300079,400081,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300080,400082,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300081,400083,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300082,400084,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300083,400085,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300084,400086,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300085,400087,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300086,400088,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300087,400038,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300087,400040,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300087,400049,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300087,400089,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300088,400090,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300089,400091,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300090,400092,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300091,400093,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300092,400094,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300093,400095,1,1,1,100);
-INSERT INTO loottable_entries VALUES (300094,400096,1,1,1,100);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369112, name='Coalshade', level=70, race=431, bodytype=5, hp=6200,
+  mindmg=170, maxdmg=700, attack_delay=30, size=8.0, loottable_id=1520008494;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
-INSERT INTO lootdrop_entries VALUES (400038,18420,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400038,18421,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400038,18422,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400038,18423,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400038,18424,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400038,18425,1,0,3,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400039,27748,1,1,100,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400040,27765,1,0,12,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400041,27839,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400041,27891,1,1,70,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400042,27843,1,1,25,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400042,27896,1,1,75,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400043,27838,1,1,50,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400043,27868,1,1,30,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400043,27870,1,1,20,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400044,27867,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400044,27924,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400045,27840,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400045,27932,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400046,27841,1,1,60,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400046,27919,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400046,27928,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400047,27862,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400047,27886,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400047,27892,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400048,27829,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400048,27903,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400048,27920,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400049,27749,1,1,25,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400050,27835,1,1,40,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400050,27845,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400050,27855,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400050,27900,1,1,10,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400051,27750,1,1,15,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400052,27893,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400052,27902,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400052,27930,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400053,27849,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400053,27864,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400053,27881,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400054,27848,1,1,60,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400054,27918,1,1,40,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400055,27847,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400056,27850,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400056,27945,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400057,27817,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400057,27882,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400058,27854,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400058,27945,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400059,27832,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400059,27863,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400059,27895,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400060,27825,1,1,80,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400060,27926,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400061,27922,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400062,27844,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400062,27856,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400062,27894,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27733,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27734,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27736,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27738,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27739,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27741,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27742,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27745,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27747,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400063,27750,1,1,3.5,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400064,27898,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400064,27948,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400065,27823,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400065,27915,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400066,27911,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400066,27948,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400067,8719,1,0,25,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400068,18989,1,0,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400069,27830,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400069,27942,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400070,27921,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400070,27943,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400071,27857,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400071,27941,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400072,27852,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400072,27866,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400072,27917,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400073,27872,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400073,27910,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400074,27836,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400074,27879,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400074,27901,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400075,27821,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400075,27890,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400076,27820,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400076,27934,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400077,27884,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400077,27946,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400078,27914,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400079,27871,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400080,27905,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400081,27933,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400081,27940,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400082,27889,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400082,27947,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-)CT157" R"CT157(
-INSERT INTO lootdrop_entries VALUES (400083,27897,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400084,27878,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400084,27912,1,1,50,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400084,27936,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400085,27828,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400085,27909,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400086,27876,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400086,27887,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400087,27858,1,1,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400088,27865,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400088,27944,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400089,27916,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400089,27925,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400089,27935,1,1,60,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400090,27822,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400090,27880,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400091,27826,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400091,27827,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400092,27837,1,0,40,0,0,127,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400092,27885,1,1,60,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400093,27834,1,1,80,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400093,27904,1,1,20,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400094,27833,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400094,27877,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400095,27869,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400095,27873,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400096,27875,1,1,30,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400096,27931,1,1,70,0,0,255,1,0,0,-1,-1,NULL,NULL);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369113, name='Echo_of_Skylance', level=70, race=69, bodytype=5, hp=5800,
+  mindmg=160, maxdmg=680, attack_delay=30, size=7.0, loottable_id=1520008495, npcspecialattks='';
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
-UPDATE npc_types SET loottable_id = 300043 WHERE id = 1500000031;
-UPDATE npc_types SET loottable_id = 300044 WHERE id = 1500000034;
-UPDATE npc_types SET loottable_id = 300045 WHERE id = 1500000066;
-UPDATE npc_types SET loottable_id = 300046 WHERE id = 1500000067;
-UPDATE npc_types SET loottable_id = 300047 WHERE id = 1500000089;
-UPDATE npc_types SET loottable_id = 300048 WHERE id = 1500000090;
-UPDATE npc_types SET loottable_id = 300049 WHERE id = 1500000092;
-UPDATE npc_types SET loottable_id = 300050 WHERE id = 1500000093;
-UPDATE npc_types SET loottable_id = 300051 WHERE id = 1500000076;
-UPDATE npc_types SET loottable_id = 300052 WHERE id = 1500000094;
-UPDATE npc_types SET loottable_id = 300053 WHERE id = 1500000095;
-UPDATE npc_types SET loottable_id = 300054 WHERE id = 1500000097;
-UPDATE npc_types SET loottable_id = 300055 WHERE id = 1500000098;
-UPDATE npc_types SET loottable_id = 300056 WHERE id = 1500000099;
-UPDATE npc_types SET loottable_id = 300057 WHERE id = 1500000100;
-UPDATE npc_types SET loottable_id = 300058 WHERE id = 1500000101;
-UPDATE npc_types SET loottable_id = 300059 WHERE id = 1500000102;
-UPDATE npc_types SET loottable_id = 300060 WHERE id = 1500000103;
-UPDATE npc_types SET loottable_id = 300061 WHERE id = 1500000104;
-UPDATE npc_types SET loottable_id = 300062 WHERE id = 1500000105;
-UPDATE npc_types SET loottable_id = 300063 WHERE id = 1500000106;
-UPDATE npc_types SET loottable_id = 300064 WHERE id = 1500000107;
-UPDATE npc_types SET loottable_id = 300065 WHERE id = 1500000108;
-UPDATE npc_types SET loottable_id = 300066 WHERE id = 1500000109;
-UPDATE npc_types SET loottable_id = 300067 WHERE id = 1500000110;
-UPDATE npc_types SET loottable_id = 300068 WHERE id = 1500000111;
-UPDATE npc_types SET loottable_id = 300069 WHERE id = 1500000112;
-UPDATE npc_types SET loottable_id = 300070 WHERE id = 1500000113;
-UPDATE npc_types SET loottable_id = 300071 WHERE id = 1500000114;
-UPDATE npc_types SET loottable_id = 300072 WHERE id = 1500000115;
-UPDATE npc_types SET loottable_id = 300073 WHERE id = 1500000118;
-UPDATE npc_types SET loottable_id = 300074 WHERE id = 1500000119;
-UPDATE npc_types SET loottable_id = 300075 WHERE id = 1500000120;
-UPDATE npc_types SET loottable_id = 300076 WHERE id = 1500000121;
-UPDATE npc_types SET loottable_id = 300077 WHERE id = 1500000122;
-UPDATE npc_types SET loottable_id = 300078 WHERE id = 1500000123;
-UPDATE npc_types SET loottable_id = 300079 WHERE id = 1500000124;
-UPDATE npc_types SET loottable_id = 300080 WHERE id = 1500000125;
-UPDATE npc_types SET loottable_id = 300081 WHERE id = 1500000126;
-UPDATE npc_types SET loottable_id = 300082 WHERE id = 1500000127;
-UPDATE npc_types SET loottable_id = 300083 WHERE id = 1500000128;
-UPDATE npc_types SET loottable_id = 300084 WHERE id = 1500000129;
-UPDATE npc_types SET loottable_id = 300085 WHERE id = 1500000130;
-UPDATE npc_types SET loottable_id = 300086 WHERE id = 1500000131;
-UPDATE npc_types SET loottable_id = 300087 WHERE id = 1500000132;
-UPDATE npc_types SET loottable_id = 300088 WHERE id = 1500000133;
-UPDATE npc_types SET loottable_id = 300089 WHERE id = 1500000134;
-UPDATE npc_types SET loottable_id = 300090 WHERE id = 1500000135;
-UPDATE npc_types SET loottable_id = 300091 WHERE id = 1500000136;
-UPDATE npc_types SET loottable_id = 300092 WHERE id = 1500000137;
-UPDATE npc_types SET loottable_id = 300093 WHERE id = 1500000138;
-UPDATE npc_types SET loottable_id = 300094 WHERE id = 1500000139;
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369021;
+UPDATE tmp_arc_npc SET id=369114, name='Firelash', level=70, race=411, bodytype=24, hp=5800,
+  mindmg=165, maxdmg=690, attack_delay=30, size=7.0, loottable_id=1520008496;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
--- 3. lizard scale / hide drops -----------------------------------------------
-INSERT INTO lootdrop VALUES (400097,'CTv1 cazicthule Tae Ew scales',-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400097,27752,1,0,100,0,0,255,1,0,0,-1,-1,NULL,NULL);
-INSERT INTO lootdrop_entries VALUES (400097,27754,1,0,4,0,0,255,1,0,0,-1,-1,NULL,NULL);
-UPDATE loottable_entries SET lootdrop_id = 400097 WHERE lootdrop_id = 400017 AND loottable_id IN (300000,300001,300002,300003,300004,300005,300006,300007,300008,300009,300017,300018,300019,300020,300027,300030,300031,300032,300036,300037,300038,300039,300040,300041,300042);
-DELETE FROM loottable_entries WHERE loottable_id IN (300000,300001,300002,300003,300004,300005,300006,300007,300008,300009,300017,300018,300019,300020,300027,300030,300031,300032,300036,300037,300038,300039,300040,300041,300042) AND lootdrop_id IN (400031,400034);
-INSERT INTO loottable VALUES (300095,'CTv1 cazicthule lizard scraps',0,0,0,0,-1,-1,NULL,NULL);
-INSERT INTO loottable_entries VALUES (300095,400097,1,0,0,100);
-UPDATE npc_types SET loottable_id = 300095 WHERE id = 1500000036;
-INSERT INTO loottable_entries VALUES (300029,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300033,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300035,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300043,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300048,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300049,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300050,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300051,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300052,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300053,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300054,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300055,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300056,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300064,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300065,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300066,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300069,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300070,400097,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300087,400097,1,0,0,100);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369115, name='Oroshar_the_Ashcaster', level=72, race=431, bodytype=5, hp=7200,
+  mindmg=200, maxdmg=820, attack_delay=28, size=11.0, loottable_id=1520008497;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
--- 4. charm -------------------------------------------------------------------
-UPDATE npc_types SET special_abilities = REPLACE(special_abilities, '^14,1', '')
- WHERE id >= 1500000000 AND id < 1500001000 AND race IN (41,163)
-   AND name NOT LIKE '#%' AND special_abilities LIKE '%14,1%';
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369116, name='Squall', level=70, race=431, bodytype=5, hp=6000,
+  mindmg=170, maxdmg=700, attack_delay=30, size=7.0, loottable_id=1520008498;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
--- 5. Tae Ew Blood Vial: 100% on every cazicthule v1 lizard -------------------
-UPDATE lootdrop_entries SET chance = 100 WHERE lootdrop_id = 400032 AND item_id = 27751;
-INSERT INTO loottable_entries VALUES (300000,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300001,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300003,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300004,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300005,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300006,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300007,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300008,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300017,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300019,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300020,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300029,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300030,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300031,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300032,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300033,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300035,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300036,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300037,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300038,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300039,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300041,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300042,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300043,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300048,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300049,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300050,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300051,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300052,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300053,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300054,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300055,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300056,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300064,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300065,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300066,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300067,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300068,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300069,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300070,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300087,400032,1,0,0,100);
-INSERT INTO loottable_entries VALUES (300095,400032,1,0,0,100);
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369117, name='Stillsheen', level=70, race=417, bodytype=5, hp=6000,
+  mindmg=170, maxdmg=700, attack_delay=30, size=7.0, loottable_id=1520008499;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
 
-)CT157",
-		.content_schema_update = true,
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369024;
+UPDATE tmp_arc_npc SET id=369118, name='Tempest', level=70, race=431, bodytype=5, hp=6000,
+  mindmg=170, maxdmg=700, attack_delay=30, size=7.0, loottable_id=1520008500;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
+
+INSERT INTO tmp_arc_npc SELECT * FROM npc_types WHERE id = 369070;
+UPDATE tmp_arc_npc SET id=369119, name='a_Colossus_shard', level=75, bodytype=3, hp=5200,
+  mindmg=250, maxdmg=900, attack_delay=30, size=6.0, loottable_id=0,
+  npcspecialattks='', special_abilities='';
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_arc_npc;
+DELETE FROM tmp_arc_npc;
+DROP TEMPORARY TABLE IF EXISTS tmp_arc_npc;
+
+-- 2. Loottables / lootdrops for the new rares.
+INSERT IGNORE INTO loottable (id,name,mincash,maxcash,avgcoin,done,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+ (1520008492,'Bristlebark',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008493,'Champion_Ultharas',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008494,'Coalshade',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008495,'Echo_of_Skylance',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008496,'Firelash',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008497,'Oroshar_the_Ashcaster',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008498,'Squall',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008499,'Stillsheen',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008500,'Tempest',0,0,0,0,-1,-1,NULL,NULL),
+ (1520008501,'Zomm_the_Seventh_Born',0,0,0,0,-1,-1,NULL,NULL);
+
+INSERT IGNORE INTO loottable_entries (loottable_id,lootdrop_id,multiplier,droplimit,mindrop,probability) VALUES
+ (1520008492,1520008536,1,1,1,100),
+ (1520008493,1520008537,1,1,1,100),
+ (1520008494,1520008538,1,1,1,100),
+ (1520008495,1520008539,1,1,1,100),
+ (1520008496,1520008540,1,1,1,100),
+ (1520008497,1520008541,1,1,1,100),
+ (1520008498,1520008542,1,1,1,100),
+ (1520008499,1520008543,1,1,1,100),
+ (1520008500,1520008544,1,1,1,100),
+ (1520008501,1520008545,3,1,1,100),
+ (1520008501,1520008546,1,2,2,100),
+ (1520008501,1520008547,1,1,0,100);
+
+INSERT IGNORE INTO lootdrop (id,name,min_expansion,max_expansion,content_flags,content_flags_disabled) VALUES
+ (1520008536,'Bristlebark',-1,-1,NULL,NULL),
+ (1520008537,'Champion_Ultharas',-1,-1,NULL,NULL),
+ (1520008538,'Coalshade',-1,-1,NULL,NULL),
+ (1520008539,'Echo_of_Skylance',-1,-1,NULL,NULL),
+ (1520008540,'Firelash',-1,-1,NULL,NULL),
+ (1520008541,'Oroshar_the_Ashcaster',-1,-1,NULL,NULL),
+ (1520008542,'Squall',-1,-1,NULL,NULL),
+ (1520008543,'Stillsheen',-1,-1,NULL,NULL),
+ (1520008544,'Tempest',-1,-1,NULL,NULL),
+ (1520008545,'por_zomm_black_orbs',-1,-1,NULL,NULL),
+ (1520008546,'por_zomm_gear',-1,-1,NULL,NULL),
+ (1520008547,'por_zomm_chronal_stone',-1,-1,NULL,NULL);
+
+INSERT IGNORE INTO lootdrop_entries (lootdrop_id,item_id,chance) VALUES
+ (1520008536,89748,40),(1520008536,89754,40),(1520008536,85657,60),
+ (1520008537,89775,40),(1520008537,89783,40),
+ (1520008538,89772,40),(1520008538,89780,40),
+ (1520008539,89756,40),(1520008539,89762,40),(1520008539,85656,60),
+ (1520008540,85658,60),
+ (1520008541,89771,40),(1520008541,89779,40),(1520008541,85610,82),
+ (1520008542,89744,40),(1520008542,89750,40),(1520008542,85655,60),
+ (1520008543,89749,40),(1520008543,89755,40),(1520008543,85653,60),
+ (1520008544,89745,40),(1520008544,89751,40),(1520008544,85655,60),
+ (1520008545,85628,100),
+ (1520008546,39237,40),(1520008546,39238,40),(1520008546,39239,40),
+ (1520008546,39240,40),(1520008546,39241,40),
+ (1520008547,33318,10);
+
+UPDATE npc_types SET loottable_id = 1520008501 WHERE id = 369036 AND (loottable_id = 0 OR loottable_id IS NULL);
+
+-- 3. Colossus Shard Earring (39215) added to the Colossus lootdrop.
+INSERT IGNORE INTO lootdrop_entries (lootdrop_id,item_id,chance) VALUES (108197,39215,20);
+
+-- 4. Spawns for the nine rares.
+INSERT IGNORE INTO spawngroup (id,name,spawn_limit,dist,max_x,min_x,max_y,min_y,delay,mindelay,despawn,despawn_timer,wp_spawns) VALUES
+ (1520008826,'arcstone_bristlebark',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008827,'arcstone_ultharas',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008828,'arcstone_oroshar_cycle',1,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008829,'arcstone_echo_of_skylance',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008830,'arcstone_firelash',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008831,'arcstone_squall',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008832,'arcstone_stillsheen',0,0,0,0,0,0,45000,15000,0,100,0),
+ (1520008833,'arcstone_tempest',0,0,0,0,0,0,45000,15000,0,100,0);
+
+INSERT IGNORE INTO spawnentry (spawngroupID,npcID,chance) VALUES
+ (1520008826,369110,100),
+ (1520008827,369111,100),
+ (1520008829,369113,100),
+ (1520008830,369114,100),
+ (1520008831,369116,100),
+ (1520008832,369117,100),
+ (1520008833,369118,100);
+INSERT IGNORE INTO spawnentry (spawngroupID,npcID,chance) VALUES
+ (1520008828,369112,50),
+ (1520008828,369115,50);
+
+INSERT IGNORE INTO spawn2 (id,spawngroupID,zone,version,x,y,z,heading,respawntime) VALUES
+ (1520023300,1520008826,'arcstone',0,-532,481,405,0,1800),
+ (1520023301,1520008827,'arcstone',0,-540,410,421,0,1800),
+ (1520023302,1520008828,'arcstone',0,760,-393,202,0,1800),
+ (1520023303,1520008829,'arcstone',0,380,-10,394,0,1800),
+ (1520023304,1520008830,'arcstone',0,900,-575,188,0,1800),
+ (1520023305,1520008831,'arcstone',0,-1040,-950,495,0,1800),
+ (1520023306,1520008832,'arcstone',0,-1020,-985,497,0,1800),
+ (1520023307,1520008833,'arcstone',0,-350,-991,382,0,1800);
+
+-- 5. "Mark of the Spirits" (task 3031) for Spirit Hunter Elijo (369002).
+INSERT IGNORE INTO tasks (id,type,duration,duration_code,title,description,reward_text,reward_id_list,cash_reward,exp_reward,reward_method,reward_points,reward_point_type,min_level,max_level,level_spread,min_players,max_players,repeatable,faction_reward,completion_emote,replay_timer_group) VALUES
+ (3031,2,0,0,'Mark of the Spirits','Spirit Hunter Elijo has asked you to recover the marks borne by the champions of Arcstone: the Mark of Okahn, the Mark of Ravenglass, the Mark of Stillwillow, the Mark of Xanzerok, and the Mark of Oroshar.','You have gathered the marks of the spirits.', '',0,0,0,0,0,60,0,0,1,1,0,0,'',0);
+
+INSERT IGNORE INTO task_activities (taskid,activityid,req_activity_id,step,activitytype,target_name,goalmethod,goalcount,description_override,item_id_list,item_list,optional,list_group) VALUES
+ (3031,0,-1,1,1,'Spirit Hunter Elijo',0,1,'Bring Elijo the Mark of Okahn','85606','',0,0),
+ (3031,1,-1,2,1,'Spirit Hunter Elijo',0,1,'Bring Elijo the Mark of Ravenglass','85607','',0,0),
+ (3031,2,-1,3,1,'Spirit Hunter Elijo',0,1,'Bring Elijo the Mark of Stillwillow','85608','',0,0),
+ (3031,3,-1,4,1,'Spirit Hunter Elijo',0,1,'Bring Elijo the Mark of Xanzerok','85609','',0,0),
+ (3031,4,-1,5,1,'Spirit Hunter Elijo',0,1,'Bring Elijo the Mark of Oroshar','85610','',0,0);
+)ARCSTONE162",
+		.content_schema_update = false,
 	},
 
-	// ------------------------------------------------------------------
-	// Origin AA -- move the rank spell below the RoF2 client's spell ceiling.
-	//
-	// The RoF2 client allocates a fixed spell array of TOTAL_SPELL_COUNT =
-	// 0xAFC9 (45,001) entries (Release-NMS-Client/eqgame_dll/EQData.h) and its
-	// GetSpellByID rejects any id >= 45001. aa_ranks 41000 pointed Origin at
-	// spell 121861, a spell the client could not address at all: the AA button
-	// did nothing and the activation was never sent. Greater Soul Gem hit the
-	// same wall and was moved 50015/50016 -> 44011/44012.
-	//
-	// Clone the spell to 44021 (next free id after the block that ends at 44020)
-	// and repoint the rank; drop 121861. Afterwards run export-client-files.bat
-	// and shared-memory.bat, then restart the zone layer.
-	//
-	// The same bug still affects Glyph of the Gambler (121862) and Invitation of
-	// Blood (121865); tracked separately.
-	// ------------------------------------------------------------------
+	// TBS Katta Castrum: the six vendors that shipped with a name/currency but
+	// no merchantlist inventory. Standalone copy:
+	// utils/sql/20261017_tbs_katta_merchants.sql
 	ManifestEntry{
-		.version = 158,
-		.description = "20261016_origin_aa_spell_id_fix",
-		.check = "SELECT 1 FROM `aa_ranks` WHERE `id` = 41000 AND `spell` = 121861",
-		.condition = "not_empty",
+		.version = 163,
+		.description = "20261017_tbs_katta_merchants",
+		.check = "SELECT 1 FROM merchantlist WHERE merchantid = 416039",
+		.condition = "empty",
 		.match = "",
-		.sql = R"ORIG158(
--- Custom migration 158: Origin AA spell 121861 -> 44021 (RoF2 client ceiling is 45001).
-DELETE FROM `spells_new` WHERE `id` = 44021;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44021,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121861;
-UPDATE `aa_ranks` SET `spell` = 44021, `spell_type` = 44021 WHERE `id` = 41000;
-DELETE FROM `spells_new` WHERE `id` = 121861;
-)ORIG158",
-		.content_schema_update = true,
-	},
-
-	// ------------------------------------------------------------------
-	// Glyph of the Gambler (rank 41010) + Invitation of Blood (rank 41011):
-	// same defect as Origin -- their rank spells (121862 / 121865) sit above the
-	// RoF2 client's 45,001-entry spell array (TOTAL_SPELL_COUNT = 0xAFC9), so the
-	// AA buttons did nothing. Move them to 44022 / 44023 and rename the quest
-	// scripts quests/global/spells/{121862,121865}.pl -> {44022,44023}.pl.
-	// ------------------------------------------------------------------
-	ManifestEntry{
-		.version = 159,
-		.description = "20261017_gambler_blood_aa_spell_id_fix",
-		.check = "SELECT 1 FROM `aa_ranks` WHERE `id` IN (41010,41011) AND `spell` IN (121862,121865)",
-		.condition = "not_empty",
-		.match = "",
-		.sql = R"GBAA159(
--- Custom migration 159: Gambler/Blood AA spell ids -> 44022/44023 (client ceiling 45001).
-DELETE FROM `spells_new` WHERE `id` = 44022;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44022,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121862;
-DELETE FROM `spells_new` WHERE `id` = 44023;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44023,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121865;
-UPDATE `aa_ranks` SET `spell` = 44022, `spell_type` = 44022 WHERE `id` = 41010;
-UPDATE `aa_ranks` SET `spell` = 44023, `spell_type` = 44023 WHERE `id` = 41011;
-DELETE FROM `spells_new` WHERE `id` IN (121862,121865);
-)GBAA159",
-		.content_schema_update = true,
-	},
-
-	// ------------------------------------------------------------------
-	// RoF2 client spell ceiling cleanup: the client's fixed spell array is
-	// TOTAL_SPELL_COUNT = 0xAFC9 (45,001) and ids >= 45001 are unreachable
-	// (Release-NMS-Client/eqgame_dll/EQData.h). Move the still-used custom
-	// spells below it and retire the dead Lucky Coin placeholder:
-	//   121866 -> 44024 (Artisan's Prize worn), 121870 -> 44025 (cake snare),
-	//   122100 -> 44026 (Edmund's Shovel click), 121863/121864 -> 44027/44028
-	//   (Glyph of Frantic Infusion ranks 2/3), 121860 deleted.
-	// Companion changes: quests/global/spells/122100.pl -> 44026.pl, 121860.pl
-	// deleted, global_player.pl + rivervale/#Cake_Defense_Baker.lua -> 44025.
-	// ------------------------------------------------------------------
-	ManifestEntry{
-		.version = 160,
-		.description = "20261018_client_spell_ceiling_cleanup",
-		.check = "SELECT 1 FROM `spells_new` WHERE `id` IN (121860,121863,121864,121866,121870,122100)",
-		.condition = "not_empty",
-		.match = "",
-		.sql = R"CEIL160(
--- ============================================================================
--- RoF2 client spell ceiling cleanup (round 2)
---
--- The client's fixed spell array is TOTAL_SPELL_COUNT = 0xAFC9 (45,001) entries
--- and GetSpellByID rejects id >= 45001 (Release-NMS-Client/eqgame_dll/EQData.h).
--- Six custom spells were minted above it. This migration moves the ones still
--- in use below the ceiling and retires the dead Lucky Coin spell.
---
---   121866 Artisan's Finesse       -> 44024   (item 9020015 worn effect)
---   121870 Sticky Icing            -> 44025   (Cake Defense quest snare)
---   122100 Grave_Dig               -> 44026   (Edmund's Shovel click + spell script)
---   121863 Glyph of Frantic Infusion R2 -> 44027 (aa_ranks 41012)
---   121864 Glyph of Frantic Infusion R3 -> 44028 (aa_ranks 41013)
---   121860 Transmute Experience    -> deleted (retired Lucky Coin placeholder)
---
--- Companion file changes (quests):
---   global_player.pl                 BuffFadeBySpellID 121870 -> 44025
---   rivervale/#Cake_Defense_Baker.lua STICKY_ICING 121870 -> 44025
---   global/spells/122100.pl          renamed to 44026.pl
---   global/spells/121860.pl          deleted (inert)
---
--- After applying: shared_memory.bat (items + spells), export-client-files.bat,
--- restart the zone layer.
---
--- Idempotent. Rollback: 20261018_client_spell_ceiling_cleanup_rollback.sql
--- ============================================================================
+		.sql = R"KATTA163(
 SET NAMES utf8mb4;
 
--- 1) Artisan's Finesse -> 44024
-DELETE FROM `spells_new` WHERE `id` = 44024;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44024,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121866;
-UPDATE `items` SET `worneffect` = 44024 WHERE `id` = 9020015;
-DELETE FROM `spells_new` WHERE `id` = 121866;
+UPDATE npc_types SET merchant_id = id
+  WHERE id IN (416039,416041,416047,416057,416064,416076);
 
--- 2) Sticky Icing -> 44025
-DELETE FROM `spells_new` WHERE `id` = 44025;
-)CEIL160"
-		R"CEIL160(INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44025,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121870;
-DELETE FROM `spells_new` WHERE `id` = 121870;
+UPDATE npc_types SET alt_currency_id = 11 WHERE id IN (416041,416057,416076);
+UPDATE npc_types SET alt_currency_id = 12 WHERE id = 416064;
 
--- 3) Grave_Dig -> 44026
-DELETE FROM `spells_new` WHERE `id` = 44026;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44026,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 122100;
-UPDATE `items` SET `clickeffect` = 44026 WHERE `id` = 3001008;
-DELETE FROM `spells_new` WHERE `id` = 122100;
+INSERT INTO merchantlist
+  (merchantid,slot,item,faction_required,level_required,min_status,max_status,alt_currency_cost,classes_required,probability,min_expansion,max_expansion) VALUES
+  (416039,1,80739,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,2,80740,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,3,80741,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,4,80742,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,5,80743,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,6,80744,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,7,80745,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,8,80746,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,9,80747,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,10,80748,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,11,80749,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,12,80750,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,13,80751,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,14,80752,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,15,80753,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,16,80754,-1100,0,0,255,10,65535,100,-1,-1),
+  (416039,17,80755,-1100,0,0,255,10,65535,100,-1,-1),
+  (416041,1,80489,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,2,80488,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,3,80483,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,4,80482,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,5,80478,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,6,80477,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,7,80475,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,8,80490,-1100,0,0,255,600,65535,100,-1,-1),
+  (416041,9,80487,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,10,80481,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,11,80480,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,12,80479,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,13,80486,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,14,80485,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,15,80476,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,16,80484,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,17,80474,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,18,80471,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,19,80470,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,20,80466,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,21,80463,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,22,80462,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,23,80461,-1100,0,0,255,450,65535,100,-1,-1),
+  (416041,24,80467,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,25,80465,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,26,80464,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,27,80472,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,28,80469,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,29,80468,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,30,80460,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,31,80456,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,32,80458,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,33,80459,-1100,0,0,255,300,65535,100,-1,-1),
+  (416041,34,80491,-1100,0,0,255,250,65535,100,-1,-1),
+  (416041,35,80473,-1100,0,0,255,250,65535,100,-1,-1),
+  (416041,36,80457,-1100,0,0,255,200,65535,100,-1,-1),
+  (416041,37,79919,-1100,0,0,255,10,65535,100,-1,-1),
+  (416047,1,80711,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,2,80712,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,3,80713,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,4,80714,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,5,80715,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,6,80716,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,7,80718,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,8,80719,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,9,80720,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,10,80721,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,11,80722,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,12,80723,-1100,0,0,255,15,65535,100,-1,-1),
+  (416047,13,80724,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,14,80725,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,15,80726,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,16,80727,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,17,80728,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,18,80729,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,19,80730,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,20,80731,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,21,80732,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,22,80733,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,23,80734,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,24,80735,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,25,80736,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,26,80737,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,27,80738,-1100,0,0,255,20,65535,100,-1,-1),
+  (416047,28,80045,-1100,0,0,255,100,65535,100,-1,-1),
+  (416047,29,80050,-1100,0,0,255,200,65535,100,-1,-1),
+  (416047,30,80046,-1100,0,0,255,300,65535,100,-1,-1),
+  (416047,31,80051,-1100,0,0,255,400,65535,100,-1,-1),
+  (416047,32,80047,-1100,0,0,255,600,65535,100,-1,-1),
+  (416047,33,80052,-1100,0,0,255,700,65535,100,-1,-1),
+  (416047,34,80048,-1100,0,0,255,900,65535,100,-1,-1),
+  (416047,35,80053,-1100,0,0,255,1000,65535,100,-1,-1),
+  (416057,1,79430,-1100,0,0,255,350,65535,100,-1,-1),
+  (416057,2,79382,-1100,0,0,255,350,65535,100,-1,-1),
+  (416057,3,79379,-1100,0,0,255,350,65535,100,-1,-1),
+  (416057,4,79358,-1100,0,0,255,350,65535,100,-1,-1),
+  (416057,5,79385,-1100,0,0,255,300,65535,100,-1,-1),
+  (416057,6,79376,-1100,0,0,255,300,65535,100,-1,-1),
+  (416057,7,79367,-1100,0,0,255,300,65535,100,-1,-1),
+  (416057,8,79424,-1100,0,0,255,300,65535,100,-1,-1),
+  (416057,9,79433,-1100,0,0,255,250,65535,100,-1,-1),
+  (416057,10,79370,-1100,0,0,255,250,65535,100,-1,-1),
+  (416057,11,79200,-1100,0,0,255,250,65535,100,-1,-1),
+  (416057,12,79073,-1100,0,0,255,250,65535,100,-1,-1),
+  (416057,13,79364,-1100,0,0,255,200,65535,100,-1,-1),
+  (416057,14,79373,-1100,0,0,255,200,65535,100,-1,-1),
+  (416057,15,79427,-1100,0,0,255,200,65535,100,-1,-1),
+  (416057,16,79388,-1100,0,0,255,200,65535,100,-1,-1),
+  (416057,17,79391,-1100,0,0,255,150,65535,100,-1,-1),
+  (416057,18,79436,-1100,0,0,255,150,65535,100,-1,-1),
+  (416057,19,79361,-1100,0,0,255,150,65535,100,-1,-1),
+  (416057,20,79067,-1100,0,0,255,150,65535,100,-1,-1),
+  (416064,1,80521,-1100,0,0,255,100,65535,100,-1,-1),
+  (416064,2,80522,-1100,0,0,255,150,65535,100,-1,-1),
+  (416064,3,80523,-1100,0,0,255,200,65535,100,-1,-1),
+  (416064,4,80524,-1100,0,0,255,250,65535,100,-1,-1),
+  (416064,5,80525,-1100,0,0,255,400,65535,100,-1,-1),
+  (416064,6,80526,-1100,0,0,255,450,65535,100,-1,-1),
+  (416064,7,80527,-1100,0,0,255,700,65535,100,-1,-1),
+  (416064,8,80556,-1100,0,0,255,100,65535,100,-1,-1),
+  (416064,9,80557,-1100,0,0,255,150,65535,100,-1,-1),
+  (416064,10,80558,-1100,0,0,255,200,65535,100,-1,-1),
+  (416064,11,80559,-1100,0,0,255,250,65535,100,-1,-1),
+  (416064,12,80560,-1100,0,0,255,400,65535,100,-1,-1),
+  (416064,13,80561,-1100,0,0,255,450,65535,100,-1,-1),
+  (416064,14,80562,-1100,0,0,255,700,65535,100,-1,-1),
+  (416064,15,80563,-1100,0,0,255,100,65535,100,-1,-1),
+  (416064,16,80564,-1100,0,0,255,150,65535,100,-1,-1),
+  (416064,17,80565,-1100,0,0,255,200,65535,100,-1,-1),
+  (416064,18,80566,-1100,0,0,255,250,65535,100,-1,-1),
+  (416064,19,80567,-1100,0,0,255,400,65535,100,-1,-1),
+  (416064,20,80568,-1100,0,0,255,450,65535,100,-1,-1),
+  (416064,21,80569,-1100,0,0,255,700,65535,100,-1,-1),
+  (416064,22,80605,-1100,0,0,255,100,65535,100,-1,-1),
+  (416064,23,80606,-1100,0,0,255,150,65535,100,-1,-1),
+  (416064,24,80607,-1100,0,0,255,200,65535,100,-1,-1),
+  (416064,25,80608,-1100,0,0,255,250,65535,100,-1,-1),
+  (416064,26,80609,-1100,0,0,255,400,65535,100,-1,-1),
+  (416064,27,80610,-1100,0,0,255,450,65535,100,-1,-1),
+  (416064,28,80611,-1100,0,0,255,700,65535,100,-1,-1),
+  (416076,1,80401,-1100,0,0,255,150,65535,100,-1,-1),
+  (416076,2,80405,-1100,0,0,255,175,65535,100,-1,-1),
+  (416076,3,80409,-1100,0,0,255,200,65535,100,-1,-1),
+  (416076,4,80413,-1100,0,0,255,225,65535,100,-1,-1),
+  (416076,5,80417,-1100,0,0,255,250,65535,100,-1,-1),
+  (416076,6,80421,-1100,0,0,255,300,65535,100,-1,-1),
+  (416076,7,80425,-1100,0,0,255,350,65535,100,-1,-1),
+  (416076,8,80429,-1100,0,0,255,250,65535,100,-1,-1),
+  (416076,9,80433,-1100,0,0,255,300,65535,100,-1,-1),
+  (416076,10,80437,-1100,0,0,255,350,65535,100,-1,-1),
+  (416076,11,80441,-1100,0,0,255,375,65535,100,-1,-1),
+  (416076,12,80445,-1100,0,0,255,450,65535,100,-1,-1),
+  (416076,13,80449,-1100,0,0,255,500,65535,100,-1,-1),
+  (416076,14,80453,-1100,0,0,255,700,65535,100,-1,-1);
+)KATTA163",
+		.content_schema_update = false,
+	},
 
--- 4) Glyph of Frantic Infusion ranks 2/3 -> 44027 / 44028
-DELETE FROM `spells_new` WHERE `id` = 44027;
-)CEIL160"
-		R"CEIL160(INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44027,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121863;
-DELETE FROM `spells_new` WHERE `id` = 44028;
-INSERT INTO `spells_new` (`id`,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236`) SELECT 44028,`name`,`player_1`,`teleport_zone`,`you_cast`,`other_casts`,`cast_on_you`,`cast_on_other`,`spell_fades`,`range`,`aoerange`,`pushback`,`pushup`,`cast_time`,`recovery_time`,`recast_time`,`buffdurationformula`,`buffduration`,`AEDuration`,`mana`,`effect_base_value1`,`effect_base_value2`,`effect_base_value3`,`effect_base_value4`,`effect_base_value5`,`effect_base_value6`,`effect_base_value7`,`effect_base_value8`,`effect_base_value9`,`effect_base_value10`,`effect_base_value11`,`effect_base_value12`,`effect_limit_value1`,`effect_limit_value2`,`effect_limit_value3`,`effect_limit_value4`,`effect_limit_value5`,`effect_limit_value6`,`effect_limit_value7`,`effect_limit_value8`,`effect_limit_value9`,`effect_limit_value10`,`effect_limit_value11`,`effect_limit_value12`,`max1`,`max2`,`max3`,`max4`,`max5`,`max6`,`max7`,`max8`,`max9`,`max10`,`max11`,`max12`,`icon`,`memicon`,`components1`,`components2`,`components3`,`components4`,`component_counts1`,`component_counts2`,`component_counts3`,`component_counts4`,`NoexpendReagent1`,`NoexpendReagent2`,`NoexpendReagent3`,`NoexpendReagent4`,`formula1`,`formula2`,`formula3`,`formula4`,`formula5`,`formula6`,`formula7`,`formula8`,`formula9`,`formula10`,`formula11`,`formula12`,`LightType`,`goodEffect`,`Activated`,`resisttype`,`effectid1`,`effectid2`,`effectid3`,`effectid4`,`effectid5`,`effectid6`,`effectid7`,`effectid8`,`effectid9`,`effectid10`,`effectid11`,`effectid12`,`targettype`,`basediff`,`skill`,`zonetype`,`EnvironmentType`,`TimeOfDay`,`classes1`,`classes2`,`classes3`,`classes4`,`classes5`,`classes6`,`classes7`,`classes8`,`classes9`,`classes10`,`classes11`,`classes12`,`classes13`,`classes14`,`classes15`,`classes16`,`CastingAnim`,`TargetAnim`,`TravelType`,`SpellAffectIndex`,`disallow_sit`,`deities0`,`deities1`,`deities2`,`deities3`,`deities4`,`deities5`,`deities6`,`deities7`,`deities8`,`deities9`,`deities10`,`deities11`,`deities12`,`deities13`,`deities14`,`deities15`,`deities16`,`field142`,`field143`,`new_icon`,`spellanim`,`uninterruptable`,`ResistDiff`,`dot_stacking_exempt`,`deleteable`,`RecourseLink`,`no_partial_resist`,`field152`,`field153`,`short_buff_box`,`descnum`,`typedescnum`,`effectdescnum`,`effectdescnum2`,`npc_no_los`,`field160`,`reflectable`,`bonushate`,`field163`,`field164`,`ldon_trap`,`EndurCost`,`EndurTimerIndex`,`IsDiscipline`,`field169`,`field170`,`field171`,`field172`,`HateAdded`,`EndurUpkeep`,`numhitstype`,`numhits`,`pvpresistbase`,`pvpresistcalc`,`pvpresistcap`,`spell_category`,`pvp_duration`,`pvp_duration_cap`,`pcnpc_only_flag`,`cast_not_standing`,`can_mgb`,`nodispell`,`npc_category`,`npc_usefulness`,`MinResist`,`MaxResist`,`viral_targets`,`viral_timer`,`nimbuseffect`,`ConeStartAngle`,`ConeStopAngle`,`sneaking`,`not_extendable`,`field198`,`field199`,`suspendable`,`viral_range`,`songcap`,`field203`,`field204`,`no_block`,`field206`,`spellgroup`,`rank`,`field209`,`field210`,`CastRestriction`,`allowrest`,`InCombat`,`OutofCombat`,`field215`,`field216`,`field217`,`aemaxtargets`,`maxtargets`,`field220`,`field221`,`field222`,`field223`,`persistdeath`,`field225`,`field226`,`min_dist`,`min_dist_mod`,`max_dist`,`max_dist_mod`,`min_range`,`field232`,`field233`,`field234`,`field235`,`field236` FROM `spells_new` WHERE `id` = 121864;
-UPDATE `aa_ranks` SET `spell` = 44027, `spell_type` = 44027 WHERE `id` = 41012;
-UPDATE `aa_ranks` SET `spell` = 44028, `spell_type` = 44028 WHERE `id` = 41013;
--- spell examine text matching aa 5003's description (+15% / +20% pet min damage)
-DELETE FROM `db_str` WHERE `id` IN (44027,44028) AND `type` = 6;
+	// TBS Katta Castrum faction split (Combine / Shissar / elementals; all
+	// vendors onto the merchant group). Standalone copy:
+	// utils/sql/20261017_tbs_katta_faction.sql
+	ManifestEntry{
+		.version = 164,
+		.description = "20261017_tbs_katta_faction",
+		.check = "SELECT 1 FROM npc_faction WHERE id = 1520000109",
+		.condition = "empty",
+		.match = "",
+		.sql = R"KATTA164(
+SET NAMES utf8mb4;
+
+INSERT INTO faction_base_data (client_faction_id,min,max) VALUES
+  (1161,-2000,2000),
+  (1165,-2000,2000)
+ON DUPLICATE KEY UPDATE min=VALUES(min), max=VALUES(max);
+
+INSERT INTO npc_faction (id,name,primaryfaction,ignore_primary_assist) VALUES
+  (1520000109,'overhaul_1161',1161,0),
+  (1520000110,'overhaul_548', 548, 0),
+  (1520000111,'overhaul_1165',1165,0);
+
+INSERT INTO npc_faction_entries
+  (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+  (1520000109,1161,-1,1,0),
+  (1520000110,548, -1,1,0),
+  (1520000111,1165,-1,1,0);
+
+UPDATE npc_types SET npc_faction_id = 1520000110
+  WHERE id BETWEEN 416000 AND 416999 AND race IN (563,374);
+
+UPDATE npc_types SET npc_faction_id = 1520000111
+  WHERE id BETWEEN 416000 AND 416999 AND race IN (431,475,476,477,478);
+
+UPDATE npc_types SET npc_faction_id = 1520000109
+  WHERE id BETWEEN 416000 AND 416999 AND race = 566
+    AND id NOT IN (
+      416019,416036,416038,416039,416041,416042,416044,416047,416049,416050,
+      416053,416054,416057,416059,416060,416061,416064,416066,416068,416070,
+      416071,416076,416078
+    );
+
+UPDATE npc_types SET npc_faction_id = 1520000064
+  WHERE id IN (
+    416019,416036,416038,416039,416041,416042,416044,416047,416049,416050,
+    416053,416054,416057,416059,416060,416061,416064,416066,416068,416070,
+    416071,416076,416078
+  );
+)KATTA164",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 165,
+		.description = "20261018_doppelganger_pet_templates",
+		.check = "SELECT 1 FROM pets WHERE type = 'SwarmPetDG4' AND petpower = -1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"DGPL165(
+-- Doppelganger-style swarm pets for every player-reachable SE_Doppelganger spell.
+--
+-- Client::Doppelganger() resolves spells_new.teleport_zone through `pets`, then
+-- clones the caster's appearance, level, stats, gear and buffs onto that NPC
+-- template. Only SwarmPetDG1..SwarmPetDG3 ever existed in `pets`, so every
+-- spell below bailed at GetPetEntry() and summoned nothing, e.g.:
+--   [Doppelganger] Unknown doppelganger spell id: [12580], check pets table
+--
+-- Because the template is fully overwritten from the caster, the existing
+-- SwarmPetDG3 template (npc_types 684) is correct for every one of these.
+-- This covers:
+--   Doppelganger AA ranks 4-13   SwarmPetDG4..DG13   (spells 12580..31606)
+--   Doppelganger leftover IDs    SwarmPetDG14..DG18  (spells 31607..33932)
+--   Projection of Fury (AA 3213/23213)  SwarmPetDGWarProj/2 (21785/23538)
+--   Illusory Ally (AA 2203)      SwarmPetIA01..03    (38414..38416)
+--   First Spire of Enchantment   SpireDoppelganger1..3 (16279..16281)
+--     template only: the spire rank spells (16270..16278) still carry no
+--     SE_Doppelganger effect, so 16279..16281 are not cast by anything yet.
+--   Rune of Tallon (item 86163/86174)   15AVTallonSwarm (39616)
+--
+-- NPC-only SE_Doppelganger spells are deliberately not covered: the effect
+-- handler ignores non-client casters.
+-- Keep in sync with common/database/database_update_manifest_custom.cpp entry 165.
+
+INSERT INTO `pets`
+  (`type`,`petpower`,`npcID`,`temp`,`petcontrol`,`petnaming`,`monsterflag`,`equipmentset`)
+VALUES
+  ('SwarmPetDG4',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG5',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG6',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG7',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG8',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG9',        -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG10',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG11',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG12',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG13',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG14',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG15',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG16',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG17',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDG18',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDGWarProj',  -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetDGWarProj2', -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetIA01',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetIA02',       -1, 684, 0, 0, 0, 0, -1),
+  ('SwarmPetIA03',       -1, 684, 0, 0, 0, 0, -1),
+  ('SpireDoppelganger1', -1, 684, 0, 0, 0, 0, -1),
+  ('SpireDoppelganger2', -1, 684, 0, 0, 0, 0, -1),
+  ('SpireDoppelganger3', -1, 684, 0, 0, 0, 0, -1),
+  ('15AVTallonSwarm',    -1, 684, 0, 0, 0, 0, -1)
+ON DUPLICATE KEY UPDATE `npcID` = `npcID`;
+)DGPL165",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 166,
+		.description = "20261018_ascendant_swarm_templates",
+		.check = "SELECT 1 FROM pets WHERE type = 'animateDead2' AND petpower = -1",
+		.condition = "empty",
+		.match = "",
+.sql = R"ASW166A(
+-- Ascendant swarm-pet port: missing npc_types + pets rows.
+--
+-- Source audited: Ascendant-EQ-Emu/Ascendant-Server database/ascendant_content.sql.gz
+-- Our spells_new already referenced these teleport_zone names, but the matching
+-- `pets` row (and usually the npc_types row) was absent, so the spell failed at
+-- GetPetEntry() and summoned nothing ("check pets table"):
+--   Army of the Dead (19 ranks)   animateDead2..18
+--   Pack Hunt (7 ranks)           packhunt1..7
+--   Rise of Bones (10 ranks)      riseofbones1..10
+--   Lyrical Prankster             LyricalDG1..4
+--   Banestrike                    SumBaneSpirit
+--   Aspect of Zomm                SummonEyeSeeInvis2
+--   Summon Storm Dervish          SUM_storm_dervish
+--   Ukun Thrall II                UkunPet253
+--   Doppelganger ranks 4-13       SwarmPetDG4..13
+--   Projection of Fury            SwarmPetDGWarProj/2
+--   Illusory Ally                 SwarmPetIA01
+--
+-- npc_types stats come from Ascendant, with one deliberate deviation: their
+-- doppelganger-family rows carry special_abilities 11,1^19,1^20,1^21,1
+-- (RangedAttack + MeleeImmunity + MagicImmunity), which makes the pets
+-- unkillable. We keep our working SwarmPetDG3 set (9,1^10,1^17,1^18,1^21,1)
+-- for DG4-13/WarProj/IA, and the Pack Hunt set (8,1^9,1^17,1^21,1) for LyricalDG.
+-- npc_types 680 and 340021 already exist here and are reused, not overwritten.
+--
+-- Twin of manifest entry 166. Idempotent: INSERT IGNORE for npcs, upsert for pets.
+
+INSERT IGNORE INTO `npc_types`
+  (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)
+VALUES
+(954,'SwarmPetDG4',NULL,66,1,14,1,3300,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,265,629,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,302,0,0,0,30,0,223,223,223,223,223,223,223,0,0,1,0,1,0,116,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(955,'SwarmPetDG5',NULL,66,1,14,1,3600,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,275,654,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,317,0,0,0,30,0,226,226,226,226,226,226,226,0,0,1,0,1,0,121,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(956,'SwarmPetDG6',NULL,67,1,14,1,3900,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,285,679,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,332,0,0,0,30,0,229,229,229,229,229,229,229,0,0,1,0,1,0,126,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(957,'SwarmPetDG7',NULL,67,1,14,1,4200,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,295,704,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,347,0,0,0,30,0,232,232,232,232,232,232,232,0,0,1,0,1,0,131,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(958,'SwarmPetDG8',NULL,68,1,14,1,4500,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,305,729,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,362,0,0,0,30,0,235,235,235,235,235,235,235,0,0,1,0,1,0,136,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(959,'SwarmPetDG9',NULL,68,1,14,1,4800,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,315,754,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,377,0,0,0,30,0,238,238,238,238,238,238,238,0,0,1,0,1,0,141,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(960,'SwarmPetDG10',NULL,69,1,14,1,5100,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,325,779,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,392,0,0,0,30,0,241,241,241,241,241,241,241,0,0,1,0,1,0,146,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(961,'SwarmPetDG11',NULL,69,1,14,1,5400,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,335,804,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,407,0,0,0,30,0,244,244,244,244,244,244,244,0,0,1,0,1,0,151,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(962,'SwarmPetDG12',NULL,70,1,14,1,5700,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,345,829,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,422,0,0,0,30,0,247,247,247,247,247,247,247,0,0,1,0,1,0,156,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(963,'SwarmPetDG13',NULL,70,1,14,1,6000,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,355,854,-1,'ABfY','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,437,0,0,0,30,0,250,250,250,250,250,250,250,0,0,1,0,1,0,161,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1318,'animateDead2',NULL,53,485,1,8,5000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,20,84,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,120,0,0,-19,30,0,134,134,97,134,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1319,'animateDead3',NULL,55,485,1,8,5500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,22,89,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,125,0,0,-19,30,0,136,136,99,136,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1320,'animateDead4',NULL,57,485,1,8,6000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,24,94,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,130,0,0,-19,30,0,138,138,101,138,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1321,'animateDead5',NULL,59,485,1,8,6500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,26,99,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,135,0,0,-19,30,0,140,140,103,140,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1322,'animateDead6',NULL,60,485,1,8,7000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,28,104,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,140,0,0,-19,30,0,142,142,105,142,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1323,'animateDead7',NULL,61,485,1,8,7500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,30,109,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,145,0,0,-19,30,0,144,144,107,144,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1324,'animateDead8',NULL,62,485,1,8,8000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,32,114,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,150,0,0,-19,30,0,146,146,109,146,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1325,'animateDead9',NULL,63,485,1,8,8500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,34,119,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,155,0,0,-19,30,0,148,148,111,148,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1326,'animateDead10',NULL,64,485,1,8,9000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,36,124,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,160,0,0,-19,30,0,150,150,113,150,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1327,'animateDead11',NULL,65,485,1,8,9500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,38,129,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,165,0,0,-19,30,0,152,152,115,152,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1328,'animateDead12',NULL,66,485,1,8,10000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,40,134,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,170,0,0,-19,30,0,154,154,117,154,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1329,'animateDead13',NULL,67,485,1,8,10500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,42,139,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,175,0,0,-19,30,0,156,156,119,156,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1330,'animateDead14',NULL,68,485,1,8,11000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,44,144,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,180,0,0,-19,30,0,158,158,121,158,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1331,'animateDead15',NULL,69,485,1,8,11500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,46,149,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,185,0,0,-19,30,0,160,160,123,160,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1332,'animateDead16',NULL,70,485,1,8,12000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,48,154,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,190,0,0,-19,30,0,162,162,125,162,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1333,'animateDead17',NULL,71,485,1,8,12500,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,50,159,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,195,0,0,-19,30,0,164,164,127,164,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+)ASW166A"
+		R"ASW166B(
+(1334,'animateDead18',NULL,72,485,1,8,13000,0,2,0,0,0,5,0,0,0,0,0,0,0,1489,0,0,0,0,52,164,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,200,0,0,-19,30,0,166,166,129,166,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1348,'riseofbones1',NULL,60,367,1,3,4000,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,40,100,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,150,0,0,0,30,0,140,120,140,120,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1349,'riseofbones2',NULL,62,367,1,3,4500,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,45,110,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,160,0,0,0,30,0,145,125,145,125,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1350,'riseofbones3',NULL,64,367,1,3,5000,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,50,120,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,170,0,0,0,30,0,150,130,150,130,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1351,'riseofbones4',NULL,66,367,1,3,5500,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,55,130,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,180,0,0,0,30,0,155,135,155,135,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1352,'riseofbones5',NULL,68,367,1,3,6000,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,60,140,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,190,0,0,0,30,0,160,140,160,140,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1353,'riseofbones6',NULL,70,367,1,3,6500,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,65,150,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,200,0,0,0,30,0,165,145,165,145,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1354,'riseofbones7',NULL,72,367,1,3,7000,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,70,160,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,210,0,0,0,30,0,170,150,170,150,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1355,'riseofbones8',NULL,73,367,1,3,7500,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,75,170,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,220,0,0,0,30,0,175,155,175,155,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1356,'riseofbones9',NULL,74,367,1,3,8000,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,80,180,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,230,0,0,0,30,0,180,160,180,160,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1357,'riseofbones10',NULL,75,367,1,3,8500,0,2,4,4,0,2,0,0,0,0,0,0,0,0,0,0,0,0,85,190,-1,'','2,1^7,1^8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,240,0,0,0,30,0,185,165,185,165,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1358,'packhunt1',NULL,60,42,1,28,3000,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,50,120,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,180,0,0,0,30,0,150,100,160,130,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1359,'packhunt2',NULL,62,42,1,28,3500,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,55,130,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,195,0,0,0,30,0,155,105,165,135,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1360,'packhunt3',NULL,64,42,1,28,4000,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,60,140,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,210,0,0,0,30,0,160,110,170,140,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1361,'packhunt4',NULL,66,42,1,28,4500,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,65,150,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,225,0,0,0,30,0,165,115,175,145,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1362,'packhunt5',NULL,68,42,1,28,5000,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,70,160,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,240,0,0,0,30,0,170,120,180,150,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1363,'packhunt6',NULL,70,42,1,28,5500,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,75,170,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,255,0,0,0,30,0,175,125,185,155,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1364,'packhunt7',NULL,72,42,1,28,6000,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,80,180,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,270,0,0,0,30,0,180,130,190,160,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1412,'SwarmPetDGWarProj',NULL,65,1,14,1,4000,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,150,400,-1,'','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,300,0,0,0,30,0,200,200,200,200,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1413,'SwarmPetDGWarProj2',NULL,68,1,14,1,5000,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,170,450,-1,'','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,330,0,0,0,30,0,210,210,210,210,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1414,'LyricalDG1',NULL,63,1,14,1,3000,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,100,300,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,280,0,0,0,30,0,180,180,180,180,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1415,'LyricalDG2',NULL,66,1,14,1,3500,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,120,340,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,300,0,0,0,30,0,190,190,190,190,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1416,'LyricalDG3',NULL,69,1,14,1,4000,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,140,380,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,320,0,0,0,30,0,200,200,200,200,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1417,'LyricalDG4',NULL,72,1,14,1,4500,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,160,420,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,340,0,0,0,30,0,210,210,210,210,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1419,'SwarmPetIA01',NULL,70,1,14,1,5000,0,2,0,0,0,6,0,0,0,0,0,0,0,0,0,0,0,0,120,350,-1,'','9,1^10,1^17,1^18,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,320,0,0,0,30,0,190,190,190,190,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1420,'SumBaneSpirit',NULL,70,127,1,28,1000,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,100,300,-1,'','8,1^9,1^17,1^21,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,200,0,0,0,30,0,150,100,150,100,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0),
+(1421,'SummonEyeSeeInvis2',NULL,50,108,1,24,500,0,2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1,'','8,1^9,1',0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,0,0,0,0,0,0,0,0,0,0,0,50,0,0,0,30,0,75,75,75,75,80,75,75,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0);
+
+UPDATE `pets` SET `npcID`=954 WHERE `type`='SwarmPetDG4' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=955 WHERE `type`='SwarmPetDG5' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=956 WHERE `type`='SwarmPetDG6' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=957 WHERE `type`='SwarmPetDG7' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=958 WHERE `type`='SwarmPetDG8' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=959 WHERE `type`='SwarmPetDG9' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=960 WHERE `type`='SwarmPetDG10' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=961 WHERE `type`='SwarmPetDG11' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=962 WHERE `type`='SwarmPetDG12' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=963 WHERE `type`='SwarmPetDG13' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=1412 WHERE `type`='SwarmPetDGWarProj' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=1413 WHERE `type`='SwarmPetDGWarProj2' AND `petpower`=-1;
+UPDATE `pets` SET `npcID`=1419 WHERE `type`='SwarmPetIA01' AND `petpower`=-1;
+
+INSERT INTO `pets` (`type`,`petpower`,`npcID`,`temp`,`petcontrol`,`petnaming`,`monsterflag`,`equipmentset`) VALUES
+  ('animateDead2', -1, 1318, 1, 0, 0, 0, 0),
+  ('animateDead3', -1, 1319, 1, 0, 0, 0, 0),
+  ('animateDead4', -1, 1320, 1, 0, 0, 0, 0),
+  ('animateDead5', -1, 1321, 1, 0, 0, 0, 0),
+  ('animateDead6', -1, 1322, 1, 0, 0, 0, 0),
+  ('animateDead7', -1, 1323, 1, 0, 0, 0, 0),
+  ('animateDead8', -1, 1324, 1, 0, 0, 0, 0),
+  ('animateDead9', -1, 1325, 1, 0, 0, 0, 0),
+  ('animateDead10', -1, 1326, 1, 0, 0, 0, 0),
+  ('animateDead11', -1, 1327, 1, 0, 0, 0, 0),
+  ('animateDead12', -1, 1328, 1, 0, 0, 0, 0),
+  ('animateDead13', -1, 1329, 1, 0, 0, 0, 0),
+  ('animateDead14', -1, 1330, 1, 0, 0, 0, 0),
+  ('animateDead15', -1, 1331, 1, 0, 0, 0, 0),
+  ('animateDead16', -1, 1332, 1, 0, 0, 0, 0),
+  ('animateDead17', -1, 1333, 1, 0, 0, 0, 0),
+  ('animateDead18', -1, 1334, 1, 0, 0, 0, 0),
+  ('packhunt1', -1, 1358, 1, 0, 0, 0, 0),
+  ('packhunt2', -1, 1359, 1, 0, 0, 0, 0),
+  ('packhunt3', -1, 1360, 1, 0, 0, 0, 0),
+  ('packhunt4', -1, 1361, 1, 0, 0, 0, 0),
+  ('packhunt5', -1, 1362, 1, 0, 0, 0, 0),
+  ('packhunt6', -1, 1363, 1, 0, 0, 0, 0),
+  ('packhunt7', -1, 1364, 1, 0, 0, 0, 0),
+  ('riseofbones1', -1, 1348, 1, 0, 0, 0, 0),
+  ('riseofbones2', -1, 1349, 1, 0, 0, 0, 0),
+  ('riseofbones3', -1, 1350, 1, 0, 0, 0, 0),
+  ('riseofbones4', -1, 1351, 1, 0, 0, 0, 0),
+  ('riseofbones5', -1, 1352, 1, 0, 0, 0, 0),
+  ('riseofbones6', -1, 1353, 1, 0, 0, 0, 0),
+  ('riseofbones7', -1, 1354, 1, 0, 0, 0, 0),
+  ('riseofbones8', -1, 1355, 1, 0, 0, 0, 0),
+  ('riseofbones9', -1, 1356, 1, 0, 0, 0, 0),
+  ('riseofbones10', -1, 1357, 1, 0, 0, 0, 0),
+  ('LyricalDG1', -1, 1414, 0, 0, 0, 0, 0),
+  ('LyricalDG2', -1, 1415, 0, 0, 0, 0, 0),
+  ('LyricalDG3', -1, 1416, 0, 0, 0, 0, 0),
+  ('LyricalDG4', -1, 1417, 0, 0, 0, 0, 0),
+  ('SumBaneSpirit', -1, 1420, 1, 0, 0, 0, 0),
+  ('SummonEyeSeeInvis2', -1, 1421, 0, 2, 0, 0, 0),
+  ('SUM_storm_dervish', -1, 340021, 0, 0, 0, 0, -1),
+  ('UkunPet253', -1, 680, 0, 2, 0, 0, -1)
+ON DUPLICATE KEY UPDATE `npcID`=VALUES(`npcID`), `temp`=VALUES(`temp`);
+)ASW166B",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 167,
+		.description = "20261018_ascendant_swarm_ai_fix",
+		.check = "SELECT 1 FROM npc_types WHERE id = 954 AND aggroradius = 55 AND runspeed = 1.25",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ASWAI167(
+-- Ascendant swarm-pet port follow-up: restore movement/aggro.
+--
+-- The rows copied by entry 166 kept Ascendant's npc_types aggro/speed fields
+-- (aggroradius 0, runspeed 0, npc_aggro 0). Every working swarm pet in this DB
+-- uses 55 / 1.25 / 1 (see SwarmPetDG1-3, SummonEye, animateDead). With 0 the
+-- ported pets could not close or acquire, so doppelgangers stood in place and
+-- took hits instead of fighting.
+--
+-- Twin of manifest entry 167. Applies to the 53 npc_types rows added by entry 166.
+
+UPDATE `npc_types`
+SET `aggroradius` = 55,
+    `assistradius` = 0,
+    `runspeed` = 1.25,
+    `npc_aggro` = 1
+WHERE `id` IN (
+  954,955,956,957,958,959,960,961,962,963,1412,1413,1419,1420,1421,1318,1319,1320,1321,1322,1323,1324,1325,1326,1327,1328,1329,1330,1331,1332,1333,1334,1348,1349,1350,1351,1352,1353,1354,1355,1356,1357,1358,1359,1360,1361,1362,1363,1364,1414,1415,1416,1417
+);
+)ASWAI167",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 168,
+		.description = "20261018_dire_charm_descriptions",
+		.check = "SELECT 1 FROM db_str WHERE id = 54014 AND type = 4",
+		.condition = "empty",
+		.match = "",
+		.sql = R"DCD168(
+-- Dire Charm AA descriptions in db_str (source for client dbstr_us.txt).
+--
+-- 145/4  AA 46 (enchanter) casts spell 43990: a plain SE_Charm with max level 66,
+--        unresistable, permanent (buffdurationformula 50). The old text claimed
+--        "below 67 or Light Blue", but 43990 takes the generic level-check path,
+--        not the 2759/2760/2761 dire-charm special case.
+-- 54014  AA 20046 (cross-class enc) casts 2761.
+-- 54015  AA 20317 (cross-class dru) casts 2760.
+-- 54013  AA 20318 (cross-class nec) casts 2759.
+-- 54013/54014/54015 had only type 1 (name), so the AA window showed
+-- "db unknown" for their description pane.
+--
+-- For 2759/2760/2761 the server bypasses max_value (see Mob::IsImmuneToSpell):
+-- charm is allowed when the target is level 46 or below, or cons light blue or
+-- lower. That is the rule described below.
+--
+-- Twin of manifest entry 168. The client file is regenerated with:
+--   export_client_files.exe dbstr
+-- and copied to the client's dbstr_us.txt / Resources/dbstr_us.txt.
+
 INSERT INTO `db_str` (`id`,`type`,`value`) VALUES
- (44027,6,'Increases your pet''s minimum damage by 15%.'),
- (44028,6,'Increases your pet''s minimum damage by 20%.');
-UPDATE `spells_new` SET `descnum` = 44027 WHERE `id` = 44027;
-UPDATE `spells_new` SET `descnum` = 44028 WHERE `id` = 44028;
-DELETE FROM `spells_new` WHERE `id` IN (121863,121864);
+  (145, 4, 'Permanently charms a single NPC up to level 66. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while an animation is active. 15 minute reuse. /alt activate 46'),
+  (54014, 4, 'Permanently charms a single NPC that is level 46 or below, or that cons light blue or lower to you. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while an animation is active. /alt activate 20046'),
+  (54015, 4, 'Permanently charms a single animal that is level 46 or below, or that cons light blue or lower to you. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while another druid pet is active. /alt activate 20317'),
+  (54013, 4, 'Permanently charms a single undead that is level 46 or below, or that cons light blue or lower to you. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while another necromancer pet is active. /alt activate 20318')
+ON DUPLICATE KEY UPDATE `value`=VALUES(`value`);
+)DCD168",
+		.content_schema_update = false,
+	},
 
--- 5) Retire Transmute Experience (Lucky Coin placeholder, cast by nothing)
-DELETE FROM `spells_new` WHERE `id` = 121860;
+	ManifestEntry{
+		.version = 169,
+		.description = "20261018_ascendant_dire_charm_fix",
+		.check = "SELECT 1 FROM aa_ranks WHERE id = 41500 AND spell = 43990",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ADCF169(
+-- Ascendant Dire Charm (AA 31084/31085/31086) was casting pet illusions:
+--   41500 -> 28620 Pet Illusion: Magma Dervish
+--   41501 -> 27244 Pet Illusion: Telmira
+--   41502 -> 26877 Pet Illusion: Pyrlien
+-- Those spells are the Petamorph Wand click effects (items 907230/907295/907293),
+-- so they stay untouched. The AA ranks now cast real charms:
+--   41500 -> 43990 Dire Charm (level 66, enchanter)
+--   41501 -> 2760  Dire Charm (Animal)
+--   41502 -> 2759  Dire Charm (Undead)
+-- and 54016/960/961 descriptions are rewritten to match.
+--
+-- Twin of manifest entry 169.
 
-)CEIL160",
-		.content_schema_update = true,
+UPDATE `aa_ranks` SET `spell`=43990 WHERE `id`=41500;
+UPDATE `aa_ranks` SET `spell`=2760  WHERE `id`=41501;
+UPDATE `aa_ranks` SET `spell`=2759  WHERE `id`=41502;
+
+INSERT INTO `db_str` (`id`,`type`,`value`) VALUES
+  (54016, 4, 'Permanently charms a single NPC up to level 66. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while an animation is active. 4 minute 20 second reuse. /alt activate 31084'),
+  (960, 4, 'Permanently charms a single animal that is level 46 or below, or that cons light blue or lower to you. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while another druid pet is active. /alt activate 31085'),
+  (961, 4, 'Permanently charms a single undead that is level 46 or below, or that cons light blue or lower to you. The charm is unresistable, lasts until it breaks, the target dies, or you zone, and cannot be used while another necromancer pet is active. /alt activate 31086')
+ON DUPLICATE KEY UPDATE `value`=VALUES(`value`);
+)ADCF169",
+		.content_schema_update = false,
+	},
+
+	ManifestEntry{
+		.version = 170,
+		.description = "20261018_pet_discipline_single_line",
+		.check = "SELECT 1 FROM aa_ability WHERE id = 3202 AND enabled = 0",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ADCF170(
+-- One Pet Discipline line for the seven pet classes.
+--   125  -> shared line (classes 30256: SK, Druid, Shaman, Necro, Mage, Enchanter,
+--           Beastlord), rank 288: level 1, cost 0. Matches the ids the multiclass
+--           class-AA grant hands out (NMS_multiclass_utils.pl).
+--   3202 -> retired: Enchanter-only duplicate (rank 7733, level 65, cost 6). It
+--           outranked 125 in Custom:DedupeAALines (same effects, higher expansion),
+--           so every 125 grant was folded into 3202 and deleted immediately, then
+--           re-granted - and re-announced - on the next zone-in.
+-- Owners of the retired copy move onto 125's rank line.
+
+UPDATE `aa_ability` SET `classes` = 30256 WHERE `id` = 125;
+UPDATE `aa_ability` SET `enabled` = 0 WHERE `id` = 3202;
+
+DELETE c FROM `character_alternate_abilities` c
+  JOIN `character_alternate_abilities` k
+    ON k.`id` = c.`id` AND k.`aa_id` = 288
+ WHERE c.`aa_id` = 7733;
+
+UPDATE `character_alternate_abilities` SET `aa_id` = 288 WHERE `aa_id` = 7733;
+)ADCF170",
+		.content_schema_update = false,
 	},
 };
 

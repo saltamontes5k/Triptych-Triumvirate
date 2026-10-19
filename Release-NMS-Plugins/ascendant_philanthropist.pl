@@ -137,7 +137,7 @@ sub Philanthropist_RunDistribution {
 }
 
 # ============================================================
-# Philanthropist_HandleItemDonation($client, \%itemcount, \%attuned) — validate + pool gear
+# Philanthropist_HandleItemDonation($client, \%itemcount, \%attuned, \%charges) — validate + pool gear
 # Called from Ben_Affactor EVENT_ITEM; stores accepted gear for The Provisioner
 # ============================================================
 # Beneficial stat columns that make an item "real gear". AC is deliberately
@@ -163,7 +163,7 @@ sub Philanthropist_GearStatValue {
 }
 
 sub Philanthropist_HandleItemDonation {
-    my ($client, $itemcount_ref, $attuned_ref) = @_;
+    my ($client, $itemcount_ref, $attuned_ref, $charges_ref) = @_;
     my $donor_name = $client->GetCleanName();
     my $dbh = plugin::LoadMysql();
 
@@ -182,11 +182,44 @@ sub Philanthropist_HandleItemDonation {
         my $row = $dbh->selectrow_hashref("SELECT * FROM items WHERE id = ?", undef, $item_id);
         my $nodrop_val = $row ? $row->{nodrop} : undef;
 
-        # Reject inherently no-drop items (nodrop: 0 = NO TRADE, 1 = tradeable)
+        # A missing item row cannot be validated. Leave it for the engine to
+        # return instead of guessing.
+        unless ($row) {
+            quest::debug("[Philanthropist] Rejecting unknown item $item_id qty=$qty");
+            plugin::Whisper("I can't identify that item. Returning it.");
+            next;
+        }
+
+        # Reject summoned (e.g. magician conjurations) and temporary items.
+        # items.norent is inverted: 0 = no-rent (temporary), 1 = rentable.
+        # Reading it as a boolean rejected almost every item in the database.
+        my $is_temporary = $row->{summonedflag}
+            || (defined($row->{norent}) && $row->{norent} == 0)
+            || ($row->{Name} && $row->{Name} =~ /^Summoned:/i);
+
+        # Temporary items are eaten, never returned. A returned temporary copy is
+        # what let players keep both the new copy and the original. This check
+        # runs first so a no-trade temporary item is destroyed too.
+        if ($is_temporary) {
+            quest::debug("[Philanthropist] Destroying summoned/temporary item $item_id qty=$qty");
+            my $charges = ($row->{stackable} && $charges_ref
+                    && $charges_ref->{$item_id} && $charges_ref->{$item_id} > 0)
+                ? $charges_ref->{$item_id} : 1;
+            my $to_consume = $qty * $charges;
+            for (my $i = 0; $i < $to_consume; $i++) {
+                last unless quest::handin({$item_id => 1});
+            }
+            plugin::Whisper("I can't take summoned or temporary items. $item_link crumbles to dust.");
+            next;
+        }
+
+        # Reject inherently no-drop items (nodrop: 0 = NO TRADE, 1 = tradeable).
+        # Leave rejected items in the hand-in bucket so the engine returns the
+        # exact instance. Summoning a copy here bypasses that return and can hand
+        # back a re-tiered item, which is how duplicates appeared.
         if (!defined($nodrop_val) || $nodrop_val == 0) {
             quest::debug("[Philanthropist] Rejecting no-trade item $item_id qty=$qty");
             plugin::Whisper("I can't accept no-trade items. Returning your $item_link.");
-            for (my $i = 0; $i < $qty; $i++) { $client->SummonItem($item_id); }
             next;
         }
 
@@ -194,20 +227,11 @@ sub Philanthropist_HandleItemDonation {
         if ($attuned_ref && $attuned_ref->{$item_id}) {
             quest::debug("[Philanthropist] Rejecting attuned item $item_id qty=$qty");
             plugin::Whisper("That item is already attuned and bound to you. Returning your $item_link.");
-            for (my $i = 0; $i < $qty; $i++) { $client->SummonItem($item_id, -1, 1); }  # attune=true
             next;
         }
 
         my $reqlevel = ($row->{reqlevel} || 0);
         my $stat_value = Philanthropist_GearStatValue($row);
-
-        # Reject summoned (e.g. magician conjurations) and temporary items.
-        if ($row->{summonedflag} || $row->{norent} || ($row->{Name} && $row->{Name} =~ /^Summoned:/i)) {
-            quest::debug("[Philanthropist] Rejecting summoned/temporary item $item_id");
-            plugin::Whisper("I can't take summoned or temporary items. Returning your $item_link.");
-            for (my $i = 0; $i < $qty; $i++) { $client->SummonItem($item_id); }
-            next;
-        }
 
         my $is_gear = ($row->{slots} && $row->{slots} != 0)
             && (($row->{itemclass} || 0) == 0)
@@ -220,7 +244,6 @@ sub Philanthropist_HandleItemDonation {
         if (!$is_gear) {
             quest::debug("[Philanthropist] Rejecting non-gear item $item_id");
             plugin::Whisper("I only take real gear with stat bonuses for adventurers, not $item_link. Returning it.");
-            for (my $i = 0; $i < $qty; $i++) { $client->SummonItem($item_id); }
             next;
         }
 
@@ -306,7 +329,8 @@ sub Philanthropist_ClaimGear {
     $sth->finish();
     return -2 unless $pick;
 
-    $client->SummonItem($pick->{item_id});
+    # No-upgrade summon: the pool must hand back exactly the donated item.
+    $client->SummonFixedItem($pick->{item_id}, -1);
 
     my $upd = $dbh->prepare("UPDATE philanthropist_item_pool SET quantity = quantity - 1 WHERE id = ?");
     $upd->execute($pick->{id});

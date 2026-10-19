@@ -176,6 +176,11 @@ void Lua_Expedition::RemoveCompass() {
 	self->SetCompass(0, 0, 0, 0, true);
 }
 
+void Lua_Expedition::RemoveAllMembers() {
+	Lua_Safe_Call_Void();
+	self->RemoveAllMembers();
+}
+
 void Lua_Expedition::RemoveLockout(std::string event_name) {
 	Lua_Safe_Call_Void();
 	self->RemoveLockout(event_name);
@@ -289,6 +294,7 @@ luabind::scope lua_register_expedition() {
 	.def("HasLockout", (bool(Lua_Expedition::*)(std::string))&Lua_Expedition::HasLockout)
 	.def("HasReplayLockout", (bool(Lua_Expedition::*)(void))&Lua_Expedition::HasReplayLockout)
 	.def("IsLocked", &Lua_Expedition::IsLocked)
+	.def("RemoveAllMembers", (void(Lua_Expedition::*)(void))&Lua_Expedition::RemoveAllMembers)
 	.def("RemoveCompass", (void(Lua_Expedition::*)(void))&Lua_Expedition::RemoveCompass)
 	.def("RemoveLockout", (void(Lua_Expedition::*)(std::string))&Lua_Expedition::RemoveLockout)
 	.def("SetCompass", (void(Lua_Expedition::*)(uint32_t, float, float, float))&Lua_Expedition::SetCompass)

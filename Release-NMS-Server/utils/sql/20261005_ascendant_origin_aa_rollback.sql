@@ -4,9 +4,9 @@
 -- Restores the Lucky Coin "Manifest Experience" AA and puts Lesson of the
 -- Devoted back behind grant_only.
 --
--- SQL revert: 20261005_ascendant_origin_aa.sql added the spell 121861 and
+-- SQL revert: 20261005_ascendant_origin_aa.sql added the spell 44021 and
 -- repointed the AA at it. Spell 121860 and the Lucky Coin item 121857 were left
--- in place, so dropping 121861 and restoring the spell pointer is enough to
+-- in place, so dropping 44021 and restoring the spell pointer is enough to
 -- bring the Lucky Coin AA back. The one thing SQL cannot undo is the retirement
 -- of quests/global/spells/121860.pl -- see below for that step.
 --
@@ -15,7 +15,7 @@
 -- copies from git.
 --
 -- quests/global/spells/121860.pl was retired to an inert no-op by the same
--- change, because nothing casts spell 121860 once rank 41000 points at 121861.
+-- change, because nothing casts spell 121860 once rank 41000 points at 44021.
 -- SQL cannot restore a file, so to fully restore the Lucky Coin AA also run:
 --     git checkout HEAD -- Release-NMS-Quests/global/spells/121860.pl
 --     git checkout HEAD -- export/Release-NMS-Quests/global/spells/121860.pl
@@ -29,7 +29,7 @@ SET NAMES utf8mb4;
 -- ---------------------------------------------------------------------------
 -- 1. Drop the Origin spell
 -- ---------------------------------------------------------------------------
-DELETE FROM spells_new WHERE id = 121861;
+DELETE FROM spells_new WHERE id = 44021;
 
 -- ---------------------------------------------------------------------------
 -- 2. aa_ability 31082 back to Manifest Experience
@@ -44,16 +44,20 @@ WHERE id = 31082;
 -- 3. aa_ranks 41000 back to the Lucky Coin spell wiring
 -- ---------------------------------------------------------------------------
 UPDATE aa_ranks
-SET spell       = 121860,
-    spell_type  = 121860,
-    cost        = 0,
-    level_req   = 45,
-    recast_time = 1,
-    expansion   = 0,
-    prev_id     = -1,
-    next_id     = -1,
-    title_sid   = 41000,
-    desc_sid    = 41000
+SET spell            = 121860,
+    spell_type       = 121860,
+    cost             = 0,
+    level_req        = 45,
+    recast_time      = 1,
+    expansion        = 0,
+    prev_id          = -1,
+    next_id          = -1,
+    -- Restore the base two-word short name ('Manifest' / 'Experience'): the
+    -- forward migration cleared lower_hotkey_sid for the one-word "Origin".
+    upper_hotkey_sid = 41000,
+    lower_hotkey_sid = 41000,
+    title_sid        = 41000,
+    desc_sid         = 41000
 WHERE id = 41000;
 
 -- ---------------------------------------------------------------------------

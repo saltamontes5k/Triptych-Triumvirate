@@ -110,6 +110,7 @@ SET(zone_sources
     nms_waypoints.cpp
     nms_vault.cpp
     nms_lon_session.cpp
+    nms_housing.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp

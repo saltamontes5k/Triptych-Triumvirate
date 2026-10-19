@@ -10,6 +10,7 @@
 -- "be present for the kill" credit).
 
 local prog = require("uf_progression")
+local ach = require("achievement_flags")
 
 local LOCKOUT = eq.seconds("72h")
 local EVENT = "Cliknar Hive Guardians"
@@ -50,6 +51,7 @@ function event_signal(e)
 	end
 	for _, c in ipairs(prog.alive_clients(CHEST_X, CHEST_Y, 300)) do
 		prog.set(c, prog.FLG.hive_guardians, 1)
+		ach.set(c, 1748504, 1, 1148504)
 		c:Message(15, "You have earned the right to face the Cliknar Queen.")
 	end
 	eq.zone_emote(15, "The hive's guardians are broken. The royal chamber lies open.")

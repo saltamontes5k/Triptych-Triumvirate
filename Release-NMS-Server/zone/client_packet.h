@@ -266,6 +266,11 @@
 	void Handle_OP_RaidDelegateAbility(const EQApplicationPacket* app);
 	void Handle_OP_RaidClearNPCMarks(const EQApplicationPacket* app);
 	void Handle_OP_RandomReq(const EQApplicationPacket* app);
+	void Handle_OP_RealEstateNeighborhoodRequest(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePlacement(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePlotSelect(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateRequest(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateSearchRequest(const EQApplicationPacket *app);
 	void Handle_OP_ReadBook(const EQApplicationPacket *app);
 	void Handle_OP_RecipeAutoCombine(const EQApplicationPacket *app);
 	void Handle_OP_RecipeDetails(const EQApplicationPacket *app);

@@ -134,6 +134,12 @@ HUNTER_CATEGORY_NAMES = frozenset(("hunter", "hunts"))
 
 DON_MAX_HISTORICAL_ZONE_ID = 345
 DON_EXCLUDED_ZONE_IDS = frozenset((213,))
+# Underfoot is the last expansion this profile ships. Its zones are 480-495;
+# 495 is the highest zone id that existed at the Underfoot release, and House of
+# Thule and later start at 700. Anything above this ceiling inside an older
+# category branch is content a newer client snapshot re-filed under an old root.
+UF_MAX_HISTORICAL_ZONE_ID = 495
+UF_EXCLUDED_ZONE_IDS: frozenset[int] = frozenset()
 ENHANCED_AVAILABILITY_MARKER = "(Enhanced) - Availability"
 
 EVENT_MANUAL = 0
@@ -1128,6 +1134,28 @@ EXPANSION_PROFILES: Tuple[ExpansionProfile, ...] = (
     ExpansionProfile("ls", "Laurion's Song", 125, ("laurionssong",)),
     ExpansionProfile("tob", "The Outer Brood", 125, ("outerbrood",)),
 )
+
+
+@dataclass(frozen=True)
+class HistoricalBoundary:
+    """A reviewed era ceiling for the historical content filter."""
+
+    max_zone_id: int
+    excluded_zone_ids: frozenset[int]
+
+
+# Profiles whose category branches can contain content that a newer client
+# snapshot re-filed under an older expansion root. The filter blocks a selected
+# Traveler, its zone family, and any required parent that would become
+# impossible once the zone is above the ceiling or explicitly excluded.
+PROFILE_HISTORICAL_BOUNDARIES: dict[str, HistoricalBoundary] = {
+    "don": HistoricalBoundary(
+        DON_MAX_HISTORICAL_ZONE_ID, DON_EXCLUDED_ZONE_IDS
+    ),
+    "uf": HistoricalBoundary(
+        UF_MAX_HISTORICAL_ZONE_ID, UF_EXCLUDED_ZONE_IDS
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -2627,6 +2655,24 @@ def _traveler_criteria(
                     base_zone_id + row.sequence - 1
                     for row in components
                 )
+        elif achievement_id % 100 == 5:
+            # Underfoot files its Travelers with a "...05" suffix and a
+            # component id exactly 600000 below the achievement id. Pin both so
+            # an unrelated later-client suffix is never accepted by accident.
+            valid = (
+                base_zone_id != 0
+                and len(components) == 1
+                and components[0].component_type == 1
+                and components[0].sequence == 1
+                and re.fullmatch(
+                    r"Visit .+", components[0].name
+                )
+                is not None
+                and components[0].component_id == achievement_id - 600000
+                and component_counts.get(components[0].component_id, 1) == 1
+            )
+            if valid:
+                zone_ids = (base_zone_id,)
         else:
             valid = (
                 achievement_id % 100 == 0
@@ -3134,13 +3180,16 @@ def _slayer_criteria(
     )
 
 
-def _filter_don_historical_selection(
+def _filter_historical_selection(
     resources: ResourceSet,
     selected_ids: set[int],
     components_by_achievement: dict[int, List[Component]],
     component_counts: dict[int, int],
+    *,
+    max_zone_id: int,
+    excluded_zone_ids: frozenset[int],
 ) -> set[int]:
-    """Fail closed on content that a current client files under old roots."""
+    """Fail closed on content that a newer client files under old roots."""
     if not selected_ids:
         return set()
 
@@ -3165,8 +3214,7 @@ def _filter_don_historical_selection(
         achievement_id
         for achievement_id, zone_ids in traveler_zones.items()
         if any(
-            zone_id > DON_MAX_HISTORICAL_ZONE_ID
-            or zone_id in DON_EXCLUDED_ZONE_IDS
+            zone_id > max_zone_id or zone_id in excluded_zone_ids
             for zone_id in zone_ids
         )
     }
@@ -3899,6 +3947,7 @@ def build_enable_selection(
     resources: ResourceSet,
     *,
     through_expansion: Optional[str] = None,
+    from_expansion: Optional[str] = None,
     max_level: Optional[int] = None,
     max_tradeskill_skill: Optional[int] = None,
     max_aa_spent: Optional[int] = None,
@@ -3924,11 +3973,53 @@ def build_enable_selection(
         if through_expansion is not None
         else None
     )
-    reviewed_profile_requested = (
-        target_profile is not None
-        and target_profile.key == "don"
+    reviewed_don_index = EXPANSION_PROFILES.index(resolve_expansion("don"))
+    target_profile_index = (
+        EXPANSION_PROFILES.index(target_profile)
+        if target_profile is not None
+        else None
     )
-    if target_profile is not None and max_level is None:
+    from_profile = (
+        resolve_expansion(from_expansion)
+        if from_expansion is not None
+        else None
+    )
+    from_profile_index = (
+        EXPANSION_PROFILES.index(from_profile)
+        if from_profile is not None
+        else None
+    )
+    if from_profile_index is not None:
+        if target_profile_index is None:
+            raise ResourceError(
+                "--enable-from-expansion requires --enable-through-expansion"
+            )
+        if from_profile_index > target_profile_index:
+            raise ResourceError(
+                f"--enable-from-expansion {from_expansion!r} is later than "
+                f"--enable-through-expansion {through_expansion!r}"
+            )
+    # The 99-ID DoN denylist is scoped to the DoN profile only.
+    forced_disabled_requested = (
+        target_profile is not None and target_profile.key == "don"
+    )
+    # The audited DoN criteria are cumulative: they apply whenever the selected
+    # range includes DoN, so an Underfoot import does not regress DoN content.
+    reviewed_profile_requested = (
+        target_profile_index is not None
+        and target_profile_index >= reviewed_don_index
+        and (
+            from_profile_index is None
+            or from_profile_index <= reviewed_don_index
+        )
+    )
+    # A range selection starts at its own expansion; only a from-launch profile
+    # carries the global General level/skill/item families.
+    if (
+        from_profile_index is None
+        and target_profile is not None
+        and max_level is None
+    ):
         max_level = target_profile.level_cap
 
     achievement_ids = {row.achievement_id for row in resources.achievements}
@@ -3936,7 +4027,9 @@ def build_enable_selection(
 
     if target_profile is not None:
         target_index = EXPANSION_PROFILES.index(target_profile)
-        selected_profiles = EXPANSION_PROFILES[: target_index + 1]
+        selected_profiles = EXPANSION_PROFILES[
+            (from_profile_index or 0) : target_index + 1
+        ]
         root_ids: set[int] = set()
         for profile in selected_profiles:
             matches = [
@@ -4086,12 +4179,19 @@ def build_enable_selection(
             component_counts,
         )
 
-    if target_profile is not None and target_profile.key == "don":
-        expansion_achievement_ids = _filter_don_historical_selection(
+    historical_boundary = (
+        PROFILE_HISTORICAL_BOUNDARIES.get(target_profile.key)
+        if target_profile is not None
+        else None
+    )
+    if historical_boundary is not None:
+        expansion_achievement_ids = _filter_historical_selection(
             resources,
             expansion_achievement_ids,
             components_by_achievement,
             component_counts,
+            max_zone_id=historical_boundary.max_zone_id,
+            excluded_zone_ids=historical_boundary.excluded_zone_ids,
         )
 
     tradeskill_achievement_ids: Tuple[int, ...] = ()
@@ -4148,31 +4248,39 @@ def build_enable_selection(
             component_counts,
         )
 
-    item_base_selected_ids = frozenset(
-        expansion_achievement_ids
-        | level_achievement_ids
-        | set(progression_level_achievement_ids)
-        | set(skill_cap_achievement_ids)
-        | set(tradeskill_achievement_ids)
-        | set(aa_spent_achievement_ids)
-    )
-    (
-        item_achievement_ids,
-        item_name_criteria,
-        item_definition_candidates,
-        item_definition_selected,
-        item_definition_rejected,
-    ) = _item_name_milestones(
-        resources,
-        target_profile,
-        item_base_selected_ids,
-        components_by_achievement,
-        component_counts,
-    )
+    item_achievement_ids: Tuple[int, ...] = ()
+    item_name_criteria: Tuple[ItemNameCriterion, ...] = ()
+    item_definition_candidates = 0
+    item_definition_selected = 0
+    item_definition_rejected = 0
+    # A range selection is purely expansion-scoped: the global General Keys and
+    # Epic item families stay with the from-launch selection.
+    if from_profile_index is None:
+        item_base_selected_ids = frozenset(
+            expansion_achievement_ids
+            | level_achievement_ids
+            | set(progression_level_achievement_ids)
+            | set(skill_cap_achievement_ids)
+            | set(tradeskill_achievement_ids)
+            | set(aa_spent_achievement_ids)
+        )
+        (
+            item_achievement_ids,
+            item_name_criteria,
+            item_definition_candidates,
+            item_definition_selected,
+            item_definition_rejected,
+        ) = _item_name_milestones(
+            resources,
+            target_profile,
+            item_base_selected_ids,
+            components_by_achievement,
+            component_counts,
+        )
 
     forced_disabled_achievement_ids = frozenset(
         REVIEWED_FORCED_DISABLED_ACHIEVEMENT_IDS & achievement_ids
-        if reviewed_profile_requested
+        if forced_disabled_requested
         else ()
     )
     reviewed_profile_achievement_ids = frozenset(
@@ -5483,6 +5591,16 @@ def _build_argument_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--enable-from-expansion",
+        metavar="EXPANSION",
+        help=(
+            "start the enabled range at EXPANSION instead of launch; requires "
+            "--enable-through-expansion and selects only that expansion range, "
+            "skipping the global General level/skill/item families (for "
+            "example, 'dodh' through 'uf')"
+        ),
+    )
+    parser.add_argument(
         "--max-level",
         type=int,
         help=(
@@ -5576,6 +5694,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "--exact-enable-selection cannot be combined with "
             "--preserve-enable-state"
         )
+    if arguments.enable_from_expansion is not None:
+        if arguments.enable_through_expansion is None:
+            raise ResourceError(
+                "--enable-from-expansion requires --enable-through-expansion"
+            )
+        if (
+            arguments.max_level is not None
+            or arguments.max_tradeskill_skill is not None
+            or arguments.max_aa_spent is not None
+        ):
+            raise ResourceError(
+                "--enable-from-expansion cannot be combined with --max-level, "
+                "--max-tradeskill-skill, or --max-aa-spent"
+            )
     for warning in _selection_policy_warnings(
         enable_slayer=arguments.enable_slayer,
         through_expansion=arguments.enable_through_expansion,
@@ -5590,6 +5722,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     selection = build_enable_selection(
         resources,
         through_expansion=arguments.enable_through_expansion,
+        from_expansion=arguments.enable_from_expansion,
         max_level=arguments.max_level,
         max_tradeskill_skill=arguments.max_tradeskill_skill,
         max_aa_spent=arguments.max_aa_spent,
@@ -5597,6 +5730,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
     selection_requested = (
         arguments.enable_through_expansion is not None
+        or arguments.enable_from_expansion is not None
         or arguments.max_level is not None
         or arguments.max_tradeskill_skill is not None
         or arguments.max_aa_spent is not None

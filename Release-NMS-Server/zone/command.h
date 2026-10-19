@@ -125,6 +125,8 @@ void command_list(Client *c, const Seperator *sep);
 void command_lootsim(Client *c, const Seperator *sep);
 void command_load_shared_memory(Client *c, const Seperator *sep);
 void command_loc(Client *c, const Seperator *sep);
+void command_housing(Client *c, const Seperator *sep);
+void command_leaverealestate(Client *c, const Seperator *sep);
 void command_logs(Client *c, const Seperator *sep);
 void command_makepet(Client *c, const Seperator *sep);
 void command_memspell(Client *c, const Seperator *sep);

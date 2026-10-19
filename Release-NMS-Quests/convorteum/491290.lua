@@ -13,7 +13,11 @@
 --     are dead.
 
 local prog = require("uf_progression")
+local ach = require("achievement_flags")
 local memory = require("nms_memory")
+
+-- Conqueror of Convorteum (1749104) components, in stage order 1..7.
+local CONQ_STAGE = { 1149104, 1149106, 1149107, 1149108, 1149109, 1149110, 1149111 }
 
 local CTRL = prog.NPC.conv_ctrl
 local STAGES = prog.NPC.stages
@@ -116,6 +120,7 @@ function event_signal(e)
 	end
 	for _, c in ipairs(prog.alive_clients(spot[1], spot[2], 300)) do
 		prog.set(c, prog.STAGE_FLG[n], 1)
+		ach.set(c, 1749104, 1, CONQ_STAGE[n])
 		c:Message(15, "Ward " .. n .. " is broken: " .. STAGE_NAMES[n] .. " falls.")
 	end
 	eq.zone_emote(15, STAGE_NAMES[n] .. " has been defeated!")

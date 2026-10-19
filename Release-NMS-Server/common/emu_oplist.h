@@ -688,5 +688,7 @@ N(OP_RealEstateItemsAction),
 N(OP_RealEstatePurchaseSelect),    // 0x792c: CRealEstatePurchaseWnd
 N(OP_RealEstatePlotSearchRequest), // 0x796c: CRealEstatePlotSearchWnd
 N(OP_RealEstateManageRequest),     // 0x7ad1: 0x8C struct + world X/Y
+N(OP_RealEstateDefinitions),       // 0x2698: definition list; must arrive before the identity
+N(OP_RealEstateZone),              // 0x6fd0: real-estate identity; sets the client's neighborhood state
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h

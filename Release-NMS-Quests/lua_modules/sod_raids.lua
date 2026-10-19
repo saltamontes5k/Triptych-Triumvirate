@@ -15,6 +15,8 @@ M.EVENT = {
     AVATAR     = "Avatar",
     KSATHRAX   = "Ksathrax",
     MINDBLIGHT = "Mindblight",
+    MALARIAN   = "Malarian",
+    CORE       = "Crystal Core",
 }
 
 -- Chest npc ids (Treasure_of_* punch chests; loot economy out of scope).
@@ -27,6 +29,8 @@ M.CHEST = {
     AVATAR     = 478745,
     KSATHRAX   = 478746,
     MINDBLIGHT = 478747,
+    MALARIAN   = 478748,
+    CORE       = 478749,
 }
 
 -- Per-instance controller npc ids (an_anchor_of_the_timeshear).
@@ -39,6 +43,8 @@ M.CTRL = {
     AVATAR     = 478735,
     KSATHRAX   = 478736,
     MINDBLIGHT = 478737,
+    MALARIAN   = 478738,
+    CORE       = 478739,
 }
 
 -- Event-spawned add npc ids (reused PEQ SoD trash where noted).

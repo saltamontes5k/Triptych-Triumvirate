@@ -78,14 +78,18 @@ my %BLESS_CAUSE_ALIAS = (
 #   Buff-type effects use custom collision-free spell ids (44014-44020),
 #   registered in Spells:AlwaysStackSpells so they never clash with player
 #   spell lines. Instant effects have no buff slot, so base ids are fine.
+#   Heals use classless percent-heal spells (44016/44019/44029/44030) so they
+#   land at any level (the buff level gate never applies) and show in the log.
 # ---------------------------------------------------------------------------
 my $SP_FEAR     = 44017;  # Blessing: Fear
 my $SP_ROOT     = 44015;  # Blessing: Root
 my $SP_POISON   = 204;    # Shock of Poison (instant)
 my $SP_DISEASE  = 44014;  # Blessing: Disease
 my $SP_LIFETAP  = 446;    # Siphon Life (instant)
-my $SP_HEAL     = 12;     # Healing (instant)
-my $SP_GROUPHEAL= 18006;  # Cantata of Rodcet (instant)
+my $SP_HEAL     = 44016;  # Blessing: Mend (self, 10% max HP, instant)
+my $SP_GROUPHEAL= 44019;  # Blessing: Renewal (group, 10% max HP, instant)
+my $SP_HEAL8    = 44030;  # Blessing: Grace (self, 8% max HP, instant)
+my $SP_HEAL4    = 44029;  # Blessing: Balm (self, 4% max HP, instant)
 my $SP_DYNSTUN  = 619;    # Dyn's Dizzying Draught (shaman disc stun; instant, unresistable)
 my $SP_FIRE     = 657;    # Flame Shock (instant)
 my $SP_FIRE2    = 6862;   # Flame Shock alt (instant)
@@ -95,6 +99,17 @@ my $SP_MANATAP  = 1686;   # Theft of Thought (instant)
 my $SP_SNARE    = 44018;  # Blessing: Snare
 my $SP_DS       = 44020;  # Blessing: Damage Shield
 my $SPELL_UNKNOWN = 0xFFFF;  # melee/ranged/basic-skill damage (EVENT_DAMAGE_GIVEN)
+
+# Percentage heal -> spell. Heals are cast through these so they are visible,
+# crit/focus like any heal, and can never be eaten by a level restriction.
+# A percentage with no spell here falls back to a direct HealDamage() call.
+# See utils/sql/20261019_blessing_heal_spells.sql.
+my %BLESS_HEAL_SPELL = ( 4 => $SP_HEAL4, 8 => $SP_HEAL8, 10 => $SP_HEAL );
+sub BlessingHealSpell {
+    my $pct = shift;
+    return 0 unless defined $pct;
+    return $BLESS_HEAL_SPELL{ int($pct * 100 + 0.5) } || 0;
+}
 
 # ---------------------------------------------------------------------------
 # Per-deity signature effects.
@@ -605,7 +620,7 @@ sub _BlessingIsCCUtility {
 }
 
 # Every tree heals. Deities with no explicit heal bundle fall back to the
-# generic "Healing" line so a heal can still trip on casts.
+# classless 10% self-heal so a heal can still trip on casts.
 sub _BlessingHealBundle {
     my $eff = shift;
     if ($eff && $eff->{cast_heal} && @{ $eff->{cast_heal} }) {
@@ -717,11 +732,15 @@ sub _BlessingRunActions {
             _BlessingCastOn($c, $s[int(rand(@s))], $mob);
         }
         elsif ($a->{heal}) {
-            $c->HealDamage(int($c->GetMaxHP() * $a->{heal}), $c);
+            my $sp = BlessingHealSpell($a->{heal});
+            if ($sp) { _BlessingCastOn($c, $sp, $c); }
+            else     { $c->HealDamage(int($c->GetMaxHP() * $a->{heal}), $c); }
         }
         elsif ($a->{heal_if_hurt}) {
             if ($c->GetHP() < ($c->GetMaxHP() * 0.5)) {
-                $c->HealDamage(int($c->GetMaxHP() * $a->{heal_if_hurt}), $c);
+                my $sp = BlessingHealSpell($a->{heal_if_hurt});
+                if ($sp) { _BlessingCastOn($c, $sp, $c); }
+                else     { $c->HealDamage(int($c->GetMaxHP() * $a->{heal_if_hurt}), $c); }
             }
         }
         elsif ($a->{hate}) {
@@ -809,6 +828,8 @@ sub _BlessingTryList {
 sub BlessingOnDamageGiven {
     my ($c, $entity_id, $damage, $spell_id, $is_ds, $is_tic, $special_attack) = @_;
     return unless $c && $damage && $damage > 0;
+    # Shrouded monster-mission forms do not carry deity blessings.
+    return if $c->IsShrouded();
     BlessingCheckDeity($c);
     return if $spell_id && $spell_id != $SPELL_UNKNOWN;   # 0/65535 = melee/ranged; skip real spells
     return if $is_ds || $is_tic;
@@ -825,6 +846,7 @@ sub BlessingOnDamageGiven {
 sub BlessingOnDamageTaken {
     my ($c, $entity_id, $damage, $spell_id, $is_ds, $is_tic) = @_;
     return 0 unless $c && $damage && $damage > 0;
+    return 0 if $c->IsShrouded();
     BlessingCheckDeity($c);
     return 0 if $spell_id && $spell_id != $SPELL_UNKNOWN;   # 0/65535 = melee/ranged; skip real spells
     return 0 if $is_ds || $is_tic;
@@ -842,6 +864,7 @@ sub BlessingOnDamageTaken {
 sub BlessingOnCast {
     my ($c, $spell_id, $target_id, $target, $spell) = @_;
     return unless $c && $spell;
+    return if $c->IsShrouded();
     BlessingCheckDeity($c);
     my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return unless $eff;
@@ -887,6 +910,7 @@ sub BlessingOnCast {
 sub BlessingOnEnterZone {
     my $c = shift;
     return unless $c;
+    return if $c->IsShrouded();
     BlessingCheckDeity($c);
     my $eff = $BLESS_PROC{ BlessingEffectiveDeity($c) };
     return unless $eff && $eff->{passive} && BlessingRank($c) >= 1;

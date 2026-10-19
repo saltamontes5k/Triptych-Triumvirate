@@ -5,6 +5,10 @@ imported into the RoF2 server. The audited server profile is launch through
 Dragons of Norrath, level 70. It does not claim that later ToB definitions are
 valid RoF2 content.
 
+**Not currently installed.** The live database holds only the server-authored
+Triptych set; see [What is actually live
+today](achievement_coverage_uf.md#what-is-actually-live-today).
+
 For runtime behavior and operations, see [RoF2 achievement
 support](achievements.md). For component identities, criteria, rewards, and the
 quest API, see [Achievement content authoring](achievement_authoring.md).
