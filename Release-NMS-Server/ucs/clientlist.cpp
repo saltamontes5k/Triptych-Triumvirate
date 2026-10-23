@@ -573,17 +573,13 @@ void Clientlist::CheckForStaleConnectionsAll()
 {
 	LogDebug("Checking for stale connections");
 
-	// The chat client drops a connection when it has heard nothing from *us* for roughly
-	// half a minute -- traffic the client sends does not help it. So keepalives are timed
-	// from our last send to that client: a session we are actively delivering to gets
-	// none, and a quiet one gets a one-byte OP_SessionReady every ~15-20s.
-	const auto now = Timer::GetCurrentTime();
-	auto it = ClientChatConnections.begin();
-	while (it != ClientChatConnections.end()) {
-		if (now - (*it)->LastSend >= 15000) {
-			(*it)->SendKeepAlive();
-		}
-		++it;
+	// Unconditional, and timed from the timer alone. The chat client drops a connection it
+	// has not heard from for ~40s and nothing else refreshes it, so this ping is what keeps
+	// chat alive. An earlier version only pinged when "we had not sent lately" (LastSend):
+	// something refreshed that stamp without emitting packets, the pings stopped, and every
+	// client dropped ~40s later (10-23 14:23:01 last ping -> 14:23:37/47/56 all three gone).
+	for (auto it = ClientChatConnections.begin(); it != ClientChatConnections.end(); ++it) {
+		(*it)->SendKeepAlive();
 	}
 }
 
