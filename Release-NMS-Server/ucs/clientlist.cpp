@@ -476,6 +476,14 @@ Clientlist::Clientlist(int ChatPort) {
 	// connection (Clientlist::CheckForStaleConnections), so this only keeps genuinely
 	// quiet-but-alive sessions around.
 	chat_opts.daybreak_options.stale_connection_ms = 3600000;
+
+	// 30s (the default) is shorter than a slow zone load. A client sitting in a loading
+	// screen cannot ACK anything, so UCS would give up and close the chat session mid-zone,
+	// and the player landed with "The universal chat service is temporarily unavailable".
+	// Caught on 10-24 13:03:58: 'reliable packet unacknowledged for [34681] ms' while
+	// potranquility was booting as a dynamic zone; the client was still on the loading
+	// screen. Two minutes covers a slow instance boot with margin.
+	chat_opts.daybreak_options.resend_timeout = 120000;
 	chat_opts.daybreak_options.resend_delay_ms = RuleI(Network, ResendDelayBaseMS);
 	chat_opts.daybreak_options.resend_delay_factor = RuleR(Network, ResendDelayFactor);
 	chat_opts.daybreak_options.resend_delay_min = RuleI(Network, ResendDelayMinMS);
