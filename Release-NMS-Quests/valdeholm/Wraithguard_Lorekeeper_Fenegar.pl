@@ -1,5 +1,6 @@
 # Wraithguard Lorekeeper Fenegar - Valdeholm
-# The Serpent's Spine :: Ancient Tomes (task 600214)
+# The Serpent's Spine :: Ancient Tomes (task 600214), Construction of Shadows (600724),
+#                        The Shattered Gift (600732)
 # Items: Torn Pages 88180-88183, Tattered Scrolls 88184-88186, Bundle of Brittle Parchment 88187-88188,
 #         Empty Book 88189, reward Runed Diamond 53713
 
@@ -17,6 +18,24 @@ sub EVENT_SAY {
     }
     else {
       quest::say("Seek the torn pages, tattered scrolls, and brittle parchment of the ancient Krithgor, and bind them in an empty book.");
+    }
+  }
+  if ($text=~/I can help/i) {
+    if (!quest::istaskactive(600724) && !quest::istaskcompleted(600724)) {
+      quest::say("The shades are [" . quest::saylink("constructing") . "] something in four places within Frostcrypt - a treasure room, a prison, a temple, a meeting hall. Walk each site unseen and mark what you find.");
+      quest::assigntask(600724);
+    }
+    else {
+      quest::say("The four sites wait: treasure room, prison, temple, meeting hall.");
+    }
+  }
+  if ($text=~/Ice and fire/i || $text=~/ice and fire/i) {
+    if (!quest::istaskactive(600732) && !quest::istaskcompleted(600732)) {
+      quest::say("There is a gift that was shattered long ago: five pieces of [" . quest::saylink("winter steel and flame") . "] scattered across the Spine. Recover them all and I will see the gift made whole.");
+      quest::assigntask(600732);
+    }
+    else {
+      quest::say("The pieces: the White Flame of the pit, two shards from the hunters of Icefall, the Red Flame of the Steppes, and the fractured statue from the My Pretty hunt.");
     }
   }
 }

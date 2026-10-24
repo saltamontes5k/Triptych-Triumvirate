@@ -2,6 +2,7 @@
 # The Serpent's Spine :: Infiltrators and Traitors of Ashengate faction arc (1135)
 # tasks: 600310 The Armies of Dyn`leth, 600311 Unchecked Aggression,
 #        600312 Bittersweet Memories, 600313 Violence Begets Violence (repeatable faction grind)
+#        600737 The Direwind Front (post-arc handoff to Scout Zryan, Direwind)
 # Requires Captain Zheren's first four tasks (600013) for Ashengate access.
 
 my @chain = (600310, 600311, 600312, 600313);
@@ -38,7 +39,12 @@ sub EVENT_SAY {
         quest::say("The eggtenders hoard the dragons' last memories. A bitter deed, but a necessary one. Say the [" . quest::saylink("word") . "] if you will lend your blade.");
       }
       else {
-        quest::say("The Sentries watch every approach to Ashengate. Violence begets violence, and we must be the ones to finish it. Seek the [" . quest::saylink("task") . "].");
+        if (!quest::istaskcompleted(600737) && !quest::istaskactive(600737)) {
+          quest::say("One last thing, and then the arc is closed: the [" . quest::saylink("front") . "] waits. Scout Zryan in the Direwind Cliffs needs every blade reported.");
+        }
+        else {
+          quest::say("The front is yours to hold now, $name. The Infiltrators remember all you have done.");
+        }
       }
     }
   }
@@ -50,6 +56,10 @@ sub EVENT_SAY {
     else {
       quest::say("Not yet, $name.");
     }
+  }
+  if ($text=~/front/i && quest::istaskcompleted(600313) && !quest::istaskactive(600737) && !quest::istaskcompleted(600737)) {
+    quest::say("Go to Scout Zryan in the Direwind Cliffs and report for the front. He will take it from there.");
+    quest::assigntask(600737);
   }
 }
 
