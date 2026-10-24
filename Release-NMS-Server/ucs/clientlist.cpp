@@ -579,16 +579,8 @@ void Client::QueuePacket(const EQApplicationPacket *p, bool ack_req) {
 
 void Clientlist::CheckForStaleConnectionsAll()
 {
+	// Keepalives are sent from Clientlist::Process() now -- see the comment there.
 	LogDebug("Checking for stale connections");
-
-	// Unconditional, and timed from the timer alone. The chat client drops a connection it
-	// has not heard from for ~40s and nothing else refreshes it, so this ping is what keeps
-	// chat alive. An earlier version only pinged when "we had not sent lately" (LastSend):
-	// something refreshed that stamp without emitting packets, the pings stopped, and every
-	// client dropped ~40s later (10-23 14:23:01 last ping -> 14:23:37/47/56 all three gone).
-	for (auto it = ClientChatConnections.begin(); it != ClientChatConnections.end(); ++it) {
-		(*it)->SendKeepAlive();
-	}
 }
 
 void Clientlist::CheckForStaleConnections(Client *c) {
@@ -658,6 +650,16 @@ void Clientlist::Process()
 
 			it = ClientChatConnections.erase(it);
 			continue;
+		}
+
+		// Keep this chat session alive from the same loop that processes its packets. A
+		// separate 15s timer was observed to stop firing after a few minutes, and the client
+		// then drops ~40s later with nothing logged anywhere (10-24: last ping 13:57:01,
+		// Judy unavailable 13:57:45, no closed connection, no resend timeout).
+		const auto keepalive_now = Timer::GetCurrentTime();
+		if (keepalive_now - (*it)->LastKeepAlive >= 15000) {
+			(*it)->SendKeepAlive();
+			(*it)->LastKeepAlive = keepalive_now;
 		}
 
 		EQApplicationPacket *app = nullptr;

@@ -90,6 +90,8 @@ public:
 	// Last time we sent this client anything. The chat client drops a connection that has
 	// heard nothing from us for about half a minute, so keepalives are timed off this.
 	uint32 LastSend = 0;
+	// Last OP_SessionReady we sent them; keepalives are driven from Clientlist::Process().
+	uint32 LastKeepAlive = 0;
 	void AddCharacter(int CharID, const char *CharacterName, int Level);
 	void ClearCharacters() { Characters.clear(); }
 	void SendMailBoxes();
