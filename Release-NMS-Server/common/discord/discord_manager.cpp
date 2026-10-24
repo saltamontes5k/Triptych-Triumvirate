@@ -13,12 +13,22 @@ constexpr int MAX_MESSAGE_LENGTH = 1900;
 
 void DiscordManager::ProcessMessageQueue()
 {
-	if (webhook_message_queue.empty()) {
-		return;
+	// Take the queue under the lock, then do the HTTP posts outside it. This used to hold
+	// webhook_queue_lock across every Discord::SendWebhookMessage -- a blocking HTTPS POST --
+	// so any thread that logged a Discord-routed line blocked in QueueWebhookMessage for as
+	// long as Discord took to answer. On 10-24 that wedged the whole UCS event loop: cdb
+	// showed the main thread in DiscordManager::QueueWebhookMessage while the worker sat in
+	// httplib::ClientImpl::Post, and chat keepalives stopped until every client timed out.
+	std::map<uint32, std::vector<std::string>> pending;
+	{
+		std::lock_guard<std::mutex> lock(webhook_queue_lock);
+		if (webhook_message_queue.empty()) {
+			return;
+		}
+		pending.swap(webhook_message_queue);
 	}
 
-	webhook_queue_lock.lock();
-	for (auto &q: webhook_message_queue) {
+	for (auto &q: pending) {
 		LogDiscord("Processing [{}] messages in queue for webhook ID [{}]...", q.second.size(), q.first);
 
 		if (q.first >= MAX_DISCORD_WEBHOOK_ID) {
@@ -62,8 +72,6 @@ void DiscordManager::ProcessMessageQueue()
 			);
 		}
 	}
-	webhook_message_queue.clear();
-	webhook_queue_lock.unlock();
 }
 
 void DiscordManager::QueuePlayerEventMessage(const PlayerEvent::PlayerEventContainer& e)
