@@ -28,3 +28,24 @@ function event_timer(e)
 		e.self:GMMove(-582, -1100, 0, 127);
 	end
 end
+
+function event_say(e)
+	if (e.message:findi("hail")) then
+		local qglobals = eq.get_qglobals();
+		if (qglobals.xebuxoruk_cooldown ~= nil) then
+			e.self:Say("The one who wears my face has been struck down -- for now. Time must gather itself before his malice can pool again. Return in three days' turn.");
+		elseif (qglobals.xebuxoruk_unlock == "1") then
+			e.self:Say("So you have felt it too -- the ripple in the hours. Something wearing my face festers in the outer wastes of this plane, twisted by the moment of my intended death. I cannot face it; my hands are too recently freed. But yours... Are you ready for me to [" .. eq.say_link("send you") .. "] to it?");
+		else
+			e.self:Say("I am myself again, thanks to Druzzil and to you. But the hours still feel... wrong. As if something is missing from its proper place.");
+		end
+	elseif (e.message:findi("send you")) then
+		local qglobals = eq.get_qglobals();
+		if (qglobals.xebuxoruk_unlock == "1" and qglobals.xebuxoruk_cooldown == nil) then
+			e.self:Say("Stand fast. The way is not kind, and neither is what waits at the end of it.");
+			e.other:MovePC(219, 125, -12, 182, 0);
+		else
+			e.self:Say("The path has already closed. Time keeps its own counsel.");
+		end
+	end
+end
