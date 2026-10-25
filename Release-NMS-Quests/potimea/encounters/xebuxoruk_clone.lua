@@ -91,12 +91,14 @@ local PHASE2_HEAL_PCT = 0.08
 local SPAWN_OFFSET = 8
 
 local STAR_MIN_DIST = 20
-local STAR_MAX_DIST = 80
+local STAR_MAX_DIST = 45
 
--- The fight happens where he stands, on the rise above the portal ring.
+-- The fight happens where he stands: on top of the potimea clocktower
+-- (z=182). The arena is sized for a platform -- keep it at or under the
+-- tower-top radius or adds spawn off the edge and fall.
 local ARENA_X = 125
 local ARENA_Y = 3
-local ARENA_RADIUS = 130
+local ARENA_RADIUS = 60
 local ZONE_EMOTE_COLOR = 15
 
 local WIPE_LINES = {
