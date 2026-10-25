@@ -1,8 +1,9 @@
 # RoF2 Player Housing — Investigation Findings
 
-Status: server-side housing is implemented and working; the **client-side
-neighborhood gate (`RealEstate[+144]`) has not been solved**. This document records what is
-established by evidence, what was inferred, and what was disproved, so nobody re-derives it.
+Status: server-side housing is implemented and working; the client-side neighborhood gate
+(`RealEstate[+144]`) was **root-caused on 2026-10-25 — see §9**: the definition "kind" must be
+the raw integer 5, and we were sending the IEEE bits of 5.0f. Everything below stands except
+where §9 corrects it.
 
 Client under test: RoF2 (`C:\Games\EQTriune\eqgame.exe`, ASLR on, image base 0x400000 in IDA).
 Server: EQS / Triptych Triumvirate (`Release-NMS-Server`).
@@ -77,27 +78,37 @@ Reads in order, all bounds-checked:
   the same hash array and the same modulo. Verified by disassembling the 0x2698 case at
   0x5B27A2 (`mov ecx,[ebp+74h]`) and the 0x6FD0 case at 0x5B30AE.
 
-### Definitions arrive over the wire, not from a file
+### Definitions: ONE map, fed from the file at startup AND merged from the wire (§9)
 
 ```c
 case 0x2698u:
-  sub_7F5B60(&reader);   // definitions list  -> manager+116
-  sub_7FC6B0(&reader);   // second list       -> manager+120
-  sub_5AAAD0(manager[30]);
+  v13 = a1[29];            // the file-fed definition map (manager dword 29 / +116)
+  sub_7F5B60(v13, &reader);  // parse entries (sub_7F4C90) and insert into v13+4
+  sub_7FC6B0(&reader);     // second list
+  sub_5AAAD0(a1[30]);
 ```
 
-`RealEstateDefs.txt` is a **developer artifact**: it ships with neither the RoF2 install nor a
-current Live-connected ToB client. Deleting it produces no error output anywhere, and seeding it
-with correct-looking data changes nothing. Treat the file as a dead end.
+CORRECTED 2026-10-25 (§9): the manager constructor builds the definition map itself
+(`sub_5B21E0` → `sub_7F5CE0`, stored at manager dword 29 / +116) and populates it from
+`RealEstateDefs.txt` via `sub_7F5380`; parse problems are reported to `RealEstateErrors.txt`.
+`case 0x2698` merges wire entries into that **same map** (`v13 = a1[29]` at 0x5B27A2), and the
+`0x6FD0` lookup reads the same `a1[29]`. The file ships with no client, but the client does read
+it when present. "Seeding the file changed nothing" was true and misleading at once: insert
+PREPENDS to the bucket chain (`sub_7F52F0`), so the wire entry for the same id shadowed the
+file's — and the wire entry carried the broken kind value (§9).
 
 Definition entry format (`sub_7F4C90`), all fields mandatory:
 
 ```
-u32 id · u32 ×8 · f32 kind · u32 · string
-u32 · u32 · f32 · f32 · f32 · u32 · u32 child-count
+u32 id · u32 ×8 · u32 kind · u32 · string (length-prefixed)
+u32 · u32 · u32 ×3 · u32 · u32 child-count (+ count × u32 children)
 ```
 
-- The `f32` is struct index 15 — the gate value. Defaults to 10, must be 5.
+- The kind is struct index 15 (node+60) — the gate value. Defaults to 10, must be the **raw
+  integer 5**. CORRECTED 2026-10-25 (§9): every field is stored verbatim (`mov dword`; the
+  "f32" here was Hex-Rays type noise), and sending the IEEE bits of 5.0f (0x40A00000) as the
+  kind is what broke the gate. Field order verified: id, slots 7–14, kind (15), slot 16,
+  string (slot 3), slots 17/18, slots 19–21, slot 22, child count.
 - **Short reads do not fail safe.** Three parsers in this handler (`sub_7F5B60`,
   `sub_7F4C90` line ~146, `sub_7FC6B0`) fall back to using the *reader's own address* as the
   value when the buffer is exhausted, which then drives a `do { } while` loop for billions of
@@ -197,14 +208,20 @@ Recorded because each cost real time:
 - **"Ordering: send definitions before the first identity."** Implemented; the gate still refuses.
 - **"The 16-byte id is optional / the strings are length-prefixed / coordinates are floats."**
   All three were wrong and all three were fixed; none of them made the building appear.
+- **"The definition kind is a float — send the IEEE bits of 5.0f."** THE ROOT CAUSE (§9). The
+  parser stores raw dwords and `sub_7F5F70` accepts only the integer 5.
+- **"Seeding RealEstateDefs.txt changes nothing, so the file is a dead end."** Misleading — the
+  file IS loaded by the manager ctor, but insert prepends, so the wire entry for the same id
+  shadowed the file's node (§9).
 
 ---
 
 ## 7. Open questions
 
-1. **Why does the lookup still return 10** when the insert provably writes into the same table?
-   Serious candidates: the client consults a manager instance the insert doesn't reach, or the
-   opcode layer doesn't deliver `0x2698` where the case expects it.
+1. ~~**Why does the lookup still return 10**~~ ANSWERED (§9): it was never returning 10 on the
+   hit path — the hit returned 0x40A00000 (the IEEE bits of 5.0f we sent as the kind), which
+   fails `sub_7F5F70`'s switch exactly like a miss. Table identity was never the problem: one
+   map at manager dword 29, shared by the file loader, the 0x2698 merge, and the 0x6FD0 lookup.
 2. **What are the real semantics of the `0x626E` placement fields** (small object and the three
    bytes)? Needs a reference packet. The cleanest source would be the client's own *writer* for
    0x2698 and 0x626E — read the sender instead of inferring from the receiver. This is the single
@@ -219,3 +236,48 @@ An upstream EQS-derived server is reported to have working housing/trophy placem
 screenshots and video of Plot Search working. That means the gate is satisfiable on some client
 build. What upstream does differently is unknown and was **not** pursued further — probing another
 live server is a ban risk and not worth it.
+
+---
+
+## 9. Resolution (2026-10-25): the gate kind must be the raw integer 5
+
+Every link below was read from the binary (IDA, `shroudref/ida/eqgame.i64`; addresses verified
+byte-identical between the IDA build and the live spellbook-patched exe, so all RVAs hold):
+
+1. The definition map is a **single object at manager dword 29 (+116)**: the manager ctor
+   `sub_5B21E0` builds it via `sub_7F5CE0`, which loads `RealEstateDefs.txt` (`sub_7F5380`:
+   first line discarded as a header, 23 `^` tokens per record; the MaxNonRE/MaxPets
+   validation CLAMPS to MaxItems and logs to `RealEstateErrors.txt` — it never rejects a
+   record), then `sub_5B5890` stores it at `a1[29]`.
+2. `case 0x2698` calls `sub_7F5B60(a1[29], reader)`: per entry it parses the record with
+   `sub_7F4C90` and inserts with `sub_7F52F0(map+4, record, &id)` — the **same map** the ctor
+   fed. Insert **prepends** to the bucket chain, so a wire entry for an id that also exists in
+   the file shadows the file's node.
+3. `case 0x6FD0` deserializes the identity object (`sub_7FDF00`), then
+   `sub_7F4FA0(a1[29], object+32)`: buckets at `*(map+1)`, key compared raw against
+   `node[27]`, **returns `node[15]` verbatim**, miss → 10.
+4. `sub_7F5F70` is a switch on that value; **only case 5 returns true**. Any other value —
+   including 0x40A00000 — falls through to default → false → eqstr 8078.
+5. `sub_7F4C90` stores every field with a plain `mov dword` (Hex-Rays renders these as float
+   only because the record local is reused for floats later — same illusion as the file
+   loader's `COERCE_FLOAT`, which the assembly at 0x7F553B disproves: `mov dword ptr
+   [ebp+ArgList], eax`). The file parser likewise stores `atoi(token 14)` raw. The kind is an
+   integer everywhere.
+
+The server was sending `memcpy`'d IEEE bits of `5.0f` (`0x40A00000`) as the kind. Every gate
+test ever run failed on that alone; "the lookup returns 10" was an inference from the miss
+default, never an observation. This also explains why the stand-in file "changed nothing": the
+file's kind-5 node was loaded at ctor, then shadowed at zone-in by the wire node carrying
+0x40A00000 for the same id.
+
+**Fixes applied 2026-10-25:**
+- `nms_housing.cpp` `SendRealEstateDefinitions`: send `U32(5)` raw; comments corrected. Server
+  rebuilt green and restarted.
+- `RealEstateDefs.txt` / `RealEstateDefRel.txt` refreshed in the live client dir and copied to
+  `Release-NMS-Client/ClientFiles` (kind 5; MaxItems 300 / MaxNonRE 60 / MaxPets 10; dangling
+  `1^1` DefRel row removed). The file is the belt, the wire defs the suspenders — both now
+  produce kind 5, so shadowing order is irrelevant.
+
+**In-game verify owed:** full client RESTART (the map is a per-process singleton built once at
+ctor — a re-zone is not enough), zone into `neighborhood`, attempt a gated action; expect no
+eqstr 8078. `RealEstateErrors.txt` should stay absent.

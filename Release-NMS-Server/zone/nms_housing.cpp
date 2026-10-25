@@ -608,9 +608,13 @@ void Client::Handle_OP_RealEstatePlacement(const EQApplicationPacket *app)
 // the value 5. +144 is written solely by wire opcode 0x6fd0, parsed by the RealEstate
 // vtable slot 3 (sub_7FDF00); upstream EQEmu has no name for 0x6fd0.
 // Sends the real-estate definition list (0x2698). The client parses it in sub_7F5B60: a u32
-// count, then per entry u32 id, eight u32s, an f32, a u32, then a length-prefixed string.
-// The f32 lands in struct index 15 -- the value sub_7F5F70 tests, where 5 is the only value
-// that means "in a neighborhood" and 10 is the miss default.
+// count, then per entry (sub_7F4C90) u32 id, eight u32s, a u32 kind, a u32, a length-prefixed
+// string, six more u32s and a child count. The kind lands in struct index 15 (node+60) -- the
+// exact value sub_7F4FA0 returns and sub_7F5F70 tests, where the raw integer 5 is the only
+// value that means "in a neighborhood" and 10 is the miss default. sub_7F4C90 stores every
+// field verbatim (mov dword; the "f32" in early notes was decompiler type noise, same as the
+// file loader's COERCE_FLOAT), so the kind must be the integer 5 -- NOT the IEEE bits of
+// 5.0f (0x40A00000), which falls through the gate predicate's switch exactly like a miss.
 void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 {
 	// The identity packet looks the key up in this table, and I cannot tell statically whether
@@ -623,17 +627,13 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 	Writer w;
 	w.U32(count);
 
-	const float kind = 5.0f;
-	uint32_t    bits = 0;
-	std::memcpy(&bits, &kind, 4);
-
 	for (int n = 0; n < count; ++n) {
 		w.U32(ids[n]);
 		for (int i = 0; i < 8; ++i) {
 			w.U32(0);
 		}
 
-		w.U32(bits);   // index 15: 5 means "in a neighborhood"
+		w.U32(5);   // index 15: raw integer 5 means "in a neighborhood"
 		w.U32(0);
 		w.Str("");
 

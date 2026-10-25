@@ -302,10 +302,11 @@ recursive search of `C:\Games`, `C:\EQS` and the user profile found no copy. The
 referenced by the client at 0xA100B8, 0xA100CC, 0xA1042C and 0xA10418; they ship with a Live
 install and are not part of an EQEmu server.
 
-Consequence: **no packet the server sends can make the client believe it is in a neighborhood
-until `RealEstateDefs.txt` exists** and gives the zone a definition whose kind resolves to 5.
-The `0x6FD0` identity packet is still required (it is the only writer of `+144`), but it is
-downstream of this.
+CORRECTED 2026-10-25 (findings doc §9): the file and the wire feed the SAME map — `case 0x2698`
+merges into `a1[29]`, the map this section describes. A packet CAN satisfy the gate: the wire
+definition just has to carry the kind as the **raw integer 5** (`sub_7F4C90` stores every field
+verbatim; the server was sending the IEEE bits of 5.0f, which is what actually broke every
+test). Insert prepends to the bucket chain, so a wire entry shadows a same-id file entry.
 
 ### RealEstateDefs.txt format (from sub_7F5380)
 
@@ -358,12 +359,14 @@ Note the manager is a lazily-constructed singleton (`sub_5B3540`), so the data f
 per **client process**. Editing the file while the game is running has no effect; the client must be
 restarted, not just re-zoned.
 
-Authored stand-ins now exist in the client directory (`RealEstateDefs.txt` with id 712 / kind 5,
-`RealEstateDefRel.txt` with `712^712`). **Unverified against a live client.** The client reports
+Authored stand-ins exist in the client directory (`RealEstateDefs.txt` with id 712 / kind 5;
+refreshed 2026-10-25 with sane item caps — MaxItems 300 / MaxNonRE 60 / MaxPets 10 — and the
+dangling `1^1` DefRel row removed; also copied to `Release-NMS-Client/ClientFiles`). **Gate
+verify in game owed** — see findings doc §9. The client reports
 parse problems to `RealEstateErrors.txt` in its own directory, and logs
 `Could not open file: %s` when a data file is absent — that file is the feedback channel.
 
-## 8b. The neighborhood gate looks unsatisfiable in this client build
+## 8b. The neighborhood gate looked unsatisfiable in this client build — FALSIFIED, see below
 
 `+144` — the value `sub_7F5F70` tests and the single thing gating every real-estate action — is
 written in only three places, found by scanning every `mov [reg+0x90], imm` and
@@ -386,6 +389,13 @@ Observed behaviour matches exactly: `#housing send list` **does** open the windo
 the packet), the client then sends 0x2691 searches that we answer, but every control is inert
 because each action re-tests `+144`. Practical consequence: on this build the native UI can show
 server data but cannot act on it, so placement runs server-side via `#housing place`.
+
+FALSIFIED 2026-10-25: the 0x6FD0 case runs. `sub_5B2500` switches on the raw opcode and contains
+`case 0x6FD0` (writes `+140` from `object+20`, `+144` from the `a1[29]` lookup); the
+server→client dispatcher `sub_4C3250` calls `sub_5B2500` at 0x4cc1ea with the opcode passed
+through, and runtime confirmed it — the client echoes the `+140` value we send back in its 0x2691
+search requests. The static scan missed that the dispatcher forwards a whole opcode class into
+the same switch. The gate was failing on the kind VALUE, not on reachability (findings doc §9).
 
 ## 8c. The 0x626E server->client packet (how a placed building becomes visible)
 
