@@ -281,3 +281,107 @@ file's kind-5 node was loaded at ctor, then shadowed at zone-in by the wire node
 **In-game verify owed:** full client RESTART (the map is a per-process singleton built once at
 ctor — a re-zone is not enough), zone into `neighborhood`, attempt a gated action; expect no
 eqstr 8078. `RealEstateErrors.txt` should stay absent.
+
+---
+
+## 10. Post-verify (2026-10-25): gate 8078 is dead; the second gate (eqstr 727) is decoded
+
+**Verified in game:** after the §9 fix the client accepts the neighborhood — the Plot Search
+window renders owned plots ("Type Player / Owner Judy") and the previously ubiquitous
+"You must be in a neighborhood" spam is gone. Plot recognition works.
+
+### The second gate: eqstr 727 — "You must be inside a plot or house to use that."
+
+Fired by `sub_747E50` (registered through a UI callback table at `0x9f86dc`; this is what
+lot-door edit / manage actions run through):
+
+```c
+sel = *(manager + 152);                    // dword 38, ctor/reset default -1
+if (sel == -1) → 727
+node = plot_map_lookup(sel);               // map at manager+4: buckets mgr+4, count mgr+8
+if (!node || node[0] == 0) → 727           // nodes: [0]=object ptr, [1]=key id, [2]=next
+else proceed
+```
+
+### Manager state model (offsets, all CONFIRMED)
+
+| Offset | Meaning |
+|---|---|
+| +136 | last spatial-update timestamp |
+| +140 | current neighborhood id (0x6FD0 object+20) |
+| +144 | context kind (defs lookup of object+32; only 5 passes `sub_7F5F70`) |
+| +148 | the real-estate object id under the player's feet |
+| +152 | the id of the HOUSE object on that plot (what eqstr 727 tests) |
+| +156, +160 | further selection slots (+160 = a sub-result's +20 from `sub_5B0A10`) |
+| +164/+168 | placement-request in-flight flag / timer |
+| ctor `sub_5B21E0`, reset `sub_5B1CF0` | all of the above to -1 / 10 / 0 |
+
+### The spatial updater — who writes +148/+152
+
+`sub_5B0A10` (manager tick, ~1 Hz):
+
+```
+if (mgr+12 <= 0)  # no real-estate context
+    +148 = +140; +152 = -1; +156 = -1; +160 = -1
+else
+    +148 = sub_4B3040(player_ctx) = sub_4B2F40(player_ctx+644)   # object under my feet (spatial)
+    if (+148 == -1) +148 = +140                                   # fallback: the neighborhood
+    sub_5B00E0:  object = plot_map[+148];
+                 +152 = sub_4D6790(object, house_kind_mask)->+20  # walk PARENT chain (+28), max 10,
+                                                                   # first ancestor whose defs kind
+                                                                   # matches the mask; -1 if none
+```
+
+`sub_4D6790` is the hierarchy walk: each RealEstate object carries **+28 = parent object id**,
+and defs kind → bitmask via `sub_7F5E30`; masks come from `sub_7F62B0`/`sub_7F62C0`. The kind
+predicates so far: **5 = neighborhood** (`sub_7F5F70`, gate 8078), **8 = plot** (`sub_7F6280`).
+Kinds 1-11 all exist in the predicate switch.
+
+### The RealEstate object model (0x58 objects, `sub_7FE100`)
+
+Arrive on **0x6FD0** (identity — decoded in §7) and on **0x63FD (25597)** — the second case in
+`sub_5B2500`, deserialized with the same vtable slot 3 plus an extra argument, applied the same
+way, and refreshing windows when the object's +20 equals the current +152 selection.
+
+| Object field | Meaning |
+|---|---|
+| +20 | own id (becomes manager +140 for the identity packet) |
+| +24 | second id (registered if > 0) |
+| +28 | **parent object id** (the hierarchy link `sub_4D6790` walks) |
+| +32 | own real-estate definition id (the defs-map key; drives +144) |
+| +36 | related id — registered as a map key **only when defs-kind(+32) == 8** |
+| +44/+48 | strings; +52 u32; child count + children; +56 string; +60 kind; +64/+68 |
+
+Apply path: `sub_5B5A90` registers the object in the plot map under +20, +24 (if > 0), +32, and
++36 (only when kind(+32) == 8); `sub_5B7C70` (vtable[10], "load by id") indexes it into a map at
+manager dword 9 (by +32) and manager dword 17 (by +36 when kind 8) and recurses through children
+(+72 count / +76 ids); `sub_5B59A0` erases (unload).
+
+### Why 727 still fires for us
+
+Our identity object registers only id 712 with kind 5. The spatial test finds no plot object
+under the player (we send no placement data), so +148 falls back to 712, and the house-walk in
+`sub_5B00E0` fails (parent id 0 is not registered; kind 5 is not in the house mask) → +152 = -1
+→ 727. It fires even inside `phinterior1a1` because nothing links the interior instance to an
+exterior plot object client-side.
+
+### Dead end recorded: 0x2AA6 items data
+
+The dispatcher's 0x2AA6 handler `sub_741670` parses ONE record (u32, u32, u32, cstring ≤63,
+cstring ≤31, u8, u32, then count × items via `sub_7FB870`) into a stack local and **discards
+it** — parse-and-discard in this build. It is not what populates the selection or the plot map,
+and it explains the Real Estate Items window showing "Yard/House/Crate: N/A" with an empty list.
+
+### Implementation path to satisfy eqstr 727 (next phase)
+
+1. Definitions: add kind-8 entries (plots) to the 0x2698 definitions packet — keep 712 = 5.
+2. Send plot objects (0x63FD or 0x6FD0) forming the hierarchy: plot object (+32 = plot def id,
+   +28 = 712, +20 = plot id) and the placed house as its child, so the apply registers real ids.
+3. Feed the spatial index — placement data for each plot (the S→C 0x626E packet decoded in §3,
+   161 bytes). Retest the eqstr-5223 rejection with the hierarchy registered first (ordering:
+   defs → objects → placements). If the spatial index (`sub_4B2F40` at player_ctx+644) does not
+   consume placement objects, decode what does.
+4. Server-side interim answer stays `#housing place` (now with a widened name-word auto-detect:
+   Hut/Cottage/Manor/Villa/Chalet/Cabin/Lodge join Residence/Deed/House; house items are
+   itemtype 11 with no data marker, so names are the only handle — the explicit
+   `#housing place <door_id> <item_id>` form always works).

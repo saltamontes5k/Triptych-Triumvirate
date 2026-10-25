@@ -56,6 +56,13 @@ already present in `utils/patches/patch_RoF2.conf` and `common/emu_oplist.h`.
 | OP_RealEstateManageRequest | 0x7AD1 | sub_73CC50 |
 | OP_RaceChangeRequest | 0x754E | sub_7276F0 |
 
+Server→client additions decoded 2026-10-25 (see findings doc §10): **0x63FD (25597)** — a second
+RealEstate-object packet handled in `sub_5B2500` beside 0x6FD0 (same object type, same apply
+path, refreshes windows when its object+20 equals the current plot selection). The defs-kind
+predicates: 5 = neighborhood (`sub_7F5F70`), 8 = plot (`sub_7F6280`); objects link into a
+hierarchy through +28 (parent id). The real-estate UI callbacks are registered through a table
+at `0x9f86dc` (e.g. the eqstr-727 gate `sub_747E50`).
+
 The whole real-estate code cluster lives at VA 0x730000..0x750000.
 
 ## 3. Client→server payloads

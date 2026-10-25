@@ -806,8 +806,10 @@ void command_housing(Client *c, const Seperator *sep)
 		const uint32_t door_id = Strings::ToUnsignedInt(sep->arg[2]);
 
 		// Which item counts as a house is a data question: the residence/deed items live in the
-		// items table and their ids differ per style. Auto-detect from inventory, or take the id
-		// the caller gave.
+		// items table (all itemtype 11, no dedicated marker), so auto-detection is name-based.
+		// The HoT house items are named inconsistently ("...Stone Residence, ... interior" vs
+		// "Zimel Style Stucco Hut, ..."), hence the word list. The explicit form
+		// (#housing place <door_id> <item_id>) always works and should be preferred.
 		uint32_t item_id = 0;
 
 		if (sep->IsNumber(3)) {
@@ -817,7 +819,10 @@ void command_housing(Client *c, const Seperator *sep)
 			auto found = database.QueryDatabase(fmt::format(
 				"SELECT i.item_id FROM inventory i JOIN items it ON it.id = i.item_id "
 				"WHERE i.character_id = {} "
-				"  AND (it.Name LIKE '%Residence%' OR it.Name LIKE '%Deed%' OR it.Name LIKE '%House%') "
+				"  AND (it.Name LIKE '%Residence%' OR it.Name LIKE '%Deed%' OR it.Name LIKE '%House%' "
+				"    OR it.Name LIKE '%Hut%' OR it.Name LIKE '%Cottage%' OR it.Name LIKE '%Manor%' "
+				"    OR it.Name LIKE '%Villa%' OR it.Name LIKE '%Chalet%' OR it.Name LIKE '%Cabin%' "
+				"    OR it.Name LIKE '%Lodge%') "
 				"  AND it.Name NOT LIKE '%Key%' LIMIT 1",
 				c->CharacterID()
 			));
@@ -828,7 +833,11 @@ void command_housing(Client *c, const Seperator *sep)
 		}
 
 		if (!item_id) {
-			c->Message(Chat::White, "[housing] no house item (residence or deed) found in your inventory.");
+			c->Message(
+				Chat::White,
+				"[housing] no house item (residence or deed) found in your inventory. "
+				"Carry the house item, or pass it explicitly: #housing place <door_id> <item_id>"
+			);
 			return;
 		}
 
