@@ -385,3 +385,46 @@ and it explains the Real Estate Items window showing "Yard/House/Crate: N/A" wit
    Hut/Cottage/Manor/Villa/Chalet/Cabin/Lodge join Residence/Deed/House; house items are
    itemtype 11 with no data marker, so names are the only handle — the explicit
    `#housing place <door_id> <item_id>` form always works).
+
+---
+
+## 11. Third batch (2026-10-25): kind-8/4 definitions + 0x63fd plot objects shipped
+
+### 0x63fd ≡ 0x6fd0 on the wire
+
+The 0x63fd case in `sub_5B2500` deserializes with the same vtable slot 3 (`sub_7FDF00`, now
+confirmed `__fastcall(object, unused_edx, reader)` — the dispatcher's extra argument is pushed
+but ignored) and runs the same apply path. Same wire layout, so plot objects reuse the identity
+builder shape. The case additionally refreshes windows when object+20 equals the current +152
+selection (`sub_74DCB0`), consistent with 0x63fd being the "your plot data" packet.
+
+### eqstr 5223 is the GENERIC placement failure
+
+`sub_5B0200` executes a placement attempt through a window vtable call and maps the returned
+error code: **20→5231, 21→5275, 42→5283, 74→5407, everything else→5223**. Our experimental
+`#housing exterior` packet executed and failed with an unmapped code — the reject was never a
+parse failure. With the object hierarchy registered the error may become a specific code, which
+then names the exact failing validation.
+
+### Shipped in this batch
+
+- `SendRealEstateDefinitions` now sends three definitions with distinct kinds: zone id = 5
+  (neighborhood, the +144 gate), id 1 = 8 (plot), id 2 = 4 (house).
+- New `SendRealEstatePlotObjects` (called at the end of `SendRealEstateIdentity`): sends every
+  plot the player owns in this neighborhood as a 0x63fd object — +20 = door_id (the plot id the
+  plot list uses), +28 = zone id (parent = the registered neighborhood object), +32 = 1 (the
+  kind-8 def), +60 = 8. The apply registers it in the client's plot map.
+- `OP_RealEstateObject=0x63fd` added to `emu_oplist.h` + `patch_RoF2.conf`.
+
+### The one remaining link: the spatial index
+
+The 727 gate reads +152, written by the 1 Hz updater only when the client's spatial index finds
+a real-estate object under the player's feet. That index is a hash at `player_ctx + 644`
+(`dword_DD2630` context; buckets +644, count +648), scanned by `sub_4B2F40`, whose entries pass
+`sub_8D2AD0` and resolve through `sub_4B30F0` to objects whose defs kind `sub_7F6030` accepts —
+**only 4 and 8**. The neighborhood fallback (+140) can never satisfy the walk (kind 5 is not in
+the 0x88 mask, and the parent chain from the root has nowhere to go), so a placement-driven
+spatial registration is mandatory. The insert side is not yet located statically: the placement
+result handler `sub_558BB0` constructs the world object (0x504xxx/0x505xxx/0x506xxx creation
+helpers), which is the most likely feeder. Next decode: the +644 hash insert (or a runtime probe
+of `sub_4B2F40`/`sub_5B00E0` on live), then correct the 0x626e placement semantics.

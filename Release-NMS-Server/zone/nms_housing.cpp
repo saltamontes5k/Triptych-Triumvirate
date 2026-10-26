@@ -338,6 +338,12 @@ constexpr uint32_t kMaxPlotsPerPlayer = 2;
 // object is registered from the 0x6fd0 packet.
 constexpr uint32_t kRealEstateKindNeighborhood = 5;
 
+// The other definition kinds the client's predicates test for (sub_7F6280 tests 8,
+// sub_7F6030 accepts {4, 8} for the "object under my feet" spatial test, and the
+// house-ancestor walk mask sub_7F62B0() == 0x88 = kinds {4, 8}).
+constexpr uint32_t kRealEstateKindHouse = 4;
+constexpr uint32_t kRealEstateKindPlot  = 8;
+
 // The client's placement payload carries the world position it acted on at
 // offsets 52 (x) and 56 (y). Resolve that to the nearest lot marker.
 struct NearestPlot {
@@ -617,23 +623,33 @@ void Client::Handle_OP_RealEstatePlacement(const EQApplicationPacket *app)
 // 5.0f (0x40A00000), which falls through the gate predicate's switch exactly like a miss.
 void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 {
-	// The identity packet looks the key up in this table, and I cannot tell statically whether
-	// the key is the zone id or the neighborhood id, so register both.
-	// Zone id, neighborhood id, and 0: the identity packet writes object+32 from its fourth u32,
-	// but if that field is not being applied the key stays 0, so cover all three.
-	const uint32_t ids[3]  = { definition_id, 1, 0 };
-	const int      count   = 3;
+	// Three definitions with distinct kinds: the zone itself is the neighborhood (kind 5,
+	// what the identity lookup must return), id 1 is a plot (kind 8) and id 2 is a house
+	// (kind 4). The client's predicates split on these: sub_7F5F70 accepts only 5 for the
+	// +144 gate, sub_7F6280 tests 8 before registering an object's +36 as a map key, and
+	// the "object under my feet" spatial test (sub_7F6030) plus the house-ancestor walk
+	// (mask 0x88) only accept kinds {4, 8}.
+	struct DefEntry {
+		uint32_t id;
+		uint32_t kind;
+	};
+	const DefEntry entries[3] = {
+		{ definition_id, kRealEstateKindNeighborhood },
+		{ 1,             kRealEstateKindPlot         },
+		{ 2,             kRealEstateKindHouse        },
+	};
+	const int count = 3;
 
 	Writer w;
 	w.U32(count);
 
-	for (int n = 0; n < count; ++n) {
-		w.U32(ids[n]);
+	for (const auto &entry : entries) {
+		w.U32(entry.id);
 		for (int i = 0; i < 8; ++i) {
 			w.U32(0);
 		}
 
-		w.U32(5);   // index 15: raw integer 5 means "in a neighborhood"
+		w.U32(entry.kind);   // index 15: raw integer kind (see the note above)
 		w.U32(0);
 		w.Str("");
 
@@ -659,9 +675,76 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 	safe_delete(outapp);
 
 	LogInfo(
-		"[Housing] sent real-estate definitions to [{}]: ids [{}] [1] [0] kind 5, {} bytes",
+		"[Housing] sent real-estate definitions to [{}]: ids [{}] kind 5, [1] kind 8, [2] kind 4, {} bytes",
 		c->GetName(), definition_id, buf.size()
 	);
+}
+
+// Sends the player's owned plots in this neighborhood as RealEstate objects on
+// OP_RealEstateObject (0x63fd). The client deserializes 0x63fd exactly like the 0x6fd0
+// identity (same sub_7FDF00 layout; the dispatcher just passes one extra ignored argument)
+// and runs the same apply path (sub_5B5A90), which registers the object in the client's plot
+// map under its ids. That map is what the plot/manage gates test against: eqstr 727 in
+// sub_747E50 requires RealEstate[+152] to be a registered object id whose definition kind is
+// 4 or 8, and the apply only indexes an object's +36 when its defs kind is 8 (sub_7F6280).
+void SendRealEstatePlotObjects(Client *c)
+{
+	if (!c || !zone || std::string(zone->GetShortName()) != "neighborhood") {
+		return;
+	}
+
+	const uint32_t    zone_id   = zone->GetZoneID();
+	const std::string zone_name = zone->GetShortName();
+
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT p.door_id FROM nms_plot p "
+		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND (p.owner_char_id = {} "
+		"  OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
+		Strings::Escape(zone_name), c->CharacterID(), c->GuildID()
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		return;
+	}
+
+	int sent = 0;
+	for (auto row = rows.begin(); row != rows.end(); ++row) {
+		if (!row[0]) {
+			continue;
+		}
+		const uint32_t door_id = Strings::ToUnsignedInt(row[0]);
+
+		Writer w;
+		w.U32(door_id);              // +20  own id -- the plot list uses door_id as plot_id
+		w.U32(0);                    // +24
+		w.U32(zone_id);              // +28  parent: the neighborhood object from the identity
+		w.U32(1);                    // +32  defs key: definition id 1, kind 8 (plot)
+		w.U32(0);                    // +36
+		w.U32(0);                    // +40
+		w.Str(zone_name);            // +48
+		w.Str(fmt::format("Plot {}", door_id));  // +44
+		w.U32(0);                    // +52
+		w.U32(0);                    // child id list count
+		w.Str("");                   // +56
+		w.U8(0);                     // key/value pair count
+		w.U32(kRealEstateKindPlot);  // +60  own kind
+		w.U32(0);                    // +64
+		w.U8(0);                     // +68
+
+		const auto &buf = w.Buffer();
+		auto outapp = new EQApplicationPacket(OP_RealEstateObject, static_cast<uint32>(buf.size()));
+		std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+		c->QueuePacket(outapp);
+		safe_delete(outapp);
+		++sent;
+
+		LogInfo("[Housing] sent plot object to [{}]: door [{}], {} bytes", c->GetName(), door_id, buf.size());
+	}
+
+	if (sent) {
+		LogInfo("[Housing] sent [{}] plot object(s) to [{}]", sent, c->GetName());
+	}
 }
 
 void Client::SendRealEstateIdentity()
@@ -730,6 +813,10 @@ void Client::SendRealEstateIdentity()
 		"[Housing] sent real-estate identity to [{}]: neighborhood [{}] '{}', zone [{}], {} bytes",
 		GetName(), neighborhood_id, neighborhood_name, zone_id, buf.size()
 	);
+
+	// Register the player's owned plots right after the identity so the client's plot map has
+	// the kind-8 objects the plot/manage gates look up.
+	SendRealEstatePlotObjects(this);
 }
 
 // Leaves a house interior. Retail houses have no doors on purpose -- you leave with the real
