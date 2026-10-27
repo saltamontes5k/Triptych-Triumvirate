@@ -1154,13 +1154,19 @@ void command_housing(Client *c, const Seperator *sep)
 			w.U32(FloatBits(pz));      // +148  world z (float)
 		}
 		w.U8(0); w.U8(0); w.U8(0);
-		// Exactly eight dwords: the parser reads +156, +160, +164, +168, +172, +176, +180 and
-		// +184. Two extra would shift the small object by 8 bytes and everything after it
-		// would be read from the wrong offsets. sub_558BB0 reads +176/+180 as floats; zero
-		// floats and zero ints are the same bytes, so zeros remain correct here.
-		for (int i = 0; i < 8; ++i) {
-			w.U32(0);
-		}
+		// Tail block +156..+184, read back by sub_5056B0 as: u32 state (+156 -- sub_558BB0
+		// tests it == 1), then SIX floats (+160..+180) that act as the placement bounds: the
+		// object's position triple is clamped into [min, max] per axis, so all-zero bounds
+		// clamp every position to the origin -- which is why nothing ever rendered. Wide
+		// bounds keep the intended position. +184 is one more u32.
+		w.U32(1);                        // +156  placement state
+		w.U32(FloatBits(-10000.0f));     // +160  bounds min
+		w.U32(FloatBits(10000.0f));      // +164  bounds max
+		w.U32(FloatBits(-10000.0f));     // +168  bounds min
+		w.U32(FloatBits(10000.0f));      // +172  bounds max
+		w.U32(FloatBits(-10000.0f));     // +176  bounds min
+		w.U32(FloatBits(10000.0f));      // +180  bounds max
+		w.U32(0);                        // +184
 		// The small object (sub_4D60E0: u8 + 3 x u16) and the three following bytes are the
 		// fields whose meaning is unknown; sub_558BB0 stores them on the placement controller
 		// (this[6..8]) and they are reset once the placement settles, so zeros are a valid
