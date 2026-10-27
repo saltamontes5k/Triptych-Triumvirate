@@ -111,6 +111,15 @@ private:
 	std::vector<uint8_t> m_buf;
 };
 
+// IEEE bit pattern of a float, for the response-side placement fields the client reads
+// back as floats (sub_558BB0: object +132..+148, tail +176/+180).
+uint32_t FloatBits(float value)
+{
+	uint32_t bits = 0;
+	std::memcpy(&bits, &value, 4);
+	return bits;
+}
+
 std::string HexDump(const EQApplicationPacket *app, size_t limit = 160)
 {
 	std::string out;
@@ -217,9 +226,8 @@ struct PlotRow {
 	uint32_t    door_id    = 0;
 	uint32_t    owner_type = 4;
 	std::string owner_name;
-};
-
-// Only owned plots appear in the plot list: the client's reader (sub_74C4C0) adds a
+	std::string address;
+};// Only owned plots appear in the plot list: the client's reader (sub_74C4C0) adds a
 // row only when the owner type is 4 (Player) or 8 (Guild). Vacant lots are simply
 // absent from this list.
 std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
@@ -227,7 +235,7 @@ std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
 	std::vector<PlotRow> rows;
 
 	auto results = database.QueryDatabase(fmt::format(
-		"SELECT p.door_id, p.plot_type, COALESCE(c.name, ''), COALESCE(g.name, '') "
+		"SELECT p.door_id, p.plot_type, COALESCE(c.name, ''), COALESCE(g.name, ''), nb.name "
 		"FROM nms_plot p "
 		"JOIN nms_neighborhood nb ON nb.id = p.neighborhood_id "
 		"LEFT JOIN character_data c ON c.id = p.owner_char_id "
@@ -249,6 +257,7 @@ std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
 		const uint32_t plot_type    = Strings::ToUnsignedInt(row[1]);
 		const std::string char_name = std::string(row[2] ? row[2] : "");
 		const std::string guild_name = std::string(row[3] ? row[3] : "");
+		const std::string nb_name   = std::string(row[4] ? row[4] : "");
 
 		if (plot_type == 1) {
 			r.owner_type = kPlotOwnerGuild;
@@ -258,6 +267,11 @@ std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
 			r.owner_type = kPlotOwnerPlayer;
 			r.owner_name = char_name;
 		}
+
+		// The plot list's second per-entry string is the Address column (confirmed against the
+		// live client: row order is Address, Type, Owner). There is no address data column, so
+		// synthesize a stable one from the lot number and the neighborhood name.
+		r.address = fmt::format("{} {}", r.door_id, nb_name);
 
 		rows.push_back(r);
 	}
@@ -286,8 +300,7 @@ void SendPlotList(Client *c, const std::string &zone_short_name, uint32_t search
 		w.U32(r.owner_type);
 		w.U32(0);
 		w.Str(r.owner_name);
-		w.Str("");   // the second per-entry string is a separate column; which one is
-		             // the street address is not yet confirmed against a live client
+		w.Str(r.address);   // second per-entry string = the Address column (live-confirmed)
 	}
 
 	const auto &buf = w.Buffer();
@@ -1090,9 +1103,10 @@ void command_housing(Client *c, const Seperator *sep)
 		}
 
 		auto   row = r.begin();
-		const float px = static_cast<float>(Strings::ToFloat(row[0] ? row[0] : "0"));
-		const float py = static_cast<float>(Strings::ToFloat(row[1] ? row[1] : "0"));
-		const float pz = static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0"));
+		const float px      = static_cast<float>(Strings::ToFloat(row[0] ? row[0] : "0"));
+		const float py      = static_cast<float>(Strings::ToFloat(row[1] ? row[1] : "0"));
+		const float pz      = static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0"));
+		const float heading = static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"));
 
 		Writer w;
 		// Both of these are null-terminated strings in this packet (the client measures them
@@ -1105,46 +1119,54 @@ void command_housing(Client *c, const Seperator *sep)
 		w.CStr(MakeRealEstateId(zone->GetZoneID(), door_id));  // 16 chars, round-trip valid
 		w.U32(0);
 		w.U32(0);
-		// The client's own placement request carries world x/y as *integers*: sub_5384D0 stores
-		// its int parameters straight into the payload and bounds-checks them against integer
-		// world limits. So these dwords are integer world units, not float bit patterns.
-		w.U32(static_cast<uint32_t>(static_cast<int32_t>(px)));
-		w.U32(static_cast<uint32_t>(static_cast<int32_t>(py)));
-		w.U32(static_cast<uint32_t>(static_cast<int32_t>(pz)));
-		for (int i = 0; i < 4; ++i) {
-			w.U32(0);
+		// The response-side world object is read back as FLOATS: sub_558BB0 compares
+		// *(float*)(object+140/144/148) against the player position and also consults
+		// +132/+136 and tail +176/+180 as floats. (The integer-world-units finding applies
+		// only to the client->server request, sub_5384D0.) Wire order here is
+		// +124, +128, +132, +136, +140, +144, +148 -- so the position lives in the last
+		// three dwords of this block, as IEEE float bit patterns.
+		const int variant = sep->IsNumber(3) ? Strings::ToInt(sep->arg[3]) : 0;
+
+		w.U32(0);                                    // +124
+		w.U32(0);                                    // +128
+		switch (variant) {
+			case 1:                                  // heading variant in +132
+				w.U32(FloatBits(heading));
+				break;
+			case 2:                                  // +132/+136 duplicate x/y
+				w.U32(FloatBits(px));
+				w.U32(FloatBits(py));
+				break;
+			case 3:                                  // legacy integer encoding (baseline)
+				w.U32(static_cast<uint32_t>(static_cast<int32_t>(px)));
+				w.U32(static_cast<uint32_t>(static_cast<int32_t>(py)));
+				w.U32(static_cast<uint32_t>(static_cast<int32_t>(pz)));
+				w.U32(0);
+				break;
+			default:                                 // +132/+136 zero floats
+				w.U32(0);
+				w.U32(0);
+				break;
+		}
+		if (variant != 3) {
+			w.U32(FloatBits(px));      // +140  world x (float)
+			w.U32(FloatBits(py));      // +144  world y (float)
+			w.U32(FloatBits(pz));      // +148  world z (float)
 		}
 		w.U8(0); w.U8(0); w.U8(0);
 		// Exactly eight dwords: the parser reads +156, +160, +164, +168, +172, +176, +180 and
 		// +184. Two extra would shift the small object by 8 bytes and everything after it
-		// would be read from the wrong offsets.
+		// would be read from the wrong offsets. sub_558BB0 reads +176/+180 as floats; zero
+		// floats and zero ints are the same bytes, so zeros remain correct here.
 		for (int i = 0; i < 8; ++i) {
 			w.U32(0);
 		}
 		// The small object (sub_4D60E0: u8 + 3 x u16) and the three following bytes are the
-		// fields whose meaning is unknown, and they are what get handed to sub_558BB0 as the
-		// placement parameters. Sweep them with the optional variant argument rather than
-		// rebuilding for each guess.
-		const int variant = sep->IsNumber(3) ? Strings::ToInt(sep->arg[3]) : 0;
-
-		switch (variant) {
-			case 1:   // u16 triple carries the low 16 bits of the world position
-				w.U8(1); w.U16(static_cast<uint16>(px)); w.U16(static_cast<uint16>(py)); w.U16(static_cast<uint16>(pz));
-				w.U8(1); w.U8(0); w.U8(0);
-				break;
-			case 2:   // u16 triple is a heading/type triple
-				w.U8(0); w.U16(1); w.U16(1); w.U16(0);
-				w.U8(0); w.U8(0); w.U8(1);
-				break;
-			case 3:   // all flags raised
-				w.U8(1); w.U16(1); w.U16(1); w.U16(1);
-				w.U8(1); w.U8(1); w.U8(1);
-				break;
-			default:  // zeros
-				w.U8(0); w.U16(0); w.U16(0); w.U16(0);
-				w.U8(0); w.U8(0); w.U8(0);
-				break;
-		}
+		// fields whose meaning is unknown; sub_558BB0 stores them on the placement controller
+		// (this[6..8]) and they are reset once the placement settles, so zeros are a valid
+		// starting point for every variant.
+		w.U8(0); w.U16(0); w.U16(0); w.U16(0);
+		w.U8(0); w.U8(0); w.U8(0);
 
 		w.U32(0); w.U32(0); w.U32(0);
 		w.U32(0);                               // child count

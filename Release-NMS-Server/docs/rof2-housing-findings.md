@@ -428,3 +428,43 @@ spatial registration is mandatory. The insert side is not yet located statically
 result handler `sub_558BB0` constructs the world object (0x504xxx/0x505xxx/0x506xxx creation
 helpers), which is the most likely feeder. Next decode: the +644 hash insert (or a runtime probe
 of `sub_4B2F40`/`sub_5B00E0` on live), then correct the 0x626e placement semantics.
+
+---
+
+## 12. Fourth batch (2026-10-25): placement positions are floats; plot address column identified
+
+### sub_558BB0 fully read — the 0x626e response spawns the world object, and its positions are FLOATS
+
+The spawn path is `sub_5056B0(new 0xC0 object, big_object, flags…, byte3, u32_1, u32_2, u32_3)`,
+and the big object's coordinates are read back as **IEEE floats**: `sub_558BB0` compares
+`*(float *)(object + 140 / +144 / +148)` against the player position (a `sqrt(dx²+dy²+dz²) <
+radius` visibility gate), and also consults `+132` / `+136` and the tail fields `+176` / `+180`
+as floats. The earlier "world coordinates are integers" finding applies **only to the
+client→server request** (`sub_5384D0`); the server→client response is float-encoded. The first
+`#housing exterior` builds put integer units at +124/+128/+132 and zeros at +140..+148 — the
+object could only ever appear at a garbage position near zero, which is exactly the observed
+"consumes the item, nothing renders". The builder now writes float bit patterns at
++140/+144/+148, with variants 0-3 sweeping the +132/+136 encodings (zero floats, heading float,
+duplicated x/y, and the legacy integer encoding as baseline). The small object
+(`u8 + 3×u16`) and the three bytes land on the placement controller (`this[6..8]`) and are reset
+once the placement settles, so zeros are a valid baseline there.
+
+Also mapped in `sub_558BB0`: a nonzero byte 1 (`a5`) diverts to an "attach to existing object"
+path (`sub_5996E0(u32_3)` resolves a parent world object), byte 2 (`a6`) gates object creation,
+and the object's render model comes from the big object via `sub_5056B0` — the 16-char id and
+the name string are the identity handles.
+
+### Plot list: the second per-entry string is the Address column
+
+Live-confirmed from the Plot Search window (row order **Address, Type, Owner**; the Address was
+blank because we sent `Str("")`): `sub_74C4C0` formats the second string into the Address
+column and the first string into Owner. `SendPlotList` now synthesizes a stable address
+(`<door_id> <neighborhood name>`); there is no address data column in the schema.
+
+### In-game state after batch 3 (b060b644)
+
+`#housing place 19` consumes the house item and creates the interior (instance works, expiry
+message shows), but nothing renders on the lot — expected, the exterior is the 0x626e path
+fixed above. Manage/plot-edit still prints eqstr 727 on the lot and inside the interior —
+consistent with the spatial index being the last unsatisfied link. Plot objects (0x63fd) and
+kind-8/4 definitions are confirmed shipped (zone logs show the plot-object sends).
