@@ -57,6 +57,8 @@ public:
 	// Rows not assigned to a selectable reward set are granted automatically.
 	const std::vector<RewardSelectionReward> &Rewards(uint32_t achievement_id) const;
 	const RewardSelectionSet *RewardSet(uint32_t achievement_id) const;
+	// True when the achievement has criteria and every one is a zone enter.
+	bool IsExplorationOnly(uint32_t achievement_id) const;
 	const std::vector<AchievementCastRequirement> &CastRequirements(uint32_t restriction_id) const;
 	std::optional<uint8_t> RequiredClass(uint32_t achievement_id) const;
 	bool ResetOnVersionChange(uint32_t achievement_id) const;
@@ -82,6 +84,7 @@ private:
 	std::unordered_map<uint32_t, std::vector<const AchievementCriterion *>> m_criteria_by_achievement;
 	std::unordered_map<uint32_t, std::vector<RewardSelectionReward>> m_rewards;
 	std::unordered_map<uint32_t, RewardSelectionSet> m_reward_sets;
+	std::unordered_map<uint32_t, bool> m_exploration_only;
 	std::unordered_map<uint32_t, std::vector<AchievementCastRequirement>> m_cast_requirements;
 	std::unordered_map<uint32_t, uint8_t> m_required_classes;
 	std::unordered_map<uint32_t, bool> m_reset_on_version_change;

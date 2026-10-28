@@ -68,7 +68,9 @@ task. In both cases, `source_id` is the corresponding achievement or task ID.
 Definitions may be reused, but provider authorization and character delivery
 ledgers remain separate.
 
-Automatic catalog entries currently apply only to achievements. Tasks use
+Automatic catalog entries are retired for achievements: every achievement
+reward now lives in a selectable set (a single non-common option when the
+reward is fixed) so it can be claimed from the achievement window. Tasks use
 their established automatic reward fields, and task loading rejects
 `reward_source_entries` rows with `source_type = 2`.
 
@@ -201,3 +203,10 @@ remain the durable authority across zoning, disconnects, and server restarts.
 When changing selectable reward content, avoid reusing a reward, option, or set
 ID for a different semantic grant. Stable IDs are part of claim validation and
 idempotency.
+
+`Achievements:ExplorationRewards` (default `true`) scopes the claim lanes for
+exploration achievements — definitions whose only enabled criteria are
+zone-enter. With it off, their pending selections are not presented in the
+claimable lane, View Reward renders nothing for them, and `ClaimReward`
+refuses the delivery; tracking, completion, and points are untouched. See
+[Achievement runtime](achievements.md) under Operational controls.

@@ -2650,7 +2650,9 @@ void ClientAchievementState::SendRewardDisplay(uint32_t definition_index)
 		reward_set &&
 		m_states[definition_index].status ==
 			EQ::Achievements::Status::Completed &&
-		RuleB(Achievements, GrantRewards)
+		RuleB(Achievements, GrantRewards) &&
+		(RuleB(Achievements, ExplorationRewards) ||
+		 !manager.IsExplorationOnly(definition.achievement_id))
 	) {
 		std::vector<PersistedAchievementRewardSelection> persisted;
 		auto rows = database.QueryDatabase(fmt::format(
@@ -2865,6 +2867,13 @@ bool ClientAchievementState::RestorePendingRewardSelection()
 			continue;
 		}
 
+		if (
+			!RuleB(Achievements, ExplorationRewards) &&
+			manager.IsExplorationOnly(definition.achievement_id)
+		) {
+			continue;
+		}
+
 		uint32_t selected_option_id = 0;
 		if (const auto found = persisted.find(definition.achievement_id);
 			found != persisted.end()) {
@@ -2923,7 +2932,9 @@ RewardSelectionDeliveryResult ClientAchievementState::ClaimReward(
 {
 	if (
 		!m_loaded ||
-		!RuleB(Achievements, GrantRewards)
+		!RuleB(Achievements, GrantRewards) ||
+		(!RuleB(Achievements, ExplorationRewards) &&
+		 AchievementManager::Instance().IsExplorationOnly(pending_reward_id))
 	) {
 		return RewardSelectionDeliveryResult::RetryableFailure;
 	}

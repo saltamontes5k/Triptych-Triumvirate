@@ -748,7 +748,17 @@ used by the runtime implementation;
 
 - `Achievements:EnableAchievements` enables loading, evaluation, persistence,
   and RoF2 packets.
-- `Achievements:GrantRewards` enables configured reward delivery.
+- `Achievements:GrantRewards` gates achievement reward delivery and the claim
+  machinery: with it off, claims are refused and pending claims are not
+  presented. Achievement rewards are claimed from the achievement window; they
+  are not granted on completion.
+- `Achievements:ExplorationRewards` (default `true`) gates reward delivery for
+  achievements whose only enabled criteria are zone-enter (exploration
+  achievements, classified at catalog load). With it off those achievements
+  still track, complete, and award points, but their Choose tabs are not
+  presented, View Reward shows nothing, and claims are refused. Rule changes
+  apply to new claims immediately; an already-open claim window refreshes on
+  the next pending-restore (zone-in or another claim).
 - `Achievements:GuildMemberNotifications` (default `true`) controls whether
   completion announcements are sent to other online guild members. Local
   completion sound, chat, and link delivery are unchanged.

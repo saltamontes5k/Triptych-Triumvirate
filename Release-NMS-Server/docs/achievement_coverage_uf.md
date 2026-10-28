@@ -11,26 +11,32 @@ components, criteria, rewards, and the quest API see
 
 ## What is actually live today
 
-The profiles below are **prepared targets, not installed content**. The live `peq` database
-holds only the server-authored **Triptych** achievements and **zero ToB-imported**
-achievements:
+The live `peq` database carries the **full imported resource snapshot** plus the
+server-authored custom sets (status 2026-10-25, after the classic expansion
+batch, entries 238-255):
 
-| Namespace | Enabled | Rewarded |
+| Population | Definitions | Enabled |
 | --- | ---: | ---: |
-| `950xxxx` Triptych line (Explorer / Veteran / Pest Control / Trailblazer) | 10 | 1 |
-| `960xxxx` Original + General (Exploration, Hunter, Raids, Level, Advancement, Class, Keys) | 306 | 0 |
-| **Total live** | **316** | **1** |
+| Imported live-EQ snapshot (all expansions, mostly disabled) | 6,574 | 810 |
+| Server-authored 950xxxx/960xxxx custom sets | 316 | 316 |
+| **Total** | **6,890** | **1,126** |
 
-- 1,630 live criteria; every `960xxxx` definition has at least one.
-- Live event mix: 1,268 NPC-name kills, 95 own item, 86 achievement complete, 82
-  zone enter, 48 skill cap, 29 AA, 21 level, 1 NPC-type kill.
-- Only **`9500040 Trailblazer`** has a reward (set `9506000 "Choose Your Boon"`, four
-  options: 1 platinum, Watchman's Spectacles, 10 AA points, the Trailblazer suffix
-  title). **315 of 316 live achievements have no reward mapping.**
-- Live criteria health: **all 1,630 resolve** against the content database. Level,
-  AA, zone-enter, owned-item, NPC-type, and NPC-name criteria all check out.
-  (Zone-name matching must be case-insensitive: `spawn2.zone` mixes `'Everfrost'`
-  and `'everfrost'`.)
+- 4,584 live criteria (4,011 pre-batch + 573 added by the classic batch,
+  ids 7000000+).
+- The Kunark / Velious / Luclin / Planes of Power trees are live: 206 of 281
+  candidates enabled with claimable rewards (202 newly enabled, 4 kept
+  partials), 75 deferred — see
+  [classic expansion batch](achievements_expansion_classic.md) and
+  `achievements_expansion_classic_deferred.csv`.
+- 19 disabled live key rows intentionally stay disabled: they duplicate
+  enabled custom Keys-category achievements.
+- Rewards are claimable single-option sets for every mapped achievement
+  (automatic `reward_source_entries` grants are retired; zero remain).
+
+Earlier text claimed the live DB held "only the server-authored Triptych
+achievements and zero ToB-imported achievements" (316 enabled / 1,630
+criteria). That was the DoN/UF-profile planning baseline, not the live state;
+the tables above supersede it.
 
 The live set is **classic-heavy**. The DoN slice in
 [achievement_coverage.md](achievement_coverage.md) and the DoDH→UF slice in this

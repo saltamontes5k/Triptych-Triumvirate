@@ -41,6 +41,7 @@ void AchievementManager::Clear()
 	m_criteria_by_achievement.clear();
 	m_rewards.clear();
 	m_reward_sets.clear();
+	m_exploration_only.clear();
 	m_cast_requirements.clear();
 	m_required_classes.clear();
 	m_reset_on_version_change.clear();
@@ -97,6 +98,7 @@ void AchievementManager::Swap(AchievementManager &other)
 	swap(m_criteria_by_achievement, other.m_criteria_by_achievement);
 	swap(m_rewards, other.m_rewards);
 	swap(m_reward_sets, other.m_reward_sets);
+	swap(m_exploration_only, other.m_exploration_only);
 	swap(m_cast_requirements, other.m_cast_requirements);
 	swap(m_required_classes, other.m_required_classes);
 	swap(m_reset_on_version_change, other.m_reset_on_version_change);
@@ -590,6 +592,21 @@ bool AchievementManager::LoadSnapshot()
 		m_criteria_by_achievement[criterion.achievement_id].push_back(&criterion);
 	}
 
+	// Zone-enter-only achievements drive the ExplorationRewards rule gate.
+	for (const auto &[achievement_id, criteria] : m_criteria_by_achievement) {
+		if (criteria.empty()) {
+			continue;
+		}
+		auto exploration_only = true;
+		for (const auto *criterion : criteria) {
+			if (criterion->event_type != EventType::ZoneEnter) {
+				exploration_only = false;
+				break;
+			}
+		}
+		m_exploration_only.emplace(achievement_id, exploration_only);
+	}
+
 	std::unordered_map<uint32_t, std::set<uint8_t>> required_classes;
 	for (const auto &criterion : m_criteria) {
 		const auto class_scoped_event =
@@ -817,6 +834,12 @@ const RewardSelectionSet *AchievementManager::RewardSet(
 {
 	const auto reward_set = m_reward_sets.find(achievement_id);
 	return reward_set != m_reward_sets.end() ? &reward_set->second : nullptr;
+}
+
+bool AchievementManager::IsExplorationOnly(uint32_t achievement_id) const
+{
+	const auto entry = m_exploration_only.find(achievement_id);
+	return entry != m_exploration_only.end() && entry->second;
 }
 
 const std::vector<AchievementCastRequirement> &AchievementManager::CastRequirements(

@@ -282,8 +282,15 @@ This table assigns automatic grants directly to a provider object.
 | `sequence` | Automatic delivery order within the source. |
 | `reward_id` | Logical reference to `rewards.reward_id`. |
 
-An achievement may have automatic entries, a selectable set, or both. A grant
-cannot be both automatic and selectable for the same source.
+Automatic achievement entries are retired. Every achievement reward is
+delivered through a selectable set so the achievement window presents it and
+the player claims it. A `source_type = 1` row here still loads as an automatic
+grant, but it bypasses the claim UI and, when that achievement also has a
+`reward_sources` row, the catalog fails to load and every zone refuses to
+start. Author new achievement rewards as sets (see the single-option example
+below) and do not add rows here.
+
+A grant cannot be both automatic and selectable for the same source.
 Tasks continue to use their established automatic reward fields; a type-`2`
 row in this table makes task reward loading fail closed.
 
@@ -778,10 +785,12 @@ unsatisfied. Optional and Display Only never decide completion.
 All enabled rewards require a positive amount. Item, alternate-currency, and
 title rewards also require a nonzero `reward_data_id`.
 
-## Automatic reward example
+## Legacy automatic reward example
 
-This example grants item `1001` once when achievement `9900002` completes.
-Achievement sources use `source_type = 1`.
+Automatic achievement rewards are retired; this example is kept for reading
+content authored before the conversion, not for new authoring. It grants item
+`1001` once when achievement `9900002` completes. Achievement sources use
+`source_type = 1`.
 
 ```sql
 START TRANSACTION;
