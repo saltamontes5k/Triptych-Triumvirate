@@ -33404,4 +33404,33 @@ INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee
 SELECT 'npc_types' t, COUNT(*) FROM merc_npc_types WHERE merc_npc_type_id >= 68 UNION ALL SELECT 'types', COUNT(*) FROM merc_types WHERE merc_type_id >= 55 UNION ALL SELECT 'templates', COUNT(*) FROM merc_templates WHERE merc_template_id >= 581 UNION ALL SELECT 'mmte', COUNT(*) FROM merc_merchant_template_entries WHERE merc_template_id >= 581 UNION ALL SELECT 'spell_lists', COUNT(*) FROM merc_spell_lists WHERE merc_spell_list_id >= 9 UNION ALL SELECT 'spell_entries', COUNT(*) FROM merc_spell_list_entries WHERE merc_spell_list_id >= 9 UNION ALL SELECT 'stances', COUNT(*) FROM merc_stance_entries WHERE proficiency_id IN (3,4) UNION ALL SELECT 'stats', COUNT(*) FROM merc_stats WHERE merc_npc_type_id >= 68 UNION ALL SELECT 'armor', COUNT(*) FROM merc_armorinfo WHERE merc_npc_type_id >= 68 UNION ALL SELECT 'weapon', COUNT(*) FROM merc_weaponinfo WHERE merc_npc_type_id >= 68;)MERC257_42",
 		.content_schema_update = false,
 	},
+	// The two PoK blessing-rod clickies (True Karanite Rod of Rainfall
+	// 976211, Quellious Wand of Tranquility 976213) were authored with
+	// clicktype = 0 — no other clickable in the DB uses that value and the
+	// RoF2 client cannot resolve it: the item display reads Unknown
+	// Activation and the click never reaches the server. clicktype 5 is
+	// the standard activated-item type (instant here, casttime 0).
+	// Twin: utils/sql/20261028_karanite_quellious_clicktype_fix.sql.
+	ManifestEntry{
+		.version = 258,
+		.description = "20261028_karanite_quellious_clicktype_fix",
+		.check = "SELECT 1 FROM items WHERE id = 976211 AND clicktype = 0",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"KQLD258(
+-- 2026-10-28 Karanite/Quellious clicky activation fix (migration v258).
+-- The two PoK blessing-rod clickies were authored with clicktype = 0, a value
+-- no other clickable in the DB uses (25,659 clickables live at types 1/3/4/5).
+-- The RoF2 client cannot resolve activation type 0 and renders the item as
+-- "Unknown Activation" while swallowing the click server-side never sees.
+-- clicktype 5 is the standard activated-item type (instant here; casttime 0).
+-- Rollback: UPDATE items SET clicktype = 0 WHERE id IN (976211, 976213);
+UPDATE `items` SET `clicktype` = 5 WHERE `id` IN (976211, 976213) AND `clicktype` = 0;
+
+-- verification
+SELECT id, name, clicktype FROM items WHERE id IN (976211, 976213);
+
+)KQLD258",
+		.content_schema_update = false,
+	},
 };
