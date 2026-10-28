@@ -1,0 +1,17 @@
+-- 2026-10-27 Karanite Rainfall (spell 44031): drop the invented SE_StartRain SPA.
+--
+-- The blessing-quest rod's click spell was cloned from Wake of Karana (1725)
+-- with effectid1 = 528, an internal "SE_StartRain" number added to spdat.h.
+-- 528 is live EverQuest's "Clear Faction" effect, so the client (and MQ2)
+-- described the rod's click as "Clears the Faction of your Character
+-- completely" -- a faction wipe, not rain.
+--
+-- The spell is now effectless; global/spells/44031.pl starts the weather with
+-- quest::rain(1) on EVENT_SPELL_EFFECT_CLIENT, the mirror of Wake of Karana's
+-- effect 93 (SE_StopRain).
+--
+-- Twin of manifest entry 256. Refresh the client file afterwards with:
+--   export_client_files.exe spells
+--
+-- Rollback: UPDATE spells_new SET effectid1 = 528 WHERE id = 44031;
+UPDATE `spells_new` SET `effectid1` = 254 WHERE `id` = 44031;
