@@ -92,3 +92,8 @@ Release-NMS-Client/*.log
 /*.patch
 Release-NMS-Client/ClientFiles/Resources/*.txt
 
+
+# --- Local-only personal folders / client backups (never commit) ---
+/EQ Triune Project/
+/Loot System Plugin/
+Release-NMS-Client/ClientFiles/*.bak-*
