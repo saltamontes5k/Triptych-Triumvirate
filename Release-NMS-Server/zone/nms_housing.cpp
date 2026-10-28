@@ -82,6 +82,19 @@ class Writer {
 public:
 	void U8(uint8_t v) { m_buf.push_back(v); }
 
+	void Float(float v) {
+		uint32_t bits = 0;
+		std::memcpy(&bits, &v, 4);
+		U32(bits);
+	}
+
+	// Overwrites a previously written u32 in place (used to backfill a count header).
+	void PatchU32(size_t offset, uint32_t v) {
+		if (offset + 4 <= m_buf.size()) {
+			std::memcpy(m_buf.data() + offset, &v, 4);
+		}
+	}
+
 	void U16(uint16_t v) {
 		m_buf.push_back(v & 0xFF);
 		m_buf.push_back((v >> 8) & 0xFF);
@@ -634,7 +647,7 @@ void Client::Handle_OP_RealEstatePlacement(const EQApplicationPacket *app)
 // field verbatim (mov dword; the "f32" in early notes was decompiler type noise, same as the
 // file loader's COERCE_FLOAT), so the kind must be the integer 5 -- NOT the IEEE bits of
 // 5.0f (0x40A00000), which falls through the gate predicate's switch exactly like a miss.
-void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
+void SendRealEstateDefinitions(Client *c, uint32_t definition_id, uint32_t neighborhood_id)
 {
 	// Three definitions with distinct kinds: the zone itself is the neighborhood (kind 5,
 	// what the identity lookup must return), id 1 is a plot (kind 8) and id 2 is a house
@@ -642,6 +655,10 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 	// +144 gate, sub_7F6280 tests 8 before registering an object's +36 as a map key, and
 	// the "object under my feet" spatial test (sub_7F6030) plus the house-ancestor walk
 	// (mask 0x88) only accept kinds {4, 8}.
+	//
+	// Field 7 of the record (the first of the eight u32s) is the NEIGHBORHOOD LINK: the
+	// spatial resolver (sub_4B30F0) only matches an object to the current neighborhood when
+	// its definition's field 7 equals RealEstate[+140]. Without it no area ever resolves.
 	struct DefEntry {
 		uint32_t id;
 		uint32_t kind;
@@ -658,7 +675,8 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 
 	for (const auto &entry : entries) {
 		w.U32(entry.id);
-		for (int i = 0; i < 8; ++i) {
+		w.U32(neighborhood_id);   // field 7: links this definition to the neighborhood
+		for (int i = 0; i < 7; ++i) {
 			w.U32(0);
 		}
 
@@ -688,8 +706,8 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id)
 	safe_delete(outapp);
 
 	LogInfo(
-		"[Housing] sent real-estate definitions to [{}]: ids [{}] kind 5, [1] kind 8, [2] kind 4, {} bytes",
-		c->GetName(), definition_id, buf.size()
+		"[Housing] sent real-estate definitions to [{}]: ids [{}] kind 5, [1] kind 8, [2] kind 4, neighborhood [{}], {} bytes",
+		c->GetName(), definition_id, neighborhood_id, buf.size()
 	);
 }
 
@@ -760,6 +778,93 @@ void SendRealEstatePlotObjects(Client *c)
 	}
 }
 
+// Sends the owned plots' FOOTPRINTS as an area manifest on 0x49df (18911). This is what
+// makes the client recognize "you are standing in your plot": the client deserializes each
+// entry into an EQAreaBase object (sub_8D2E30) and hashes it into the spatial index the
+// 1 Hz updater scans (sub_4B2F40). An entry is:
+//   u32      area id  -- hashed key; must match the plot object's id (+20 = door_id) so the
+//                       updater can resolve it in the client's plot map
+//   f32 x16  row-major 4x4 mapping LOCAL [-1,+1]^3 -> WORLD. Columns are the half-extent
+//            axis vectors, the 4th row is the world center. The inside test (sub_505BA0 +
+//            sub_505F60) transforms the player position by the INVERSE and requires every
+//            component within +/-1, so an axis-aligned box centered at the lot with
+//            half-extents (hx,hy,hz) is [hx 0 0 0 / 0 hy 0 0 / 0 0 hz 0 / cx cy cz 1].
+//   u32 x5   trailing fields (land at area+72..88; not read by the inside test)
+// When the test passes the updater sets RealEstate[+148] to the plot object id and
+// sub_5B00E0 walks it (kind 8 matches the {4,8} ancestor mask), setting +152 -- which is
+// exactly what the eqstr-727 manage/plot-edit gate (sub_747E50) requires.
+void SendRealEstateAreaManifest(Client *c)
+{
+	if (!c || !zone || std::string(zone->GetShortName()) != "neighborhood") {
+		return;
+	}
+
+	const std::string zone_name = zone->GetShortName();
+
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT p.door_id, d.pos_x, d.pos_y, d.pos_z "
+		"FROM nms_plot p "
+		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
+		"WHERE n.zone = '{}' AND (p.owner_char_id = {} "
+		"  OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
+		Strings::Escape(zone_name), c->CharacterID(), c->GuildID()
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		return;
+	}
+
+	// Half-extents of the recognized footprint, in world units. Plots are the ~20m
+	// stone-bordered squares; being generous here only widens the "standing in the plot"
+	// test, and the vertical extent keeps the test true while moving over the lot.
+	constexpr float kHalfX = 15.0f;
+	constexpr float kHalfY = 15.0f;
+	constexpr float kHalfZ = 20.0f;
+
+	Writer w;
+	int sent = 0;
+
+	// Count first: the client's ingest (sub_4B2AB0) reads it before the entries. We build
+	// the header after the entries because the query result is not sized ahead of time --
+	// reserve by writing a placeholder and patching the count in place.
+	w.U32(0);
+
+	for (auto row = rows.begin(); row != rows.end(); ++row) {
+		if (!row[0]) {
+			continue;
+		}
+		const uint32_t door_id = Strings::ToUnsignedInt(row[0]);
+		const float cx = Strings::ToFloat(row[1] ? row[1] : "0");
+		const float cy = Strings::ToFloat(row[2] ? row[2] : "0");
+		const float cz = Strings::ToFloat(row[3] ? row[3] : "0");
+
+		w.U32(door_id);          // area id == plot object id
+		w.Float(kHalfX); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
+		w.Float(0.0f); w.Float(kHalfY); w.Float(0.0f); w.Float(0.0f);
+		w.Float(0.0f); w.Float(0.0f); w.Float(kHalfZ); w.Float(0.0f);
+		w.Float(cx); w.Float(cy); w.Float(cz); w.Float(1.0f);
+		for (int i = 0; i < 5; ++i) {
+			w.U32(0);
+		}
+		++sent;
+	}
+
+	if (!sent) {
+		return;
+	}
+
+	w.PatchU32(0, static_cast<uint32_t>(sent));
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateAreas, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] sent area manifest to [{}]: [{}] plot footprint(s), {} bytes", c->GetName(), sent, buf.size());
+}
+
 void Client::SendRealEstateIdentity()
 {
 	if (!zone || std::string(zone->GetShortName()) != "neighborhood") {
@@ -796,7 +901,7 @@ void Client::SendRealEstateIdentity()
 	// lookup below returns struct index 15, whose miss default is 10, and the client appears to
 	// latch the neighborhood value from the first identity it sees. The packet is well-formed
 	// now (every trailing field present, plus the second list's count), so it no longer crashes.
-	SendRealEstateDefinitions(this, zone_id);
+	SendRealEstateDefinitions(this, zone_id, neighborhood_id);
 
 	Writer w;
 	w.U32(neighborhood_id);          // object +20 -> RealEstate[+140]
@@ -828,8 +933,10 @@ void Client::SendRealEstateIdentity()
 	);
 
 	// Register the player's owned plots right after the identity so the client's plot map has
-	// the kind-8 objects the plot/manage gates look up.
+	// the kind-8 objects the plot/manage gates look up, then send the plot footprints so the
+	// spatial updater recognizes "standing in the plot" (the eqstr-727 gate's requirement).
 	SendRealEstatePlotObjects(this);
+	SendRealEstateAreaManifest(this);
 }
 
 // Leaves a house interior. Retail houses have no doors on purpose -- you leave with the real
@@ -1078,7 +1185,7 @@ void command_housing(Client *c, const Seperator *sep)
 		}
 
 		if (sep->arg[2] && !strcasecmp(sep->arg[2], "defs")) {
-			SendRealEstateDefinitions(c, zone->GetZoneID());
+			SendRealEstateDefinitions(c, zone->GetZoneID(), 1);
 			c->SendRealEstateIdentity();
 			c->Message(Chat::White, "[housing] definitions + identity sent.");
 		}

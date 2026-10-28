@@ -691,5 +691,6 @@ N(OP_RealEstateManageRequest),     // 0x7ad1: 0x8C struct + world X/Y
 N(OP_RealEstateDefinitions),       // 0x2698: definition list; must arrive before the identity
 N(OP_RealEstateZone),              // 0x6fd0: real-estate identity; sets the client's neighborhood state
 N(OP_RealEstateObject),            // 0x63fd: real-estate object (plot/house); same wire format as 0x6fd0
+N(OP_RealEstateAreas),             // 0x49df: area manifest (plot footprints); feeds the client's spatial index
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h

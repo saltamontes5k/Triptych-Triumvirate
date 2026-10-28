@@ -465,6 +465,63 @@ column and the first string into Owner. `SendPlotList` now synthesizes a stable 
 
 `#housing place 19` consumes the house item and creates the interior (instance works, expiry
 message shows), but nothing renders on the lot — expected, the exterior is the 0x626e path
-fixed above. Manage/plot-edit still prints eqstr 727 on the lot and inside the interior —
+fixed above. Manage/plot-edit still prints eqstr 727 on the lot and inside `phinterior1a1` —
 consistent with the spatial index being the last unsatisfied link. Plot objects (0x63fd) and
 kind-8/4 definitions are confirmed shipped (zone logs show the plot-object sends).
+
+---
+
+## 13. Sixth batch (2026-10-25): the plot-recognition packet — opcode 0x49df
+
+This is the "plots recognized by the client first" layer upstream shipped before placements.
+
+### The spatial index, fully decoded
+
+- The manager singleton pointer lives at `dword_DCEE30`; the object holds TWO hashes:
+  **+0x00** = the ACTIVE area hash (buckets@+0, modulus@+4), **+0x14** = the placement
+  override hash (buckets@+0x14, modulus@+0x18, fed by the 0x626e key/value pair list —
+  cleared per packet by `sub_4D5B90`; not the scanner's input).
+- The scanner `sub_4B2F40` (via the thunk `sub_4B3040`; player position is stored at
+  player ctx `dword_DD2630` +0x284) walks the +0x00 hash. Node = {area object, area id,
+  next}. Per node: `sub_8D2AD0` → `sub_505BA0` (invert the area's 4×4) → `sub_505F60`
+  (transform player position; inside iff every |component| ≤ 1). Then `sub_4B30F0(area_id,
+  mgr+140)` must resolve the id in the client's PLOT MAP to an object whose **definition
+  field 7 == the current neighborhood id**, with defs kind in {4, 8} (`sub_7F6030`) —
+  on success the updater sets RealEstate[+148] = object+20, then `sub_5B00E0` walks the
+  {4,8} ancestor mask (mask `sub_7F62B0()` = 0x88) and sets +152 — what eqstr 727 tests.
+- **Field 7 of the definition record is the NEIGHBORHOOD LINK** (defs file token "I1";
+  first of the eight u32s on the wire). Ours were 0 — the resolution could never match
+  even with areas present.
+
+### The 0x49df (18911) area manifest
+
+Dispatcher case at `0x4CA7A5` (`cmp 0x49DF` at 0x4c45c3): builds the reader
+(`sub_410C40` = {ptr,len,pos}), then — when `dword_DCEE30` is live — `sub_4B2740` (clear
+the +0x14 override hash) and `sub_4B2AB0`: reads `u32 count`, then per entry a new 0x5C
+EQAreaBase object filled by `sub_8D2E30`:
+
+```
+u32        area id            -> object dword 1 (the hashed key)
+f32 x16    4x4 row-major      -> four 16-byte blocks (sub_8D3200): LOCAL [-1,+1]^3 -> WORLD;
+                              columns = half-extent axis vectors, 4th row = world center
+u32 x5     trailing fields    -> object dwords 18..22 (not read by the inside test)
+```
+
+The inside test inverts the 4×4 (`sub_505BA0`) and transforms the player position; the
+player is "in" the area when the local coordinates are within ±1 per axis. An axis-aligned
+box at the lot is therefore `[hx 0 0 0 / 0 hy 0 0 / 0 0 hz 0 / cx cy cz 1]`.
+
+### Shipped
+
+- `SendRealEstateAreaManifest` (after the identity + plot objects on zone-in): one area per
+  owned plot, id = door_id, box centered at the door's world position, half-extents
+  15/15/20 — only resolvable ids matter, so owned plots suffice.
+- Definitions now carry field 7 = neighborhood id (wire and `RealEstateDefs.txt`; the
+  client file also gains explicit plot(1, kind 8) / house(2, kind 4) rows).
+- `OP_RealEstateAreas=0x49df` in `emu_oplist.h` + `patch_RoF2.conf`.
+
+### Expected end-to-end (pending in-game verify)
+
+Zone in → defs (field 7 = 1) → identity (+140 = 1) → 0x63fd plot objects (plot map) →
+0x49df areas (spatial index) → 1 Hz updater: player on lot ⇒ inside area ⇒ +148 = door_id ⇒
+plot object kind 8 ⇒ +152 = door_id ⇒ **Manage no longer prints eqstr 727**.
