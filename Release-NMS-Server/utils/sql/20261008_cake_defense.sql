@@ -72,9 +72,9 @@ INSERT INTO `npc_types`
 VALUES
 	(1520001800,'Wendel_Sweetcrumb','Master Confectioner',30,128,41,1,1500,0,0,0,3,1.25,0,0,30,300,0,0,0,0,0,0),
 	(1520001801,'#Cake_Defense_Controller','The Pastry Ward',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0),
-	(1520001810,'a_peckish_adventurer','Could eat a whole halfling',24,1,1,1,380,0,0,0,6,1.25,10,24,30,200,0,150,0,0,0,0),
-	(1520001811,'a_famished_adventurer','Has not eaten in days',25,1,1,1,460,0,1,0,6,1.25,12,28,30,220,0,150,0,0,0,0),
-	(1520001812,'a_ravenous_adventurer','Smells frosting from a zone away',26,1,1,1,560,0,2,0,6,1.25,14,32,30,240,0,150,0,0,0,0);
+	(1520001810,'a_peckish_adventurer','Could eat a whole halfling',24,1,1,1,270,0,0,0,6,1.25,5,12,30,200,0,150,0,0,0,0),
+	(1520001811,'a_famished_adventurer','Has not eaten in days',25,1,1,1,330,0,1,0,6,1.25,6,14,30,220,0,150,0,0,0,0),
+	(1520001812,'a_ravenous_adventurer','Smells frosting from a zone away',26,1,1,1,390,0,2,0,6,1.25,7,16,30,240,0,150,0,0,0,0);
 
 -- Spawns: baker in the Bazaar v0, controller in rivervale v202 (version
 -- column set explicitly -- v202 instances only load spawn2 version 202/-1).
