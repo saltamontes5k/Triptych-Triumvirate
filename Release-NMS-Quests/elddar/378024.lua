@@ -16,5 +16,18 @@ function event_say(e)
 		if not e.other:HasItem(85645) then
 			e.other:SummonFixedItem(85645); -- Pouch of Treant Spirit Seeds
 		end
+	elseif t:find("seeds") or t:find("tree spirit") or t:find("grayleaf") then
+		-- PoR theme completion: "Tree Spirits" (303195)
+		if not e.other:IsTaskActive(por.tasks.tree_spirits) and not e.other:IsTaskCompleted(por.tasks.tree_spirits) then
+			e.other:AssignTask(por.tasks.tree_spirits);
+			e.self:Say("There is another way our spirits may rest. Grayleaf the Fallen walks the ruins of Takish-Hiz still, with four Treants of the Ancient Grove at his side. Gather their spirit seeds - five in all - and return to me.");
+		elseif e.other:IsTaskCompleted(por.tasks.tree_spirits) then
+			if (tonumber(e.other:GetBucket("por.tree_spirits_reward")) or 0) == 0 then
+				if por.grant_pair(e.other, 39665, 39666) > 0 then -- Glittering Cloak of the Ruins / Jeweled Belt of the Lost
+					e.other:SetBucket("por.tree_spirits_reward", "1");
+				end
+				e.self:Say("The seeds return to the source, and our spirits may rest at last. Take this keepsake of the old groves.");
+			end
+		end
 	end
 end

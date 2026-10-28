@@ -217,4 +217,6 @@ sub EVENT_DAMAGE_GIVEN
 
 sub EVENT_KILLED_MERIT {
     plugin::ProcessSlayerCredit($client, $npc, $entity_list);
+    # Permanent tradeskill skill-ups for raid targets (NMS_tradeskill_utils.pl).
+    plugin::AwardTradeskillKillCredit($client, $npc);
 }

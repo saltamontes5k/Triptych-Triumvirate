@@ -28,7 +28,9 @@ sub EVENT_ENTER {
     # Use $TLDesc as key and structure our data with zone short name, coordinates, and heading
     my $locData = [quest::GetZoneShortName($npc->GetZoneID()), $npc->GetX(), $npc->GetY(), $npc->GetZ(), $npc->GetHeading()];
 
-    if (plugin::update_zone_entry($accountID, $TLDesc, $locData, $suffix)) {
-        quest::message(15, "This place seems familiar. You are sure to remember it later.");
-    }
+    # NOTE: the plugin::update_zone_entry attunement store was never implemented,
+    # so this trigger stays dormant until a store exists. Nothing requires this
+    # file yet; do not enable it until then.
+    quest::debug("TPTriggerG hit for $TLDesc (attunement store not implemented; loc="
+        . join(",", @$locData) . ")");
 }

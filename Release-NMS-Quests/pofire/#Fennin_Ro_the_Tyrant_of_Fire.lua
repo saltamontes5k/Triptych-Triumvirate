@@ -67,3 +67,29 @@ end
 -- End of File  Zone: PoFire  ID: 217076  -- #Fennin_Ro_the_Tyrant_of_Fire
 -- Untargetable
 -- Zone Emotes added by Covou
+
+local memory = require("nms_memory")
+
+-- NMS progression death handler merged from the unbound Fennin_Ro_the_Tyrant_of_Fire.lua:
+-- the # npc binds THIS file, so only these events run for the raid boss. Without this
+-- merge his death never spawned the DoN/LDoN memory and the stage objective was
+-- unobtainable.
+function event_death_complete(e)
+	eq.zone_emote(1, "Loud cries of hopelessness echo throughout the burning lands. The creatures of Doomfire call out to their master, Fennin Ro the Tyrant of Fire, for his dead body now lies at the feet of the mighty adventurers.")
+	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- Only flag in non-respawning dz
+		eq.spawn2(217058, 0, 0, e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading()) -- Essence_of_Fire
+	end
+
+	memory.spawn(e, "DoN", "fennin ro the tyrant of fire", "LDoN", "fennin ro the tyrant of fire")
+end
+
+function event_killed_merit(e)
+	if tostring(eq.get_zone_instance_version()) == eq.get_rule("Custom:StaticInstanceVersion") then -- Only flag in non-respawning dz
+		local fennin_bucket = tonumber(e.other:GetAccountBucket("pop.flags.fennin")) or 0
+		if fennin_bucket == 0 then
+			e.other:SummonItem(29147) -- Item: Globe of Dancing Flame
+			e.other:SetAccountBucket("pop.flags.fennin", "1")
+			e.other:Message(MT.LightBlue, "You receive a character flag!")
+		end
+	end
+end

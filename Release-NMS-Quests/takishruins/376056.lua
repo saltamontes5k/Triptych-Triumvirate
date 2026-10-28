@@ -16,6 +16,19 @@ function event_say(e)
 		e.self:Say("The Guardians of Spring, Summer, Autumn, and Winter each hold a Lifestone. Free them, and return the stones to me.");
 	elseif t:find("chalice") then
 		e.self:Say("The Chalice of Life is not a thing of metal or gem. It is the cycle itself, and I would see it mended before I pass on.");
+	elseif t:find("shiv") or t:find("chancellor") then
+		-- PoR theme completion: "A Shiv in the Ribs" (303194)
+		if not e.other:IsTaskActive(por.tasks.a_shiv_in_the_ribs) and not e.other:IsTaskCompleted(por.tasks.a_shiv_in_the_ribs) then
+			e.other:AssignTask(por.tasks.a_shiv_in_the_ribs);
+			e.self:Say("The chancellors who sold the Elddar to the sand scheme in their tower still, all five together. Give each of them a shiv in the ribs for me.");
+		elseif e.other:IsTaskCompleted(por.tasks.a_shiv_in_the_ribs) then
+			if (tonumber(e.other:GetBucket("por.shiv_reward")) or 0) == 0 then
+				if por.grant_pair(e.other, 39663, 39664) > 0 then -- Etched Glass Ring / Gemmed Hoop of the Ruins
+					e.other:SetBucket("por.shiv_reward", "1");
+				end
+				e.self:Say("The chancellors fall silent at last. Take this - it outlasted them.");
+			end
+		end
 	end
 end
 

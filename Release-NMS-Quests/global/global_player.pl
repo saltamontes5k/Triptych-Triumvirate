@@ -75,6 +75,15 @@ sub EVENT_ENTERZONE {
         $client->BuffFadeBySpellID(44025);
         $client->RemoveShroudSilent();
     }
+
+    # NMS: Dwarven Keg Wedding cleanup. A keg shroud (race 377) that leaves
+    # kaladima v25 -- zone-out, bind release after a failed wedding, instance
+    # expiry -- is restored here. Race 377 is the stock barrel/keg model; the
+    # shroud is only ever applied inside the version 25 expedition.
+    if ($client->GetRace() == 377
+        && !($zonesn eq 'kaladima' && $client->GetZoneInstanceVersion() == 25)) {
+        $client->RemoveShroudSilent();
+    }
 }
 
 sub EVENT_RESPAWN {

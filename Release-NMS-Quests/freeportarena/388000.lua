@@ -13,6 +13,19 @@ function event_say(e)
 				e.other:SummonFixedItem(39198); -- Arena Champion's Badge
 			end
 		end
+	elseif t:find("master") or t:find("circle") or t:find("challenge") then
+		-- PoR theme completion: "The Arena Master's Challenge" (303193)
+		if not e.other:IsTaskActive(por.tasks.arena_masters_challenge) and not e.other:IsTaskCompleted(por.tasks.arena_masters_challenge) then
+			e.other:AssignTask(por.tasks.arena_masters_challenge);
+			e.self:Say("The champions of the Circle stand in Relic, from the First to the Sixth. Best all six and return to me as Arena Master.");
+		elseif e.other:IsTaskCompleted(por.tasks.arena_masters_challenge) then
+			if (tonumber(e.other:GetBucket("por.arena_master_reward")) or 0) == 0 then
+				if por.grant_circle_reward(e.other) > 0 then
+					e.other:SetBucket("por.arena_master_reward", "1");
+				end
+				e.self:Say("Six champions, six falls. You are the Arena Master now. Take your due.");
+			end
+		end
 	elseif t:find("champion") or t:find("badge") or t:find("arena") then
 		if e.other:IsTaskCompleted(por.tasks.arena_champions_badge) then
 			e.self:Say("Well fought. You have earned the title, champion. Wear the badge with pride.");

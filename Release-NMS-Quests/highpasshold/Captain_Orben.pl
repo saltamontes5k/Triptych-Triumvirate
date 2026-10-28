@@ -8,6 +8,12 @@ sub EVENT_SAY {
 			quest::say("We set up this Volunteer Watch to help keep these beasts outta Highpass Hold. We get volunteers to stand watch at the gates, and pay them a small reward for every [gnoll] scalp they turn in.");
 		}
 	}
+	elsif ($text=~/job/i) {
+		#:: Match if faction is Dubious or better
+		if ($faction <= 7) {
+			quest::say("We're short-handed around here, as usual. Would you like to help us out with the [Volunteer Watch]?");
+		}
+	}
 	elsif ($text=~/gnoll/i) {
 		#:: Match if faction is Dubious or better
 		if ($faction <= 7) {

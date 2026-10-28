@@ -18,6 +18,38 @@ local xeru_despawn_recheck = 60 * 1000;
 
 local add_thresholds = { 80, 60, 50, 40 };
 
+-- The four Praesertum lieutenants Xeru calls into the fight, one add per
+-- add_threshold. Home coordinates are their live spawn2 positions in sseru
+-- (spawn2 33191-33194); a displaced lieutenant fights at add_hp and is moved
+-- home and healed on reset. No blessing spells were authored for this
+-- encounter, so lt.blessing stays unset and is skipped at pull.
+local lieutenants = {
+	[159114] = { -- #Praesertum_Matpa
+		x = -674.0, y = -842.0, z = 155.875, h = 408,
+		add_hp      = 200000,
+		xeru_shout  = "Matpa! Lend me your voice!",
+		add_shout   = "The Praesertum answer, Inquisitor!",
+	},
+	[159112] = { -- #Praesertum_Rhugol
+		x = -697.0, y = 1.0,    z = 158.375, h = 48,
+		add_hp      = 250000,
+		xeru_shout  = "Rhugol! Show them the will of the Praesertum!",
+		add_shout   = "For the Praesertum!",
+	},
+	[159113] = { -- #Praesertum_Vantorus
+		x = 206.0,  y = -869.0, z = 157.75,  h = 440,
+		add_hp      = 300000,
+		xeru_shout  = "Vantorus! Break them upon your shield!",
+		add_shout   = "None shall reach the Inquisitor!",
+	},
+	[159115] = { -- #Praesertum_Bikun
+		x = 240.0,  y = -1.0,   z = 158.375, h = 296,
+		add_hp      = 200000,
+		xeru_shout  = "Bikun! Tear the heresy from their bones!",
+		add_shout   = "The Praesertum endure!",
+	},
+};
+
 local spell_torturing_winds    = 2061;
 local spell_rune_iii           = 483;
 local spell_xeru_authority     = 36838;
@@ -117,7 +149,9 @@ function evt_xeru_combat(e)
 			if mob.valid then
 				eligible[lt_id] = true;
 				alive_count = alive_count + 1;
-				e.self:ApplySpellBuff(lt.blessing);
+				if lt.blessing ~= nil then
+					e.self:ApplySpellBuff(lt.blessing);
+				end
 			else
 				eligible[lt_id] = false;
 			end

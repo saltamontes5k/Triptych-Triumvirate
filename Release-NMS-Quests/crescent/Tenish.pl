@@ -250,49 +250,49 @@ sub EVENT_ITEM {
 
   # ================= LEATHER =================
   # --- Leather Part 1 ---
-  if (plugin::check_handin(\%itemcount, 51874 => 4, 51492 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32816 => 4, 32832 => 1)) {
     my %reward = (6 => 53811, 7 => 53818, 15 => 53874);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Tunic. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51874 => 3, 51979 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32816 => 3, 32834 => 1)) {
     my %reward = (6 => 53807, 7 => 53814, 15 => 53870);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Armwraps. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51983 => 4, 51481 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32812 => 4, 32833 => 1)) {
     my %reward = (6 => 53812, 7 => 53819, 15 => 53875);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Leggings. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51983 => 3, 52462 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32812 => 3, 32838 => 1)) {
     my %reward = (6 => 53806, 7 => 53813, 15 => 53869);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Cowl. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51983 => 2, 51934 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32812 => 2, 32835 => 1)) {
     my %reward = (6 => 53809, 7 => 53816, 15 => 53872);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Gloves. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51874 => 2, 51478 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32816 => 2, 32836 => 1)) {
     my %reward = (6 => 53810, 7 => 53817, 15 => 53873);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Boots. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51983 => 1, 52154 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32812 => 1, 32837 => 1)) {
     my %reward = (6 => 53808, 7 => 53815, 15 => 53871);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Wristguard. Return it with the right powersource and I can empower it further.");
@@ -359,49 +359,49 @@ sub EVENT_ITEM {
 
   # ================= SILK =================
   # --- Silk Part 1 ---
-  if (plugin::check_handin(\%itemcount, 51518 => 4, 51484 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32817 => 4, 32839 => 1)) {
     my %reward = (11 => 53846, 12 => 53853, 13 => 53860, 14 => 53867);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Robe. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51518 => 3, 51485 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32817 => 3, 32841 => 1)) {
     my %reward = (11 => 53842, 12 => 53849, 13 => 53856, 14 => 53863);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Sleeves. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51520 => 4, 51489 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32813 => 4, 32840 => 1)) {
     my %reward = (11 => 53847, 12 => 53854, 13 => 53861, 14 => 53868);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Pants. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51520 => 3, 51490 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32813 => 3, 32845 => 1)) {
     my %reward = (11 => 53841, 12 => 53848, 13 => 53855, 14 => 53862);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Cap. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51520 => 2, 51488 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32813 => 2, 32842 => 1)) {
     my %reward = (11 => 53844, 12 => 53851, 13 => 53858, 14 => 53865);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Gloves. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51518 => 2, 51486 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32817 => 2, 32843 => 1)) {
     my %reward = (11 => 53845, 12 => 53852, 13 => 53859, 14 => 53866);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Sandals. Return it with the right powersource and I can empower it further.");
     plugin::return_items(\%itemcount);
     return;
   }
-  if (plugin::check_handin(\%itemcount, 51520 => 1, 51487 => 1)) {
+  if (plugin::check_handin(\%itemcount, 32813 => 1, 32844 => 1)) {
     my %reward = (11 => 53843, 12 => 53850, 13 => 53857, 14 => 53864);
     quest::summonitem($reward{$class});
     quest::say("My theory was correct! Here is your Wristband. Return it with the right powersource and I can empower it further.");

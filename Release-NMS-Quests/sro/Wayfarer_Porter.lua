@@ -8,6 +8,6 @@ function event_say(e)
   if e.message:findi("hail") then
     eq.get_entity_list():MessageClose(e.self, true, 100, MT.SayEcho, "The Wayfarer Porter says, 'The southern ruins hold an older camp. I can send you there, if you are [" .. eq.say_link("ready") .. "].'")
   elseif e.message:findi("ready") then
-    e.other:MovePC(393, -273, -141, 107, 0) -- Zone: southro
+    e.other:MovePC(35, 1030, -1440, -24, 0) -- Zone: sro, South Ro LDoN camp
   end
 end

@@ -128,7 +128,7 @@ function dodh.grant_curse_zone(key)
 	if not cl then
 		return
 	end
-	for _, c in ipairs(cl.entries) do
+	for c in cl.entries do
 		if c.valid then
 			dodh.grant_curse(c, key)
 		end
@@ -151,7 +151,7 @@ function dodh.grant_mayong_immunity_zone()
 	if not cl then
 		return
 	end
-	for _, c in ipairs(cl.entries) do
+	for c in cl.entries do
 		if c.valid then
 			c:SetBucket("dodh.mayong_immune", "1")
 		end

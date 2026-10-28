@@ -157,6 +157,19 @@ por.tasks = {
   -- Raid keys / raid tasks
   entrance_to_daosheen_chamber = 3379,
   corruption_of_ro             = 3398,
+  -- Theme-completion side tasks (v175, 2026-10-23; see utils/sql/20261023_por_theme_completion.sql)
+  lost_brother            = 303187,
+  tipped_balance          = 303188,
+  alley_of_the_damned     = 303189,
+  trouble_with_dirt       = 303190,
+  crossfire               = 303191,
+  into_the_wall           = 303192,
+  arena_masters_challenge = 303193,
+  a_shiv_in_the_ribs      = 303194,
+  tree_spirits            = 303195,
+  giant_problems          = 303196,
+  the_orcish_loggers      = 303197,
+  the_rage_within         = 303198,
 }
 
 por.aa = {
@@ -278,6 +291,23 @@ function por.grant_circle_reward(client)
           n = n + 1
         end
       end
+    end
+  end
+  return n
+end
+
+-- Grant one of two items for every class the (multiclass) client owns:
+-- casters get caster_item, melee/hybrids get melee_item.
+function por.grant_pair(client, caster_item, melee_item)
+  local n = 0
+  for class_id = 1, 16 do
+    if client:HasClassID(class_id) then
+      if por.caster_classes[class_id] then
+        client:SummonFixedItem(caster_item)
+      else
+        client:SummonFixedItem(melee_item)
+      end
+      n = n + 1
     end
   end
   return n
