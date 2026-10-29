@@ -1217,6 +1217,7 @@ RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that
 RULE_BOOL(Custom, 	Fellowships, 						false, 	"Enable the RoF2 fellowship system: membership, roster window, /fsay chat, campsites and vitality.")
 RULE_BOOL(Custom, 	FellowshipCamps, 					true, 	"Enable fellowship campsite creation and campsite effects (requires Fellowships).")
 RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP/AA banking and sharing (requires Fellowships).")
+RULE_INT(Custom, 	FellowshipCampMembers, 				2, 		"Living fellowship members, including the camper, that must be within 100 units and out of combat to create a campsite. Clamped to 1-12; the native client may still gate its Camp button on its own threshold.")
 
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")

@@ -72,7 +72,8 @@ bool CanCamp(Client& actor, const Fellowship::Snapshot& fellowship) {
   const auto dx = actor.GetX() - other->GetX(), dy = actor.GetY() - other->GetY(), dz = actor.GetZ() - other->GetZ();
   if (dx*dx + dy*dy + dz*dz <= 100.0f*100.0f) ++nearby;
  }
- return nearby >= 3;
+ const int required = std::clamp(RuleI(Custom, FellowshipCampMembers), 1, 12);
+ return static_cast<int>(nearby) >= required;
 }
 }
 
@@ -192,7 +193,7 @@ void Client::Handle_OP_FellowshipAction(const EQApplicationPacket* app) {
   auto current=service.GetByCharacter(CharacterID(),now);
   if(!current || !current.value.id) { Failure(*this,Fellowship::Error::NotMember);return; }
   if(current.value.campfire) { Message(Chat::Red,"Destroy your existing campfire before creating another.");return; }
-  if(!CanCamp(*this,current.value)) { Message(Chat::Red,"Three living fellowship members must be within 100 units and out of combat to create a campfire.");return; }
+  if(!CanCamp(*this,current.value)) { Message(Chat::Red,"%d living fellowship members must be within 100 units and out of combat to create a campfire.", std::clamp(RuleI(Custom, FellowshipCampMembers),1,12));return; }
   if(!std::isfinite(GetX()) || !std::isfinite(GetY()) || !std::isfinite(GetZ()) || !std::isfinite(GetHeading()))return;
   Fellowship::Campfire fire;
   fire.zone_id=zone->GetZoneID();fire.instance_id=zone->GetInstanceID();fire.type=definition->id;

@@ -82,6 +82,7 @@ string literal at 65,535 bytes). The rows must stay in step with
 | `Custom:Fellowships` | `false` | Master gate. Off means no roster, no `/fsay`, no camp, no vitality. |
 | `Custom:FellowshipCamps` | `true` | Campsite creation and effects. |
 | `Custom:FellowshipVitality` | `true` | Vitality banking and XP/AA sharing. |
+| `Custom:FellowshipCampMembers` | `2` | Living members, including the camper, that must be nearby and out of combat to camp. Clamped to 1-12. |
 
 All entry points test the gate and fail closed. Flip the master rule on only
 after the schema is present: `SELECT rule_value FROM rule_values WHERE
@@ -101,6 +102,26 @@ rule_name='Custom:Fellowships'`.
 
 Only combat XP on a kill is shared (`ExpSource::Kill`, non-rez). Quest, script
 and resurrection awards are never intercepted.
+
+## Multiclass
+
+This server runs every character as a multiclass character: one level, one
+normal-XP pool, one AA pool, and a class bitmask. The fellowship code is
+class-agnostic by construction:
+
+- Sharing divides the character's own combat award; it never touches classes,
+  so there is no per-class splitter to bypass. The vitality finalizer re-enters
+  `SetEXP` with the transaction flag set, which is the same path a solo kill
+  takes on a multiclass character.
+- Caps are computed from level and the configured maximum level
+  (`Character:MaxExpLevel`, falling back to `Character:MaxLevel`), not from class.
+- The roster's class column carries the character's base class only; it is a
+  display value and drives nothing.
+
+The camp-member floor is `Custom:FellowshipCampMembers` (default 2). The native
+client may still gate its own Camp button on a threshold it computes locally, in
+which case the server floor only decides whether a request that arrives is
+accepted.
 
 ## Paid campsite materials
 
@@ -149,7 +170,7 @@ In game (three members unless stated):
 2. Invite/accept/decline; verify the five-minute invitation expiry.
 3. Roster and MOTD persist across relog and a zone restart.
 4. `/fsay` to a member in another zone; verify no duplicate echo for the sender.
-5. Free camp with three members within range, out of combat; verify the visual.
+5. Free camp with the configured minimum of members within range, out of combat; verify the visual.
 6. One paid camp: exact kit and lumber decrement, inventory view correct
    without relog, and a second attempt with insufficient materials fails closed.
 7. Out-of-range and expired camp behaviour; insignia travel into the camp zone.
