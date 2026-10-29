@@ -36,10 +36,18 @@ deferral reasons: `docs/achievements_expansion_classic_deferred.csv`.
   dependency enabled (resolved to a fixpoint, so metas follow their children).
   An achievement enables only when every required state-bearing component has
   at least one resolving criterion. Manual (event-0) components defer.
-- Reward policy follows the 10-16 convention: AA = max(1, points/10),
-  coin = points/2 platinum (amount in copper = points x 500), one
-  single-option "Claim rewards" set per achievement (never
-  `reward_source_entries`; the automatic lane is retired).
+- Reward policy follows the 10-16 convention: AA = max(1, points/10) plus a
+  coin component, one single-option "Claim rewards" set per achievement
+  (never `reward_source_entries`; the automatic lane is retired). The coin
+  component shipped as points/2 platinum (amount = points x 500 copper) and
+  was swapped on 2026-10-28 to a flat 5 Triunes of Fate (alternate currency
+  6, item 46779): the expansion block via manifest entry 259, and all
+  remaining achievement-sourced copper rewards — the entry-220 claimable sets
+  and the Trailblazer coin purse — via manifest entry 260
+  (`20261028_achievements_triune_all_rewards.sql`). Every claimable
+  achievement coin slot now pays 5 Triunes of Fate. The platinum values of
+  the 8 converted rows live in `nms_ach_copper_triune_backup` until that
+  file's rollback runs; claimed Triunes are never clawed back.
 
 ## Decisions on record
 
@@ -54,10 +62,10 @@ deferral reasons: `docs/achievements_expansion_classic_deferred.csv`.
 - The 13 event-0 manual criteria (4 PoP Progression keys without items, 9 PoP
   raid phase rows) were left inert and in place.
 - Exploration rewards are separately togglable: the
-  `Achievements:ExplorationRewards` rule (default on) gates reward delivery for
-  every zone-enter-only achievement, so an operator who finds "an AA for zoning
-  in" too generous can withhold just those rewards while the achievements keep
-  tracking and awarding points.
+  `Achievements:ExplorationRewards` rule (default on) gates reward delivery
+  for every zone-enter-only achievement, so an operator who finds "an AA for
+  zoning in" too generous can withhold just those rewards while the
+  achievements keep tracking and awarding points.
 
 ## Prerequisite (not reproducible from the repo alone)
 
@@ -69,13 +77,14 @@ AchievementsClient `586bbacd721bb4aa`, AchievementComponentsClient
 `a5c0410014cbbf44`, AchievementCategories `781086ad569cbc16`,
 AchievementCategoryAssociationsClient `d2888dcee5208484`,
 AchievementAssociationsClient `92b0700f94cc10ef`) imported via
-`utils/scripts/import_achievement_resources.py` with its own enable selection,
-or a `release-peq.zip` snapshot already carrying the imported rows.
+`utils/scripts/import_achievement_resources.py` with its own enable
+selection, or a `release-peq.zip` snapshot already carrying the imported
+rows.
 
 ## Pre-existing issues found (not touched here)
 
 - 15 enabled achievements with claimable sets but no completable criteria
-  (1749150-1749168, an earlier batch's mission line) - reward sources exist
+  (1749150-1749168, an earlier batch's missions) — reward sources exist
   yet nothing can complete them.
 - 9 enabled task-complete criteria outside these expansions target task ids
   that do not exist in `tasks`.
@@ -88,7 +97,11 @@ SQL canaries (all eight assertion classes) returned zero on the live database
 after application, and again after the server boot; the boot ran manifest
 entries 238-255 through the binary (custom_version 237 -> 255) and every zone
 loaded the replacement snapshot (a failed load refuses to start the zone;
-all zones stayed up). In-game checklist: the four expansion tabs render in the
-achievement window, a zone-enter Traveler step ticks on entry, a raid kill
-credits its step, and the Choose/claim flow delivers AA + coin on one
-achievement.
+all zones stayed up). Entry 259 ran at the next boot (custom_version 259):
+zero copper rows remained in the 9540000-9540411 block. Entry 260 ran at the
+2026-10-28 evening boot (custom_version 260): zero achievement-sourced copper
+rewards remain anywhere, 214 rewards pay alternate currency 6, and the 8
+original platinum values sit in `nms_ach_copper_triune_backup`. In-game
+checklist: the four expansion tabs render in the achievement window, a
+zone-enter Traveler step ticks on entry, a raid kill credits its step, and
+the Choose/claim flow delivers AA + 5 Triunes of Fate on one achievement.
