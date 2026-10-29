@@ -1,0 +1,119 @@
+{
+  "status": "Authored reconstruction; consult native-status.json for verified gameplay scope",
+  "data": {
+    "verrin": {
+      "npc": 395241,
+      "task": 3039904,
+      "activity": 4,
+      "finish": {
+        "x": -1691,
+        "y": -233,
+        "z": 6.875,
+        "h": 449
+      },
+      "arrival_radius": 15,
+      "arrival_height": 15,
+      "timeout_seconds": 1800,
+      "kill_activity": 3
+    },
+    "thralls": {
+      "npcs": {
+        "395228": true,
+        "395261": true,
+        "395264": true,
+        "395266": true
+      },
+      "alchemist": 394031,
+      "powder": 36169,
+      "antidote": 36170,
+      "antidote_quantity": 6,
+      "powder_activity": 3,
+      "task": 3039907,
+      "activity": 4,
+      "finish": {
+        "x": -1691,
+        "y": -233,
+        "z": 6.875,
+        "h": 449
+      },
+      "arrival_radius": 15,
+      "arrival_height": 15,
+      "timeout_seconds": 1800,
+      "guards": [
+        395901,
+        395902
+      ],
+      "freed_types": {
+        "395228": 395904,
+        "395261": 395905,
+        "395264": 395906,
+        "395266": 395907
+      }
+    },
+    "buckets": {
+      "doors": {
+        "51": 36164,
+        "53": 36164,
+        "55": 36164,
+        "57": 36192,
+        "59": 36192,
+        "61": 36192
+      },
+      "task": 3039905,
+      "activity": {
+        "36164": 6,
+        "36192": 7
+      },
+      "radius": 25,
+      "height": 25,
+      "respawn_seconds": 540,
+      "empty_percent": 33
+    },
+    "silo": {
+      "npc": 395227,
+      "ooze": 395903,
+      "initial_size": 4,
+      "growth_per_tick": 1,
+      "tick_seconds": 10,
+      "ticks": 12
+    },
+    "cocoons": {
+      "npc": 395231,
+      "larva": 395900,
+      "minimum": 4,
+      "maximum": 5
+    }
+  },
+  "researched": {
+    "bucket_respawn_seconds": "540 from February3 2008 firsthand timer report",
+    "larval_spawn_count": "Approximately4..5 from March20 2008 firsthand report",
+    "rescue_quantity": 5,
+    "antidote_quantity": 6,
+    "camp_endpoint": "Existing Scout Ethaniel spawn; finish8units east, within arrival tolerance",
+    "silo": "2011-revised archived guide: ooze spawns on reserves, grows/emotes, only ooze despawns; reserves remain. Narrative says minutes;120second scene is reconstructed.",
+    "thrall_respawn": "June21 2012 report1..2min after rescue while prior thrall still walking. Free a dynamic actor and restart original spawn immediately;90seconds configured from range, not exact original."
+  },
+  "reconstructed_not_original": {
+    "bucket_empty_percent": 33,
+    "bucket_click_radius": 25,
+    "bucket_height": 25,
+    "arrival_radius": 15,
+    "arrival_height": 15,
+    "encounter_timeout_seconds": 1800,
+    "ooze_tick_seconds": 10,
+    "ooze_ticks": 12,
+    "ooze_initial_size": 4,
+    "ooze_growth_per_tick": 1,
+    "uniform_4_or_5_larvae": true,
+    "thrall_respawn_seconds": 90,
+    "guard_spawn_position": "Original thrall source XYZ; no arbitrary lateral offset. Compatibility repair for farmhouse collision; exact Live guard offsets are not recovered."
+  },
+  "pending_native_validation": [
+    "Door hide/respawn inRoF2",
+    "NPC pathing from farm to camp",
+    "Guard attacks freed thrall and arrival saves credit",
+    "Mavin output and retry consumption",
+    "Cocoon appearance and hatch model"
+  ],
+  "policy": "These scene timings/probabilities are reconstruction settings, not exact May2013 claims. Do not publish as original protocol or gameplay constants."
+}

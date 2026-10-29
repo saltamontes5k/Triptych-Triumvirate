@@ -1,0 +1,79 @@
+{
+  "cutoff": "2013-05-31",
+  "tasks": [
+    {
+      "title": "Who's Who?",
+      "source": "https://everquest.allakhazam.com/db/quest/3584",
+      "objectives": [
+        "Hail Neezzee",
+        "Kill Neezzee",
+        "Hail Warwing"
+      ],
+      "period": "Original2006 Warwing NPC walkthrough and2011 level42 attempt; active combat after hail",
+      "timer": "Eight-hour report is June22,2013 after cutoff; no exact May timer claimed"
+    },
+    {
+      "title": "Infiltrate the Hive",
+      "source": "https://everquest.allakhazam.com/db/quest/3585",
+      "objectives": [
+        "Deliver Bixie War Plans from original collected point"
+      ],
+      "period": "2006 hand-in completion;2009 exact ground location Y-182.51 X-12.29 Z410.69"
+    },
+    {
+      "title": "Honey, I'm Home!",
+      "source": "https://everquest.allakhazam.com/db/quest/3586",
+      "objectives": [
+        "Deliver2wing,2flesh,1scentgland,2antennae,1insignia"
+      ],
+      "period": "June4,2012 explicitly says old loot objectives removed and preloot allowed"
+    },
+    {
+      "title": "The Queen Bixie",
+      "source": "https://everquest.allakhazam.com/db/quest/3587",
+      "objectives": [
+        "Kill Queen Pelzia"
+      ],
+      "choices": [
+        "Honeystone of Buzzitude",
+        "Honeystone of Dream Delights",
+        "Honeystone of Magicjum"
+      ],
+      "period": "2006 Warwing original walkthrough explicitly lists3choices; normal corpse jewelry not a task reward"
+    }
+  ],
+  "queen": {
+    "source": "https://everquest.allakhazam.com/db/npc/22673",
+    "period_evidence": [
+      "October10,2006 adds around70percent and20percent, room tether",
+      "March22,2007 maxhit622 on74warrior; July/August2008 maxhit623",
+      "December2,2008 says9000HarmTouch took about7percent, implying roughly128000HP, not exact recoveredHP",
+      "April5,2012 names Pelzias Paralyzation",
+      "February7,2013 level40mage nearlywon; December2012level88necro killed~30sec"
+    ],
+    "selected_candidate": {
+      "hp": 128000,
+      "hp_provenance": "Derived approximate period report, configurable reconstruction, not recovered exact value",
+      "max_hit": 623,
+      "spell": 9312,
+      "snare_root_immunity": true,
+      "summon": false,
+      "tether": "Room tether confirmed; exact radius unknown; reconstruct near original throne",
+      "adds": "Five swarmers and10grubs from currentNPCdescription; timing70/20periodconfirmed. Exact split and repetition requirelabel."
+    }
+  },
+  "grub": {
+    "source": "https://everquest.allakhazam.com/db/npc/22675",
+    "level": 45,
+    "period": "AddedSeptember22,2006; May4,2012 saysCarnageCloak andFlawedDefiantCharm drops",
+    "model": "Unrecovered; do not claim exact model"
+  },
+  "task_type": "Type2individual quest with normal groupkillcredit selected provisionally; websearch did not establish shared task ownership. No exact shared-task parity claim.",
+  "swarmer": {
+    "source": "https://everquest.allakhazam.com/db/npc/22674",
+    "level": 30,
+    "added": "2006-09-22",
+    "behavior": "Queen encounter spawn; 2015 report10-15second swarm-pet lifetime is later corroboration, not recovered May2013 timing",
+    "model": "Unrecovered"
+  }
+}

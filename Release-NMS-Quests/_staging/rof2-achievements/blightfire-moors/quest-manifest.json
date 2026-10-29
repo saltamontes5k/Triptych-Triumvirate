@@ -1,0 +1,50 @@
+[
+  {
+    "path": "crescent/394004.lua",
+    "sha256": "dfbd4f56520d49ffcec75269626203f62975dbd729061daa20d52fad4b9a1c67"
+  },
+  {
+    "path": "crescent/394091.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "crescent/394154.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "lua_modules/achievement_quest_blightfire.lua",
+    "sha256": "65f261bdc67b154432cbab23fd0a86445748dabf960635e4dbd4a9948fd5a600"
+  },
+  {
+    "path": "lua_modules/achievement_quest_blightfire_data.lua",
+    "sha256": "b2078085c51d1a988acfb50317e3e655c1526e5d5d794c63918c0e56f69e9038"
+  },
+  {
+    "path": "moors/395052.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395070.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395079.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395118.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395128.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395144.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "moors/395215.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  }
+]

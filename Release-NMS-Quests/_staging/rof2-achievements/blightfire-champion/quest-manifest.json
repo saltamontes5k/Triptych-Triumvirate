@@ -1,0 +1,94 @@
+[
+  {
+    "path": "crescent/394092.lua",
+    "sha256": "03fef8f33e8b6b72a0773768a16d2ebac83852cba03c77ed5957849f5033ba64"
+  },
+  {
+    "path": "crescent/394126.lua",
+    "sha256": "03fef8f33e8b6b72a0773768a16d2ebac83852cba03c77ed5957849f5033ba64"
+  },
+  {
+    "path": "global/spells/9181.lua",
+    "sha256": "4d781512f5b2a2bd15078923555a15d195e5ea256ff4af073527829eba9c28bd"
+  },
+  {
+    "path": "lua_modules/achievement_quest_blightfire_champion.lua",
+    "sha256": "0e697ebb14dab89f7f74e283d05446523c06222b4509519d8f1fe11dfd80a9ba"
+  },
+  {
+    "path": "lua_modules/achievement_quest_blightfire_champion_data.lua",
+    "sha256": "e670feb8626fa35c8ec6caa89ec88ad3b2fae21b3f99388109411b9cf5b8bd45"
+  },
+  {
+    "path": "moors/395060.lua",
+    "sha256": "77cd594b4307e0176e3a7a7984d465fb943a878900ed818ec8bd8e4931626ac3"
+  },
+  {
+    "path": "moors/395073.lua",
+    "sha256": "b4aeb3d12254fc1da56ec2577f1bf1095e37b38289680e098e275e027d5c710b"
+  },
+  {
+    "path": "moors/395080.lua",
+    "sha256": "1e274c3bc027e3ee1faee2249182f4352f5df65d0597beac00633283a20bcb77"
+  },
+  {
+    "path": "moors/395085.lua",
+    "sha256": "b4aeb3d12254fc1da56ec2577f1bf1095e37b38289680e098e275e027d5c710b"
+  },
+  {
+    "path": "moors/395087.lua",
+    "sha256": "8702aa0a93d2821a3c40ec7d826e3d6ea374cdfc6fba8fae0c92a6ee2bab9ab5"
+  },
+  {
+    "path": "moors/395123.lua",
+    "sha256": "03fef8f33e8b6b72a0773768a16d2ebac83852cba03c77ed5957849f5033ba64"
+  },
+  {
+    "path": "moors/395153.lua",
+    "sha256": "522f6c4b5c8398e4c9038ff6e936a7d313837db03e344710d8259b6b26b9ffd7"
+  },
+  {
+    "path": "moors/395174.lua",
+    "sha256": "522f6c4b5c8398e4c9038ff6e936a7d313837db03e344710d8259b6b26b9ffd7"
+  },
+  {
+    "path": "moors/395184.lua",
+    "sha256": "03fef8f33e8b6b72a0773768a16d2ebac83852cba03c77ed5957849f5033ba64"
+  },
+  {
+    "path": "moors/395185.lua",
+    "sha256": "f76320f1be3f9b03424cc2a0fcae94990041bb99f6bd5331420b37d525a918e7"
+  },
+  {
+    "path": "moors/395187.lua",
+    "sha256": "77cd594b4307e0176e3a7a7984d465fb943a878900ed818ec8bd8e4931626ac3"
+  },
+  {
+    "path": "moors/395221.lua",
+    "sha256": "522f6c4b5c8398e4c9038ff6e936a7d313837db03e344710d8259b6b26b9ffd7"
+  },
+  {
+    "path": "moors/395245.lua",
+    "sha256": "03fef8f33e8b6b72a0773768a16d2ebac83852cba03c77ed5957849f5033ba64"
+  },
+  {
+    "path": "moors/395249.lua",
+    "sha256": "522f6c4b5c8398e4c9038ff6e936a7d313837db03e344710d8259b6b26b9ffd7"
+  },
+  {
+    "path": "moors/395250.lua",
+    "sha256": "77cd594b4307e0176e3a7a7984d465fb943a878900ed818ec8bd8e4931626ac3"
+  },
+  {
+    "path": "moors/395931.lua",
+    "sha256": "68a763ba1160a45aaf25d662400f4a4f90a3546adecb73c38439851f2fae9d0e"
+  },
+  {
+    "path": "moors/395932.lua",
+    "sha256": "68a763ba1160a45aaf25d662400f4a4f90a3546adecb73c38439851f2fae9d0e"
+  },
+  {
+    "path": "moors/395933.lua",
+    "sha256": "68a763ba1160a45aaf25d662400f4a4f90a3546adecb73c38439851f2fae9d0e"
+  }
+]

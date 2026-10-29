@@ -1,0 +1,222 @@
+[
+  {
+    "path": "crescent/#Council_Aide_Mystrana.pl",
+    "stock_before_sha256": "3fe02df31997155db2fe7d27083610d8e4bac57a9b6c1d0fd15b6917d8bbfa31",
+    "after_sha256": "5c2bcff0669e350f7c5bb9b42f37d9473f4a19382fcb394dbca0321c83b5e432"
+  },
+  {
+    "path": "crescent/#Disgruntled_Boawb.pl",
+    "stock_before_sha256": "ee2b469ffc735b7b0d8b697e8270c3e12e64e6239aaf5d2c37e58c2e2f458fd1",
+    "after_sha256": "0ad71dd4ce996205c1b105b949c2f2b6f4f016de14f84c50620380017e442dfe"
+  },
+  {
+    "path": "crescent/#Emissary_Tinnvin.pl",
+    "stock_before_sha256": "d8fa0c6a671daaedf2a2a35101d382dfd306625a108f5dd09185220824e2e15d",
+    "after_sha256": "d8fa0c6a671daaedf2a2a35101d382dfd306625a108f5dd09185220824e2e15d"
+  },
+  {
+    "path": "crescent/#Initiate_Dakkan.pl",
+    "stock_before_sha256": "3d872d16ff1c2cdcc5f623c076a4e25f4c14b3d3aa5fb8a35facc6cdbcbaf970",
+    "after_sha256": "3d872d16ff1c2cdcc5f623c076a4e25f4c14b3d3aa5fb8a35facc6cdbcbaf970"
+  },
+  {
+    "path": "crescent/#Innkeeper_Fathus.pl",
+    "stock_before_sha256": "29be23a9f82246344fbf8c3c48c4676232ad1f6bedbf0cb247d1508a2495425a",
+    "after_sha256": "0fec87f4024e00861165ed9fd28b67864ed10b63068ed89f1f89f7613ae70dd9"
+  },
+  {
+    "path": "crescent/#Jinkin.pl",
+    "stock_before_sha256": "e2fea49044cc943d66d0c2cf3ecb2c51258e5600c231d0c8d09410c31a7a5c33",
+    "after_sha256": "e2fea49044cc943d66d0c2cf3ecb2c51258e5600c231d0c8d09410c31a7a5c33"
+  },
+  {
+    "path": "crescent/394001.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394008.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394010.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394015.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394017.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394027.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b498dffcf2f61480d914f100d0d672948e8dff725372f9883caf37ad8622e489"
+  },
+  {
+    "path": "crescent/394037.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "d765b1d1bec64a3b7e642eca15b12c4e3579c398fb865084272823dbe1f36dc8"
+  },
+  {
+    "path": "crescent/394078.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394107.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "636b3bf4bb907b002e76590f895fde654a737f70b0b4300e3522876e1bb3446c"
+  },
+  {
+    "path": "crescent/394108.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e368ebcb34f20b886153b8d1f8874166896be4fd40941c1c81d7fe612164f037"
+  },
+  {
+    "path": "crescent/394111.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394114.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394119.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b0c8b40c991266eb71380203843d2006f429e111cb0e9f82db8b16c7c7a82fe9"
+  },
+  {
+    "path": "crescent/394123.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394127.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "5948cb5d5685ec678d04c1ae375b0e9ebc011394b3cbc6545b5575aed9d43ee2"
+  },
+  {
+    "path": "crescent/394142.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394161.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394164.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "a24e186ecd8efc4ea5f9ffab9ba2b276c944a80046163e51aa81d7bd57adf4ee"
+  },
+  {
+    "path": "crescent/394176.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394178.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "ff50266dd346439d472ef28a3094cf12cabb059d0566cef8e5fc6286c0d74226"
+  },
+  {
+    "path": "crescent/394179.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394183.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394186.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394192.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394227.pl",
+    "stock_before_sha256": null,
+    "after_sha256": "89a7cfb46660804cfc6a609ed80fc1e9ecad7d2c3985700030b8a081f0494e80"
+  },
+  {
+    "path": "crescent/394255.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "e354407558ad4e15344d47f7e023bd3a7c2ea041709b9b46c361798a0db2a242"
+  },
+  {
+    "path": "crescent/394256.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "4279b3df279d2b694903cae0196fb281d004bca94b9f500080b2a1242116445e"
+  },
+  {
+    "path": "crescent/394900.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b375ac5d5a69e44d259d670b1a74a05a27e7f113244c5f172241818991c2c63d"
+  },
+  {
+    "path": "crescent/394901.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b375ac5d5a69e44d259d670b1a74a05a27e7f113244c5f172241818991c2c63d"
+  },
+  {
+    "path": "crescent/394902.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b375ac5d5a69e44d259d670b1a74a05a27e7f113244c5f172241818991c2c63d"
+  },
+  {
+    "path": "crescent/394903.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b375ac5d5a69e44d259d670b1a74a05a27e7f113244c5f172241818991c2c63d"
+  },
+  {
+    "path": "crescent/394904.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b375ac5d5a69e44d259d670b1a74a05a27e7f113244c5f172241818991c2c63d"
+  },
+  {
+    "path": "crescent/394930.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "fb05d1ae5dc66c289f6b46278c84261b5cff693e8680efd2f5bff3a819802596"
+  },
+  {
+    "path": "crescent/394933.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "97ae419207a6316a22e2eb64dcaef1b54b64e108dcf14b265227d5c6f8cec324"
+  },
+  {
+    "path": "crescent/player.pl",
+    "stock_before_sha256": "73f1a15a144a53458bf75f9caa117de8fbe97082235b0a7ee80a3c5b7e978878",
+    "after_sha256": "a5e9a91b735681629418516baacb665a3604796c2b4661c5619312e58020ee41"
+  },
+  {
+    "path": "lua_modules/achievement_quest_crescent_data.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "75cd1926853475cc35009b52acbe1fc4de35dd1cd5f704be99fae7c619f81a73"
+  },
+  {
+    "path": "lua_modules/achievement_quest_crescent_world.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "a01f9250a6628604557d5fd106bf4572d29549dd1d3bb0df15db6844113c68c2"
+  },
+  {
+    "path": "lua_modules/achievement_quest_npcs.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "9043446c606a7d59dbcf0d95a0dc730162c100394287703a78a888a5e5945d31"
+  }
+]

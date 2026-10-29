@@ -1,0 +1,25 @@
+[
+  {
+    "id": 395920,
+    "parent": 395093,
+    "name": "The_Ticking_Crocodile",
+    "overrides": {
+      "level": 23,
+      "maxlevel": 23,
+      "maxdmg": 46,
+      "npc_faction_id": 395920,
+      "loottable_id": 0
+    },
+    "provenance": "Period2006 con23; walkthrough maxhit46. Native snapjaw model/body/other combat fields retained as reconstruction; named ordinary loot unrecovered."
+  },
+  {
+    "id": 395921,
+    "parent": 395133,
+    "name": "Ratwork_Model_VIII",
+    "overrides": {
+      "npc_faction_id": 0,
+      "loottable_id": 0
+    },
+    "provenance": "Native Ratwork VII model and combat fields copied; original VIII absent. Exact original size, HP and level unrecovered."
+  }
+]

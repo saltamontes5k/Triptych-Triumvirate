@@ -371,6 +371,14 @@ bool Zone::LoadGroundSpawns() {
 			const uint32 max_allowed = g.spawn[slot_id].max_allowed;
 
 			if (inst) {
+				// Fresh ground-spawn clickies must have their defined charges.
+				// CreateItem defaults to zero; that otherwise produces unusable
+				// quest scrolls such as Touch of the Six. Dropped items retain
+				// their existing charges through the separate Object path.
+				if (inst->GetItem()->MaxCharges > 0) {
+					inst->SetCharges(inst->GetItem()->MaxCharges);
+				}
+
 				for (uint32 i = 0; i < max_allowed; i++) {
 					auto object = new Object(
 						inst,

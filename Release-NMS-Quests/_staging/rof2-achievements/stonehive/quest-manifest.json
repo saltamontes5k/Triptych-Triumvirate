@@ -1,0 +1,66 @@
+[
+  {
+    "path": "lua_modules/achievement_quest_blightfire.lua",
+    "sha256": "65f261bdc67b154432cbab23fd0a86445748dabf960635e4dbd4a9948fd5a600"
+  },
+  {
+    "path": "lua_modules/achievement_quest_blightfire_data.lua",
+    "sha256": "b2078085c51d1a988acfb50317e3e655c1526e5d5d794c63918c0e56f69e9038"
+  },
+  {
+    "path": "lua_modules/achievement_quest_stonehive.lua",
+    "sha256": "148df1960a8a7f1e884ffac748f551c34a0b8952987b5f409b6a8b9a4c255337"
+  },
+  {
+    "path": "lua_modules/achievement_quest_stonehive_data.lua",
+    "sha256": "cc8f4948e5b904386d0ed135875571d98de8df3535945782ab058846d3b4d1a1"
+  },
+  {
+    "path": "lua_modules/achievement_quest_stonehive_scenes.lua",
+    "sha256": "14983da7c4ed8d473d9749ab893e45b994f0f68cf2cc4779cca4fcb792b24276"
+  },
+  {
+    "path": "moors/395211.lua",
+    "sha256": "fc5487c74d1a4d93ee159707d824d03c23d9ecc17bf4d567ea81ad1f395525f5"
+  },
+  {
+    "path": "moors/395213.lua",
+    "sha256": "fc5487c74d1a4d93ee159707d824d03c23d9ecc17bf4d567ea81ad1f395525f5"
+  },
+  {
+    "path": "moors/395215.lua",
+    "sha256": "fc5487c74d1a4d93ee159707d824d03c23d9ecc17bf4d567ea81ad1f395525f5"
+  },
+  {
+    "path": "stonehive/396109.lua",
+    "sha256": "5dff837842e4e9973ccd8e3a599e963299e8f965541d366e7804088635afdaca"
+  },
+  {
+    "path": "stonehive/396123.lua",
+    "sha256": "fc5487c74d1a4d93ee159707d824d03c23d9ecc17bf4d567ea81ad1f395525f5"
+  },
+  {
+    "path": "stonehive/396180.lua",
+    "sha256": "3dad395b920586e822811eeed4a275a960120b37c9777ad5758f31bb2c9e81e0"
+  },
+  {
+    "path": "stonehive/396209.lua",
+    "sha256": "00af390cf96e13a85949e8d7b02b6759583678d45d07f1b3ba11f418352d18a9"
+  },
+  {
+    "path": "stonehive/396229.lua",
+    "sha256": "fc5487c74d1a4d93ee159707d824d03c23d9ecc17bf4d567ea81ad1f395525f5"
+  },
+  {
+    "path": "stonehive/396930.lua",
+    "sha256": "fd968c2d7221fdc81ca98255f404c34a4319e2590f7a337a30068d66ec1a37d3"
+  },
+  {
+    "path": "stonehive/396931.lua",
+    "sha256": "b82e10a004b2b40c4be7b8d6eed4c1219a412d2f61d4334f43a5e014e2720d01"
+  },
+  {
+    "path": "stonehive/396932.lua",
+    "sha256": "b82e10a004b2b40c4be7b8d6eed4c1219a412d2f61d4334f43a5e014e2720d01"
+  }
+]

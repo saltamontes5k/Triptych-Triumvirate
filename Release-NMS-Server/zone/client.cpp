@@ -9052,7 +9052,7 @@ bool Client::SetAlternateCurrencyValue(uint32 currency_id, uint32 new_amount)
 	alternate_currency[currency_id] = new_amount;
 	bool persistence_succeeded = true;
 	if (RuleB(Custom, EnableAccountAltCurrency)) {
-		database.UpdateAccountAltCurrencyValue(AccountID(), currency_id, new_amount);
+		persistence_succeeded = database.UpdateAccountAltCurrencyValue(AccountID(), currency_id, new_amount);
 	} else {
 		persistence_succeeded = database.UpdateAltCurrencyValue(CharacterID(), currency_id, new_amount);
 	}
@@ -9123,7 +9123,12 @@ int Client::AddAlternateCurrencyValue(
 		new_value = 0;
 	}
 
-	SetAlternateCurrencyValue(currency_id, static_cast<uint32>(new_value));
+	// Propagate the real persistence outcome: the reward-claim path proves
+	// delivery with this flag, so a dropped write must not read as success.
+	const bool persisted = SetAlternateCurrencyValue(currency_id, static_cast<uint32>(new_value));
+	if (persistence_succeeded) {
+		*persistence_succeeded = persisted;
+	}
 	return new_value;
 }
 

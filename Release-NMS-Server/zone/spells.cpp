@@ -66,6 +66,8 @@ Copyright (C) 2001-2002 EQEMu Development Team (http://eqemu.org)
 	and not SpellFinished().
 */
 
+#include "quest_item_target_permissions.h"
+
 #include "../common/bodytypes.h"
 #include "../common/classes.h"
 #include "../common/global_define.h"
@@ -4680,8 +4682,64 @@ bool Mob::SpellOnTarget(
 
 				}
 
+				// Dummy item spells that implement specific NPC quest interactions are
+				// not general buffs. Keep every native cast/target check and exempt only
+				// this beneficial-to-NPC permission decision for the exact quest context.
+				const bool quest_item_target_allowed = [&]() {
+					if ((spell_id != 33562 && spell_id != 33564 && spell_id != 9255 && spell_id != 9181) ||
+						isproc || casting_spell_id != spell_id || !IsClient() ||
+						(casting_spell_slot != CastingSlot::Item && casting_spell_slot != CastingSlot::PotionBelt)) {
+						return false;
+					}
+					const auto *item = CastToClient()->GetInv().GetItem(casting_spell_inventory_slot);
+					if (!item || !item->IsClassCommon() || !item->GetItem()) {
+						return false;
+					}
+					QuestItemTargetPermissions::Context context;
+					context.spell_id = spell_id;
+					context.zone_id = zone->GetZoneID();
+					context.item_id = item->GetID();
+					context.item_click_spell_id = item->GetItem()->Click.Effect;
+					context.authentic_item_cast = true;
+					context.expected_spell_shape =
+						spells[spell_id].good_effect == BENEFICIAL_EFFECT &&
+						spells[spell_id].target_type == ST_Target &&
+						spells[spell_id].pcnpc_only_flag == ((spell_id == 9255 || spell_id == 9181) ? 0 : PCNPCOnlyFlagType::NPC) &&
+						spells[spell_id].effect_id[0] == (spell_id == 9181 ? SE_Blank : SE_CHA) &&
+						spells[spell_id].base_value[0] == (spell_id == 9181 ? 0 : 1);
+					for (int effect = 1; effect < EFFECT_COUNT; ++effect) {
+						if (spells[spell_id].effect_id[effect] != SE_Blank ||
+							(spell_id == 9181 && spells[spell_id].base_value[effect] != 0)) {
+							context.expected_spell_shape = false;
+						}
+					}
+					context.correct_task_activity_active = CastToClient()->IsTaskActivityActive(
+						spell_id == 9255 ? 3040105 : 910023, spell_id == 9255 ? 1 : (spell_id == 33562 ? 5 : 14)
+					);
+					if (spell_id == 9181) {
+						context.correct_task_activity_active = false;
+						if (spelltar->IsNPC()) {
+							for (size_t activity = 0; activity < QuestItemTargetPermissions::Moorwalkers.size(); ++activity) {
+								if (spelltar->GetNPCTypeID() == QuestItemTargetPermissions::Moorwalkers[activity]) {
+									context.correct_task_activity_active = CastToClient()->IsTaskActivityActive(3040208, activity);
+									break;
+								}
+							}
+						}
+					}
+					context.target_is_npc = spelltar->IsNPC();
+					if (context.target_is_npc) {
+						context.target_npc_type_id = spelltar->GetNPCTypeID();
+						context.target_race = spelltar->GetRace();
+						context.target_is_owned = spelltar->GetOwnerID() != 0 || spelltar->CastToNPC()->GetSwarmOwner() != 0;
+						context.target_hp_ratio = spelltar->GetHPRatio();
+						context.target_attackable = spell_id == 33564 && IsAttackAllowed(spelltar, true);
+					}
+					return QuestItemTargetPermissions::Allows(context);
+				}();
+
 				if (
-					(!IsAllianceSpell(spell_id) && !IsBeneficialAllowed(spelltar)) ||
+					(!IsAllianceSpell(spell_id) && !IsBeneficialAllowed(spelltar) && !quest_item_target_allowed) ||
 					(IsGroupOnlySpell(spell_id) &&
 						!(
 							(

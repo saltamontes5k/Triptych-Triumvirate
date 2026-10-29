@@ -1,0 +1,60 @@
+{
+  "status": "PASS existing local port; whole May2013 achievement project remains incomplete",
+  "native_quests_completed": 14,
+  "tasks": [
+    3039801,
+    3039802,
+    3039803,
+    3039804,
+    3039805,
+    3039806,
+    3039807,
+    3039808,
+    3039809,
+    3039810,
+    3039811,
+    3039812,
+    3039813,
+    3039814
+  ],
+  "saved_completed_components": 14,
+  "parent_achievements": [
+    500020500,
+    500020600,
+    500020700
+  ],
+  "objectives": 44,
+  "native_routes": [
+    "Both real sign doors/native selector and acceptance",
+    "Original rat/viper kills, pelts/skins and rare locket loot",
+    "Four period-researched exploration centres, Slynn hail and real supplies delivery",
+    "Real rockbreaker/miner kills, ore/hammers/picks, Quarry prerequisite, Orren and Scar shield",
+    "Three sequential Rotwood quests with15 farmers, real static spore acquisition and Molderahn",
+    "Real ooze/hedge/thorn-family acquisition and all final deliveries"
+  ],
+  "rewards": {
+    "53506": 10,
+    "53507": 1,
+    "53508": 1,
+    "53509": 1,
+    "53518": 10,
+    "53523": 10,
+    "53533": 1
+  },
+  "cash": "Explorer5pp plus Supply9pp: combined native saved gain14pp in isolated no-hunt handin interval",
+  "XP": "Configured approved defaults use normal server XP modifiers; exact original XP amounts are not established.",
+  "factions": "Native normal faction path observed, including character modifiers; period directions supported, exact original base magnitudes remain labelled",
+  "persistence": "All14 task histories,14 completion components and3 parents saved; all3 client achievements observedcomplete before and after logout/login",
+  "rotwood_cycle": "After allthree native completions, actual Roanoak selector offered only first Treants quest again; no repeat accepted",
+  "package_checks": "Fresh scoped SQL import and repeated import into temporary table copies; eight quest-installer safety/composition checks; live read-only identity/acquisition preflight",
+  "engine": "Six-patch clean pinned-source Linux GCC12.2 zone/world build PASS; native existing local port verified; clean-port native gameplay NOT RUN",
+  "QA": "Geared level85/GMflag0 real combat and QA staging travel; no task/activity grants or quest-item summons. QA backpacks/inventory banking and original fixture retained privately.",
+  "limits": [
+    "Historical minimum-level balance not established by high-level verification",
+    "Some gates/repeatability, faction base magnitudes and exploration bounds remain labelled reconstructions",
+    "No separate unverified achievement reward inferred from original catalogue flags",
+    "Native Windows server build/install NOT RUN; Python installer is cross-platform; local validation ran on Linux",
+    "This package does not complete all achievements or quests through Rain of Fear"
+  ],
+  "parent_reward_upgrade": "Required ../blightfire-parent-rewards package now supplies family gear sets; original verification entries above describe the earlier quest-only run. Conqueror meta reward remains unresolved."
+}

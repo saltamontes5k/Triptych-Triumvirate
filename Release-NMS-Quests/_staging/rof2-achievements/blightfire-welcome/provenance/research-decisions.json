@@ -1,0 +1,110 @@
+{
+  "cutoff": "2013-05-31",
+  "scope": "Eight Welcome to the Moors quest routes; Champion remains separately pending",
+  "sources": [
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3795",
+      "quest": "The Golden Pick I",
+      "entered": "2006-10-31",
+      "period_evidence": [
+        "March 2007 player received the first task at level19",
+        "October 2008 player reports all three quests nonrepeatable and pick removal at final turn-in"
+      ],
+      "selected": "Eight walkthrough objectives, minimum19, nonrepeatable",
+      "limits": "Modern edited walkthrough supplies objective counts; original publication date does not prove unchanged text. October2006 repeatable report conflicts with later2008 completion report."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3796",
+      "quest": "The Golden Pick II",
+      "entered": "2006-10-31",
+      "period_evidence": [
+        "2007 reports confirm skins from darkwater lockjaws",
+        "2007/2008 reports discuss the second task being nonrepeatable"
+      ],
+      "selected": "Broken pick to Bronson; six saplings/two branches/two darkwater lockjaws/two skins; repaired quest pick to Ordunn",
+      "limits": "Dialogue mentions three skins but journal requires two; journal selected. Minimum20 is a labelled inference from original20-25 giver and repaired item level-to-attain20, not an exact recovered gate."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/item/53551",
+      "item": "The Golden Pick, nonweapon",
+      "page_updated": "2008-10-09",
+      "selected": "Light-type repaired hand-in pick maps to native36194; weapon native36175 is distinct"
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3797",
+      "quest": "The Golden Pick III",
+      "entered": "2006-10-31",
+      "period_evidence": [
+        "2006/2007 reports describe weapon being removed at final turn-in",
+        "2008 reports include an anomalous way to retain it",
+        "2010 player cannot repeat the full chain"
+      ],
+      "selected": "Equip mining weapon36175; real proc9410 against original rock piles; two samples from each of three mines; five class-filtered reward items; remove mining weapon at completion",
+      "limits": "Current page says repeatable, conflicting with later period reports and October2008 all-three-nonrepeatable report. Selected nonrepeatable; minimum20 is inferred. Ore proc probability and trigger volumes unrecovered; successful eligible proc yields one sample, labelled reconstruction."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3814",
+      "quest": "The Darkwater Pools",
+      "entered": "2006-11-02",
+      "selected": "Four skins and one shell, simultaneous deliveries; repeatable; XP only",
+      "limits": "Minimum24 uses current published level and is not independently recovered from period completion text. Source reports disagree about southern pool drops; preserve native drop routes rather than adding more."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3830",
+      "quest": "The Slashclaw Cliffs",
+      "entered": "2006-11-06",
+      "period_evidence": [
+        "December2006 player completed at26 and reports only XP",
+        "June2012 specifically confirms only slashclaw cub works"
+      ],
+      "selected": "Four fresh pelts, actual trap9255 cast on original unowned cub, trap/pelt turn-ins; repeatable; selected minimum26 over conflicting current28",
+      "limits": "Observed completion at26 establishes availability by26, not exact minimum. The same native trap item is delivered after capture; no invented filled-trap item."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3828",
+      "quest": "The Ghostpack Fens",
+      "entered": "2006-11-06",
+      "period_evidence": [
+        "January2010 player completed at30",
+        "2006 player describes wolf magic immunity cycles"
+      ],
+      "selected": "Four fresh ghostwolf pelts and one Denlord tooth, deliveries, Slashclaw Pelt Cloak53525; nonrepeatable; minimum30 from published level and dated completion",
+      "limits": "Exact minimum below30 unverified; no changes to existing ghostpack combat scripts, drops or placements."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3831",
+      "quest": "The Ticking Crocodile",
+      "entered": "2006-11-06",
+      "period_evidence": [
+        "June2007 accepted at21",
+        "January2009 confirms ratwork spawns on top of crocodile corpse and can disappear before core insertion"
+      ],
+      "selected": "Clear southern pond ordinary crocodiles; kill spawned named; hand in core; actual ratwork walk; final Hammerstock hail after arrival; repeatable; minimum21",
+      "limits": "Named/ModelVIII missing from native content. Authored395920/395921 and copied native creature models are reconstructed. Spawn10percent and300second scene lifetimes are configurable reconstruction, not historical constants. Per-character attempt ownership prevents foreign scene credit."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/npc/23667",
+      "npc": "The Ticking Crocodile",
+      "period_evidence": [
+        "October2006 player con at23",
+        "April2012 southern pond confirmation"
+      ],
+      "selected": "Level23; quest walkthrough max hit46; other combat values require labelled native-template reconstruction"
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest/3794",
+      "quest": "Witchlamps",
+      "entered": "2006-10-31",
+      "period_evidence": [
+        "July2007 repeat completion confirmed",
+        "December2008 player confirms lightstones may be collected before acceptance and reports warrior26 unable to obtain while wizard26 could"
+      ],
+      "selected": "Four lightstone deliveries; ten Elixir of Clear Mind53524; repeatable; minimum20 follows original giver tag",
+      "limits": "Class restriction is uncertain: historical report conflicts with all-class Hero Journey requirement/current all-class page. Do not invent a class gate from one report; keep uncertainty explicit."
+    }
+  ],
+  "xp": "1000 PEQ-style approved default where exact original amount unavailable; choice task common reward carries XP with tasks.exp_reward=0",
+  "excluded": "Do not import 2026 group-wide quest drop changes, current maxlevel130, unconfirmed coin/faction rewards or speculative parent gear options.",
+  "preserved": "Original acquisition routes, named spawn points, housing and player data, callback chains, ordinary spawns and drop probabilities.",
+  "status": "DEPLOYED; eight native quest completions; all eight component bits and parent complete after logout/login; parent gear rewards not implemented"
+}

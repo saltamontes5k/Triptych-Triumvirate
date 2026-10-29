@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "cutoff": "2013-05-31",
+  "status": "Nine historically admitted Crescent identities only; individual native route validation is documented separately.",
+  "policy": "Enable only dated individual or explicitly bounded family presence evidence; reject known later component additions and resource identity/shape drift. No claim of a complete May 2013 snapshot.",
+  "achievements": [
+    {
+      "achievement_id": 500010100,
+      "catalogue_name": "Graduate of Crescent Reach (1-20)",
+      "source_url": "https://www.eqmagetower.com/forums/viewtopic.php?t=3585",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_announcement",
+      "status": "verified_present",
+      "reason": "Listed in March 13, 2012 original Hero Journey launch announcement; matched current identity",
+      "identity_source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5647",
+      "reviewed_shape_sha256": "d6bf54079efe9a818a32b9fb8732aba327711a71980db689d910c2ec41a21476"
+    },
+    {
+      "achievement_id": 500010200,
+      "catalogue_name": "Welcome to Crescent Reach (1+)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5554",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "54225f24a3254a6c843d351961ef8b368ad01987ed4de23b092a00a3ebd046cf"
+    },
+    {
+      "achievement_id": 500010300,
+      "catalogue_name": "Ready for Combat (1-5)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5555",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "9b874f72432f09a7f47f1bdd27e5d241b364c19fb4d0580c224ed8d867906151"
+    },
+    {
+      "achievement_id": 500010400,
+      "catalogue_name": "Important Errands (6-10)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5556",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "3b1f38fe848fc3cd37b5616023602a6ee4a29d592ce4ad15877539d74368450b"
+    },
+    {
+      "achievement_id": 500010500,
+      "catalogue_name": "Making a Name for Yourself (11-15)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5557",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "3c4ba878ece43061a8033f721d8831e5b43dcecc809179a4680a38d97e6dea55"
+    },
+    {
+      "achievement_id": 500010600,
+      "catalogue_name": "Becoming a Hero (16-20)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5558",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "4ee86613675560b78800137f47c791866b5689eef7ef4cc94bc04ec5e8adc1ed"
+    },
+    {
+      "achievement_id": 500010700,
+      "catalogue_name": "The Council of Six (Crescent 1+)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5590",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "b0a4b6dd8aa9aaf459946c5f285b9c39e0bde9148451edeb7b39c6ae1247310c"
+    },
+    {
+      "achievement_id": 500010800,
+      "catalogue_name": "Love in the Air (Crescent 1+)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5591",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "d3254c54e010694900cb5d021f85e924268ab43256f5dd1c7f1de94b3b22f5b2"
+    },
+    {
+      "achievement_id": 500010900,
+      "catalogue_name": "Boawb's Jealousy (Crescent 1+)",
+      "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5592",
+      "evidence_date": "2012-03-13",
+      "evidence_type": "contemporary_achievement_record",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "804a8433912c0706cf6854797288d8b1409e4a79870d55a98473f19ba10ea1eb"
+    }
+  ]
+}

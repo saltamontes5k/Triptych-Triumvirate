@@ -1,0 +1,70 @@
+[
+  {
+    "path": "README.md",
+    "sha256": "e466603cb8bd052e334255ce9dbd72a96ca0cee60cfa54c0db635639d0b0f7a7"
+  },
+  {
+    "path": "apply_quests.py",
+    "sha256": "5daaed34bfc3a605bc23c833c0a395cc1aa5b11d1a5d59adb08b6210f262aa94"
+  },
+  {
+    "path": "configuration/reconstruction-policy.json",
+    "sha256": "e2fd45694239bb047115a38885d8e3097943407f02e975083d48324797a92287"
+  },
+  {
+    "path": "configure.py",
+    "sha256": "3ff19d8d71e086e504bc712a322f695b9b96c4e04b340735ecb9a6336d07f37b"
+  },
+  {
+    "path": "obsolete-aliases.json",
+    "sha256": "c99ec2cfafa31a7fae9c8752d8b612cf3d707b75b4768238f7cddb8ed7500015"
+  },
+  {
+    "path": "patches/quest-hooks.patch",
+    "sha256": "b847ba68d6bded5dd2e1c332aa973c37841048adf90dd7e6a5dddade56b76762"
+  },
+  {
+    "path": "preflight.py",
+    "sha256": "d1c1fa07a597a28d1b5da16c638c7f1daa768e755bbbe59dea80d21073c5829c"
+  },
+  {
+    "path": "provenance/baseline-identities.json",
+    "sha256": "eb5cc7520761f22ed21391858135497b49e7e4c942b63429b5894aa86aca5761"
+  },
+  {
+    "path": "provenance/identity-provenance.json",
+    "sha256": "f664810948c9f9a6d781d14b19ace67ccc98a67c1655b4b80e36f01de2946ff4"
+  },
+  {
+    "path": "provenance/native-status.json",
+    "sha256": "1447da1bee472363cffe007aff0b66ba2b901d288546b849acf5231a1773b2ff"
+  },
+  {
+    "path": "provenance/quest-provenance.json",
+    "sha256": "acbad6122e299c2778698469c27fff13b4df033318f7d9b55a981556a7b59d51"
+  },
+  {
+    "path": "quest-manifest.json",
+    "sha256": "afa1b03d55cdd76dc658a55b7a0bfce10b39f6695beea7010fc5e086c1ce1bf6"
+  },
+  {
+    "path": "quests/lua_modules/shards_partisan.lua",
+    "sha256": "af08d3a2c5400a9edce8a4ed560db75dfaf646ac5742058b960665bba00a4430"
+  },
+  {
+    "path": "quests/lua_modules/shards_partisan_config.lua",
+    "sha256": "86f8a2691f6d6faa6a81a7bddf47e2e4d28e63f1a2601c6798d351421cdc3697"
+  },
+  {
+    "path": "sql/010-shards-catalogue.sql",
+    "sha256": "5cb821f887e4d8ad07aa582cbec92e8ebc586aa0a131cf1021387da3f0be17f1"
+  },
+  {
+    "path": "sql/015-welcome-prerequisite.sql",
+    "sha256": "a56f17f5214a05e0814d6b4924d90d3e9b1c330abad1bd38c8a3b2002f68c055"
+  },
+  {
+    "path": "sql/020-shards-partisan.sql",
+    "sha256": "0ffbd645b82e337140c5da2f8b184689acd2617d1c5952c5912c7a5e3e85e458"
+  }
+]

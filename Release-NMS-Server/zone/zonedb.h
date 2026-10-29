@@ -659,7 +659,7 @@ public:
 
 	/* Account Alternate Currency   */
 	void LoadAccountAltCurrencyValues(uint32 account_id, std::map<uint32, uint32> &currency);
-	void UpdateAccountAltCurrencyValue(uint32 account_id, uint32 currency_id, uint32 value);
+	bool UpdateAccountAltCurrencyValue(uint32 account_id, uint32 currency_id, uint32 value);
 
 	/*
 		* Misc stuff.

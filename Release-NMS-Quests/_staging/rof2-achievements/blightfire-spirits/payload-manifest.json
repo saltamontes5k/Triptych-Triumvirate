@@ -1,0 +1,106 @@
+[
+  {
+    "path": "README.md",
+    "sha256": "2520c05044ff9691dde5a5310a65968efa7ee67efd2e66d42f13aef02b06f9dc"
+  },
+  {
+    "path": "apply_quests.py",
+    "sha256": "a8a0f27345697ebfbfed4082d13eb1143dea8f965a3c7f494cebff2b57402b6d"
+  },
+  {
+    "path": "hooks/global-player-spirits.fragment.lua",
+    "sha256": "7538b12c2a43c7e0a0e064d7be7a49394cb9ab8300eacde0d414558955e06f21"
+  },
+  {
+    "path": "hooks/moors-player-spirits.fragment.lua",
+    "sha256": "73afbc74848fa2e0eef50f8fb1403585a35fbb05e109109c737bc525bb547959"
+  },
+  {
+    "path": "preflight.py",
+    "sha256": "d6c7352f7de41e6cfee9a3a2d8497a710c2afcc0e59bdb889592cc0b3e45326d"
+  },
+  {
+    "path": "provenance/baseline-identities.json",
+    "sha256": "ef37cf1f7f8db154acddaaff56235fa42ca4458668d1ee57749c0edd4b5e60a4"
+  },
+  {
+    "path": "provenance/implementation-specification.json",
+    "sha256": "2b73605d6c761c7d5ed4629121f40635a6073ab7d073178c9e024855a0015f90"
+  },
+  {
+    "path": "provenance/native-status.json",
+    "sha256": "db085a8071a9200e228937f54954a4dadbf33bc92b73275c0803ee81526b81ba"
+  },
+  {
+    "path": "provenance/new-npc-profiles.json",
+    "sha256": "860429be4fd9b7a483545e4005d799a947a48e7b1aa03851a49d4a0472ae096e"
+  },
+  {
+    "path": "provenance/research-decisions.json",
+    "sha256": "a4aa19c989bb3b8610ba5356f106de80b632f697cd42d2ce8031dcf218f2d089"
+  },
+  {
+    "path": "provenance/scene-data.json",
+    "sha256": "8159d8b4e6b66bdb9506873f4bf35bbed58f46a6fc57b41177b1e3d9612518bf"
+  },
+  {
+    "path": "quest-manifest.json",
+    "sha256": "6246a6079a3309c2601ecda51a060f3bfcebcc30745f9033d87390e063a33927"
+  },
+  {
+    "path": "quests/crescent/394108.lua",
+    "sha256": "3a4eb401a3ccd02c1fce5916087f54d701730095775d922dee70074b877bfab8"
+  },
+  {
+    "path": "quests/global/spells/8698.lua",
+    "sha256": "4cb5560a6daa2527ff446e1a5616a0c9508095044ba47eea9a1b90de8ed172c0"
+  },
+  {
+    "path": "quests/lua_modules/achievement_quest_blightfire_spirits.lua",
+    "sha256": "d51fc236fbe212200f3489e98bc4ad6ac1ca5949c682d32dd0ee36de95fa1e31"
+  },
+  {
+    "path": "quests/lua_modules/achievement_quest_blightfire_spirits_data.lua",
+    "sha256": "9abc54f7797b5a304121fcfe8e1d79eabbc0f52f9fcdb7ac975deb1e5cec0bee"
+  },
+  {
+    "path": "quests/moors/395132.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395190.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395232.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395276.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395910.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395911.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395912.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "quests/moors/395913.lua",
+    "sha256": "590dbc804c7c52cbe22b82a7be373ff0fc65d274b60126d22bf85ce0237a3885"
+  },
+  {
+    "path": "sql/010-catalogue.sql",
+    "sha256": "386ce801a36ad3f9714a2dab384c4c21eab636ba5ae65a95e070b5edbce5ff6f"
+  },
+  {
+    "path": "sql/020-quests.sql",
+    "sha256": "931b453b0e16998710d7af9f531b8f96c571eb4ddb8be8244c3f4178fd81e954"
+  }
+]

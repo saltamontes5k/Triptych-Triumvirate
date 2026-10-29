@@ -411,6 +411,7 @@ public:
 		uint32 value
 	);
 	bool CompleteSharedTaskAchievement(uint32 achievement_id);
+	std::string GetSharedTaskIdentity();
 	void LockSharedTask(bool lock);
 	void EndSharedTask();
 	void EndSharedTask(bool send_fail);
@@ -636,6 +637,7 @@ public:
 	void SetSecondaryWeaponOrnamentation(uint32 model_id);
 	void TaskSelector(luabind::adl::object table);
 	void TaskSelector(luabind::adl::object table, bool ignore_cooldown);
+	bool TaskSelectorFromNPC(Lua_NPC npc, luabind::adl::object table);
 
 	void SetClientMaxLevel(uint8 max_level);
 	uint8 GetClientMaxLevel();

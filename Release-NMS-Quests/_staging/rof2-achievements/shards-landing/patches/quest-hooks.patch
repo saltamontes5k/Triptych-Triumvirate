@@ -1,0 +1,2996 @@
+diff --git a/crystalshard/a_Ry-Gorr_digger.lua b/crystalshard/a_Ry-Gorr_digger.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_digger.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_excavator.lua b/crystalshard/a_Ry-Gorr_excavator.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_excavator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_guard.lua b/crystalshard/a_Ry-Gorr_guard.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_guard.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_messenger.lua b/crystalshard/a_Ry-Gorr_messenger.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_messenger.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_miner.lua b/crystalshard/a_Ry-Gorr_miner.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_miner.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_oracle.lua b/crystalshard/a_Ry-Gorr_oracle.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_oracle.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_overseer.lua b/crystalshard/a_Ry-Gorr_overseer.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_overseer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_prospector.lua b/crystalshard/a_Ry-Gorr_prospector.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_prospector.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_shaman.lua b/crystalshard/a_Ry-Gorr_shaman.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_shaman.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_Ry-Gorr_watchman.lua b/crystalshard/a_Ry-Gorr_watchman.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_Ry-Gorr_watchman.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_hollow_terror.lua b/crystalshard/a_hollow_terror.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_hollow_terror.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_lazy_orc.lua b/crystalshard/a_lazy_orc.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_lazy_orc.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_pure_terror.lua b/crystalshard/a_pure_terror.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_pure_terror.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_stalag_terror.lua b/crystalshard/a_stalag_terror.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_stalag_terror.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_tentacle_terror.lua b/crystalshard/a_tentacle_terror.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_tentacle_terror.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/a_tentacle_tormentor.lua b/crystalshard/a_tentacle_tormentor.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/a_tentacle_tormentor.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/an_icy_leech.lua b/crystalshard/an_icy_leech.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/an_icy_leech.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/an_icy_terror.lua b/crystalshard/an_icy_terror.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/an_icy_terror.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/crystalshard/player.lua b/crystalshard/player.lua
+new file mode 100644
+--- /dev/null
++++ b/crystalshard/player.lua
+@@ -0,0 +1,52 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_enter_zone = event_enter_zone
++function event_enter_zone(e)
++    if shard_previous_event_enter_zone then local old_result=shard_previous_event_enter_zone(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.enter(e.self)
++end
++local shard_previous_event_player_pickup = event_player_pickup
++function event_player_pickup(e)
++    if shard_previous_event_player_pickup then local old_result=shard_previous_event_player_pickup(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.pickup(e)
++end
++local shard_previous_event_loot = event_loot
++function event_loot(e)
++    if shard_previous_event_loot then local old_result=shard_previous_event_loot(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.loot(e)
++end
++local shard_previous_event_combine_validate = event_combine_validate
++function event_combine_validate(e)
++    if shard_previous_event_combine_validate then local old_result=shard_previous_event_combine_validate(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.combine_validate(e)
++end
++local shard_previous_event_combine_success = event_combine_success
++function event_combine_success(e)
++    if shard_previous_event_combine_success then local old_result=shard_previous_event_combine_success(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.combine_success(e)
++end
++local shard_previous_event_timer = event_timer
++function event_timer(e)
++    if shard_previous_event_timer then local old_result=shard_previous_event_timer(e);if old_result and old_result ~= 0 then return old_result end end
++    if e.timer == "shard_partisan" then shard_arc.tick(e.self) end
++end
++local shard_previous_event_task_stage_complete = event_task_stage_complete
++function event_task_stage_complete(e)
++    if shard_previous_event_task_stage_complete then local old_result=shard_previous_event_task_stage_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.stage(e)
++end
++local shard_previous_event_task_accepted = event_task_accepted
++function event_task_accepted(e)
++    if shard_previous_event_task_accepted then local old_result=shard_previous_event_task_accepted(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.accepted(e)
++end
++local shard_previous_event_task_complete = event_task_complete
++function event_task_complete(e)
++    if shard_previous_event_task_complete then local old_result=shard_previous_event_task_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.complete(e)
++end
++local shard_previous_event_click_door = event_click_door
++function event_click_door(e)
++    if shard_previous_event_click_door then local old_result=shard_previous_event_click_door(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.door(e)
++end
+diff --git a/eastwastesshard/a_dire_wolf.lua b/eastwastesshard/a_dire_wolf.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_dire_wolf.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_fear_shardling.lua b/eastwastesshard/a_fear_shardling.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_fear_shardling.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_manticore.lua b/eastwastesshard/a_manticore.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_manticore.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_nightmare.lua b/eastwastesshard/a_nightmare.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_nightmare.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_samhain.lua b/eastwastesshard/a_samhain.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_samhain.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_savage_dire_wolf.lua b/eastwastesshard/a_savage_dire_wolf.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_savage_dire_wolf.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/a_snow_griffin.lua b/eastwastesshard/a_snow_griffin.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/a_snow_griffin.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/an_elder_snow_griffin.lua b/eastwastesshard/an_elder_snow_griffin.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/an_elder_snow_griffin.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/eastwastesshard/player.lua b/eastwastesshard/player.lua
+new file mode 100644
+--- /dev/null
++++ b/eastwastesshard/player.lua
+@@ -0,0 +1,52 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_enter_zone = event_enter_zone
++function event_enter_zone(e)
++    if shard_previous_event_enter_zone then local old_result=shard_previous_event_enter_zone(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.enter(e.self)
++end
++local shard_previous_event_player_pickup = event_player_pickup
++function event_player_pickup(e)
++    if shard_previous_event_player_pickup then local old_result=shard_previous_event_player_pickup(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.pickup(e)
++end
++local shard_previous_event_loot = event_loot
++function event_loot(e)
++    if shard_previous_event_loot then local old_result=shard_previous_event_loot(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.loot(e)
++end
++local shard_previous_event_combine_validate = event_combine_validate
++function event_combine_validate(e)
++    if shard_previous_event_combine_validate then local old_result=shard_previous_event_combine_validate(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.combine_validate(e)
++end
++local shard_previous_event_combine_success = event_combine_success
++function event_combine_success(e)
++    if shard_previous_event_combine_success then local old_result=shard_previous_event_combine_success(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.combine_success(e)
++end
++local shard_previous_event_timer = event_timer
++function event_timer(e)
++    if shard_previous_event_timer then local old_result=shard_previous_event_timer(e);if old_result and old_result ~= 0 then return old_result end end
++    if e.timer == "shard_partisan" then shard_arc.tick(e.self) end
++end
++local shard_previous_event_task_stage_complete = event_task_stage_complete
++function event_task_stage_complete(e)
++    if shard_previous_event_task_stage_complete then local old_result=shard_previous_event_task_stage_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.stage(e)
++end
++local shard_previous_event_task_accepted = event_task_accepted
++function event_task_accepted(e)
++    if shard_previous_event_task_accepted then local old_result=shard_previous_event_task_accepted(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.accepted(e)
++end
++local shard_previous_event_task_complete = event_task_complete
++function event_task_complete(e)
++    if shard_previous_event_task_complete then local old_result=shard_previous_event_task_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.complete(e)
++end
++local shard_previous_event_click_door = event_click_door
++function event_click_door(e)
++    if shard_previous_event_click_door then local old_result=shard_previous_event_click_door(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.door(e)
++end
+diff --git a/global/items/script_8793.lua b/global/items/script_8793.lua
+new file mode 100644
+--- /dev/null
++++ b/global/items/script_8793.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_item_click_cast = event_item_click_cast
++function event_item_click_cast(e)
++    if shard_previous_event_item_click_cast then local old_result=shard_previous_event_item_click_cast(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.tuning_start(e)
++end
+diff --git a/global/spells/23998.lua b/global/spells/23998.lua
+new file mode 100644
+--- /dev/null
++++ b/global/spells/23998.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_spell_effect = event_spell_effect
++function event_spell_effect(e)
++    if shard_previous_event_spell_effect then local old_result=shard_previous_event_spell_effect(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.spell(e)
++end
+diff --git a/global/spells/33562.lua b/global/spells/33562.lua
+new file mode 100644
+--- /dev/null
++++ b/global/spells/33562.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_spell_effect = event_spell_effect
++function event_spell_effect(e)
++    if shard_previous_event_spell_effect then local old_result=shard_previous_event_spell_effect(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.spell(e)
++end
+diff --git a/global/spells/33563.lua b/global/spells/33563.lua
+new file mode 100644
+--- /dev/null
++++ b/global/spells/33563.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_spell_effect = event_spell_effect
++function event_spell_effect(e)
++    if shard_previous_event_spell_effect then local old_result=shard_previous_event_spell_effect(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.spell(e)
++end
+diff --git a/global/spells/33564.lua b/global/spells/33564.lua
+new file mode 100644
+--- /dev/null
++++ b/global/spells/33564.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_spell_effect = event_spell_effect
++function event_spell_effect(e)
++    if shard_previous_event_spell_effect then local old_result=shard_previous_event_spell_effect(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.spell(e)
++end
+diff --git a/global/spells/33565.lua b/global/spells/33565.lua
+new file mode 100644
+--- /dev/null
++++ b/global/spells/33565.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_spell_effect = event_spell_effect
++function event_spell_effect(e)
++    if shard_previous_event_spell_effect then local old_result=shard_previous_event_spell_effect(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.spell(e)
++end
+diff --git a/kaelshard/a_Protector_of_Zek.lua b/kaelshard/a_Protector_of_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_Protector_of_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_Protector_of_war.lua b/kaelshard/a_Protector_of_war.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_Protector_of_war.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_cleric_of_Tallon_Zek.lua b/kaelshard/a_cleric_of_Tallon_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_cleric_of_Tallon_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_cleric_of_Vallon_Zek.lua b/kaelshard/a_cleric_of_Vallon_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_cleric_of_Vallon_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_courier.lua b/kaelshard/a_courier.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_courier.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_drunken_faerie.lua b/kaelshard/a_drunken_faerie.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_drunken_faerie.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_fey_delerium.lua b/kaelshard/a_fey_delerium.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_fey_delerium.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_fey_uniter.lua b/kaelshard/a_fey_uniter.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_fey_uniter.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_frost_giant_berserker.lua b/kaelshard/a_frost_giant_berserker.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_frost_giant_berserker.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_frost_giant_commoner.lua b/kaelshard/a_frost_giant_commoner.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_frost_giant_commoner.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_frost_giant_gladiator.lua b/kaelshard/a_frost_giant_gladiator.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_frost_giant_gladiator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_frost_giant_trainer.lua b/kaelshard/a_frost_giant_trainer.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_frost_giant_trainer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_frost_giant_wolf_tamer.lua b/kaelshard/a_frost_giant_wolf_tamer.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_frost_giant_wolf_tamer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_grave_conjurer.lua b/kaelshard/a_grave_conjurer.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_grave_conjurer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_guardian_of_Zek.lua b/kaelshard/a_guardian_of_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_guardian_of_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_kromrif_recruiter.lua b/kaelshard/a_kromrif_recruiter.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_kromrif_recruiter.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_kromzek_sorcerer.lua b/kaelshard/a_kromzek_sorcerer.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_kromzek_sorcerer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_lesser_storm_giant_noble.lua b/kaelshard/a_lesser_storm_giant_noble.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_lesser_storm_giant_noble.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_noble_storm_giant.lua b/kaelshard/a_noble_storm_giant.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_noble_storm_giant.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_penumbral_coldain.lua b/kaelshard/a_penumbral_coldain.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_penumbral_coldain.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_priest_of_Tallon_Zek.lua b/kaelshard/a_priest_of_Tallon_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_priest_of_Tallon_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_ritualist_of_Rallos_Zek.lua b/kaelshard/a_ritualist_of_Rallos_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_ritualist_of_Rallos_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_ritualist_of_Tallon_Zek.lua b/kaelshard/a_ritualist_of_Tallon_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_ritualist_of_Tallon_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_ritualist_of_Vallon_Zek.lua b/kaelshard/a_ritualist_of_Vallon_Zek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_ritualist_of_Vallon_Zek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_storm_giant_berserker.lua b/kaelshard/a_storm_giant_berserker.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_storm_giant_berserker.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_storm_giant_commoner.lua b/kaelshard/a_storm_giant_commoner.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_storm_giant_commoner.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_storm_giant_gladiator.lua b/kaelshard/a_storm_giant_gladiator.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_storm_giant_gladiator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_storm_giant_noble.lua b/kaelshard/a_storm_giant_noble.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_storm_giant_noble.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_storm_giant_of_nobility.lua b/kaelshard/a_storm_giant_of_nobility.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_storm_giant_of_nobility.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_thieving_acolyte.lua b/kaelshard/a_thieving_acolyte.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_thieving_acolyte.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_twisted_prowler.lua b/kaelshard/a_twisted_prowler.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_twisted_prowler.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/a_visiting_noble.lua b/kaelshard/a_visiting_noble.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/a_visiting_noble.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/an_arena_spectator.lua b/kaelshard/an_arena_spectator.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/an_arena_spectator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/an_umbral_coldain.lua b/kaelshard/an_umbral_coldain.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/an_umbral_coldain.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/an_unbalanced_kromzek.lua b/kaelshard/an_unbalanced_kromzek.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/an_unbalanced_kromzek.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/an_upright_kromrif.lua b/kaelshard/an_upright_kromrif.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/an_upright_kromrif.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/kaelshard/player.lua b/kaelshard/player.lua
+new file mode 100644
+--- /dev/null
++++ b/kaelshard/player.lua
+@@ -0,0 +1,52 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_enter_zone = event_enter_zone
++function event_enter_zone(e)
++    if shard_previous_event_enter_zone then local old_result=shard_previous_event_enter_zone(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.enter(e.self)
++end
++local shard_previous_event_player_pickup = event_player_pickup
++function event_player_pickup(e)
++    if shard_previous_event_player_pickup then local old_result=shard_previous_event_player_pickup(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.pickup(e)
++end
++local shard_previous_event_loot = event_loot
++function event_loot(e)
++    if shard_previous_event_loot then local old_result=shard_previous_event_loot(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.loot(e)
++end
++local shard_previous_event_combine_validate = event_combine_validate
++function event_combine_validate(e)
++    if shard_previous_event_combine_validate then local old_result=shard_previous_event_combine_validate(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.combine_validate(e)
++end
++local shard_previous_event_combine_success = event_combine_success
++function event_combine_success(e)
++    if shard_previous_event_combine_success then local old_result=shard_previous_event_combine_success(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.combine_success(e)
++end
++local shard_previous_event_timer = event_timer
++function event_timer(e)
++    if shard_previous_event_timer then local old_result=shard_previous_event_timer(e);if old_result and old_result ~= 0 then return old_result end end
++    if e.timer == "shard_partisan" then shard_arc.tick(e.self) end
++end
++local shard_previous_event_task_stage_complete = event_task_stage_complete
++function event_task_stage_complete(e)
++    if shard_previous_event_task_stage_complete then local old_result=shard_previous_event_task_stage_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.stage(e)
++end
++local shard_previous_event_task_accepted = event_task_accepted
++function event_task_accepted(e)
++    if shard_previous_event_task_accepted then local old_result=shard_previous_event_task_accepted(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.accepted(e)
++end
++local shard_previous_event_task_complete = event_task_complete
++function event_task_complete(e)
++    if shard_previous_event_task_complete then local old_result=shard_previous_event_task_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.complete(e)
++end
++local shard_previous_event_click_door = event_click_door
++function event_click_door(e)
++    if shard_previous_event_click_door then local old_result=shard_previous_event_click_door(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.door(e)
++end
+diff --git a/shardslanding/#Councilman_Nostulia.lua b/shardslanding/#Councilman_Nostulia.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Councilman_Nostulia.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
++local shard_previous_event_trade = event_trade
++function event_trade(e)
++    if shard_previous_event_trade then local old_result=shard_previous_event_trade(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.trade(e)
++end
+diff --git a/shardslanding/#Director_Idris_Manaar.lua b/shardslanding/#Director_Idris_Manaar.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Director_Idris_Manaar.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
++local shard_previous_event_trade = event_trade
++function event_trade(e)
++    if shard_previous_event_trade then local old_result=shard_previous_event_trade(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.trade(e)
++end
+diff --git a/shardslanding/#Engineer_Eilisia.lua b/shardslanding/#Engineer_Eilisia.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Engineer_Eilisia.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Evoker_Farleap.lua b/shardslanding/#Evoker_Farleap.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Evoker_Farleap.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Evoker_Redwolf.lua b/shardslanding/#Evoker_Redwolf.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Evoker_Redwolf.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Evoker_Slowtail.lua b/shardslanding/#Evoker_Slowtail.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Evoker_Slowtail.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Evoker_Waylight.lua b/shardslanding/#Evoker_Waylight.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Evoker_Waylight.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Harbinger_Glask.lua b/shardslanding/#Harbinger_Glask.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Harbinger_Glask.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
++local shard_previous_event_trade = event_trade
++function event_trade(e)
++    if shard_previous_event_trade then local old_result=shard_previous_event_trade(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.trade(e)
++end
+diff --git a/shardslanding/#Leopold_Crunchbasher.lua b/shardslanding/#Leopold_Crunchbasher.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Leopold_Crunchbasher.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Magus_Burlshin.lua b/shardslanding/#Magus_Burlshin.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Magus_Burlshin.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
++local shard_previous_event_trade = event_trade
++function event_trade(e)
++    if shard_previous_event_trade then local old_result=shard_previous_event_trade(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.trade(e)
++end
+diff --git a/shardslanding/#Overseer_Drent.lua b/shardslanding/#Overseer_Drent.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Overseer_Drent.lua
+@@ -0,0 +1,35 @@
++-- EQQuests 5978; server item 85971, task 910000. Allakhazam IDs are not server IDs.
++function event_say(e)
++    if e.message:lower():find("hail", 1, true) then
++        if e.other:GetLevel() < 85 then
++            e.self:Say("Return when you have reached level 85. These hills are dangerous.")
++        elseif not e.other:IsTaskActive(910000) and not e.other:IsTaskCompleted(910000) then
++            e.other:AssignTask(910000, e.self:GetID())
++            e.self:Say("Welcome to the outpost. Explore our camp, speak with me and Master Hunter Jilare, then survey the landing.")
++        elseif e.other:IsTaskCompleted(910000) then
++            e.self:Say("You have earned our welcome. Master Hunter Jilare has further work for you.")
++        else
++            e.self:Say("Follow your survey objectives. If you find anything unusual in the Silent Hall, bring it to me.")
++        end
++    end
++end
++
++function event_trade(e)
++    local item_lib = require("items")
++    -- Native Deliver marks the matching instance before EVENT_TRADE. Consume only that shard.
++    for slot = 1, 4 do
++        local item = e.trade["item" .. slot]
++        if item and item.valid and item:GetID() == 85971 and item:GetTaskDeliveredCount() > 0 then
++            item_lib.check_turn_in(e.trade, {item1 = 85971})
++            break
++        end
++    end
++    item_lib.return_items(e.self, e.other, e.trade)
++end
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_B-Drynn.lua b/shardslanding/#Shardtender_B-Drynn.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_B-Drynn.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_Babblemok.lua b/shardslanding/#Shardtender_Babblemok.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_Babblemok.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_N-Laris.lua b/shardslanding/#Shardtender_N-Laris.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_N-Laris.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_Pureglade.lua b/shardslanding/#Shardtender_Pureglade.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_Pureglade.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_Tyvale.lua b/shardslanding/#Shardtender_Tyvale.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_Tyvale.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/#Shardtender_V-Rax.lua b/shardslanding/#Shardtender_V-Rax.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/#Shardtender_V-Rax.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_say = event_say
++function event_say(e)
++    if shard_previous_event_say then local old_result=shard_previous_event_say(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.say(e)
++end
+diff --git a/shardslanding/a_blighted_prowler.lua b/shardslanding/a_blighted_prowler.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_blighted_prowler.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_blightshell_scarab.lua b/shardslanding/a_blightshell_scarab.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_blightshell_scarab.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_calculating_overseer.lua b/shardslanding/a_calculating_overseer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_calculating_overseer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_chillclaw_wyvern.lua b/shardslanding/a_chillclaw_wyvern.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_chillclaw_wyvern.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_citizen.lua b/shardslanding/a_citizen.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_citizen.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_clickshell_pest.lua b/shardslanding/a_clickshell_pest.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_clickshell_pest.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_dredger.lua b/shardslanding/a_conscripted_dredger.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_dredger.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_edgecrafter.lua b/shardslanding/a_conscripted_edgecrafter.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_edgecrafter.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_excavator.lua b/shardslanding/a_conscripted_excavator.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_excavator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_fighter.lua b/shardslanding/a_conscripted_fighter.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_fighter.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_gladiator.lua b/shardslanding/a_conscripted_gladiator.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_gladiator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_ironshaper.lua b/shardslanding/a_conscripted_ironshaper.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_ironshaper.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_lifter.lua b/shardslanding/a_conscripted_lifter.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_lifter.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_miner.lua b/shardslanding/a_conscripted_miner.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_miner.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_smith.lua b/shardslanding/a_conscripted_smith.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_smith.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_conscripted_tender.lua b/shardslanding/a_conscripted_tender.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_conscripted_tender.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_coralspine_goral.lua b/shardslanding/a_coralspine_goral.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_coralspine_goral.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_corrupted_coralspine.lua b/shardslanding/a_corrupted_coralspine.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_corrupted_coralspine.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_corrupted_devourer.lua b/shardslanding/a_corrupted_devourer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_corrupted_devourer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_council_advisor.lua b/shardslanding/a_council_advisor.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_council_advisor.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_council_judicator.lua b/shardslanding/a_council_judicator.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_council_judicator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_council_overseer.lua b/shardslanding/a_council_overseer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_council_overseer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_devout_believer.lua b/shardslanding/a_devout_believer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_devout_believer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_dire_plainskeeper.lua b/shardslanding/a_dire_plainskeeper.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_dire_plainskeeper.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_feeble_devourer.lua b/shardslanding/a_feeble_devourer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_feeble_devourer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_apparition.lua b/shardslanding/a_forsaken_apparition.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_apparition.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
+diff --git a/shardslanding/a_forsaken_believer.lua b/shardslanding/a_forsaken_believer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_believer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_coordinator.lua b/shardslanding/a_forsaken_coordinator.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_coordinator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_overseer.lua b/shardslanding/a_forsaken_overseer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_overseer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_speaker.lua b/shardslanding/a_forsaken_speaker.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_speaker.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_supervisor.lua b/shardslanding/a_forsaken_supervisor.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_supervisor.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_forsaken_torchbearer.lua b/shardslanding/a_forsaken_torchbearer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_forsaken_torchbearer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_frostcoat_grazer.lua b/shardslanding/a_frostcoat_grazer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_frostcoat_grazer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_frostcoat_patriarch.lua b/shardslanding/a_frostcoat_patriarch.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_frostcoat_patriarch.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_greater_ivyscale.lua b/shardslanding/a_greater_ivyscale.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_greater_ivyscale.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_greater_slatescale.lua b/shardslanding/a_greater_slatescale.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_greater_slatescale.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_kangon_verdantbeak.lua b/shardslanding/a_kangon_verdantbeak.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_kangon_verdantbeak.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_lesser_blightshell.lua b/shardslanding/a_lesser_blightshell.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_lesser_blightshell.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_lesser_hoarder.lua b/shardslanding/a_lesser_hoarder.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_lesser_hoarder.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_lesser_plainskeeper.lua b/shardslanding/a_lesser_plainskeeper.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_lesser_plainskeeper.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_naeya_plainshound.lua b/shardslanding/a_naeya_plainshound.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_naeya_plainshound.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_pious_believer.lua b/shardslanding/a_pious_believer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_pious_believer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_plainsdweller_guardian.lua b/shardslanding/a_plainsdweller_guardian.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_plainsdweller_guardian.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_plainsdweller_wyvern.lua b/shardslanding/a_plainsdweller_wyvern.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_plainsdweller_wyvern.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_ruthless_overseer.lua b/shardslanding/a_ruthless_overseer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_ruthless_overseer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_selyrah_plainskeeper.lua b/shardslanding/a_selyrah_plainskeeper.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_selyrah_plainskeeper.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_silent_herald.lua b/shardslanding/a_silent_herald.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_silent_herald.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_slatescale_serpent.lua b/shardslanding/a_slatescale_serpent.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_slatescale_serpent.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_slatescale_slitherer.lua b/shardslanding/a_slatescale_slitherer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_slatescale_slitherer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_soulless_attendee.lua b/shardslanding/a_soulless_attendee.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_soulless_attendee.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_stoic_believer.lua b/shardslanding/a_stoic_believer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_stoic_believer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_taskmaster.lua b/shardslanding/a_taskmaster.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_taskmaster.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_venomshell_pest.lua b/shardslanding/a_venomshell_pest.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_venomshell_pest.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_venomshell_scarab.lua b/shardslanding/a_venomshell_scarab.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_venomshell_scarab.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_verdantbeak_cub.lua b/shardslanding/a_verdantbeak_cub.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_verdantbeak_cub.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_wayward_nightmare.lua b/shardslanding/a_wayward_nightmare.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_wayward_nightmare.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
+diff --git a/shardslanding/a_wild_naeya.lua b/shardslanding/a_wild_naeya.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_wild_naeya.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_worntooth_grendlaen.lua b/shardslanding/a_worntooth_grendlaen.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_worntooth_grendlaen.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_worntooth_matron.lua b/shardslanding/a_worntooth_matron.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_worntooth_matron.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/a_zealous_believer.lua b/shardslanding/a_zealous_believer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/a_zealous_believer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_arena_sentry.lua b/shardslanding/an_arena_sentry.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_arena_sentry.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_arena_ward.lua b/shardslanding/an_arena_ward.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_arena_ward.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_armory_director.lua b/shardslanding/an_armory_director.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_armory_director.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_armory_foreman.lua b/shardslanding/an_armory_foreman.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_armory_foreman.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_armory_guard.lua b/shardslanding/an_armory_guard.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_armory_guard.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_armory_sentry.lua b/shardslanding/an_armory_sentry.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_armory_sentry.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_armory_ward.lua b/shardslanding/an_armory_ward.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_armory_ward.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_elder_naeya.lua b/shardslanding/an_elder_naeya.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_elder_naeya.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_elder_prowler.lua b/shardslanding/an_elder_prowler.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_elder_prowler.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_enforcer.lua b/shardslanding/an_enforcer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_enforcer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_icebeak_matriarch.lua b/shardslanding/an_icebeak_matriarch.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_icebeak_matriarch.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_icebeak_pup.lua b/shardslanding/an_icebeak_pup.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_icebeak_pup.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_iceclaw_wyvern.lua b/shardslanding/an_iceclaw_wyvern.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_iceclaw_wyvern.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_impassive_clergyman.lua b/shardslanding/an_impassive_clergyman.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_impassive_clergyman.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_ivyscale_serpent.lua b/shardslanding/an_ivyscale_serpent.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_ivyscale_serpent.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_ivyscale_slitherer.lua b/shardslanding/an_ivyscale_slitherer.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_ivyscale_slitherer.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_oashim_hoarder.lua b/shardslanding/an_oashim_hoarder.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_oashim_hoarder.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_umbraphyte_cultivator.lua b/shardslanding/an_umbraphyte_cultivator.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_umbraphyte_cultivator.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/an_umbraphyte_tender.lua b/shardslanding/an_umbraphyte_tender.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/an_umbraphyte_tender.lua
+@@ -0,0 +1,12 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_killed_merit = event_killed_merit
++function event_killed_merit(e)
++    if shard_previous_event_killed_merit then local old_result=shard_previous_event_killed_merit(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.killed(e)
++end
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.death(e)
++end
+diff --git a/shardslanding/envoy-s_supply_box.lua b/shardslanding/envoy-s_supply_box.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/envoy-s_supply_box.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.container_open(e)
++end
+diff --git a/shardslanding/player.lua b/shardslanding/player.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/player.lua
+@@ -0,0 +1,73 @@
++-- Shard's Landing welcome task; existing global player events still run separately.
++function event_enter_zone(e)
++    if e.self:GetLevel() >= 85 and not e.self:IsTaskActive(910000) and not e.self:IsTaskCompleted(910000) then
++        e.self:AssignTask(910000)
++    end
++end
++function event_player_pickup(e)
++    if e.item:GetID() == 85971 and e.self:IsTaskActivityActive(910000,17) then
++        e.self:UpdateTaskActivity(910000,17,1)
++    end
++end
++function event_task_stage_complete(e)
++    if e.task_id == 910000 and e.self:IsTaskActivityActive(910000,17) and e.self:HasItem(85971) then
++        e.self:UpdateTaskActivity(910000,17,1)
++    end
++end
++function event_task_complete(e)
++    if e.task_id == 910000 then
++        e.self:AddAAPoints(3)
++    end
++end
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_enter_zone = event_enter_zone
++function event_enter_zone(e)
++    if shard_previous_event_enter_zone then local old_result=shard_previous_event_enter_zone(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.enter(e.self)
++end
++local shard_previous_event_player_pickup = event_player_pickup
++function event_player_pickup(e)
++    if shard_previous_event_player_pickup then local old_result=shard_previous_event_player_pickup(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.pickup(e)
++end
++local shard_previous_event_loot = event_loot
++function event_loot(e)
++    if shard_previous_event_loot then local old_result=shard_previous_event_loot(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.loot(e)
++end
++local shard_previous_event_combine_validate = event_combine_validate
++function event_combine_validate(e)
++    if shard_previous_event_combine_validate then local old_result=shard_previous_event_combine_validate(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.combine_validate(e)
++end
++local shard_previous_event_combine_success = event_combine_success
++function event_combine_success(e)
++    if shard_previous_event_combine_success then local old_result=shard_previous_event_combine_success(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.combine_success(e)
++end
++local shard_previous_event_timer = event_timer
++function event_timer(e)
++    if shard_previous_event_timer then local old_result=shard_previous_event_timer(e);if old_result and old_result ~= 0 then return old_result end end
++    if e.timer == "shard_partisan" then shard_arc.tick(e.self) end
++end
++local shard_previous_event_task_stage_complete = event_task_stage_complete
++function event_task_stage_complete(e)
++    if shard_previous_event_task_stage_complete then local old_result=shard_previous_event_task_stage_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.stage(e)
++end
++local shard_previous_event_task_accepted = event_task_accepted
++function event_task_accepted(e)
++    if shard_previous_event_task_accepted then local old_result=shard_previous_event_task_accepted(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.accepted(e)
++end
++local shard_previous_event_task_complete = event_task_complete
++function event_task_complete(e)
++    if shard_previous_event_task_complete then local old_result=shard_previous_event_task_complete(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.complete(e)
++end
++local shard_previous_event_click_door = event_click_door
++function event_click_door(e)
++    if shard_previous_event_click_door then local old_result=shard_previous_event_click_door(e);if old_result and old_result ~= 0 then return old_result end end
++    return shard_arc.door(e)
++end
+diff --git a/shardslanding/supply_barrel.lua b/shardslanding/supply_barrel.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/supply_barrel.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.container_open(e)
++end
+diff --git a/shardslanding/supply_box.lua b/shardslanding/supply_box.lua
+new file mode 100644
+--- /dev/null
++++ b/shardslanding/supply_box.lua
+@@ -0,0 +1,7 @@
++
++local shard_arc = require("shards_partisan")
++local shard_previous_event_death = event_death
++function event_death(e)
++    if shard_previous_event_death then local old_result=shard_previous_event_death(e);if old_result and old_result ~= 0 then return old_result end end
++    shard_arc.container_open(e)
++end

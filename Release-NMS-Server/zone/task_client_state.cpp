@@ -162,12 +162,21 @@ bool RewardSelectionsMatch(
 
 std::vector<RewardSelectionReward> ResolveTaskRewards(
 	const RewardSelectionSet &reward_set,
-	uint32_t selected_option_id
+	uint32_t selected_option_id,
+	uint32_t character_classes
 )
 {
+	auto eligible_reward_set = reward_set;
+	std::erase_if(eligible_reward_set.options, [character_classes](const auto &option) {
+		return !EQ::RewardSelection::OptionEligibleForClass(option, character_classes);
+	});
+	if (!EQ::RewardSelection::ValidCanonicalSelection(eligible_reward_set, selected_option_id)) {
+		return {};
+	}
+
 	const RewardSelectionOption *selected_option = nullptr;
 	std::vector<RewardSelectionReward> rewards;
-	for (const auto &option : reward_set.options) {
+	for (const auto &option : eligible_reward_set.options) {
 		if (option.common_to_all) {
 			rewards.insert(
 				rewards.end(),
@@ -180,15 +189,13 @@ std::vector<RewardSelectionReward> ResolveTaskRewards(
 		}
 	}
 
-	if (!selected_option) {
-		return {};
+	if (selected_option) {
+		rewards.insert(
+			rewards.end(),
+			selected_option->rewards.begin(),
+			selected_option->rewards.end()
+		);
 	}
-
-	rewards.insert(
-		rewards.end(),
-		selected_option->rewards.begin(),
-		selected_option->rewards.end()
-	);
 	return rewards;
 }
 
@@ -198,6 +205,7 @@ std::optional<RewardSelectionSession> BuildTaskRewardSelectionSession(
 	uint64_t source_instance_id,
 	uint32_t pending_reward_id,
 	RewardSelectionChannel channel,
+	uint32_t character_classes,
 	uint32_t selected_option_id = 0
 )
 {
@@ -205,6 +213,10 @@ std::optional<RewardSelectionSession> BuildTaskRewardSelectionSession(
 		return std::nullopt;
 	}
 
+	auto eligible_reward_set = reward_set;
+	std::erase_if(eligible_reward_set.options, [character_classes](const auto &option) {
+		return !EQ::RewardSelection::OptionEligibleForClass(option, character_classes);
+	});
 	RewardSelectionSession session;
 	session.source.source = RewardSelectionSource::Task;
 	session.source.source_id = task_id;
@@ -214,8 +226,10 @@ std::optional<RewardSelectionSession> BuildTaskRewardSelectionSession(
 	session.reward_set.reward_set_id = reward_set.reward_set_id;
 	session.reward_set.title = reward_set.title;
 
-	bool found_selected_option = selected_option_id == 0;
-	for (const auto &option : reward_set.options) {
+	bool found_selected_option = selected_option_id == 0 ||
+		(selected_option_id == EQ::RewardSelection::CommonOnlySelection &&
+		 EQ::RewardSelection::IsCommonOnly(eligible_reward_set));
+	for (const auto &option : eligible_reward_set.options) {
 		if (
 			selected_option_id &&
 			!option.common_to_all &&
@@ -1362,6 +1376,7 @@ bool ClientTaskState::RewardTask(
 				persisted.source_instance_id,
 				persisted.pending_reward_id,
 				RewardSelectionChannel::Claimable,
+				c->GetClassesBits(),
 				persisted.selected_option_id
 			);
 			if (!task_reward_session) {
@@ -1689,6 +1704,7 @@ void ClientTaskState::SendRewardSelection(Client *client, uint32_t task_id)
 		source_instance_id,
 		pending_reward_id,
 		RewardSelectionChannel::Preview,
+		client->GetClassesBits(),
 		selected_option_id
 	);
 	if (!session || !client->GetRewardSelection().Open(*session)) {
@@ -1795,6 +1811,7 @@ void ClientTaskState::RestorePendingRewardSelection(Client *client)
 				persisted.source_instance_id,
 				persisted.pending_reward_id,
 				RewardSelectionChannel::Claimable,
+				client->GetClassesBits(),
 				persisted.selected_option_id
 			);
 			if (session) {
@@ -1883,7 +1900,8 @@ RewardSelectionDeliveryResult ClientTaskState::ClaimRewardSelection(
 
 	const auto expected_rewards = ResolveTaskRewards(
 		*reward_set,
-		claim.selected_option_id
+		claim.selected_option_id,
+		client->GetClassesBits()
 	);
 	if (expected_rewards.empty() || expected_rewards.size() != claim.rewards.size()) {
 		return RewardSelectionDeliveryResult::RetryableFailure;

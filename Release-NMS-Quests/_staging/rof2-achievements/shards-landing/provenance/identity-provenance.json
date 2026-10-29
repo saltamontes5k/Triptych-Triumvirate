@@ -1,0 +1,15 @@
+{
+  "admissions": [
+    {
+      "achievement_id": 2075225,
+      "catalogue_name": "Partisan of Shard's Landing",
+      "source_url": "https://www.redguides.com/community/threads/help-getting-100.25122/",
+      "evidence_date": "2012-12-04",
+      "evidence_type": "contemporary_achievement_record",
+      "reason": "First-person December4,2012 completion report individually lists the Shard's Landing Partisan arc and its completion reward, separately from subquest XP. This unambiguously identifies the launch-era zone Partisan achievement.",
+      "limitation": "Historical identity presence only. Current component labels, required/optional counts, point values and reward parity are not independently proven unchanged since May2013. Shape digest freezes the reviewed modern resource group; it is not original-shape proof. Missing objectives remain unbound and block completion. No reward grants inferred.",
+      "status": "verified_present",
+      "reviewed_shape_sha256": "e35fe09cd60e99bf03ba67ab7630e8445910b29c4050433bbcfa11d205d8c343"
+    }
+  ]
+}

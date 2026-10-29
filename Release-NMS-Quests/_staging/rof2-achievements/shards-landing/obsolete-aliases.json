@@ -1,0 +1,72 @@
+[
+  {
+    "before": "crystalshard/a_Ry`Gorr_digger.lua",
+    "after": "crystalshard/a_Ry-Gorr_digger.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_excavator.lua",
+    "after": "crystalshard/a_Ry-Gorr_excavator.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_guard.lua",
+    "after": "crystalshard/a_Ry-Gorr_guard.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_messenger.lua",
+    "after": "crystalshard/a_Ry-Gorr_messenger.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_miner.lua",
+    "after": "crystalshard/a_Ry-Gorr_miner.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_oracle.lua",
+    "after": "crystalshard/a_Ry-Gorr_oracle.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_overseer.lua",
+    "after": "crystalshard/a_Ry-Gorr_overseer.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_prospector.lua",
+    "after": "crystalshard/a_Ry-Gorr_prospector.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_shaman.lua",
+    "after": "crystalshard/a_Ry-Gorr_shaman.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "crystalshard/a_Ry`Gorr_watchman.lua",
+    "after": "crystalshard/a_Ry-Gorr_watchman.lua",
+    "sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "before": "shardslanding/#Shardtender_B`Drynn.lua",
+    "after": "shardslanding/#Shardtender_B-Drynn.lua",
+    "sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "before": "shardslanding/#Shardtender_N`Laris.lua",
+    "after": "shardslanding/#Shardtender_N-Laris.lua",
+    "sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "before": "shardslanding/#Shardtender_V`Rax.lua",
+    "after": "shardslanding/#Shardtender_V-Rax.lua",
+    "sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "before": "shardslanding/envoy`s_supply_box.lua",
+    "after": "shardslanding/envoy-s_supply_box.lua",
+    "sha256": "387c3687432ec8ed64a8ed3726e72cd105e7c5fc1b535cde8d6f782b78a2bdba"
+  }
+]

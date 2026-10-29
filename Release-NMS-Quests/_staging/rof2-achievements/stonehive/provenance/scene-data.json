@@ -1,0 +1,221 @@
+{
+  "tasks": {
+    "3040301": {
+      "id": 3040301,
+      "giver": 395211,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040302": {
+      "id": 3040302,
+      "giver": 396229,
+      "repeatable": true,
+      "prerequisites": [
+        3040301
+      ]
+    },
+    "3040303": {
+      "id": 3040303,
+      "giver": 396229,
+      "repeatable": true,
+      "prerequisites": [
+        3040302
+      ]
+    },
+    "3040304": {
+      "id": 3040304,
+      "giver": 395211,
+      "repeatable": true,
+      "prerequisites": [
+        3040303
+      ]
+    },
+    "3040305": {
+      "id": 3040305,
+      "giver": 395211,
+      "repeatable": true,
+      "prerequisites": [
+        3040304
+      ]
+    },
+    "3040306": {
+      "id": 3040306,
+      "giver": 395213,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040307": {
+      "id": 3040307,
+      "giver": 395213,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040308": {
+      "id": 3040308,
+      "giver": 395213,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040309": {
+      "id": 3040309,
+      "giver": 395215,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040310": {
+      "id": 3040310,
+      "giver": 395215,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040311": {
+      "id": 3040311,
+      "giver": 395215,
+      "repeatable": false,
+      "prerequisites": [
+        3040309,
+        3040310
+      ]
+    },
+    "3040312": {
+      "id": 3040312,
+      "giver": 395215,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040313": {
+      "id": 3040313,
+      "giver": 396123,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040314": {
+      "id": 3040314,
+      "giver": 396123,
+      "repeatable": true,
+      "prerequisites": [
+        3040313
+      ]
+    },
+    "3040315": {
+      "id": 3040315,
+      "giver": 396123,
+      "repeatable": true,
+      "prerequisites": [
+        3040314
+      ]
+    },
+    "3040316": {
+      "id": 3040316,
+      "giver": 396123,
+      "repeatable": true,
+      "prerequisites": [
+        3040315
+      ]
+    }
+  },
+  "givers": {
+    "395211": [
+      3040301,
+      3040304,
+      3040305
+    ],
+    "395213": [
+      3040306,
+      3040307,
+      3040308
+    ],
+    "395215": [
+      3040309,
+      3040310,
+      3040311,
+      3040312
+    ],
+    "396123": [
+      3040313,
+      3040314,
+      3040315,
+      3040316
+    ],
+    "396229": [
+      3040302,
+      3040303
+    ]
+  },
+  "series": {
+    "scout": [
+      3040301,
+      3040302,
+      3040303,
+      3040304,
+      3040305
+    ],
+    "warwing": [
+      3040313,
+      3040314,
+      3040315,
+      3040316
+    ]
+  },
+  "explore": {
+    "3040304": {
+      "x": -30,
+      "y": 190,
+      "z": 265
+    },
+    "3040305": {
+      "x": 80,
+      "y": 25,
+      "z": 286.54
+    }
+  },
+  "radii": {
+    "horizontal": 24,
+    "vertical": 15
+  },
+  "juzzulli": {
+    "npc": 396930,
+    "x": 78,
+    "y": 85,
+    "z": 290,
+    "level": 37,
+    "max_hit": 77,
+    "hp": 3000,
+    "provenance": "Position corroborates quest library and original book object. Level37/maxhit77 current walkthrough; HP3000 labelled encounter reconstruction."
+  },
+  "queen": {
+    "npc": 396209,
+    "hp": 128000,
+    "min_hit": 100,
+    "max_hit": 623,
+    "spell": 9312,
+    "spell_recast": 15,
+    "mana": 0,
+    "tether_radius": 90,
+    "tether_vertical": 25,
+    "swarmer": 396931,
+    "grub": 396932,
+    "wave_thresholds": [
+      70,
+      20
+    ],
+    "swarmer_count": 5,
+    "grub_count": 10,
+    "grub_cap": 100,
+    "provenance": "HP derived approximately from2008 9000HT/~7%; maxhit623 period observed, not exact unmitigated stat proof. Tether radius/minhit/cap reconstructed. Spell9312 native mana0/recast15000ms retained; original NPC cast cadence unverified. Wave thresholds2006; count/type split selected from current NPC total counts."
+  },
+  "neezzee": {
+    "aggro": 0,
+    "assist": 0
+  },
+  "disguise": {
+    "spell": 12903,
+    "race": 520,
+    "provenance": "Original Bixie disguise behavior2006 confirmed, exact spell ID not recovered. Native preRoF2 Illusion:BixieDrone12903 provides cancellable buff; selected emulator substitution, not claimed original spell."
+  },
+  "fungus": {
+    "npc": 396109,
+    "sap": 54637,
+    "provenance": "April7,2012 container sap source; original fungus lootdrop109689 already has petals/seeds/sap; retain native weighted loot, no scripted guaranteed extra item"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "xp_per_completion": 500,
+  "truffle_drop_percent": 50,
+  "xp_policy": "Approved labelled PEQ-style flat-XP default; original numeric XP unknown.",
+  "drop_policy": "Configurable server reconstruction; original truffle probability is not verified. Existing drops are not replaced."
+}

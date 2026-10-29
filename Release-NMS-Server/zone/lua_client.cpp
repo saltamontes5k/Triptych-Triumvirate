@@ -2,6 +2,8 @@
 
 #include "lua.hpp"
 #include <luabind/luabind.hpp>
+#include <cmath>
+#include <limits>
 
 #include "client.h"
 #include "dynamic_zone.h"
@@ -1669,6 +1671,13 @@ bool Lua_Client::CompleteSharedTaskAchievement(uint32 achievement_id)
 	);
 }
 
+std::string Lua_Client::GetSharedTaskIdentity()
+{
+	Lua_Safe_Call_String();
+	const auto identity = self->GetSharedTaskId();
+	return identity > 0 ? std::to_string(identity) : std::string{};
+}
+
 void Lua_Client::LockSharedTask(bool lock) {
 	Lua_Safe_Call_Void();
 	return self->LockSharedTask(lock);
@@ -2862,6 +2871,37 @@ void Lua_Client::TaskSelector(luabind::adl::object table, bool ignore_cooldown) 
 	self->TaskQuestSetSelector(self, tasks, ignore_cooldown);
 }
 
+// Object/door scripts can offer tasks through an actual nearby NPC giver.
+// True means dispatched; native eligibility filters can still leave no offers.
+bool Lua_Client::TaskSelectorFromNPC(Lua_NPC npc, luabind::adl::object table) {
+	Lua_Safe_Call_Bool();
+	NPC* giver = npc;
+	if (!RuleB(TaskSystem, EnableTaskSystem) || !giver ||
+		entity_list.GetNPCByID(giver->GetID()) != giver || luabind::type(table) != LUA_TTABLE) {
+		return false;
+	}
+	const auto distance = giver->CalculateDistance(self);
+	if (!std::isfinite(distance) || distance > MAX_TASK_SELECT_DISTANCE) {
+		return false;
+	}
+	std::vector<int> tasks;
+	for (int i = 1; i <= MAXCHOOSERENTRIES; ++i) {
+		auto value = table[i];
+		if (luabind::type(value) == LUA_TNUMBER) {
+			const double task_id = luabind::object_cast<double>(value);
+			if (std::isfinite(task_id) && task_id > 0 &&
+				task_id <= std::numeric_limits<int>::max() && std::floor(task_id) == task_id) {
+				tasks.push_back(static_cast<int>(task_id));
+			}
+		}
+	}
+	if (tasks.empty()) {
+		return false;
+	}
+	self->TaskQuestSetSelector(giver, tasks, false);
+	return true;
+}
+
 bool Lua_Client::TeleportToPlayerByCharID(uint32 character_id) {
 	Lua_Safe_Call_Bool();
 	return self->GotoPlayer(database.GetCharNameByID(character_id));
@@ -4014,6 +4054,7 @@ luabind::scope lua_register_client() {
 	.def("ClearZoneFlag", (void(Lua_Client::*)(uint32))&Lua_Client::ClearZoneFlag)
 	.def("CompleteAchievement", (bool(Lua_Client::*)(uint32))&Lua_Client::CompleteAchievement)
 	.def("CompleteSharedTaskAchievement", &Lua_Client::CompleteSharedTaskAchievement)
+	.def("GetSharedTaskIdentity", &Lua_Client::GetSharedTaskIdentity)
 	.def("CompleteTask", (bool(Lua_Client::*)(int))&Lua_Client::CompleteTask)
 	.def("Connected", (bool(Lua_Client::*)(void))&Lua_Client::Connected)
 	.def("CountAugmentEquippedByID", (uint32(Lua_Client::*)(uint32))&Lua_Client::CountAugmentEquippedByID)
@@ -4536,6 +4577,7 @@ luabind::scope lua_register_client() {
 	.def("TakePlatinum", (bool(Lua_Client::*)(uint32,bool))&Lua_Client::TakePlatinum)
 	.def("TaskSelector", (void(Lua_Client::*)(luabind::adl::object))&Lua_Client::TaskSelector)
 	.def("TaskSelector", (void(Lua_Client::*)(luabind::adl::object, bool))&Lua_Client::TaskSelector)
+	.def("TaskSelectorFromNPC", &Lua_Client::TaskSelectorFromNPC)
 	.def("TeleportToPlayerByCharID", (bool(Lua_Client::*)(uint32))&Lua_Client::TeleportToPlayerByCharID)
 	.def("TeleportToPlayerByName", (bool(Lua_Client::*)(std::string))&Lua_Client::TeleportToPlayerByName)
 	.def("TeleportGroupToPlayerByCharID", (bool(Lua_Client::*)(uint32))&Lua_Client::TeleportGroupToPlayerByCharID)

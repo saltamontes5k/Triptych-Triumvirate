@@ -26,6 +26,7 @@ public:
 		uint8_t     common_to_all;
 		uint8_t     flags;
 		uint8_t     enabled;
+		uint32_t    class_mask;
 	};
 
 	static std::string PrimaryKey()
@@ -43,6 +44,7 @@ public:
 			"common_to_all",
 			"flags",
 			"enabled",
+			"class_mask",
 		};
 	}
 
@@ -56,6 +58,7 @@ public:
 			"common_to_all",
 			"flags",
 			"enabled",
+			"class_mask",
 		};
 	}
 
@@ -103,6 +106,7 @@ public:
 		e.common_to_all = 0;
 		e.flags         = 0;
 		e.enabled       = 1;
+		e.class_mask    = 65535;
 
 		return e;
 	}
@@ -146,6 +150,7 @@ public:
 			e.common_to_all = row[4] ? static_cast<uint8_t>(strtoul(row[4], nullptr, 10)) : 0;
 			e.flags         = row[5] ? static_cast<uint8_t>(strtoul(row[5], nullptr, 10)) : 0;
 			e.enabled       = row[6] ? static_cast<uint8_t>(strtoul(row[6], nullptr, 10)) : 1;
+			e.class_mask    = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 65535;
 
 			return e;
 		}
@@ -186,6 +191,7 @@ public:
 		v.push_back(columns[4] + " = " + std::to_string(e.common_to_all));
 		v.push_back(columns[5] + " = " + std::to_string(e.flags));
 		v.push_back(columns[6] + " = " + std::to_string(e.enabled));
+		v.push_back(columns[7] + " = " + std::to_string(e.class_mask));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -214,6 +220,7 @@ public:
 		v.push_back(std::to_string(e.common_to_all));
 		v.push_back(std::to_string(e.flags));
 		v.push_back(std::to_string(e.enabled));
+		v.push_back(std::to_string(e.class_mask));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -250,6 +257,7 @@ public:
 			v.push_back(std::to_string(e.common_to_all));
 			v.push_back(std::to_string(e.flags));
 			v.push_back(std::to_string(e.enabled));
+			v.push_back(std::to_string(e.class_mask));
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -290,6 +298,7 @@ public:
 			e.common_to_all = row[4] ? static_cast<uint8_t>(strtoul(row[4], nullptr, 10)) : 0;
 			e.flags         = row[5] ? static_cast<uint8_t>(strtoul(row[5], nullptr, 10)) : 0;
 			e.enabled       = row[6] ? static_cast<uint8_t>(strtoul(row[6], nullptr, 10)) : 1;
+			e.class_mask    = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 65535;
 
 			all_entries.push_back(e);
 		}
@@ -321,6 +330,7 @@ public:
 			e.common_to_all = row[4] ? static_cast<uint8_t>(strtoul(row[4], nullptr, 10)) : 0;
 			e.flags         = row[5] ? static_cast<uint8_t>(strtoul(row[5], nullptr, 10)) : 0;
 			e.enabled       = row[6] ? static_cast<uint8_t>(strtoul(row[6], nullptr, 10)) : 1;
+			e.class_mask    = row[7] ? static_cast<uint32_t>(strtoul(row[7], nullptr, 10)) : 65535;
 
 			all_entries.push_back(e);
 		}
@@ -402,6 +412,7 @@ public:
 		v.push_back(std::to_string(e.common_to_all));
 		v.push_back(std::to_string(e.flags));
 		v.push_back(std::to_string(e.enabled));
+		v.push_back(std::to_string(e.class_mask));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -431,6 +442,7 @@ public:
 			v.push_back(std::to_string(e.common_to_all));
 			v.push_back(std::to_string(e.flags));
 			v.push_back(std::to_string(e.enabled));
+			v.push_back(std::to_string(e.class_mask));
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}

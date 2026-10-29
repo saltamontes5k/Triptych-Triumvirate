@@ -1,0 +1,41 @@
+[
+  {
+    "id": 395931,
+    "parent": 395069,
+    "name": "an_undead_bat",
+    "changes": {
+      "race": 34,
+      "bodytype": 21,
+      "npc_spells_id": 0,
+      "loottable_id": 0,
+      "npc_faction_id": 0,
+      "class": 1
+    },
+    "provenance": "Period2006 named undead bat explicitly not flagged undead. Race34 global bat and native guardian combat fields are reconstruction; original model/stats unrecovered."
+  },
+  {
+    "id": 395932,
+    "parent": 395062,
+    "name": "a_tower_rat",
+    "changes": {
+      "npc_spells_id": 0,
+      "loottable_id": 0,
+      "npc_faction_id": 0
+    },
+    "provenance": "Roof rat adds confirmed; native dire-rat model/combat fields reused as reconstruction."
+  },
+  {
+    "id": 395933,
+    "parent": 395185,
+    "name": "Agathas_Right_Eye",
+    "changes": {
+      "race": 108,
+      "npc_spells_id": 0,
+      "loottable_id": 0,
+      "npc_faction_id": 0,
+      "hp": 500,
+      "class": 1
+    },
+    "provenance": "Four eye adds confirmed2007; race108 and500HP are labelled reconstruction. Exact original combat/spell roster unresolved."
+  }
+]

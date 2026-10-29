@@ -1,0 +1,333 @@
+{
+  "scope": "Seven missing Shards Landing Partisan tasks plus independent Eastern Wastes portal activation; Welcome910000 retained",
+  "historical_cutoff": "2013-05-31",
+  "source_scope": "Detailed current pages corroborate mechanics unless a fact is explicitly identified with a pre-cutoff comment date; do not treat current undated quantities as independently period-verified.",
+  "status": "staged; no active changes or native test by this agent",
+  "historical_roster": {
+    "url": "https://everquest.allakhazam.com/wiki.html?p=eq:Progression_Through_Rain_of_Fear&oldid=461435",
+    "revision_date": "2013-04-20 10:27:07",
+    "verified_by": "root agent in Chrome"
+  },
+  "sources": [
+    {
+      "quest": 5989,
+      "name": "Exploring Shards Landing",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5989",
+      "facts": "Current Rasper explicitly describes automatic reagent pairing and automatic potion consumption by qualifying kills; exact numerical default drops remain labelled.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5979,
+      "name": "Words of the Unspoken",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5979",
+      "facts": "December31,2012 comment supplies ten map coordinates; mapXY signs are inverted to worldXY. December1,2012 describes5 language points below80 and1 thereafter. January2,2013 respawn approximatelyone minute.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5990,
+      "name": "Unspoken Verse",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5990",
+      "facts": "February3,2013 reply says carry all sixteen components and run over the spots; no dropping/clicking a book. December10,2012 apparition is yellow to95, rootable/stunnable and appearance matches its spawner. April30,2013 completion text establishes pre-cutoff quest presence.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5991,
+      "name": "Unusual Goral Coral",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5991",
+      "facts": "Current detailed walkthrough used for functional item/spell/combine actions. December24,2012 confirms a level87 character can finish. Current records differ in describing some samples as looted versus automatically inventoried; staging follows Rasper explicit auto-inventory description.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5992,
+      "name": "The Harbingers of Thule",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5992",
+      "facts": "Four distinct Shardtenders ofsix, three distinct Evokers offour; actual EasternWastes attunement; meditate seated around central giant crystal; return to Director. January2013 nonrepeatability report. Other portal objectives optional.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5993,
+      "name": "Conquering Your Fears",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5993",
+      "facts": "December13,2012 six native/four fear kills each zone. November30 lock after lastKael fearkill before report. December2 five recaptured souls. December16 level98 nightmares; six shards on last required corpses. Shared one-to-six players.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 5994,
+      "name": "The Believers",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5994",
+      "facts": "December1,2012 confirms6/5/3 kills and4AA. January4,2013 confirms5percent maxHP bite per tick. December15,2012 arenaoverseer alternative and biting until underground exit. Head passive; returnSilentHall carrying it for ShareTruth.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    },
+    {
+      "quest": 6002,
+      "name": "Eastern Wastes Portal Activation",
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=6002",
+      "facts": "Current page supplies exact title and two objectives: activateDireTuningCrystal in feartouchedEastWastes, returnShard. Old-world zoning crystal nearY-9100 X-4200 Z143. January2014 inventory-click-after-zoning corroboration is explicitly post-cutoff.",
+      "observation_owner": "Root agent using Chrome except Rasper corroboration"
+    }
+  ],
+  "reward_policy": {
+    "xp_per_task": 1000,
+    "xp_status": "Approved configurable PEQ-style server default; not claimed as original Live XP",
+    "cash": {
+      "910025": {
+        "copper": 562500,
+        "period_source": "December14,2012 comment on5993"
+      }
+    },
+    "aa": {
+      "910025": {
+        "points": 6,
+        "period_source": "November30,2012 comment on5993"
+      },
+      "910026": {
+        "points": 4,
+        "period_source": "December1,2012 comment on5994"
+      }
+    },
+    "unconfigured": "Other current-record cash, undated faction amounts and modern Fragment120367 reward are not promoted to verified May2013 grants."
+  },
+  "reconstruction_settings": {
+    "configuration": "quests/lua_modules/shards_partisan_config.lua",
+    "ground_respawn_seconds": 60,
+    "generic_location_radius": 40,
+    "sermon_seconds": 60,
+    "meditation_seconds": 30,
+    "head_bite_tick_seconds": 6,
+    "extractor_chance_percent": 25,
+    "paper_ink_blood_drop_percent": 100,
+    "quest_min_level": 85,
+    "apparition": {
+      "id": 752950,
+      "template": 752069,
+      "appearance": "Cloned from spawner after spawn per period source; PEQ model fallback unverified",
+      "combat": "Retained PEQ template default, not verified Live balance"
+    },
+    "nightmare": {
+      "id": 752951,
+      "template": 755001,
+      "level": 98,
+      "level_status": "Period December16,2012 source",
+      "model_combat": "PEQ-derived configurable default, not verified original appearance/balance"
+    },
+    "central_crystal": "Collected door36436 X-141.115 Y498.309 Z13.25 reused as configurable meditation/release bound",
+    "zone_geometry": "City/village bounds reused from existingWelcome task; exact paper points individually sourced.",
+    "new_oldworld_portal": "Collected755 return crystal model/coordinates copied to oldEW116; destination uses existing zonepoint arrival; source confirms travel point, rendering remains untested."
+  },
+  "access": {
+    "open_stock_zones": [
+      752,
+      754,
+      755,
+      756
+    ],
+    "unchanged_old_eastwastes": 116,
+    "repair": "Only min_status80 to0 for exact stock version0 rows with min_level0 max_level255 expansion19 ruleset1 empty flag_needed",
+    "expansion_audit": "CurrentExpansion19; WorldExpansionSettings524287; client-based override false; no expansion-rule change needed"
+  },
+  "runtime_evidence": "None from this staging. Syntax parsing and source-level independent review are separate from native validation.",
+  "unresolved_fidelity": [
+    "Five optional non-EastWastes portal-activation tasks are not implemented in this batch.",
+    "Exact original combat balance, timed vision/sermon cadence and all non-period reward quantities remain unverified.",
+    "New old-world portal reuses a collected feartouched crystal object; its rendering in old EastWastes requires a native asset check.",
+    "Designate one shared-task crafter to loot all six NoTrade fearshards; cross-owner shard custody is not silently bypassed.",
+    "The item-specific30sec marker plus completed generic spell23998 needs native validation; no credit occurs on item click alone."
+  ],
+  "corroboration_url": "https://www.raspersrealm.com/Everquest/RoF/openShard.html",
+  "paper_model_placement_revision": {
+    "reason": "NativeCouncilMinutespickupwasoccludedbyduplicateitemlessstaticbookmodel; all10marker/modelassociations auditedtogether",
+    "basis": "Eightcollectedstaticmodelsandtwocollectorgroundplaceholders within8horizontalunitsofdatedmapmarkers",
+    "migration": "Convertplaceholdersintorecurringquestpickupswithoutduplicategeometry",
+    "exact_live_actor_coordinates": "unverified; PEQcollectedmodelcoordinatesretained",
+    "associations": [
+      {
+        "id": 228369,
+        "x": 1712,
+        "y": -715.4,
+        "z": -497,
+        "heading": 106,
+        "name": "IT10645_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752001,
+        "quest_item": 85975,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228362,
+        "x": 2349.4,
+        "y": -275.5,
+        "z": -292,
+        "heading": 283,
+        "name": "IT10646_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752002,
+        "quest_item": 85976,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228370,
+        "x": 1770.1,
+        "y": -927,
+        "z": -462,
+        "heading": 168,
+        "name": "IT11073_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752004,
+        "quest_item": 85978,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228372,
+        "x": 2118.9,
+        "y": -1196.4,
+        "z": -597,
+        "heading": 200,
+        "name": "IT10645_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752005,
+        "quest_item": 85979,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228365,
+        "x": 1379,
+        "y": 233,
+        "z": -437,
+        "heading": 360,
+        "name": "IT11618_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752007,
+        "quest_item": 85981,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228364,
+        "x": 1349.58,
+        "y": -48.78,
+        "z": -498,
+        "heading": 21,
+        "name": "IT10645_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752008,
+        "quest_item": 85982,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228366,
+        "x": 748.2,
+        "y": -191.57,
+        "z": -747,
+        "heading": 500,
+        "name": "IT11618_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752009,
+        "quest_item": 85983,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 228363,
+        "x": 1768,
+        "y": -586.6,
+        "z": -481,
+        "heading": 6,
+        "name": "IT10645_ACTORDEF",
+        "itemid": 0,
+        "type": 255,
+        "zoneid": 752,
+        "version": 0,
+        "ground_id": 30752010,
+        "quest_item": 85984,
+        "fix_z": 0,
+        "source": "collected static paper model"
+      },
+      {
+        "id": 1607,
+        "x": 2249.3,
+        "y": 4.73,
+        "z": -292,
+        "heading": 360,
+        "name": "IT11618_ACTORDEF",
+        "itemid": 1001,
+        "zoneid": 752,
+        "version": 0,
+        "fix_z": 1,
+        "ground_id": 30752003,
+        "quest_item": 85977,
+        "source": "collected FIX THE ITEMID ground placeholder"
+      },
+      {
+        "id": 1606,
+        "x": 969.6,
+        "y": 165.65,
+        "z": -497,
+        "heading": 94,
+        "name": "IT10646_ACTORDEF",
+        "itemid": 1001,
+        "zoneid": 752,
+        "version": 0,
+        "fix_z": 1,
+        "ground_id": 30752006,
+        "quest_item": 85980,
+        "source": "collected FIX THE ITEMID ground placeholder"
+      }
+    ]
+  },
+  "release_correctness_revisions": {
+    "exploring_cold_family": {
+      "source": "https://everquest.allakhazam.com/db/quest.html?quest=5989",
+      "period": "Nov29/30,2012 players identify ice/chill wyverns.",
+      "implementation": "Exact existingPEQ IDs752048/752050/752062; May2013 Icescale UIlabel retained. No new NPC/spawn.",
+      "later_corroboration": "July28,2013 label clarification is not represented as preMay text."
+    },
+    "exploring_reward": {
+      "period": "Jan14,2013 repeated completion report confirms6AA",
+      "implementation": "SixAA once per accepted run via persisted epoch key;450pp/+25faction remain unverified and are not granted."
+    },
+    "optional_criterion_behavior": {
+      "components": [
+        2075226,
+        2075228
+      ],
+      "behavior": 1,
+      "progress_mode": 3,
+      "proof": "Type2\u2192Optional in importer; EvaluateDefinition uses criterion behavior directly.",
+      "historical_limit": "Repairs semantics of frozen admitted type2 shape. Does not independently prove originalMay2013 required/optional shape.",
+      "changes": "Exactly two metadata rows; no character data edits/grants."
+    },
+    "exploring_repeatability": {
+      "source": "https://everquest.allakhazam.com/db/quest.html?quest=5989",
+      "period": "Jan 14, 2013 repeat completion report",
+      "implementation": "Task910020 repeatable1; completed Drent dialogue again offers scouting. Native fresh acceptance after actual completion passed; no AA granted merely on acceptance.",
+      "UnknownExactTimer": "Original replay duration unrecovered; replay_timer_seconds=0 is explicitly configured, not asserted as original Live duration."
+    }
+  },
+  "release_snapshot_note": "Earlier staging limitations below are retained as dated research history and are superseded where explicitly resolved by provenance/native-status.json. All nine scoped routes have native completion evidence in the final snapshot; multiplayer and exact fidelity limits remain explicit."
+}

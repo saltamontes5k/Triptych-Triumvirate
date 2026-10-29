@@ -1,0 +1,19 @@
+{
+  "status": "PASS within stated coverage",
+  "parent_sets": 8,
+  "options": 26,
+  "item_entries": 27,
+  "native_claims": 8,
+  "selected_native_reward_items": 9,
+  "fresh_client_exit_and_autologin_persistence": true,
+  "no_duplicate_offer_after_reload_or_login": true,
+  "permanent_equipped_slots": 20,
+  "scope": "One normally eligible warrior claimed each set; database delivery records and selected item properties except regenerated GUID persisted after actual client exit and saved-profile AutoLogin",
+  "limits": [
+    "All16classes checked in configuration eligibility matrix, not individually played",
+    "Current source copies entered2012/edited2026; not exact archived2013 reward tables",
+    "Full original Battling weapon choice set and Berserker common-shield behavior remain unverified",
+    "Conqueror meta bundle unconfigured; unconfirmed XP/AA/cash/faction not invented",
+    "Native Windows preflight not executed"
+  ]
+}

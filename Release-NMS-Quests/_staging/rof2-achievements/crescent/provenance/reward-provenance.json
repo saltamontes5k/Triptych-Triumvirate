@@ -1,0 +1,118 @@
+[
+  {
+    "achievement_id": 500010400,
+    "title": "Important Errands (6-10)",
+    "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5556",
+    "policy": "Choose one eligible item",
+    "items": [
+      {
+        "id": 108329,
+        "name": "Simple Soldier's Belt",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108326,
+        "name": "Simple Soldier's Orb",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108339,
+        "name": "Simple Scryer's Belt",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108336,
+        "name": "Simple Scryer's Figurine",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      }
+    ],
+    "quantity": 1,
+    "limitations": "Named reward table plus exact local item/class identities. No unsupported XP, currency, tier or modern reward additions inferred."
+  },
+  {
+    "achievement_id": 500010500,
+    "title": "Making a Name for Yourself (11-15)",
+    "source_url": "https://everquest.allakhazam.com/db/quest.html?quest=5557",
+    "policy": "Choose one eligible item",
+    "items": [
+      {
+        "id": 108328,
+        "name": "Simple Soldier's Band",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108321,
+        "name": "Simple Soldier's Ear Stud",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108320,
+        "name": "Simple Soldier's Earring",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108327,
+        "name": "Simple Soldier's Ring",
+        "classes": 49629,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108338,
+        "name": "Simple Scryer's Band",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108331,
+        "name": "Simple Scryer's Ear Stud",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108330,
+        "name": "Simple Scryer's Earring",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      },
+      {
+        "id": 108337,
+        "name": "Simple Scryer's Ring",
+        "classes": 15906,
+        "races": 65535,
+        "loregroup": 0,
+        "stackable": 0
+      }
+    ],
+    "quantity": 1,
+    "limitations": "Named reward table plus exact local item/class identities. No unsupported XP, currency, tier or modern reward additions inferred."
+  }
+]

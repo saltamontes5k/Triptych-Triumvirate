@@ -1,0 +1,514 @@
+[
+  {
+    "id": 108061,
+    "name": "Rough Consigned Plate Bracer",
+    "classes": 151,
+    "slots": 1536,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108062,
+    "name": "Rough Consigned Plate Gauntlets",
+    "classes": 151,
+    "slots": 4096,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108063,
+    "name": "Rough Consigned Plate Boots",
+    "classes": 151,
+    "slots": 524288,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108064,
+    "name": "Rough Consigned Plate Helm",
+    "classes": 151,
+    "slots": 4,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108065,
+    "name": "Rough Consigned Plate Vambraces",
+    "classes": 151,
+    "slots": 128,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108066,
+    "name": "Rough Consigned Plate Greaves",
+    "classes": 151,
+    "slots": 262144,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108067,
+    "name": "Rough Consigned Breastplate",
+    "classes": 151,
+    "slots": 131072,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108068,
+    "name": "Rough Consigned Chain Bracer",
+    "classes": 33544,
+    "slots": 1536,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108069,
+    "name": "Rough Consigned Chain Gauntlets",
+    "classes": 33544,
+    "slots": 4096,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108070,
+    "name": "Rough Consigned Chain Boots",
+    "classes": 33544,
+    "slots": 524288,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108071,
+    "name": "Rough Consigned Chain Coif",
+    "classes": 33544,
+    "slots": 4,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108072,
+    "name": "Rough Consigned Chain Sleeves",
+    "classes": 33544,
+    "slots": 128,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108073,
+    "name": "Rough Consigned Chain Leggings",
+    "classes": 33544,
+    "slots": 262144,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108074,
+    "name": "Rough Consigned Chain Tunic",
+    "classes": 33544,
+    "slots": 131072,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108075,
+    "name": "Rough Consigned Leather Bracer",
+    "classes": 16480,
+    "slots": 1536,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108076,
+    "name": "Rough Consigned Leather Gloves",
+    "classes": 16480,
+    "slots": 4096,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108077,
+    "name": "Rough Consigned Leather Boots",
+    "classes": 16480,
+    "slots": 524288,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108078,
+    "name": "Rough Consigned Leather Cap",
+    "classes": 16480,
+    "slots": 4,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108079,
+    "name": "Rough Consigned Leather Sleeves",
+    "classes": 16480,
+    "slots": 128,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108080,
+    "name": "Rough Consigned Leather Trousers",
+    "classes": 16480,
+    "slots": 262144,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108081,
+    "name": "Rough Consigned Leather Tunic",
+    "classes": 16480,
+    "slots": 131072,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108082,
+    "name": "Rough Consigned Cloth Wristwrap",
+    "classes": 15360,
+    "slots": 1536,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108083,
+    "name": "Rough Consigned Cloth Gloves",
+    "classes": 15360,
+    "slots": 4096,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108084,
+    "name": "Rough Consigned Cloth Sandals",
+    "classes": 15360,
+    "slots": 524288,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108085,
+    "name": "Rough Consigned Cloth Cap",
+    "classes": 15360,
+    "slots": 4,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108086,
+    "name": "Rough Consigned Cloth Sleeves",
+    "classes": 15360,
+    "slots": 128,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108087,
+    "name": "Rough Consigned Cloth Pantaloons",
+    "classes": 15360,
+    "slots": 262144,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108088,
+    "name": "Rough Consigned Cloth Robe",
+    "classes": 15360,
+    "slots": 131072,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108340,
+    "name": "Rough Soldier's Ear Stud",
+    "classes": 49629,
+    "slots": 18,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108341,
+    "name": "Rough Soldier's Earring",
+    "classes": 49629,
+    "slots": 18,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108342,
+    "name": "Rough Soldier's Facemask",
+    "classes": 49629,
+    "slots": 8,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108343,
+    "name": "Rough Soldier's Gorget",
+    "classes": 49629,
+    "slots": 32,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108344,
+    "name": "Rough Soldier's Mantle",
+    "classes": 49629,
+    "slots": 64,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108345,
+    "name": "Rough Soldier's Cloak",
+    "classes": 49629,
+    "slots": 256,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108346,
+    "name": "Rough Soldier's Stake",
+    "classes": 49629,
+    "slots": 2048,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108347,
+    "name": "Rough Soldier's Ring",
+    "classes": 49629,
+    "slots": 98304,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108348,
+    "name": "Rough Soldier's Band",
+    "classes": 49629,
+    "slots": 98304,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108349,
+    "name": "Rough Soldier's Belt",
+    "classes": 49629,
+    "slots": 1048576,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108350,
+    "name": "Rough Scryer's Ear Stud",
+    "classes": 15906,
+    "slots": 18,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108351,
+    "name": "Rough Scryer's Earring",
+    "classes": 15906,
+    "slots": 18,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108352,
+    "name": "Rough Scryer's Facemask",
+    "classes": 15906,
+    "slots": 8,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108353,
+    "name": "Rough Scryer's Necklace",
+    "classes": 15906,
+    "slots": 32,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108354,
+    "name": "Rough Scryer's Scarf",
+    "classes": 15906,
+    "slots": 64,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108355,
+    "name": "Rough Scryer's Cloak",
+    "classes": 15906,
+    "slots": 256,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108356,
+    "name": "Rough Scryer's Wand",
+    "classes": 15906,
+    "slots": 2048,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108357,
+    "name": "Rough Scryer's Ring",
+    "classes": 15906,
+    "slots": 98304,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108358,
+    "name": "Rough Scryer's Band",
+    "classes": 15906,
+    "slots": 98304,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108359,
+    "name": "Rough Scryer's Belt",
+    "classes": 15906,
+    "slots": 1048576,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108536,
+    "name": "Rough Consigned Nihilite Shard",
+    "classes": 65535,
+    "slots": 2070526,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108537,
+    "name": "Rough Consigned Trillion Amethyst",
+    "classes": 65535,
+    "slots": 2070526,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108540,
+    "name": "Rough Consigned Hammer",
+    "classes": 16861,
+    "slots": 24576,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108541,
+    "name": "Rough Consigned Scepter",
+    "classes": 15906,
+    "slots": 8192,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108542,
+    "name": "Rough Consigned Shortsword",
+    "classes": 413,
+    "slots": 24576,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108543,
+    "name": "Rough Consigned Longsword",
+    "classes": 413,
+    "slots": 24576,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108544,
+    "name": "Rough Consigned Stone Dagger",
+    "classes": 16793,
+    "slots": 24576,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108545,
+    "name": "Rough Consigned Serrated Dagger",
+    "classes": 15872,
+    "slots": 8192,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108546,
+    "name": "Rough Consigned Knuckle Dusters",
+    "classes": 16448,
+    "slots": 24576,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108547,
+    "name": "Rough Consigned Spiked Staff",
+    "classes": 49245,
+    "slots": 8192,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108548,
+    "name": "Rough Consigned Trident",
+    "classes": 32797,
+    "slots": 8192,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108549,
+    "name": "Rough Consigned Halberd",
+    "classes": 32797,
+    "slots": 8192,
+    "reqlevel": 15,
+    "reclevel": 20
+  },
+  {
+    "id": 108550,
+    "name": "Rough Consigned Bow",
+    "classes": 285,
+    "slots": 2048,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108551,
+    "name": "Rough Consigned Chitin Shield",
+    "classes": 16861,
+    "slots": 16384,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108552,
+    "name": "Rough Consigned Round Shield",
+    "classes": 15906,
+    "slots": 16384,
+    "reqlevel": 15,
+    "reclevel": 30
+  },
+  {
+    "id": 108553,
+    "name": "Rough Consigned Charm",
+    "classes": 65535,
+    "slots": 1,
+    "reqlevel": 15,
+    "reclevel": 30
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "scope": "Council / Making a Name / Becoming a Hero and required neighboring Crescent catalogue/task routes; not all EQEmu achievements",
+  "included": {
+    "definitions": 9,
+    "components": 57,
+    "criteria": 46,
+    "enabled_criteria": 45,
+    "task_definitions": 37,
+    "task_activities": 87,
+    "quest_files": 44,
+    "reward_sets": 4,
+    "reward_options": 18
+  },
+  "unbound_type1_completion_components": [],
+  "native_baker": {
+    "party": "PASS original crate item52638 and exact handin => five53488, saved task3039702 and component50025",
+    "truffles": "PASS six52637 actual corpse acquisitions and handin => five53487, saved task3039701 and component50024",
+    "limitations": "Original-type QA mushroom spawns after stock exhausted, development travel/healing/gear. No quest-item or task-progress grants.50percent probability remains labelled server default."
+  },
+  "other_routes": "Retain source-batch provenance and its exact native/source-only boundaries. Packaging did not repeat all historical quest routes or prove a full Graduate run.",
+  "graduate": "All current type1 completion components have enabled bindings. Full native Graduate completion and unrecovered meta rewards are not claimed.",
+  "clean_install": "Staged only; no clean separate-server installation/native run in this packaging audit.",
+  "librarian": "Reviewed PEQ pre-Lore callback body staged; current custom Lore callback is not overwritten automatically."
+}

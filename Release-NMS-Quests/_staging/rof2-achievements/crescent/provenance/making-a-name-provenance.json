@@ -1,0 +1,68 @@
+{
+  "scope": "Complete5quest Making a Name for Yourself500010500 reconstruction",
+  "historical_cutoff": "2013-05-31",
+  "native_task_ids": {
+    "No Skin off Your Back": 3039501,
+    "What a Croc!": 3039502,
+    "Rings and Things": 3039503,
+    "A Dark Heart": 10640,
+    "Web of Fears": 5436
+  },
+  "sources": [
+    {
+      "url": "https://tagn.wordpress.com/2006/11/18/crescent-reach-level-10-to-15-quests/",
+      "date": "2006-11-18",
+      "facts": "All3Skinneroffers available together;10bearkills+10hides;12alligatorhides;5ore+5bits;Web10kills+5eggs thenQueen;eggsretained."
+    },
+    {
+      "url": "https://yachiken.michikusa.jp/eq/task/12_tss_tasks.htm",
+      "facts": "Original participant task journal;Shay/Vunderlevel10;CanyonQueenCrown and classcompatible staff rewards."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=5557",
+      "date": "2012-03-13",
+      "facts": "Historical5component achievement catalogue attestation."
+    }
+  ],
+  "reused_native_facts": {
+    "darkheart_objectives": "10640Kill394117\u2192Loot52636\u2192Deliver394027",
+    "web_objectives": "5436Kill3spidertypes10+Loot546575parallel\u2192Explorebridge\u2192Kill394019",
+    "preserved_achievement_criteria": [
+      50029,
+      50030
+    ],
+    "preserved_achievement_reward_set": 500010500,
+    "existing_spider_loottable": 90148,
+    "leafdrake_keeps_original_table": 394220,
+    "isolated_spider_clone": 30395001
+  },
+  "reconstruction_settings": {
+    "new_skinner_xp": 1000,
+    "new_skinner_cash": 0,
+    "missing_loot_rate_percent": 50,
+    "missing_loot_quantity": 1,
+    "authorization": "Parent confirmed user-authorized labelled configurable acquisition reconstruction settings; no historical numeric rate claimed.",
+    "web_bridge_center_xyz": [
+      -2067,
+      -1038,
+      -154
+    ],
+    "web_bridge_half_extents": [
+      60,
+      60,
+      20
+    ],
+    "bridge_evidence": "First northern bridge geometry: paired mapline edges aroundX-2085..-2050,Y-1080..-998,Z-154; standalone bounding box is configurable default.",
+    "local_map_sha256": "34db99e8342ab17b5dc0d93366469151a3044726de958559903a245b890f7d0b"
+  },
+  "explicit_uncertainties": [
+    "Croc12 uses2006period source; later undated guide8 not substituted.",
+    "Missing acquisition numeric50% is configurable server default, not verified Live rate or quest-state conditional drop rule.",
+    "Web retains current nonrepeatableflag despite2006repeatability account;May2013change date not established.",
+    "Original sentry witness mechanic for Shelga is not recovered; existingnativekill/loot/deliver semantics retained.",
+    "Web retains existing7possible10%Queenpopulation and nativeQueenkill stage; no speculative forcedspawn or population deletion.",
+    "Exact bridge box is reconstructed; native terrain traversal pending.",
+    "ExistingDarkHeartXP2000/cash2500 andWebXP500 are inherited servervalues, not validated originalLive amounts."
+  ],
+  "script_precedence": "No numeric/named/versioned/default scripts found for3givers in runtime/package; before_sha256=null means installer must fail on unexpected usermodification and merge rather than overwrite."
+}

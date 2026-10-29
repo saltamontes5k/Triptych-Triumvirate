@@ -72,7 +72,10 @@ public:
 				),
 				.enabled = static_cast<uint8_t>(
 					row[6] ? strtoul(row[6], nullptr, 10) : 1
-				)
+				),
+				.class_mask = row[7]
+					? static_cast<uint32_t>(strtoul(row[7], nullptr, 10))
+					: 65535
 			});
 		}
 		return true;

@@ -1,0 +1,560 @@
+[
+  {
+    "class": 1,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Plate Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Bow",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Rapier",
+          "Ornate Consigned Scythe",
+          "Ornate Consigned Harpoon",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 2,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Plate Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 3,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Plate Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Bow",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Scythe",
+          "Ornate Consigned Harpoon",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 4,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Chain Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Bow",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Rapier",
+          "Ornate Consigned Scythe",
+          "Ornate Consigned Harpoon",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 5,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Plate Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Bow",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Rapier",
+          "Ornate Consigned Scythe",
+          "Ornate Consigned Harpoon",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 6,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Leather Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 7,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Leather Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 8,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Plate Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Rapier"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 9,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Chain Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Bow",
+          "Ornate Consigned Gladius",
+          "Ornate Consigned Longsword",
+          "Ornate Consigned Rapier"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 10,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Chain Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 11,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Cloth Wristwrap"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 12,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Cloth Wristwrap"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 13,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Cloth Wristwrap"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 14,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Cloth Wristwrap"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Earring",
+          "Ornate Scryer's Ear Loop"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Scryer's Ring",
+          "Ornate Scryer's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Consigned Glowing Shield",
+          "Ornate Consigned Scepter"
+        ]
+      }
+    }
+  },
+  {
+    "class": 15,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Leather Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Bone Sledgehammer",
+          "Ornate Consigned Rapier",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": [
+          "Ornate Consigned Skullshield"
+        ]
+      }
+    }
+  },
+  {
+    "class": 16,
+    "sets": {
+      "500030200": {
+        "eligible_choices": [
+          "Ornate Consigned Chain Bracer"
+        ],
+        "common_items": []
+      },
+      "500030400": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Earring",
+          "Ornate Soldier's Ear Stud"
+        ]
+      },
+      "500030500": {
+        "eligible_choices": [],
+        "common_items": [
+          "Ornate Soldier's Ring",
+          "Ornate Soldier's Band"
+        ]
+      },
+      "500030600": {
+        "eligible_choices": [
+          "Ornate Consigned Scythe",
+          "Ornate Consigned Harpoon",
+          "Ornate Consigned Skullstaff"
+        ],
+        "common_items": []
+      }
+    }
+  }
+]

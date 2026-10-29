@@ -1,0 +1,881 @@
+{
+  "status": "Released production content; 16 quests completed in native RoF2 checks and persisted after fresh login. See native-status.json for historical and verification limits.",
+  "cutoff": "2013-05-31",
+  "tasks": [
+    {
+      "id": 3040301,
+      "title": "Sticky Situation",
+      "giver": 395211,
+      "achievement_id": 500030200,
+      "component_id": 50086,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver the note to Scout Neauza",
+          "goalcount": 1,
+          "npc_ids": [
+            396229
+          ],
+          "step": 0,
+          "zone": 396,
+          "item_id": 54622,
+          "activityid": 0
+        }
+      ],
+      "min_level": 30,
+      "repeatable": true,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3855",
+      "decisions": "Stages2/3/4 autoassigned; stage5 explicitly requested with Juzzulli, per2012/Feb2013 reports. Minimum30 for first4 best-supported by2007 level31 stage4 completion; final35 chosen from achievement display35 and period31 rejection, exact threshold not recovered.",
+      "task_type": 2
+    },
+    {
+      "id": 3040302,
+      "title": "The Saving Salve",
+      "giver": 396229,
+      "achievement_id": 500030200,
+      "component_id": 50087,
+      "activities": [
+        {
+          "kind": "kill",
+          "activitytype": 2,
+          "description": "Defeat a bixie enthraller",
+          "goalcount": 1,
+          "npc_ids": [
+            396173
+          ],
+          "step": 0,
+          "zone": 396,
+          "activityid": 0
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Give Saving Salve to Scout Neauza",
+          "goalcount": 1,
+          "npc_ids": [
+            396229
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54623,
+          "activityid": 1
+        }
+      ],
+      "min_level": 30,
+      "repeatable": true,
+      "prerequisites": [
+        3040301
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3856",
+      "decisions": "Stages2/3/4 autoassigned; stage5 explicitly requested with Juzzulli, per2012/Feb2013 reports. Minimum30 for first4 best-supported by2007 level31 stage4 completion; final35 chosen from achievement display35 and period31 rejection, exact threshold not recovered.",
+      "task_type": 2
+    },
+    {
+      "id": 3040303,
+      "title": "Plans or No Plans",
+      "giver": 396229,
+      "achievement_id": 500030200,
+      "component_id": 50088,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver Muddied Bixie Plans to Scout Vreshnar",
+          "goalcount": 1,
+          "npc_ids": [
+            395211
+          ],
+          "step": 0,
+          "zone": 395,
+          "item_id": 54624,
+          "activityid": 0
+        }
+      ],
+      "min_level": 30,
+      "repeatable": true,
+      "prerequisites": [
+        3040302
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3857",
+      "decisions": "Stages2/3/4 autoassigned; stage5 explicitly requested with Juzzulli, per2012/Feb2013 reports. Minimum30 for first4 best-supported by2007 level31 stage4 completion; final35 chosen from achievement display35 and period31 rejection, exact threshold not recovered.",
+      "task_type": 2
+    },
+    {
+      "id": 3040304,
+      "title": "Bee Prepared for War",
+      "giver": 395211,
+      "achievement_id": 500030200,
+      "component_id": 50089,
+      "activities": [
+        {
+          "kind": "scene",
+          "activitytype": 255,
+          "description": "Explore the botanical research area",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 396,
+          "point": {
+            "x": -30,
+            "y": 190,
+            "z": 265
+          },
+          "activityid": 0
+        },
+        {
+          "kind": "loot",
+          "activitytype": 3,
+          "description": "Obtain Bixie Alchemy Notes",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54642,
+          "activityid": 1
+        },
+        {
+          "kind": "scene",
+          "activitytype": 255,
+          "description": "Find the Bixie Potion Bottle",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54641,
+          "activityid": 2
+        },
+        {
+          "kind": "scene",
+          "activitytype": 255,
+          "description": "Find the Bixie Spellbook",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54640,
+          "activityid": 3
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver Bixie Alchemy Notes to Scout Vreshnar",
+          "goalcount": 1,
+          "npc_ids": [
+            395211
+          ],
+          "step": 2,
+          "zone": 395,
+          "item_id": 54642,
+          "activityid": 4
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver Bixie Potion Bottle to Scout Vreshnar",
+          "goalcount": 1,
+          "npc_ids": [
+            395211
+          ],
+          "step": 2,
+          "zone": 395,
+          "item_id": 54641,
+          "activityid": 5
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver Bixie Spellbook to Scout Vreshnar",
+          "goalcount": 1,
+          "npc_ids": [
+            395211
+          ],
+          "step": 2,
+          "zone": 395,
+          "item_id": 54640,
+          "activityid": 6
+        }
+      ],
+      "min_level": 30,
+      "repeatable": true,
+      "prerequisites": [
+        3040303
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3858",
+      "decisions": "Stages2/3/4 autoassigned; stage5 explicitly requested with Juzzulli, per2012/Feb2013 reports. Minimum30 for first4 best-supported by2007 level31 stage4 completion; final35 chosen from achievement display35 and period31 rejection, exact threshold not recovered.",
+      "task_type": 2
+    },
+    {
+      "id": 3040305,
+      "title": "The Golden One",
+      "giver": 395211,
+      "achievement_id": 500030200,
+      "component_id": 50090,
+      "activities": [
+        {
+          "kind": "scene",
+          "activitytype": 255,
+          "description": "Explore the magical research area",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 396,
+          "point": {
+            "x": 80,
+            "y": 25,
+            "z": 286.54
+          },
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "activitytype": 2,
+          "description": "Defeat Juzzulli",
+          "goalcount": 1,
+          "npc_ids": [
+            396930
+          ],
+          "step": 1,
+          "zone": 396,
+          "activityid": 1
+        }
+      ],
+      "min_level": 35,
+      "repeatable": true,
+      "prerequisites": [
+        3040304
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [
+        {
+          "item_id": 53586,
+          "quantity": 1,
+          "class_mask": 15360
+        },
+        {
+          "item_id": 53587,
+          "quantity": 1,
+          "class_mask": 65535
+        }
+      ],
+      "source": "https://everquest.allakhazam.com/db/quest/3859",
+      "decisions": "Stages2/3/4 autoassigned; stage5 explicitly requested with Juzzulli, per2012/Feb2013 reports. Minimum30 for first4 best-supported by2007 level31 stage4 completion; final35 chosen from achievement display35 and period31 rejection, exact threshold not recovered.",
+      "task_type": 2
+    },
+    {
+      "id": 3040306,
+      "title": "A'mazin Plants",
+      "giver": 395213,
+      "achievement_id": 500030400,
+      "component_id": 50095,
+      "activities": [
+        {
+          "kind": "loot",
+          "activitytype": 3,
+          "description": "Gather ten Violasuthia Petal",
+          "goalcount": 10,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 396,
+          "item_id": 54635,
+          "activityid": 0
+        }
+      ],
+      "min_level": 34,
+      "repeatable": false,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53579,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/4019",
+      "decisions": "2012 journal has collection only; no delivery objective. Sap accepted at28 in2008; other minimums selected currentheader34, labelled uncertain. Native drops retained; fungus-patch sap route must be supplied.",
+      "task_type": 2
+    },
+    {
+      "id": 3040307,
+      "title": "Curious Seed",
+      "giver": 395213,
+      "achievement_id": 500030400,
+      "component_id": 50096,
+      "activities": [
+        {
+          "kind": "loot",
+          "activitytype": 3,
+          "description": "Gather ten Acantuss Seed",
+          "goalcount": 10,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 396,
+          "item_id": 54636,
+          "activityid": 0
+        }
+      ],
+      "min_level": 34,
+      "repeatable": false,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53580,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/4020",
+      "decisions": "2012 journal has collection only; no delivery objective. Sap accepted at28 in2008; other minimums selected currentheader34, labelled uncertain. Native drops retained; fungus-patch sap route must be supplied.",
+      "task_type": 2
+    },
+    {
+      "id": 3040308,
+      "title": "Sappy Request",
+      "giver": 395213,
+      "achievement_id": 500030400,
+      "component_id": 50097,
+      "activities": [
+        {
+          "kind": "loot",
+          "activitytype": 3,
+          "description": "Gather ten Symplokiss Sap",
+          "goalcount": 10,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 396,
+          "item_id": 54637,
+          "activityid": 0
+        }
+      ],
+      "min_level": 28,
+      "repeatable": false,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53578,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/4021",
+      "decisions": "2012 journal has collection only; no delivery objective. Sap accepted at28 in2008; other minimums selected currentheader34, labelled uncertain. Native drops retained; fungus-patch sap route must be supplied.",
+      "task_type": 2
+    },
+    {
+      "id": 3040309,
+      "title": "Nothing to Stew About",
+      "giver": 395215,
+      "achievement_id": 500030500,
+      "component_id": 50098,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver ten Delectable Bixie Wing to Cook Idriak",
+          "goalcount": 10,
+          "npc_ids": [
+            395215
+          ],
+          "step": 0,
+          "zone": 395,
+          "item_id": 54632,
+          "activityid": 0
+        }
+      ],
+      "min_level": 32,
+      "repeatable": true,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53581,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3836",
+      "decisions": "April2012 exact single delivery objective supersedes older loot-only version. Minimum and repeatability fromcurrentheader, labelled uncertain. Heads prerequisite offer gating selected from April2012 ordering report; original could offer early then reject hand-in.",
+      "task_type": 2
+    },
+    {
+      "id": 3040310,
+      "title": "Touchy Feely Flan",
+      "giver": 395215,
+      "achievement_id": 500030500,
+      "component_id": 50099,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver ten Scrumptious Bixie Antennae to Cook Idriak",
+          "goalcount": 10,
+          "npc_ids": [
+            395215
+          ],
+          "step": 0,
+          "zone": 395,
+          "item_id": 54633,
+          "activityid": 0
+        }
+      ],
+      "min_level": 34,
+      "repeatable": true,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53582,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3834",
+      "decisions": "April2012 exact single delivery objective supersedes older loot-only version. Minimum and repeatability fromcurrentheader, labelled uncertain. Heads prerequisite offer gating selected from April2012 ordering report; original could offer early then reject hand-in.",
+      "task_type": 2
+    },
+    {
+      "id": 3040311,
+      "title": "Heads Above the Rest",
+      "giver": 395215,
+      "achievement_id": 500030500,
+      "component_id": 50100,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver ten Ripe Bixie Head to Cook Idriak",
+          "goalcount": 10,
+          "npc_ids": [
+            395215
+          ],
+          "step": 0,
+          "zone": 395,
+          "item_id": 54634,
+          "activityid": 0
+        }
+      ],
+      "min_level": 38,
+      "repeatable": false,
+      "prerequisites": [
+        3040309,
+        3040310
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53583,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3837",
+      "decisions": "April2012 exact single delivery objective supersedes older loot-only version. Minimum and repeatability fromcurrentheader, labelled uncertain. Heads prerequisite offer gating selected from April2012 ordering report; original could offer early then reject hand-in.",
+      "task_type": 2
+    },
+    {
+      "id": 3040312,
+      "title": "Jumjum Research",
+      "giver": 395215,
+      "achievement_id": 500030500,
+      "component_id": 50101,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver two Fresh Jumjum to Cook Idriak",
+          "goalcount": 2,
+          "npc_ids": [
+            395215
+          ],
+          "step": 1,
+          "zone": 395,
+          "item_id": 54626,
+          "activityid": 0
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver two Jumjum Wine to Cook Idriak",
+          "goalcount": 2,
+          "npc_ids": [
+            395215
+          ],
+          "step": 1,
+          "zone": 395,
+          "item_id": 54627,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver two Processed Jumjum to Cook Idriak",
+          "goalcount": 2,
+          "npc_ids": [
+            395215
+          ],
+          "step": 1,
+          "zone": 395,
+          "item_id": 54628,
+          "activityid": 2
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver two Jumjum Jam to Cook Idriak",
+          "goalcount": 2,
+          "npc_ids": [
+            395215
+          ],
+          "step": 1,
+          "zone": 395,
+          "item_id": 54629,
+          "activityid": 3
+        }
+      ],
+      "min_level": 32,
+      "repeatable": true,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53584,
+          "quantity": 1,
+          "quantity_provenance": "Page lists one reward item; original stack quantity not independently recovered"
+        }
+      ],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3841",
+      "decisions": "March25,2012 explicitly removes loot objectives; preloot allowed. Original native Bixie Snare11515 restriction109 already supported by engine race checks. Minimum32/currentheader selected.",
+      "task_type": 2
+    },
+    {
+      "id": 3040313,
+      "title": "Who's Who?",
+      "giver": 396123,
+      "achievement_id": 500030600,
+      "component_id": 50102,
+      "activities": [
+        {
+          "kind": "speak",
+          "activitytype": 4,
+          "description": "Find and hail Neezzee",
+          "goalcount": 1,
+          "npc_ids": [
+            396180
+          ],
+          "step": 0,
+          "zone": 396,
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "activitytype": 2,
+          "description": "Defeat Neezzee",
+          "goalcount": 1,
+          "npc_ids": [
+            396180
+          ],
+          "step": 1,
+          "zone": 396,
+          "activityid": 1
+        },
+        {
+          "kind": "speak",
+          "activitytype": 4,
+          "description": "Return to Warwing Wendlez",
+          "goalcount": 1,
+          "npc_ids": [
+            396123
+          ],
+          "step": 2,
+          "zone": 396,
+          "activityid": 2
+        }
+      ],
+      "min_level": 35,
+      "repeatable": true,
+      "prerequisites": [],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3584",
+      "decisions": "2006 original3objectives; Neezzee passive until hail then attacks. Level35 from achievement display; current45 describes difficulty and2011 level42 attempt. Exact minimum unknown; currentgroupcap6 does not independently prove shared task type. Shared/party semantics need evidence before native acceptance claim.",
+      "task_type": 2
+    },
+    {
+      "id": 3040314,
+      "title": "Infiltrate the Hive",
+      "giver": 396123,
+      "achievement_id": 500030600,
+      "component_id": 50103,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver Bixie War Plans to Warwing",
+          "goalcount": 1,
+          "npc_ids": [
+            396123
+          ],
+          "step": 0,
+          "zone": 396,
+          "item_id": 21793,
+          "activityid": 0
+        }
+      ],
+      "min_level": 35,
+      "repeatable": true,
+      "prerequisites": [
+        3040313
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3585",
+      "decisions": "2006 hand-in completion;2009 ground loc corroborates original collected point. No invented fresh-loot requirement; current0/1journal text is retrieve.",
+      "task_type": 2
+    },
+    {
+      "id": 3040315,
+      "title": "Honey, I'm Home!",
+      "giver": 396123,
+      "achievement_id": 500030600,
+      "component_id": 50104,
+      "activities": [
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver 2 Intact Bixie Wing to Warwing",
+          "goalcount": 2,
+          "npc_ids": [
+            396123
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54616,
+          "activityid": 0
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver 2 Intact Bixie Flesh to Warwing",
+          "goalcount": 2,
+          "npc_ids": [
+            396123
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54617,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver 1 Intact Bixie Scent Gland to Warwing",
+          "goalcount": 1,
+          "npc_ids": [
+            396123
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54618,
+          "activityid": 2
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver 2 Intact Bixie Antennae to Warwing",
+          "goalcount": 2,
+          "npc_ids": [
+            396123
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54619,
+          "activityid": 3
+        },
+        {
+          "kind": "deliver",
+          "activitytype": 1,
+          "description": "Deliver 1 Intact Stone Hive Insignia to Warwing",
+          "goalcount": 1,
+          "npc_ids": [
+            396123
+          ],
+          "step": 1,
+          "zone": 396,
+          "item_id": 54620,
+          "activityid": 4
+        }
+      ],
+      "min_level": 35,
+      "repeatable": true,
+      "prerequisites": [
+        3040314
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "source": "https://everquest.allakhazam.com/db/quest/3586",
+      "decisions": "June4,2012 explicitly removes old5loot objectives; native existing mob loot retained, five delivery objectives only.",
+      "task_type": 2
+    },
+    {
+      "id": 3040316,
+      "title": "The Queen Bixie",
+      "giver": 396123,
+      "achievement_id": 500030600,
+      "component_id": 50105,
+      "activities": [
+        {
+          "kind": "kill",
+          "activitytype": 2,
+          "description": "Defeat Queen Pelzia",
+          "goalcount": 1,
+          "npc_ids": [
+            396209
+          ],
+          "step": 0,
+          "zone": 396,
+          "activityid": 0
+        }
+      ],
+      "min_level": 35,
+      "repeatable": true,
+      "prerequisites": [
+        3040315
+      ],
+      "configured_xp": 1000,
+      "xp_provenance": "Approved configurable PEQ-style XP default; original amount unknown",
+      "duration_seconds": 0,
+      "cash_reward": 0,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [
+        {
+          "item_id": 53591,
+          "quantity": 1,
+          "class_mask": 65535
+        },
+        {
+          "item_id": 53592,
+          "quantity": 1,
+          "class_mask": 15360
+        },
+        {
+          "item_id": 53593,
+          "quantity": 1,
+          "class_mask": 65535
+        }
+      ],
+      "source": "https://everquest.allakhazam.com/db/quest/3587",
+      "decisions": "2006 NPC report confirms all3rewardchoices; QueenNPC22673 period2006/2007/2008 confirms room tether, adds, maxhits622/623; April2012 confirms Paralyzation. OriginalHP unrecovered:2008 reported9000HT~7percent implies~128k; existing3111HP/max18 placeholder contradicts reports. Reconstruction must be labelled, not silently retain trivial fight.",
+      "task_type": 2
+    }
+  ],
+  "limitations": [
+    "Parent achievement gear rewards unimplemented; distinct from confirmed quest rewards",
+    "Original min levels, repeatability and stack quantities have labelled uncertainties",
+    "Warwing task shared/party semantics, timer and disguise spell identity need investigation; do not publish exact parity claim",
+    "Queen reconstruction requires period-supported encounter, not merely kill task against placeholder NPC"
+  ]
+}

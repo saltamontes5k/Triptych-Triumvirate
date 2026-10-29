@@ -238,11 +238,21 @@ Options define the common and selectable groups in a reward set.
 | `label` | Text in the reward choices list. |
 | `common_to_all` | `1` grants this option with every selection; `0` makes it selectable. |
 | `flags` | RoF2 option flags passed to the reward window. Use `0` unless a verified client behavior requires another value. |
+| `class_mask` | Bitmask of classes that may see and claim the option. Bit 0 is Warrior through bit 15 is Berserker; the default `65535` allows every class. Only achievement and task sources may restrict it. |
 | `enabled` | `1` loads the option. |
 
 The primary key is `(reward_set_id, option_id)`. Every loaded set must contain
 at least one enabled, non-common option, and every loaded option must contain at
-least one enabled grant.
+least one enabled grant. An achievement set may instead contain only common
+options; that set is granted as a single claim without a choice.
+
+`class_mask` is evaluated against the character's permanent class bits, which
+on this multiclass server is the union of up to three classes. An option is
+eligible when any one of those classes is in its mask, so a Paladin/Shadow
+Knight/Warrior character sees a Warrior-only option.
+
+A set whose options are all `common_to_all = 1` is claimed with the RoF2
+no-selection token instead of an option ID.
 
 ### `reward_option_entries`
 
@@ -1193,6 +1203,27 @@ $client->CompleteSharedTaskAchievement(9900004);
 The shared-task methods return `false` when the client has no active shared
 task. Do not pass a task definition ID in place of the active instance; the
 wrapper deliberately obtains the instance ID from the client.
+
+`client:GetSharedTaskIdentity()` returns the active shared-task instance ID as a
+string, or an empty string when the client has none. Lua quest hooks that must
+distinguish instances (object scenes, per-instance state) should key on this
+value rather than the task definition ID.
+
+### Offering tasks from an object or door: Lua
+
+Object and door scripts have no NPC to open a selector. `client:TaskSelectorFromNPC(npc, { task_ids })`
+dispatches the listed tasks through a real, nearby NPC giver and keeps every
+native eligibility, range, cooldown and lockout filter:
+
+```lua
+local giver = eq.get_entity_list():GetNPCByID(395221)
+client:TaskSelectorFromNPC(giver, { 3040208 })
+```
+
+It returns `false` when the task system is disabled, the NPC is not a live
+entity in this zone, the player is farther than 60 units away, or the list is
+empty after filtering. A `true` result only means the selector was dispatched;
+the client may still receive no offers.
 
 ## Publishing changes
 

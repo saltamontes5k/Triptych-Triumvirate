@@ -1,0 +1,182 @@
+{
+  "status": "deployed on development server; both Baker native routes passed; clean release installation not native-tested",
+  "cutoff": "2013-05-31",
+  "sources": [
+    {
+      "url": "https://www.paullynch.org/eqblog/?m=200612",
+      "date": "2006-12 monthly archive; exact included article publication date must be verified",
+      "proves": "Contextual firsthand original-era monthly archive references Baker routes/stat food; current standalone guide mixes later HeroJourney/FreeSilver context and is not used as2006 proof."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=3698",
+      "root_chrome_report": "2026-10-28",
+      "proves": "Superseded current walkthrough: use archived_objective_and_reward_proof for min5, six originals and five-item reward."
+    },
+    {
+      "url": "https://everquest.allakhazam.com/db/quest.html?quest=3699",
+      "root_chrome_report": "2026-10-28",
+      "proves": "Superseded current walkthrough: preserved Feb2013 revision proves min5, one original loot/deliver and five-item reward; modern two-drop is excluded."
+    }
+  ],
+  "database_audit": {
+    "baker_npc": 394178,
+    "baker_script": "absent both runtime and PEQ quest tree",
+    "task_titles": "absent",
+    "item_ids": {
+      "Tasty Truffles": 52637,
+      "Fizzy Lemonade": 52638,
+      "Pocket Flan Dessert": 53487,
+      "Shivra's Fizzy Lemonade": 53488
+    },
+    "verified_mushrooms": [
+      394014,
+      394049
+    ],
+    "sleepbringer_variant": "absent; no fabricated spawn",
+    "mushroom_loottable": 90171,
+    "truffle_acquisition": "absent in all Crescent loot tables",
+    "lemonade_crate": {
+      "npc_id": 394093,
+      "spawn2_id": 77023,
+      "xyz": [
+        -2425,
+        -531,
+        -115
+      ],
+      "loottable": 90147,
+      "lootdrop": 90269,
+      "item": 52638,
+      "chance": 100,
+      "multiplier": 1
+    }
+  },
+  "collision_audit": {
+    "3039701": "unused task ID",
+    "3039702": "unused task ID",
+    "3039401_3039402": "occupied by Wanderlust; rejected",
+    "30397001": "unused lootdrop/loottable ID"
+  },
+  "uncertainties": [
+    "Exact original flatXP unknown; use approved labelled PEQ-style500 default.",
+    "Half5xflan/min5 corroborated by Sep2013 revision archivedNovember, beyond Maycutoff; date retained explicitly.",
+    "50percent truffle chance is a configurable PEQ-style reconstruction candidate, not original probability proof.",
+    "Sleepbringer variant absent in currentPEQ and not fabricated."
+  ],
+  "implementation_semantics": [
+    "Native Loot activities credit only after successful inventory acquisition; no pre-custody event_loot credit.",
+    "Native Deliver activities plus exact GetTaskDeliveredCount custody; no one-item-per-slot stack shortcut.",
+    "Server task-completion reward path owns XP; callbacks do not duplicate rewards.",
+    "Both repeatable offers remain available after prior completion, but reject already-active task.",
+    "No item grants on hail; no loot duplication or fresh crate spawning."
+  ],
+  "archived_objective_and_reward_proof": [
+    {
+      "url": "https://web.archive.org/web/20131101080403/http://everquest.allakhazam.com/db/quest.html?quest=3698",
+      "snapshot_date": "2013-11-01",
+      "page_last_modified": "2013-09-20",
+      "facts": "Minimum5, repeatable, six TastyTruffles loot/deliver, XP plus five PocketFlanDessert. PostMay continuity corroboration for existing2006 quest, not a May2013 snapshot."
+    },
+    {
+      "url": "https://web.archive.org/web/20131101083204/http://everquest.allakhazam.com/db/quest.html?quest=3699",
+      "snapshot_date": "2013-11-01",
+      "page_last_modified": "2013-02-26",
+      "facts": "Precutoff revision: minimum5, repeatable, one FizzyLemonade loot/deliver, XP plus five Shivra Fizzy Lemonade."
+    }
+  ],
+  "authoritative_research_summary": {
+    "observed_via": "Connected Chrome accessibility page, root read",
+    "scope": "Quests existed2006; no modern new achievement identity admitted",
+    "quests": [
+      {
+        "id": 3698,
+        "title": "Slightly Less Than One-Half of a Baker's Dozen",
+        "source": "https://web.archive.org/web/20131101080403/http://everquest.allakhazam.com/db/quest.html?quest=3698",
+        "archive": "2013-11-01",
+        "page_modified": "2013-09-20",
+        "min_level": 5,
+        "repeatable": true,
+        "request_keyword": "gather",
+        "loot": {
+          "item": 52637,
+          "name": "Tasty Truffles",
+          "count": 6,
+          "owners": [
+            "a sourcap sporeling",
+            "a sporeling drowsemaster",
+            "a sporeling sleepbringer"
+          ],
+          "zone": "crescent"
+        },
+        "deliver": {
+          "item": 52637,
+          "count": 6,
+          "npc": 394178
+        },
+        "reward": {
+          "item": 53487,
+          "name": "Pocket Flan Dessert",
+          "count": 5,
+          "xp": "confirmed present; original numerical XP unknown"
+        },
+        "historical_caveat": "Archive and last edit afterMay31cutoff; corroborates an existing2006quest, not separately proven May2013rewardquantity. Current2026min8differs; old5retained."
+      },
+      {
+        "id": 3699,
+        "title": "Party Preparation",
+        "source": "https://web.archive.org/web/20131101083204/http://everquest.allakhazam.com/db/quest.html?quest=3699",
+        "archive": "2013-11-01",
+        "page_modified": "2013-02-26",
+        "min_level": 5,
+        "repeatable": true,
+        "request_keyword": "look",
+        "loot": {
+          "item": 52638,
+          "name": "Fizzy Lemonade",
+          "count": 1,
+          "owner": 394093,
+          "zone": "crescent",
+          "server_location": {
+            "x": -2425,
+            "y": -531,
+            "z": -115
+          }
+        },
+        "deliver": {
+          "item": 52638,
+          "count": 1,
+          "npc": 394178
+        },
+        "reward": {
+          "item": 53488,
+          "name": "Shivra's Fizzy Lemonade",
+          "count": 5,
+          "xp": "confirmed present; original numerical XP unknown"
+        },
+        "exclude_modern": "2026two-dropcrate dynamicloot repair; preserveexisting PEQone; modernmax130ignored"
+      }
+    ],
+    "npc": {
+      "id": 394178,
+      "name": "Baker Shivra",
+      "location_source": "2007/2012 first-person ZAM comments",
+      "server_location_approx": {
+        "x": -1521,
+        "y": -1438,
+        "z": 34
+      }
+    },
+    "link_correction": "PaulLynchHalfquestlink3626actuallyThrillsandQuills; correctHalf3698fromBakerNPCpage"
+  },
+  "guards": [
+    "MariaDB CHECK enforced at session level before persistent writes; never run client with--force.",
+    "Absent or exact own tasktitle/type; expected two component identities; absent or exact task criteria.",
+    "Own lootdrop name/item/charges/chance and no other table owners.",
+    "Only NPC394014/394049 may share90171; exact existing crate one-item loot retained.",
+    "Four item identities and BakerNPC identity verified before DML."
+  ],
+  "native_acceptance": {
+    "party_preparation": "Original crate52638 loot and exact handin; five53488 delivered; completion3039702 and achievement component50025 persisted.",
+    "half_bakers_dozen": "Six52637 acquired by actual mushroom corpse loot, then exact handin; five53487 delivered; completion3039701 and component50024 persisted.",
+    "limitations": "Some original-type QA mushroom spawns used after stock exhausted. No quest-item or task-progress grants.50percent drop remains labelled reconstruction default. No clean separate-server installation/native pass implied."
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "status": "PASS within stated coverage",
+  "client": "May10,2013 RoF2 with matching x86 MacroQuest and MQ2Observer0.5.2",
+  "quests_completed": 16,
+  "objectives": 33,
+  "achievement_components": 16,
+  "parent_achievements_completed": 4,
+  "parent_reward_sets_claimed": 4,
+  "fresh_logout_login_persistence": true,
+  "observed_actions": [
+    "Actual scout deliveries, research area, ground book/bottle pickups, Krizzia and triggered Juzzulli",
+    "Original weighted botany and cooking loot, native hand-ins, prerequisite offers and rewards",
+    "Warwing Neezzee, ground plans, all eight disguise materials and selected Bixie illusion",
+    "Partially completed Warwing delivery retained earlier counts and accepted the last-listed Insignia before Antennae",
+    "Actual Queen kill; peak five swarmers and ten grubs; periodic spell attempts resisted by high-level test character; swarmers removed after death, grubs retained",
+    "Four parent item reward sets claimed through native reward UI, including paired earrings/rings and shield plus chosen weapon",
+    "Actual client process exit and fresh saved-profile AutoLogin; all16 tasks,16components,4parents,4reward ledgers and selected nonconsumable rewards persisted; no duplicate offers"
+  ],
+  "qa_setup": [
+    "Level85 geared character with GM flag disabled; authorized GM travel between sites",
+    "Two test-only inventory bags supplied to prevent storage exhaustion; no quest items or objective counts supplied for Stone Hive"
+  ],
+  "xp": "1000 configurable approved PEQ-style XP defaults where original amounts unknown; no unconfirmed parent XP/AA/cash invented",
+  "limitations": [
+    "High-level representative checks do not establish minimum-level combat balance, multiplayer/shared-task parity or every class reward choice",
+    "Queen room tether was source/contract checked, not exercised in native gameplay",
+    "Exact actor models, original spell identity, encounter timings/statistics and potion stack quantities retain labelled uncertainties/reconstructions",
+    "Modern parent reward source copies are not archived May2013 snapshots; full original Warwing option set and Berserker shield behavior remain unverified",
+    "Mead53578 grant observed; later inventory absence is consistent with normal drink consumption but consumption itself was not independently observed",
+    "Earlier-zone parent gear rewards remain separate unfinished work",
+    "Installer checked on Linux with temporary SQL/filesystem copies; native Windows execution not performed"
+  ]
+}

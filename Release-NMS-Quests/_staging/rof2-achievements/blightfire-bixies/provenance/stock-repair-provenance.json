@@ -1,0 +1,65 @@
+{
+  "status": "Installed; native verification in progress",
+  "repairs": [
+    {
+      "npc": 395231,
+      "field": "level",
+      "value": 1,
+      "source": "https://everquest.allakhazam.com/db/npc.html?id=23901",
+      "preserve": "Existing875HP preserved; exact original object HP not verified."
+    },
+    {
+      "npc": 395240,
+      "mandibles": 3,
+      "chance": 100,
+      "max_hit": 169,
+      "ability": "rampage",
+      "source": "https://web.archive.org/web/20131028174104/http://everquest.allakhazam.com/db/quest.html?quest=3839",
+      "evidence": "2011 revision and2006 firsthand3drops; guaranteed3 reconstructed from consistent reports, not recovered server table."
+    },
+    {
+      "npc": 395259,
+      "max_hit": 94,
+      "ability": "flurry",
+      "npc_spells_id": 1,
+      "source": "https://web.archive.org/web/20140216131643/http://everquest.allakhazam.com/db/quest.html?quest=3853",
+      "spell_policy": "Native PEQ Default Cleric List, not recovered original specific spells/timers."
+    },
+    {
+      "npc": 395236,
+      "npc_spells_id": 7,
+      "source": "https://web.archive.org/web/20131027172320/http://everquest.allakhazam.com/db/quest.html?quest=3848",
+      "spell_policy": "Period gardener healing reported; native PEQ Default Druid List, not recovered exact original list."
+    },
+    {
+      "spawn_ids": [
+        98593,
+        98710,
+        98716,
+        98719,
+        98722
+      ],
+      "respawn_seconds": 90,
+      "source": "https://web.archive.org/web/20140216131643/http://everquest.allakhazam.com/db/quest.html?quest=3853",
+      "classification": "Configurable reconstruction inside period-reported1..2minute range, not exact original timer."
+    },
+    {
+      "npc": 395181,
+      "npc_spells_id": 9,
+      "abilities": [
+        "unmezable",
+        "uncharmable"
+      ],
+      "source": "https://web.archive.org/web/20131102053816/http://everquest.allakhazam.com/db/quest.html?quest=3758",
+      "spell_policy": "Native PEQ defaultShadowknight9 includes confirmed EngulfingDarkness355 atlevel33; remaining exactoriginal spell selection/timers unproven."
+    },
+    {
+      "npc": 395227,
+      "field": "class",
+      "before": 62,
+      "value": 1,
+      "evidence": "Unchanged native class62 Object could not open GiveWnd with genuine Green Ooze Bud, including clear-view attempt. After scoped class1 repair the same item entered the native give window, delivery spawned the hungry ooze and Silo completed with confirmed53512ring.",
+      "policy": "Server interaction repair, not recovered Live class. Preserve barrel race536, position and stationary neutral profile; scene spawn adds immune melee/magic/aggro/on flags to preserve noncombat prop."
+    }
+  ]
+}

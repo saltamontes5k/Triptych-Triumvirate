@@ -1,0 +1,153 @@
+{
+  "tasks": {
+    "3040201": {
+      "id": 3040201,
+      "giver": 394092,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040202": {
+      "id": 3040202,
+      "giver": 394092,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040203": {
+      "id": 3040203,
+      "giver": 394126,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040204": {
+      "id": 3040204,
+      "giver": 395123,
+      "repeatable": true,
+      "prerequisites": []
+    },
+    "3040205": {
+      "id": 3040205,
+      "giver": 395123,
+      "repeatable": true,
+      "prerequisites": [
+        3040204
+      ]
+    },
+    "3040206": {
+      "id": 3040206,
+      "giver": 395123,
+      "repeatable": true,
+      "prerequisites": [
+        3040205
+      ]
+    },
+    "3040207": {
+      "id": 3040207,
+      "giver": 395245,
+      "repeatable": false,
+      "prerequisites": []
+    },
+    "3040208": {
+      "id": 3040208,
+      "giver": 395184,
+      "repeatable": false,
+      "prerequisites": []
+    }
+  },
+  "givers": {
+    "394092": [
+      3040201,
+      3040202
+    ],
+    "394126": [
+      3040203
+    ],
+    "395123": [
+      3040204,
+      3040205,
+      3040206
+    ],
+    "395245": [
+      3040207
+    ],
+    "395184": [
+      3040208
+    ]
+  },
+  "bone": {
+    "npc": 395087,
+    "race": 383,
+    "class": 62,
+    "item": 28693,
+    "x": 2921.0,
+    "y": 1869.0,
+    "z": 320.125,
+    "respawn_seconds": 640,
+    "provenance": "Original nameless native NPC395087/spawn98330 retained at its existing tower-floor position. Native class62 open/loot mechanism; missing remains item added by callback. Later2016 guide gives a different corner and is not promoted over original placement."
+  },
+  "tower": {
+    "npc": 395080,
+    "crest": 85773,
+    "torch_item": 36163,
+    "torch_npc": 395073,
+    "signal_npc": 395085,
+    "bat": 395931,
+    "rat": 395932,
+    "transition_hp": 50,
+    "roof": {
+      "x": 2900,
+      "y": 1828,
+      "z": 482.125
+    },
+    "initial_hp": 12000,
+    "mana": 1000,
+    "spells": [
+      {
+        "id": 229,
+        "type": 16384,
+        "recast": 20
+      },
+      {
+        "id": 48,
+        "type": 512,
+        "recast": 30
+      }
+    ],
+    "torch_seconds": 20,
+    "signal_seconds_per_torch": 5,
+    "adds_interval_seconds": 20,
+    "roster_window_seconds": 10,
+    "reset_seconds": 600,
+    "add_limit": 32,
+    "provenance": "50% selected from multiple2006/2012 reports; April2013 report40% retained as conflict. Four native torch placements and native roof signal placement retained. HP12000 period estimate; roster/reset/addcap are reconstruction. Numeric faction amount unconfigured."
+  },
+  "moorwalkers": {
+    "task": 3040208,
+    "item": 85760,
+    "spell": 9181,
+    "max_hp_ratio": 25,
+    "max_hit": 244,
+    "targets": {
+      "395221": 0,
+      "395174": 1,
+      "395249": 2,
+      "395153": 3
+    },
+    "slumber_seconds": 180,
+    "provenance": "2008 25% report selected; July2013 50% confirmation is after cutoff. Sleep180s and model posture are reconstruction; original spawn timers retained."
+  },
+  "witch": {
+    "agatha": 395185,
+    "eye": 395933,
+    "thresholds": [
+      80,
+      60,
+      40,
+      20
+    ],
+    "eye_count": 4,
+    "zan": 395245,
+    "drakkin_race": 522,
+    "walk_seconds": 25,
+    "provenance": "Four adds confirmedAug2007; HP thresholds and timing are reconstruction. Visible Drakkin transformation/walk confirmed walkthrough."
+  }
+}

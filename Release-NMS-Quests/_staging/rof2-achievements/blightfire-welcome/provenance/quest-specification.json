@@ -1,0 +1,717 @@
+{
+  "status": "DEPLOYED; eight native quest completions; all eight component bits and parent complete after logout/login; parent gear rewards not implemented",
+  "cutoff": "2013-05-31",
+  "tasks": [
+    {
+      "id": 3040101,
+      "title": "The Golden Pick I",
+      "giver": 395117,
+      "activities": [
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Explore the first Mucktail mine entrance",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 2861,
+            "max_x": 2961,
+            "min_y": -1905,
+            "max_y": -1805,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 0
+        },
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Explore the second Mucktail mine entrance",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 2003,
+            "max_x": 2103,
+            "min_y": -2005,
+            "max_y": -1905,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 1
+        },
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Explore the third Mucktail mine entrance",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 1604,
+            "max_x": 1704,
+            "min_y": -1970,
+            "max_y": -1870,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 2
+        },
+        {
+          "kind": "kill",
+          "goalcount": 10,
+          "npc_ids": [
+            395008,
+            395013,
+            395017,
+            395018,
+            395021,
+            395022,
+            395024,
+            395032,
+            395049
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Defeat 10 Mucktail rock breakers",
+          "activitytype": 2,
+          "activityid": 3
+        },
+        {
+          "kind": "loot",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "description": "Loot a Tarnished Golden Pickhead",
+          "activitytype": 3,
+          "item_id": 36171,
+          "activityid": 4
+        },
+        {
+          "kind": "loot",
+          "goalcount": 3,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "description": "Loot 3 parts of the broken pick haft",
+          "activitytype": 3,
+          "item_id": 36172,
+          "activityid": 5
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395117
+          ],
+          "step": 2,
+          "zone": 395,
+          "description": "Deliver the pickhead to Ordunn",
+          "activitytype": 1,
+          "item_id": 36171,
+          "activityid": 6
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 3,
+          "npc_ids": [
+            395117
+          ],
+          "step": 2,
+          "zone": 395,
+          "description": "Deliver 3 haft pieces to Ordunn",
+          "activitytype": 1,
+          "item_id": 36172,
+          "activityid": 7
+        }
+      ],
+      "min_level": 19,
+      "repeatable": false,
+      "prerequisites": [],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50037,
+      "description": "Ordunn believes the gnolls have a legendary golden pick. Explore the mines and recover its broken parts."
+    },
+    {
+      "id": 3040102,
+      "title": "The Golden Pick II",
+      "giver": 395117,
+      "activities": [
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            394091
+          ],
+          "step": 0,
+          "zone": 394,
+          "description": "Show Smithy Bronson the broken pick",
+          "activitytype": 1,
+          "item_id": 36173,
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "goalcount": 6,
+          "npc_ids": [
+            395057,
+            395061,
+            395077
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Defeat 6 Rotwood saplings",
+          "activitytype": 2,
+          "activityid": 1
+        },
+        {
+          "kind": "loot",
+          "goalcount": 2,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "description": "Loot 2 Rotwood Treant Branches",
+          "activitytype": 3,
+          "item_id": 36174,
+          "activityid": 2
+        },
+        {
+          "kind": "kill",
+          "goalcount": 2,
+          "npc_ids": [
+            395050,
+            395056,
+            395136,
+            395192,
+            395197
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Defeat 2 darkwater lockjaws",
+          "activitytype": 2,
+          "activityid": 3
+        },
+        {
+          "kind": "loot",
+          "goalcount": 2,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "description": "Loot 2 Darkwater Crocodile Skins",
+          "activitytype": 3,
+          "item_id": 85747,
+          "activityid": 4
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 2,
+          "npc_ids": [
+            394091
+          ],
+          "step": 2,
+          "zone": 394,
+          "description": "Deliver 2 branches to Smithy Bronson",
+          "activitytype": 1,
+          "item_id": 36174,
+          "activityid": 5
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 2,
+          "npc_ids": [
+            394091
+          ],
+          "step": 2,
+          "zone": 394,
+          "description": "Deliver 2 skins to Smithy Bronson",
+          "activitytype": 1,
+          "item_id": 85747,
+          "activityid": 6
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395117
+          ],
+          "step": 3,
+          "zone": 395,
+          "description": "Return the repaired golden pick to Ordunn",
+          "activitytype": 1,
+          "item_id": 36194,
+          "activityid": 7
+        }
+      ],
+      "min_level": 20,
+      "repeatable": false,
+      "prerequisites": [
+        3040101
+      ],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50038,
+      "description": "Take the broken pick to Smithy Bronson. Gather materials for its repair, then return the repaired pick to Ordunn."
+    },
+    {
+      "id": 3040103,
+      "title": "The Golden Pick III",
+      "giver": 395117,
+      "activities": [
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Enter Mucktail mine 1",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 3130,
+            "max_x": 3230,
+            "min_y": -2161,
+            "max_y": -2061,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 0
+        },
+        {
+          "kind": "scene",
+          "goalcount": 2,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "description": "Use the Golden Pick to mine 2 pieces of ore in mine 1",
+          "activitytype": 255,
+          "activityid": 1
+        },
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 2,
+          "zone": 395,
+          "description": "Enter Mucktail mine 2",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 2315,
+            "max_x": 2415,
+            "min_y": -1910,
+            "max_y": -1810,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 2
+        },
+        {
+          "kind": "scene",
+          "goalcount": 2,
+          "npc_ids": [],
+          "step": 3,
+          "zone": 395,
+          "description": "Use the Golden Pick to mine 2 pieces of ore in mine 2",
+          "activitytype": 255,
+          "activityid": 3
+        },
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 4,
+          "zone": 395,
+          "description": "Enter Mucktail mine 3",
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 1516,
+            "max_x": 1616,
+            "min_y": -2187,
+            "max_y": -2087,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "activityid": 4
+        },
+        {
+          "kind": "scene",
+          "goalcount": 2,
+          "npc_ids": [],
+          "step": 5,
+          "zone": 395,
+          "description": "Use the Golden Pick to mine 2 pieces of ore in mine 3",
+          "activitytype": 255,
+          "activityid": 5
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 2,
+          "npc_ids": [
+            395117
+          ],
+          "step": 6,
+          "zone": 395,
+          "description": "Deliver 2 ore samples from mine 1 to Ordunn",
+          "activitytype": 1,
+          "item_id": 36176,
+          "activityid": 6
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 2,
+          "npc_ids": [
+            395117
+          ],
+          "step": 6,
+          "zone": 395,
+          "description": "Deliver 2 ore samples from mine 2 to Ordunn",
+          "activitytype": 1,
+          "item_id": 36177,
+          "activityid": 7
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 2,
+          "npc_ids": [
+            395117
+          ],
+          "step": 6,
+          "zone": 395,
+          "description": "Deliver 2 ore samples from mine 3 to Ordunn",
+          "activitytype": 1,
+          "item_id": 36178,
+          "activityid": 8
+        }
+      ],
+      "min_level": 20,
+      "repeatable": false,
+      "prerequisites": [
+        3040102
+      ],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [
+        {
+          "item_id": 53528,
+          "quantity": 1
+        },
+        {
+          "item_id": 53529,
+          "quantity": 1
+        },
+        {
+          "item_id": 53530,
+          "quantity": 1
+        },
+        {
+          "item_id": 53531,
+          "quantity": 1
+        },
+        {
+          "item_id": 53532,
+          "quantity": 1
+        }
+      ],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50039,
+      "description": "Equip the Golden Pick and strike rock piles in each Mucktail mine. Bring two ore samples from each mine to Ordunn."
+    },
+    {
+      "id": 3040104,
+      "title": "The Darkwater Pools",
+      "giver": 395118,
+      "activities": [
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            395118
+          ],
+          "step": 0,
+          "zone": 395,
+          "description": "Deliver 4 Darkwater Crocodile Skins to Ozzana",
+          "activitytype": 1,
+          "item_id": 85747,
+          "activityid": 0
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395118
+          ],
+          "step": 0,
+          "zone": 395,
+          "description": "Deliver a Moors Turtle Shell to Ozzana",
+          "activitytype": 1,
+          "item_id": 85748,
+          "activityid": 1
+        }
+      ],
+      "min_level": 24,
+      "repeatable": true,
+      "prerequisites": [],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50040,
+      "description": "Hunt the darkwater crocodiles and bog turtles. Bring four skins and a turtle shell to Ozzana."
+    },
+    {
+      "id": 3040105,
+      "title": "The Slashclaw Cliffs",
+      "giver": 395118,
+      "activities": [
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Loot 4 Pristine Slashclaw Pelts",
+          "activitytype": 3,
+          "item_id": 85749,
+          "activityid": 0
+        },
+        {
+          "kind": "scene",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Use the Slashclaw Cub Trap on a slashclaw cub",
+          "activitytype": 255,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395118
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Deliver the cub trap to Ozzana",
+          "activitytype": 1,
+          "item_id": 85753,
+          "activityid": 2
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            395118
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Deliver 4 Pristine Slashclaw Pelts to Ozzana",
+          "activitytype": 1,
+          "item_id": 85749,
+          "activityid": 3
+        }
+      ],
+      "min_level": 26,
+      "repeatable": true,
+      "prerequisites": [],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50041,
+      "description": "Collect pristine slashclaw pelts and use Ozzana\u2019s trap to capture a live slashclaw cub."
+    },
+    {
+      "id": 3040106,
+      "title": "The Ghostpack Fens",
+      "giver": 395118,
+      "activities": [
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Loot 4 Etheral Ghostwolf Pelts",
+          "activitytype": 3,
+          "item_id": 85750,
+          "activityid": 0
+        },
+        {
+          "kind": "loot",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "description": "Loot Denlord Darkmoon\u2019s Tooth",
+          "activitytype": 3,
+          "item_id": 85751,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            395118
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Deliver 4 ghostwolf pelts to Ozzana",
+          "activitytype": 1,
+          "item_id": 85750,
+          "activityid": 2
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395118
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Deliver Denlord Darkmoon\u2019s Tooth to Ozzana",
+          "activitytype": 1,
+          "item_id": 85751,
+          "activityid": 3
+        }
+      ],
+      "min_level": 30,
+      "repeatable": false,
+      "prerequisites": [],
+      "confirmed_reward_items": [
+        {
+          "item_id": 53525,
+          "quantity": 1
+        }
+      ],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50042,
+      "description": "Bring Ozzana proof of the ghostpack: four ethereal pelts and the tooth of Denlord Darkmoon."
+    },
+    {
+      "id": 3040107,
+      "title": "The Ticking Crocodile",
+      "giver": 395134,
+      "activities": [
+        {
+          "kind": "scene",
+          "goalcount": 1,
+          "npc_ids": [
+            395920
+          ],
+          "step": 0,
+          "zone": 395,
+          "description": "Defeat the Ticking Crocodile to free Ratwork Model VIII",
+          "activitytype": 255,
+          "activityid": 0
+        },
+        {
+          "kind": "scene",
+          "goalcount": 1,
+          "npc_ids": [
+            395921
+          ],
+          "step": 1,
+          "zone": 395,
+          "description": "Give the Ratwork Power Core to Ratwork Model VIII",
+          "activitytype": 255,
+          "item_id": 85755,
+          "activityid": 1
+        },
+        {
+          "kind": "scene",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 2,
+          "zone": 395,
+          "description": "Return to Hammerstock after Ratwork Model VIII arrives",
+          "activitytype": 255,
+          "activityid": 2
+        }
+      ],
+      "min_level": 21,
+      "repeatable": true,
+      "prerequisites": [],
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50043,
+      "description": "Clear giant crocodiles from the southern pond to find the one that swallowed Hammerstock\u2019s ratwork. Restore its power and see it safely home."
+    },
+    {
+      "id": 3040108,
+      "title": "Witchlamps",
+      "giver": 395143,
+      "activities": [
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            395143
+          ],
+          "step": 0,
+          "zone": 395,
+          "description": "Deliver 4 Witchlamp Lightstones to Alchemist Ella",
+          "activitytype": 1,
+          "item_id": 85754,
+          "activityid": 0
+        }
+      ],
+      "min_level": 20,
+      "repeatable": true,
+      "prerequisites": [],
+      "confirmed_reward_items": [
+        {
+          "item_id": 53524,
+          "quantity": 10
+        }
+      ],
+      "reward_choice_items": [],
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "achievement_id": 500020200,
+      "component_id": 50044,
+      "description": "Collect four Witchlamp Lightstones from the western hills and bring them to Alchemist Ella for a supply of potions."
+    }
+  ],
+  "limits": [
+    "Quest level/repeatability conflicts, scene probabilities and trigger volumes retain explicit labels",
+    "No parent gear reward mapping supplied",
+    "Golden pick consumable quest object36194 differs from mining weapon36175",
+    "Crocodile kill and core hand-in are scene-owned counters so a foreign character cannot consume/advance another character\u2019s ratwork scene."
+  ]
+}

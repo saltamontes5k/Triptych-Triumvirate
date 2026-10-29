@@ -1,0 +1,1296 @@
+{
+  "status": "RESEARCHED SETTINGS APPROVED; native verification pending",
+  "tasks": [
+    {
+      "id": 3039801,
+      "title": "Lost Memento",
+      "giver": 395002,
+      "achievement_id": 500020500,
+      "component_id": 50060,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 1,
+          "goalcount": 1,
+          "description": "Deliver Anarynn's Lost Gold Locket",
+          "zone": 394,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85756,
+          "npc_ids": [
+            394004
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 15,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {},
+        "repeatability_evidence": "Dated pre-cutoff repeat-completion reports; period-cross-checks.json"
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131101114121/http://everquest.allakhazam.com/db/quest.html?quest=3813",
+        "page_last_modified": "2011-01-11",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039802,
+      "title": "Experienced Hunters Needed",
+      "giver": 395002,
+      "achievement_id": 500020500,
+      "component_id": 50061,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Bog Rat Pelt",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85745,
+          "npc_ids": [
+            395118
+          ],
+          "kind": "deliver"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Blightfire Snake Skin",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85746,
+          "npc_ids": [
+            395118
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 15,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {},
+        "repeatability_evidence": "Dated pre-cutoff repeat-completion reports; period-cross-checks.json"
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131101141045/http://everquest.allakhazam.com/db/quest.html?quest=3812",
+        "page_last_modified": "2011-01-11",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039803,
+      "title": "Wanted: Intrepid Explorer",
+      "giver": 395002,
+      "achievement_id": 500020500,
+      "component_id": 50062,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Explore Ogre Stomp",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": -2150,
+              "max_x": -1850,
+              "min_y": 1700,
+              "max_y": 2000,
+              "min_z": -5000,
+              "max_z": 5000
+            }
+          },
+          "bounds_provenance": "2011-revised archived waypoint; configurable reconstructed XY half-width150 and unrestricted practical Z. Not exact original volume.",
+          "kind": "explore"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Explore Roanoak's Grove",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": 1050,
+              "max_x": 1350,
+              "min_y": 250,
+              "max_y": 550,
+              "min_z": -5000,
+              "max_z": 5000
+            }
+          },
+          "bounds_provenance": "2011-revised archived waypoint; configurable reconstructed XY half-width150 and unrestricted practical Z. Not exact original volume.",
+          "kind": "explore"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Explore Sporali Farms",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": 1590,
+              "max_x": 1890,
+              "min_y": 1665,
+              "max_y": 1965,
+              "min_z": -5000,
+              "max_z": 5000
+            }
+          },
+          "bounds_provenance": "2011-revised archived waypoint; configurable reconstructed XY half-width150 and unrestricted practical Z. Not exact original volume.",
+          "kind": "explore"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Explore Ghostpack Woods",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": -3010,
+              "max_x": -2710,
+              "min_y": 1425,
+              "max_y": 1725,
+              "min_z": -5000,
+              "max_z": 5000
+            }
+          },
+          "bounds_provenance": "2011-revised archived waypoint; configurable reconstructed XY half-width150 and unrestricted practical Z. Not exact original volume.",
+          "kind": "explore"
+        },
+        {
+          "activityid": 4,
+          "activitytype": 4,
+          "goalcount": 1,
+          "description": "Speak Scout Captain Slynn",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395128
+          ],
+          "kind": "speak"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 20,
+        "repeatable": 0,
+        "cash_reward": 5000,
+        "factions": {
+          "1129": 10
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131027145724/http://everquest.allakhazam.com/db/quest.html?quest=3817",
+        "page_last_modified": "2011-01-18",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039804,
+      "title": "Wanted: Supply Runner",
+      "giver": 395002,
+      "achievement_id": 500020500,
+      "component_id": 50063,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 4,
+          "goalcount": 1,
+          "description": "Speak Scout Captain Slynn",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395128
+          ],
+          "kind": "speak"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 1,
+          "goalcount": 1,
+          "description": "Deliver Blightfire Bivouac Supplies",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 85797,
+          "npc_ids": [
+            395215
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 30,
+        "repeatable": 0,
+        "cash_reward": 9000,
+        "factions": {
+          "1129": 10
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131101141100/http://everquest.allakhazam.com/db/quest.html?quest=3838",
+        "page_last_modified": "2011-01-19",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039805,
+      "title": "Ore for Smelting",
+      "giver": 394091,
+      "achievement_id": 500020600,
+      "component_id": 50064,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Enter zone moors",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": 0,
+              "max_x": 0,
+              "min_y": 0,
+              "max_y": 0,
+              "min_z": 0,
+              "max_z": 0
+            }
+          },
+          "kind": "enter_zone",
+          "bounds_provenance": "Whole-zone Explore uses native zone filter with no area; Touch11 is a switch interaction, not zone entry."
+        },
+        {
+          "activityid": 1,
+          "activitytype": 2,
+          "goalcount": 10,
+          "description": "Kill Mucktail rock breakers/miners",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395008,
+            395013,
+            395017,
+            395018,
+            395021,
+            395022,
+            395023,
+            395024,
+            395025,
+            395027,
+            395032,
+            395036,
+            395037,
+            395038,
+            395042,
+            395049
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Hunk of Blightfire Ore",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 36193,
+          "kind": "loot"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Hunk of Blightfire Ore",
+          "zone": 394,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "item_id": 36193,
+          "npc_ids": [
+            394091
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "No invented XP reward: period source confirms potions but does not independently establish quest XP.",
+      "review": {
+        "min_level": 20,
+        "repeatable": 0,
+        "cash_reward": 0,
+        "factions": {}
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [
+        {
+          "item_id": 53506,
+          "quantity": 10
+        }
+      ],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20130922074240/http://everquest.allakhazam.com/db/quest.html?quest=3786",
+        "page_last_modified": "2013-09-13",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered.",
+        "repeatability_caveat": "Nearest archive page modified September2013, after cutoff; nonrepeatable is provisional rather than established May2013 fact."
+      },
+      "configured_xp": 0
+    },
+    {
+      "id": 3039806,
+      "title": "Gnollish Tools",
+      "giver": 394091,
+      "achievement_id": 500020600,
+      "component_id": 50065,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Enter zone moors",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": 0,
+              "max_x": 0,
+              "min_y": 0,
+              "max_y": 0,
+              "min_z": 0,
+              "max_z": 0
+            }
+          },
+          "kind": "enter_zone",
+          "bounds_provenance": "Whole-zone Explore uses native zone filter with no area; Touch11 is a switch interaction, not zone entry."
+        },
+        {
+          "activityid": 1,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Rock Breaker Hammer",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 85743,
+          "kind": "loot"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Mucktail Mining Pick",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 36162,
+          "kind": "loot"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Rock Breaker Hammer",
+          "zone": 394,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "item_id": 85743,
+          "npc_ids": [
+            394091
+          ],
+          "kind": "deliver"
+        },
+        {
+          "activityid": 4,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Mucktail Mining Pick",
+          "zone": 394,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "item_id": 36162,
+          "npc_ids": [
+            394091
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 15,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {},
+        "repeatability_evidence": "Dated pre-cutoff repeat-completion reports; period-cross-checks.json"
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [
+        {
+          "item_id": 53509,
+          "quantity": 1
+        }
+      ],
+      "min_level_acceptance_proven_at": 16,
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131101071752/http://everquest.allakhazam.com/db/quest.html?quest=3788",
+        "page_last_modified": "2013-03-21",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered.",
+        "level_override": "Use15 inferred from2007 level16 acceptance, avoiding archival recommended20 as a hard gate."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039807,
+      "title": "The Mucktail Quarry",
+      "giver": 395052,
+      "achievement_id": 500020600,
+      "component_id": 50066,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 2,
+          "goalcount": 10,
+          "description": "Kill a Mucktail rock breaker",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395008,
+            395013,
+            395017,
+            395018,
+            395021,
+            395022,
+            395024,
+            395032,
+            395049
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Rock Breaker Hammer",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85743,
+          "kind": "loot"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Rock Breaker Hammer",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 85743,
+          "npc_ids": [
+            395052
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 18,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {
+          "1129": 10
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [
+        {
+          "item_id": 53507,
+          "quantity": 1
+        }
+      ],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131027160358/http://everquest.allakhazam.com/db/quest.html?quest=3815",
+        "page_last_modified": "2011-01-11",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039808,
+      "title": "The Mucktail Mines",
+      "giver": 395052,
+      "achievement_id": 500020600,
+      "component_id": 50067,
+      "prerequisite_titles": [
+        "The Mucktail Quarry"
+      ],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 2,
+          "goalcount": 10,
+          "description": "Kill a Mucktail miner",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395023,
+            395025,
+            395027,
+            395036,
+            395037,
+            395038,
+            395042
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 4,
+          "goalcount": 1,
+          "description": "Speak Ambassador Orren",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395070
+          ],
+          "kind": "speak"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 2,
+          "goalcount": 1,
+          "description": "Kill Pit Boss Scar",
+          "zone": 395,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395046
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 3,
+          "goalcount": 1,
+          "description": "Loot Scar's Shattered Shield",
+          "zone": 395,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "item_id": 85744,
+          "kind": "loot"
+        },
+        {
+          "activityid": 4,
+          "activitytype": 1,
+          "goalcount": 1,
+          "description": "Deliver Scar's Shattered Shield",
+          "zone": 395,
+          "review": {
+            "step": 4,
+            "req_activity_id": -1
+          },
+          "item_id": 85744,
+          "npc_ids": [
+            395052
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 18,
+        "repeatable": 0,
+        "cash_reward": 0,
+        "factions": {
+          "1129": 20
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [
+        3039807
+      ],
+      "reward_items_for_review": [
+        {
+          "item_id": 53508,
+          "quantity": 1
+        }
+      ],
+      "all_classes": true,
+      "class_evidence": "2007 completion report distinguishes task eligibility from reward weapon classes",
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131101064234/http://everquest.allakhazam.com/db/quest.html?quest=3816",
+        "page_last_modified": "2011-01-13",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039809,
+      "title": "Rotwood, The Infected Treants",
+      "giver": 395079,
+      "achievement_id": 500020700,
+      "component_id": 50068,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 2,
+          "goalcount": 12,
+          "description": "Kill Rotwood Saplings",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395057,
+            395061,
+            395077
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 2,
+          "goalcount": 4,
+          "description": "Kill Rotwood Treants",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395088,
+            395146,
+            395147
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 4,
+          "goalcount": 1,
+          "description": "Speak Roanoak",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395079
+          ],
+          "kind": "speak"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 20,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {
+          "1110": 10,
+          "1109": 10,
+          "1111": -10
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "min_level_acceptance_proven_at": 20,
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131031122330/http://everquest.allakhazam.com/db/quest.html?quest=3639",
+        "page_last_modified": "2011-01-12",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039810,
+      "title": "Rotwood, The Spore Farms",
+      "giver": 395079,
+      "achievement_id": 500020700,
+      "component_id": 50069,
+      "prerequisite_titles": [
+        "Rotwood, The Infected Treants"
+      ],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 2,
+          "goalcount": 15,
+          "description": "Kill Sporali Farmers",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395089,
+            395097,
+            395115
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Rotwood Spore",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85752,
+          "kind": "loot"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Rotwood Spore",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 85752,
+          "npc_ids": [
+            395079
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 20,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {
+          "1110": 10,
+          "1109": 10,
+          "1111": -10
+        },
+        "farmer_goalcount": 15
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "farmer_count_candidates": {
+        "current_EQResource": 10,
+        "ZAM_2006_narrative": 15
+      },
+      "prerequisites": [
+        3039809
+      ],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131027210719/http://everquest.allakhazam.com/db/quest.html?quest=3641",
+        "page_last_modified": "2011-01-14",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered.",
+        "farmer_count": "Archived narrative revised2011 requires15, chosen over2026 guide10."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039811,
+      "title": "Rotwood: Molderahn",
+      "giver": 395079,
+      "achievement_id": 500020700,
+      "component_id": 50070,
+      "prerequisite_titles": [
+        "Rotwood, The Infected Treants",
+        "Rotwood, The Spore Farms"
+      ],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 2,
+          "goalcount": 3,
+          "description": "Kill Sporali Warriors",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395098,
+            395111,
+            395113
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 2,
+          "goalcount": 3,
+          "description": "Kill Sporali Elders",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395096,
+            395121,
+            395126
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 2,
+          "goalcount": 1,
+          "description": "Kill Molderahn",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395137
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 4,
+          "goalcount": 1,
+          "description": "Speak Roanoak",
+          "zone": 395,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395079
+          ],
+          "kind": "speak"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 20,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {
+          "1110": 20,
+          "1109": 20,
+          "1111": -20
+        }
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [
+        3039809,
+        3039810
+      ],
+      "reward_items_for_review": [
+        {
+          "item_id": 53533,
+          "quantity": 1
+        }
+      ],
+      "all_classes": true,
+      "class_evidence": "2006 caster completion reports",
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131027224924/http://everquest.allakhazam.com/db/quest.html?quest=3643",
+        "page_last_modified": "2011-01-14",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039812,
+      "title": "Hardy Seeds",
+      "giver": 394154,
+      "achievement_id": 500020700,
+      "component_id": 50071,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Seed Pod",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 54656,
+          "kind": "loot"
+        },
+        {
+          "activityid": 1,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Seed Pod",
+          "zone": 394,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 54656,
+          "npc_ids": [
+            394154
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 15,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {},
+        "repeatability_evidence": "Dated pre-cutoff repeat-completion reports; period-cross-checks.json"
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [
+        {
+          "item_id": 53518,
+          "quantity": 10
+        }
+      ],
+      "min_level_acceptance_proven_at": 15,
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131028174330/http://everquest.allakhazam.com/db/quest.html?quest=4141",
+        "page_last_modified": "2012-01-03",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039813,
+      "title": "Kindling for the Fires",
+      "giver": 394091,
+      "achievement_id": 500020700,
+      "component_id": 50072,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 5,
+          "goalcount": 1,
+          "description": "Enter zone moors",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1,
+            "bounds": {
+              "min_x": 0,
+              "max_x": 0,
+              "min_y": 0,
+              "max_y": 0,
+              "min_z": 0,
+              "max_z": 0
+            }
+          },
+          "kind": "enter_zone",
+          "bounds_provenance": "Whole-zone Explore uses native zone filter with no area; Touch11 is a switch interaction, not zone entry."
+        },
+        {
+          "activityid": 1,
+          "activitytype": 2,
+          "goalcount": 10,
+          "description": "Kill hedge devils",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "npc_ids": [
+            395149,
+            395150,
+            395151,
+            395152,
+            395155,
+            395277,
+            395278,
+            395280
+          ],
+          "kind": "kill"
+        },
+        {
+          "activityid": 2,
+          "activitytype": 3,
+          "goalcount": 4,
+          "description": "Loot Hedge Devil Branch",
+          "zone": 395,
+          "review": {
+            "step": 2,
+            "req_activity_id": -1
+          },
+          "item_id": 36197,
+          "kind": "loot"
+        },
+        {
+          "activityid": 3,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Hedge Devil Branch",
+          "zone": 394,
+          "review": {
+            "step": 3,
+            "req_activity_id": -1
+          },
+          "item_id": 36197,
+          "npc_ids": [
+            394091
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 25,
+        "repeatable": 0,
+        "cash_reward": 0,
+        "factions": {}
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131031130037/http://everquest.allakhazam.com/db/quest.html?quest=3787",
+        "page_last_modified": "2013-03-21",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered.",
+        "level_override": "Use25 from2007 level24 rejection and2008 level25 acceptance; archive recommended20 contradicted by period reports."
+      },
+      "configured_xp": 1000
+    },
+    {
+      "id": 3039814,
+      "title": "Green Ooze Buds",
+      "giver": 395144,
+      "achievement_id": 500020700,
+      "component_id": 50073,
+      "prerequisite_titles": [],
+      "activities": [
+        {
+          "activityid": 0,
+          "activitytype": 1,
+          "goalcount": 4,
+          "description": "Deliver Green Ooze Bud",
+          "zone": 395,
+          "review": {
+            "step": 1,
+            "req_activity_id": -1
+          },
+          "item_id": 85758,
+          "npc_ids": [
+            395144
+          ],
+          "kind": "deliver"
+        }
+      ],
+      "approved_xp_default": 1000,
+      "xp_provenance": "Configurable PEQ-style reconstruction default approved by user; not original XP proof.",
+      "review": {
+        "min_level": 30,
+        "repeatable": 1,
+        "cash_reward": 0,
+        "factions": {}
+      },
+      "source_draft": "task-specification.draft.json",
+      "status": "Native quest completion and saved achievement credit verified on existing local port; clean-port native installation NOT RUN",
+      "prerequisites": [],
+      "reward_items_for_review": [
+        {
+          "item_id": 53523,
+          "quantity": 10
+        }
+      ],
+      "activity_layout_note": "Reconstructed step/dependency layout; native objectives and final delivery/report gates verified. Original Live UI step metadata remains unrecovered.",
+      "settings_provenance": {
+        "archive": "https://web.archive.org/web/20131031151525/http://everquest.allakhazam.com/db/quest.html?quest=3622",
+        "page_last_modified": "2011-01-18",
+        "capture_after_cutoff": true,
+        "classification": "Best-supported researched settings approved by user; archive header level is not an independently verified minimum.",
+        "quantity_caveat": "Faction numerical amounts corroborated by later sources; original direction is supported by archive, exact May2013 amounts remain unproven.",
+        "layout": "Reconstructed parallel kill/loot acquisition, followed by native hand-in/report gates; original UI step metadata not recovered."
+      },
+      "configured_xp": 1000
+    }
+  ],
+  "preserve": "Existing corpse loot,destructible mushrooms,spawns,character data and housing remain unchanged",
+  "task_ids": "3039801..3039814: available in active DB at staging audit; recheck before installation",
+  "policy": {
+    "user_decision": "Use best-supported historical values with clear labels",
+    "scope": "Conflicting minimum levels and repeatability",
+    "exact_original_claim": false,
+    "XP": "User-approved labelled configurable PEQ-style defaults where XP reward is known but exact amount missing",
+    "preserve_existing_acquisition": true
+  }
+}

@@ -1,0 +1,102 @@
+[
+  {
+    "path": "README.md",
+    "sha256": "3c6587055e5c5b6374e5a809ce51ab5f226708d1a1680326eec9c3634132175a"
+  },
+  {
+    "path": "apply_quests.py",
+    "sha256": "562cfd2936d2c8c0b4dc23a991eb07398345c54eb48dac32ed6c41d7afc79bde"
+  },
+  {
+    "path": "configuration/reconstruction-policy.json",
+    "sha256": "13a66fb70081bb2f7eec36f628e525bc088e921977af03fa49e5f171fb0a0782"
+  },
+  {
+    "path": "hooks/player-click-door.fragment.lua",
+    "sha256": "5b535f46f16c30d318c942d36e0d673fe8c7a72036ff97d91abba8a58dde8769"
+  },
+  {
+    "path": "hooks/task-complete.fragment.lua",
+    "sha256": "9a228c277fc81ef4915bf47d727ab5f3f2727c165171734db00ac9a2e2d375ac"
+  },
+  {
+    "path": "preflight.py",
+    "sha256": "7119beba8050bb98fd9a98e3470477cc3034b9140c504c618206ac63f4513041"
+  },
+  {
+    "path": "provenance/baseline-identities.json",
+    "sha256": "4c3688d38d7362b634e8eea7980c4cd62aac5a90b316c7f99c9ec28eb5b8fd91"
+  },
+  {
+    "path": "provenance/historical-sources.json",
+    "sha256": "eb7c34b748a4c4b586dac7577e654e072ed202a22cbb4e4e3b73a462b295f194"
+  },
+  {
+    "path": "provenance/native-status.json",
+    "sha256": "028d5188d85744999c0f2c331e2ee7e43705265b5edd2de1d97ede91559df56c"
+  },
+  {
+    "path": "provenance/quest-specification.json",
+    "sha256": "68f87c96865243b93ab514c7e731f026cd4f8dfe6b0588155d08f7cd57dafa65"
+  },
+  {
+    "path": "quest-manifest.json",
+    "sha256": "aca696c74938c1e6f23622f0d377eb0d2a8fbceca8af6648e2fccd56684bd891"
+  },
+  {
+    "path": "quests/crescent/394004.lua",
+    "sha256": "dfbd4f56520d49ffcec75269626203f62975dbd729061daa20d52fad4b9a1c67"
+  },
+  {
+    "path": "quests/crescent/394091.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/crescent/394154.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/lua_modules/achievement_quest_blightfire.lua",
+    "sha256": "65f261bdc67b154432cbab23fd0a86445748dabf960635e4dbd4a9948fd5a600"
+  },
+  {
+    "path": "quests/lua_modules/achievement_quest_blightfire_data.lua",
+    "sha256": "b2078085c51d1a988acfb50317e3e655c1526e5d5d794c63918c0e56f69e9038"
+  },
+  {
+    "path": "quests/moors/395052.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395070.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395079.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395118.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395128.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395144.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "quests/moors/395215.lua",
+    "sha256": "83badb7906981a8e286b0219e5afc4cc448da022db03b32aa13107299ccdaf29"
+  },
+  {
+    "path": "sql/010-catalogue.sql",
+    "sha256": "62219f426ccac14bff0168865bec26be00cf197b824d05ee484fe3e372d7690e"
+  },
+  {
+    "path": "sql/020-quests.sql",
+    "sha256": "0b882cc411368ee63756ca2f1b396781ee84134cfbd37c3fb039beac68e58382"
+  }
+]

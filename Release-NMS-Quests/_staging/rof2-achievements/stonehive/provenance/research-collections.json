@@ -1,0 +1,93 @@
+{
+  "cutoff": "2013-05-31",
+  "status": "Research decisions used in released package; native identity/acquisition checks completed; original uncertainties retained below.",
+  "tasks": [
+    {
+      "title": "A'mazin Plants",
+      "url": "https://everquest.allakhazam.com/db/quest/4019",
+      "entered": "2007-02-14",
+      "objective": "Loot ten Violasuthia Petal, no invented delivery step",
+      "period_evidence": "2012-04-10 task text and completion; 2006-12-01 NPC comment confirms10 petals and potion",
+      "reward": "Violasuthia Healing Potion",
+      "level_selection": 34,
+      "level_provenance": "Current header, original minimum not independently recovered",
+      "repeatable": false
+    },
+    {
+      "title": "Curious Seed",
+      "achievement_label": "Curious Seeds",
+      "url": "https://everquest.allakhazam.com/db/quest/4020",
+      "entered": "2007-02-14",
+      "objective": "Loot ten Acantuss Seed; no delivery step",
+      "period_evidence": "2012-04-10 journal and completion text",
+      "reward": "Acantuss Mana Potion",
+      "level_selection": 34,
+      "level_provenance": "Current header, original minimum not independently recovered",
+      "repeatable": false
+    },
+    {
+      "title": "Sappy Request",
+      "url": "https://everquest.allakhazam.com/db/quest/4021",
+      "entered": "2007-02-14",
+      "objective": "Loot ten Symplokiss Sap; no delivery step",
+      "period_evidence": "2012-04-10 journal; 2008-11-07 acceptance at28; 2012-04-07 sap also in fungus-patch containers",
+      "reward": "Jumjum Honey Mead",
+      "level_selection": 28,
+      "level_provenance": "Period acceptance overrides current32 header",
+      "repeatable": false,
+      "acquisition_note": "Retain native existing mob drops; audit fungus-patch alternative before claiming complete acquisition parity"
+    },
+    {
+      "title": "Nothing to Stew About",
+      "url": "https://everquest.allakhazam.com/db/quest/3836",
+      "entered": "2006-11-07",
+      "objective": "Deliver ten Delectable Bixie Wing to Cook Idriak; preloot allowed",
+      "period_evidence": "2012-04-01 explicit single delivery step supersedes2007 loot-only report",
+      "reward": "Honey-Touched Band",
+      "level_selection": 32,
+      "level_provenance": "Current header; best-supported configurable selection",
+      "repeatable": true
+    },
+    {
+      "title": "Touchy Feely Flan",
+      "url": "https://everquest.allakhazam.com/db/quest/3834",
+      "entered": "2006-11-07",
+      "objective": "Deliver ten Scrumptious Bixie Antennae to Cook Idriak; preloot allowed",
+      "period_evidence": "2012-04-01 explicit single delivery step, no loot objective",
+      "reward": "Obsidian Bixie Bauble",
+      "level_selection": 34,
+      "level_provenance": "Current header; best-supported configurable selection",
+      "repeatable": true
+    },
+    {
+      "title": "Heads Above the Rest",
+      "url": "https://everquest.allakhazam.com/db/quest/3837",
+      "entered": "2006-11-07",
+      "objective": "Deliver ten Ripe Bixie Head to Cook Idriak; preloot allowed",
+      "period_evidence": "2012-04-01 exact delivery step; 2012-04-02 reports wings then antennae required before heads turn-in",
+      "reward": "Buzzing Bixie Wand",
+      "level_selection": 38,
+      "level_provenance": "Current header; best-supported configurable selection",
+      "repeatable": false,
+      "prerequisites": [
+        "Nothing to Stew About",
+        "Touchy Feely Flan"
+      ],
+      "ordering_uncertainty": "Period players could accept before prior quests but hand-in failed; native core delivery occurs before quest EVENT_TRADE, so choose explicit prerequisite offer gating with documented difference rather than silently auto-credit out of order"
+    },
+    {
+      "title": "Jumjum Research",
+      "url": "https://everquest.allakhazam.com/db/quest/3841",
+      "entered": "2006-11-07",
+      "objective": "Deliver two each Fresh Jumjum, Jumjum Wine, Processed Jumjum and Jumjum Jam; four delivery objectives, preloot allowed",
+      "period_evidence": "2012-03-25 explicitly replaces old loot steps; 2006-11-08 confirms reward is bixie-only snare with3minute refresh",
+      "reward": "Honeycomb Blaster",
+      "level_selection": 32,
+      "level_provenance": "Current header; best-supported configurable selection",
+      "repeatable": true,
+      "reward_function": "Audit real Honeycomb Blaster spell/equip/use restrictions; reward item presence alone is not proof of its utility"
+    }
+  ],
+  "xp": "Approved configurable1000 PEQ-style default only where XP confirmed but exact amount unknown",
+  "later_sources": "2018 any-bixie claims treated as later corroboration, not reason to rewrite original drops"
+}

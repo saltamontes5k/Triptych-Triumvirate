@@ -58,7 +58,10 @@ Achievements and tasks share six provider-neutral content tables:
 - `rewards` defines typed grants.
 - `reward_sets` defines titled selectable collections.
 - `reward_options` defines ordered choices. An option marked
-  `common_to_all = 1` is granted with every selectable option.
+  `common_to_all = 1` is granted with every selectable option. `class_mask`
+  (bit 0 Warrior .. bit 15 Berserker, default `65535`) restricts which players
+  may see and claim an option; it is only accepted on achievement and task
+  sources.
 - `reward_option_entries` places grants in options.
 - `reward_sources` maps one provider object to one selectable set.
 - `reward_source_entries` maps automatic grants directly to a provider object.
@@ -77,7 +80,9 @@ their established automatic reward fields, and task loading rejects
 Reward, set, and option IDs sent over the wire must fit in an unsigned 32-bit
 integer. Every referenced reward must be enabled, every loaded option must
 contain at least one reward, and a loaded set must contain at least one
-non-common option. A reward may be reused across sources or sets, but may appear
+non-common option, except an achievement set whose options are all common: that
+set is claimable as a single no-choice grant. A reward may be reused across
+sources or sets, but may appear
 only once within one set and cannot be both automatic and selectable for the
 same source.
 

@@ -1,0 +1,52 @@
+{
+  "accessed": "2026-10-28",
+  "classification": "Later firsthand guide corroboration; not proof these numerical amounts or repeat settings existed inMay2013",
+  "source_base": "https://tss.eqresource.com/quests.php?name=",
+  "faction_id_native": 1129,
+  "quests": [
+    {
+      "source": "thebixiethreat",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixiejumjum",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixieplans",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixiethralls",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixiemenacedronehatchery",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixiemenacejumjumfields",
+      "faction_amount": 10,
+      "level": 28
+    },
+    {
+      "source": "bixiemenacethesilo",
+      "faction_amount": 20,
+      "level": 28
+    }
+  ],
+  "other_quest_levels": {
+    "buzzazar": 30,
+    "stonehivevenomstingers": 30,
+    "atasteforhoney": 30,
+    "awidowslastmemory": 30,
+    "shehauntsmydreams": 30
+  },
+  "widow_reward": "Current independent guide lists XP only; item53519 remains unconfirmed and excluded.",
+  "conflicts": "Current guide marks allEthaniel tasks andSheHaunts repeatable; retain period nonrepeat flags where original dated sources sayNo. PeriodWidow header25 retained over modern30 as best-supported historical candidate."
+}

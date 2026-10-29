@@ -1,0 +1,545 @@
+{
+  "status": "DEPLOYED; all seven native routes and post-relog completion verified; parent gear rewards remain unresolved",
+  "cutoff": "2013-05-31",
+  "tasks": [
+    {
+      "id": 3040001,
+      "title": "Dead Wood, The Shambling Mounds",
+      "giver": 394108,
+      "request_keyword": "theory",
+      "prerequisites": [
+        3039606
+      ],
+      "min_level": 25,
+      "repeatable": false,
+      "cash_reward": 7000,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "kill",
+          "goalcount": 6,
+          "npc_ids": [
+            395148,
+            395149,
+            395150,
+            395151,
+            395152,
+            395155,
+            395163,
+            395164,
+            395165,
+            395167,
+            395168,
+            395205,
+            395208,
+            395219,
+            395277,
+            395278,
+            395280
+          ],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 0,
+          "description": "Defeat 6 briars or hedge devils"
+        },
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 3,
+          "item_id": 84233,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            394108
+          ],
+          "step": 1,
+          "zone": 394,
+          "activitytype": 1,
+          "item_id": 84233,
+          "activityid": 2
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50045,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Akins needs samples from the shambling plants of Blightfire Moors. Defeat the briars and hedge devils, collect their branches, and bring the samples to him."
+    },
+    {
+      "id": 3040002,
+      "title": "Dead Wood, Treants",
+      "giver": 394108,
+      "request_keyword": "initially thought",
+      "prerequisites": [
+        3040001
+      ],
+      "min_level": 25,
+      "repeatable": false,
+      "cash_reward": 12000,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "kill",
+          "goalcount": 6,
+          "npc_ids": [
+            395057,
+            395061,
+            395077,
+            395088,
+            395146,
+            395147,
+            395171,
+            395172,
+            395176,
+            395182,
+            395189,
+            395202
+          ],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 0,
+          "description": "Defeat 6 treants or gnarlroots"
+        },
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 3,
+          "item_id": 84234,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            394108
+          ],
+          "step": 1,
+          "zone": 394,
+          "activitytype": 1,
+          "item_id": 84234,
+          "activityid": 2
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50046,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Akins wants to compare the animated plants with the trees of Blightfire Moors. Defeat treants, collect their wooden hearts, and return to him."
+    },
+    {
+      "id": 3040003,
+      "title": "Spooky!",
+      "giver": 394108,
+      "request_keyword": "bottom",
+      "prerequisites": [
+        3040002
+      ],
+      "min_level": 25,
+      "repeatable": false,
+      "cash_reward": 12000,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 5,
+          "bounds": {
+            "min_x": -1113,
+            "max_x": -983,
+            "min_y": 886,
+            "max_y": 1016,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "description": "Find the source of the magic in the crater",
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "goalcount": 5,
+          "npc_ids": [
+            395186,
+            395190,
+            395191,
+            395216
+          ],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 1,
+          "description": "Defeat 5 blightfire giants"
+        },
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 3,
+          "item_id": 84237,
+          "activityid": 2
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            394108
+          ],
+          "step": 2,
+          "zone": 394,
+          "activitytype": 1,
+          "item_id": 84237,
+          "activityid": 3
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50047,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Investigate the magic in the Blightfire crater. Defeat the restless giants, gather glowing glass shards, and take them to Akins."
+    },
+    {
+      "id": 3040004,
+      "title": "The Everburning",
+      "giver": 394108,
+      "request_keyword": "solving",
+      "prerequisites": [
+        3040003
+      ],
+      "min_level": 25,
+      "repeatable": false,
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 0,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 5,
+          "bounds": {
+            "min_x": -1113,
+            "max_x": -983,
+            "min_y": 886,
+            "max_y": 1016,
+            "min_z": -1000,
+            "max_z": 1000
+          },
+          "description": "Return to the crater to attune the wand",
+          "activityid": 0
+        },
+        {
+          "kind": "scene",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 255,
+          "description": "Use the attuned wand and learn the giant spirit's story",
+          "activityid": 1
+        },
+        {
+          "kind": "speak",
+          "goalcount": 1,
+          "npc_ids": [
+            394108
+          ],
+          "step": 2,
+          "zone": 394,
+          "activitytype": 4,
+          "activityid": 2
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50048,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [
+        {
+          "item_id": 53543,
+          "quantity": 1
+        },
+        {
+          "item_id": 53544,
+          "quantity": 1
+        },
+        {
+          "item_id": 53545,
+          "quantity": 1
+        },
+        {
+          "item_id": 53546,
+          "quantity": 1
+        },
+        {
+          "item_id": 53547,
+          "quantity": 1
+        }
+      ],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Take Akins\u2019 spirit wand to the crater and attune it. Use the attuned wand on a restless giant, learn its story, and report what you discover."
+    },
+    {
+      "id": 3040005,
+      "title": "Summon the Spirits",
+      "giver": 395232,
+      "request_keyword": "compassion",
+      "prerequisites": [],
+      "min_level": 30,
+      "repeatable": false,
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 395915,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "kill",
+          "goalcount": 8,
+          "npc_ids": [
+            395173,
+            395175,
+            395177,
+            395179,
+            395188,
+            395203,
+            395206
+          ],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 0,
+          "description": "Defeat 8 gnarl thorns"
+        },
+        {
+          "kind": "loot",
+          "goalcount": 4,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 3,
+          "item_id": 36179,
+          "activityid": 1
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 4,
+          "npc_ids": [
+            395232
+          ],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 1,
+          "item_id": 36179,
+          "activityid": 2
+        },
+        {
+          "kind": "kill",
+          "goalcount": 5,
+          "npc_ids": [
+            395910,
+            395911
+          ],
+          "step": 2,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 3,
+          "description": "Defeat 5 summoned Nokk shades"
+        },
+        {
+          "kind": "speak",
+          "goalcount": 1,
+          "npc_ids": [
+            395232
+          ],
+          "step": 3,
+          "zone": 395,
+          "activitytype": 4,
+          "activityid": 4
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50049,
+      "confirmed_reward_items": [],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Gather Bog Bark for Gubjak the Lost. Follow him to the Nokk circle, defeat the spirits called by his fire, and report back."
+    },
+    {
+      "id": 3040006,
+      "title": "Lay Them to Rest",
+      "giver": 395232,
+      "request_keyword": "destroyed",
+      "prerequisites": [
+        3040005
+      ],
+      "min_level": 30,
+      "repeatable": false,
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 395916,
+      "faction_amount": 0,
+      "activities": [
+        {
+          "kind": "scene",
+          "goalcount": 5,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 255,
+          "description": "Remove skulls from the ancient totems",
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "goalcount": 10,
+          "npc_ids": [
+            395912
+          ],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 1,
+          "description": "Defeat 10 ancestral guardians"
+        },
+        {
+          "kind": "speak",
+          "goalcount": 1,
+          "npc_ids": [
+            395232
+          ],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 4,
+          "activityid": 2
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50050,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53550,
+          "quantity": 1
+        }
+      ],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Use the skulls around the Nokk circle to call forth ancestral guardians. Lay the guardians to rest and return to Gubjak."
+    },
+    {
+      "id": 3040007,
+      "title": "The Fallen Dragon",
+      "giver": 395132,
+      "request_keyword": "hail",
+      "prerequisites": [],
+      "min_level": 25,
+      "repeatable": true,
+      "cash_reward": 0,
+      "configured_xp": 1000,
+      "faction_reward": 1129,
+      "faction_amount": 10,
+      "activities": [
+        {
+          "kind": "explore",
+          "goalcount": 1,
+          "npc_ids": [],
+          "step": 0,
+          "zone": 395,
+          "activitytype": 5,
+          "bounds": {
+            "min_x": 41,
+            "max_x": 111,
+            "min_y": 905,
+            "max_y": 975,
+            "min_z": -50,
+            "max_z": 100
+          },
+          "description": "Pluck a scale from the dead dragon",
+          "activityid": 0
+        },
+        {
+          "kind": "kill",
+          "goalcount": 5,
+          "npc_ids": [
+            395154,
+            395156,
+            395158,
+            395160,
+            395162
+          ],
+          "step": 1,
+          "zone": 395,
+          "activitytype": 2,
+          "activityid": 1,
+          "description": "Defeat 5 sporali decomposers"
+        },
+        {
+          "kind": "deliver",
+          "goalcount": 1,
+          "npc_ids": [
+            395276
+          ],
+          "step": 2,
+          "zone": 395,
+          "activitytype": 1,
+          "item_id": 85768,
+          "activityid": 2
+        }
+      ],
+      "achievement_id": 500020300,
+      "component_id": 50051,
+      "confirmed_reward_items": [
+        {
+          "item_id": 53516,
+          "quantity": 1
+        }
+      ],
+      "reward_choice_items": [],
+      "xp_provenance": "Approved PEQ-style default1000; original XP amount unverified.",
+      "layout_provenance": "Native task dependency layout reconstructed from dated journal reports and walkthroughs; see research-decisions.json.",
+      "description": "Investigate the fallen dragon in Blightfire Moors. Recover a scale, defeat the sporali decomposers, and take your findings to Selay the Cascade."
+    }
+  ],
+  "preserve": [
+    "Housing and character data",
+    "Akins tasks3039605/3039606",
+    "Existing named NPC positions",
+    "Existing original corpse drops",
+    "All existing global/player callbacks"
+  ],
+  "limitations": [
+    "Exact original trigger volumes, charm success rate, some combat stats and model subtypes not established",
+    "Gubjak repeatability and five-skull cutoff are labelled historical inferences; see research decisions",
+    "Faction numeric corroboration is later than the historical cutoff; directions are period supported"
+  ]
+}

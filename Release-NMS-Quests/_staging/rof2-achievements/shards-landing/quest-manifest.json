@@ -1,0 +1,867 @@
+[
+  {
+    "path": "crystalshard/a_Ry-Gorr_digger.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_excavator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_guard.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_messenger.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_miner.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_oracle.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_overseer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_prospector.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_shaman.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_Ry-Gorr_watchman.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_hollow_terror.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_lazy_orc.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_pure_terror.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_stalag_terror.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_tentacle_terror.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/a_tentacle_tormentor.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/an_icy_leech.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/an_icy_terror.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "crystalshard/player.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b098b1af35ad9ea1cc010c16ce072178bae659d89c9d9d6cdf094fa5686942b0"
+  },
+  {
+    "path": "eastwastesshard/a_dire_wolf.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_fear_shardling.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_manticore.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_nightmare.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_samhain.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_savage_dire_wolf.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/a_snow_griffin.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/an_elder_snow_griffin.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "eastwastesshard/player.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b098b1af35ad9ea1cc010c16ce072178bae659d89c9d9d6cdf094fa5686942b0"
+  },
+  {
+    "path": "global/items/script_8793.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "743728209a78bd6568bc192cb5d2fdac04ca052555e391349ad21278ea9aa6f8"
+  },
+  {
+    "path": "global/spells/23998.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "49bc6e4eccf4c785c31bba4f38077143dadec494112517ef5b1aaad66ff49af6"
+  },
+  {
+    "path": "global/spells/33562.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "49bc6e4eccf4c785c31bba4f38077143dadec494112517ef5b1aaad66ff49af6"
+  },
+  {
+    "path": "global/spells/33563.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "49bc6e4eccf4c785c31bba4f38077143dadec494112517ef5b1aaad66ff49af6"
+  },
+  {
+    "path": "global/spells/33564.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "49bc6e4eccf4c785c31bba4f38077143dadec494112517ef5b1aaad66ff49af6"
+  },
+  {
+    "path": "global/spells/33565.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "49bc6e4eccf4c785c31bba4f38077143dadec494112517ef5b1aaad66ff49af6"
+  },
+  {
+    "path": "kaelshard/a_Protector_of_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_Protector_of_war.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_cleric_of_Tallon_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_cleric_of_Vallon_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_courier.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_drunken_faerie.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_fey_delerium.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_fey_uniter.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_frost_giant_berserker.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_frost_giant_commoner.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_frost_giant_gladiator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_frost_giant_trainer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_frost_giant_wolf_tamer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_grave_conjurer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_guardian_of_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_kromrif_recruiter.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_kromzek_sorcerer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_lesser_storm_giant_noble.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_noble_storm_giant.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_penumbral_coldain.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_priest_of_Tallon_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_ritualist_of_Rallos_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_ritualist_of_Tallon_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_ritualist_of_Vallon_Zek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_storm_giant_berserker.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_storm_giant_commoner.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_storm_giant_gladiator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_storm_giant_noble.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_storm_giant_of_nobility.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_thieving_acolyte.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_twisted_prowler.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/a_visiting_noble.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/an_arena_spectator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/an_umbral_coldain.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/an_unbalanced_kromzek.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/an_upright_kromrif.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "kaelshard/player.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "b098b1af35ad9ea1cc010c16ce072178bae659d89c9d9d6cdf094fa5686942b0"
+  },
+  {
+    "path": "shardslanding/#Councilman_Nostulia.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "ab00982dd5a0ccf160c47949411512937730acf0776f8d81bfb3c89eacab2a65"
+  },
+  {
+    "path": "shardslanding/#Director_Idris_Manaar.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "ab00982dd5a0ccf160c47949411512937730acf0776f8d81bfb3c89eacab2a65"
+  },
+  {
+    "path": "shardslanding/#Engineer_Eilisia.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Evoker_Farleap.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Evoker_Redwolf.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Evoker_Slowtail.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Evoker_Waylight.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Harbinger_Glask.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "ab00982dd5a0ccf160c47949411512937730acf0776f8d81bfb3c89eacab2a65"
+  },
+  {
+    "path": "shardslanding/#Leopold_Crunchbasher.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Magus_Burlshin.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "ab00982dd5a0ccf160c47949411512937730acf0776f8d81bfb3c89eacab2a65"
+  },
+  {
+    "path": "shardslanding/#Overseer_Drent.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "39b81e13138a1c4ff8985e0f07a880f0f61d0fe27a1e5cbed12b4bf2963fb9dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_B-Drynn.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_Babblemok.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_N-Laris.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_Pureglade.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_Tyvale.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/#Shardtender_V-Rax.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "234805265ba9161e11f662ea997fc2c998898420de7daa9468069d1478a156dc"
+  },
+  {
+    "path": "shardslanding/a_blighted_prowler.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_blightshell_scarab.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_calculating_overseer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_chillclaw_wyvern.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_citizen.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_clickshell_pest.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_dredger.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_edgecrafter.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_excavator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_fighter.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_gladiator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_ironshaper.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_lifter.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_miner.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_smith.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_conscripted_tender.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_coralspine_goral.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_corrupted_coralspine.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_corrupted_devourer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_council_advisor.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_council_judicator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_council_overseer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_devout_believer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_dire_plainskeeper.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_feeble_devourer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_apparition.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "9b52dcdd3adc7700407709f5650846d7d4c37d3a2006d7f3b9316540cd47473f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_believer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_coordinator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_overseer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_speaker.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_supervisor.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_forsaken_torchbearer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_frostcoat_grazer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_frostcoat_patriarch.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_greater_ivyscale.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_greater_slatescale.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_kangon_verdantbeak.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_lesser_blightshell.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_lesser_hoarder.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_lesser_plainskeeper.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_naeya_plainshound.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_pious_believer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_plainsdweller_guardian.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_plainsdweller_wyvern.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_ruthless_overseer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_selyrah_plainskeeper.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_silent_herald.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_slatescale_serpent.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_slatescale_slitherer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_soulless_attendee.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_stoic_believer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_taskmaster.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_venomshell_pest.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_venomshell_scarab.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_verdantbeak_cub.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_wayward_nightmare.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "9b52dcdd3adc7700407709f5650846d7d4c37d3a2006d7f3b9316540cd47473f"
+  },
+  {
+    "path": "shardslanding/a_wild_naeya.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_worntooth_grendlaen.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_worntooth_matron.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/a_zealous_believer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_arena_sentry.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_arena_ward.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_armory_director.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_armory_foreman.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_armory_guard.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_armory_sentry.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_armory_ward.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_elder_naeya.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_elder_prowler.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_enforcer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_icebeak_matriarch.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_icebeak_pup.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_iceclaw_wyvern.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_impassive_clergyman.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_ivyscale_serpent.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_ivyscale_slitherer.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_oashim_hoarder.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_umbraphyte_cultivator.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/an_umbraphyte_tender.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "0de790f1bcd420950fa5100474570002521d681d15c2a4e45ece76978c0d329f"
+  },
+  {
+    "path": "shardslanding/envoy-s_supply_box.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "387c3687432ec8ed64a8ed3726e72cd105e7c5fc1b535cde8d6f782b78a2bdba"
+  },
+  {
+    "path": "shardslanding/player.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "da0761157a3ff3069df66abfaeb92b8de08672521385987422cb1a88f67dd11b"
+  },
+  {
+    "path": "shardslanding/supply_barrel.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "387c3687432ec8ed64a8ed3726e72cd105e7c5fc1b535cde8d6f782b78a2bdba"
+  },
+  {
+    "path": "shardslanding/supply_box.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "387c3687432ec8ed64a8ed3726e72cd105e7c5fc1b535cde8d6f782b78a2bdba"
+  },
+  {
+    "path": "lua_modules/shards_partisan_config.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "86f8a2691f6d6faa6a81a7bddf47e2e4d28e63f1a2601c6798d351421cdc3697"
+  },
+  {
+    "path": "lua_modules/shards_partisan.lua",
+    "stock_before_sha256": null,
+    "after_sha256": "af08d3a2c5400a9edce8a4ed560db75dfaf646ac5742058b960665bba00a4430"
+  }
+]
