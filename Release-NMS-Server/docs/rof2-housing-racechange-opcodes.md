@@ -214,9 +214,14 @@ are members-only, upkeep/escrow/transfer/move-out/90-day forfeiture. The client 
 | 0x218C PlotSelect | logged only |
 | 0x626E Placement | claims the nearest vacant lot, then sends the plot list |
 
+On zone-in the same file also sends the definition list (0x2698), the estate snapshot
+(0x6FD0), the player's plot objects (0x63FD), the plot area manifest (0x49DF) and one placement
+preview (0x626E S2C) per placed building. That burst, and every client gate it feeds, is covered
+in `docs/rof2-housing-findings.md` §9-14.
+
 Backing tables: `nms_neighborhood` and `nms_plot` (see
-`utils/sql/20261019_housing_schema.sql`, compiled migration 161). 76 plots are seeded from
-the `OBP_LOTSQUARE` lot markers.
+`utils/sql/20261019_housing_schema.sql`, compiled migration 161; `nms_plot.house_item_id` is
+migration 264). 76 plots are seeded from the `OBP_LOTSQUARE` lot markers.
 
 Two details in the client reader drive the response bytes:
 

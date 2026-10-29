@@ -370,11 +370,23 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RaidDelegateAbility] = &Client::Handle_OP_RaidDelegateAbility;
 	ConnectedOpcodes[OP_RaidClearNPCMarks] = &Client::Handle_OP_RaidClearNPCMarks;
 	ConnectedOpcodes[OP_RandomReq] = &Client::Handle_OP_RandomReq;
-	ConnectedOpcodes[OP_RealEstateNeighborhoodRequest] = &Client::Handle_OP_RealEstateNeighborhoodRequest;
-	ConnectedOpcodes[OP_RealEstatePlacement] = &Client::Handle_OP_RealEstatePlacement;
-	ConnectedOpcodes[OP_RealEstatePlotSelect] = &Client::Handle_OP_RealEstatePlotSelect;
-	ConnectedOpcodes[OP_RealEstateRequest] = &Client::Handle_OP_RealEstateRequest;
-	ConnectedOpcodes[OP_RealEstateSearchRequest] = &Client::Handle_OP_RealEstateSearchRequest;
+	ConnectedOpcodes[OP_RealEstateAction5Request] = &Client::Handle_OP_RealEstateAction5Request;
+	ConnectedOpcodes[OP_RealEstateEscrow] = &Client::Handle_OP_RealEstateEscrow;
+	ConnectedOpcodes[OP_RealEstateGo] = &Client::Handle_OP_RealEstateGo;
+	ConnectedOpcodes[OP_RealEstateHouseSwap] = &Client::Handle_OP_RealEstateHouseSwap;
+	ConnectedOpcodes[OP_RealEstateInspect] = &Client::Handle_OP_RealEstateInspect;
+	ConnectedOpcodes[OP_RealEstateItemInspect] = &Client::Handle_OP_RealEstateItemInspect;
+	ConnectedOpcodes[OP_RealEstateItemOperation] = &Client::Handle_OP_RealEstateItemOperation;
+	ConnectedOpcodes[OP_RealEstateLoadLayout] = &Client::Handle_OP_RealEstateLoadLayout;
+	ConnectedOpcodes[OP_RealEstateNeighborhood] = &Client::Handle_OP_RealEstateNeighborhood;
+	ConnectedOpcodes[OP_RealEstatePack] = &Client::Handle_OP_RealEstatePack;
+	ConnectedOpcodes[OP_RealEstatePickup] = &Client::Handle_OP_RealEstatePickup;
+	ConnectedOpcodes[OP_RealEstatePlacementBegin] = &Client::Handle_OP_RealEstatePlacementBegin;
+	ConnectedOpcodes[OP_RealEstatePurchase] = &Client::Handle_OP_RealEstatePurchase;
+	ConnectedOpcodes[OP_RealEstateSale] = &Client::Handle_OP_RealEstateSale;
+	ConnectedOpcodes[OP_RealEstateStoreAll] = &Client::Handle_OP_RealEstateStoreAll;
+	ConnectedOpcodes[OP_RealEstateTextRequest] = &Client::Handle_OP_RealEstateTextRequest;
+	ConnectedOpcodes[OP_RealEstateVotingOptOut] = &Client::Handle_OP_RealEstateVotingOptOut;
 	ConnectedOpcodes[OP_ReadBook] = &Client::Handle_OP_ReadBook;
 	ConnectedOpcodes[OP_RecipeAutoCombine] = &Client::Handle_OP_RecipeAutoCombine;
 	ConnectedOpcodes[OP_RecipeDetails] = &Client::Handle_OP_RecipeDetails;
@@ -5488,7 +5500,7 @@ void Client::Handle_OP_CAuth(const EQApplicationPacket *app) {
 			SendLoNSession();
 
 			// The client refuses every real-estate action until it is told this zone
-			// is a neighborhood; that is what OP_RealEstateZone carries.
+			// is a neighborhood; that is what OP_RealEstateZoneContext carries.
 			SendRealEstateIdentity();
 		}
 

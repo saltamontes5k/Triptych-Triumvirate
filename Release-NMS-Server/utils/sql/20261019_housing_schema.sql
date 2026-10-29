@@ -13,6 +13,7 @@
 -- field where 4 = Player and 8 = Guild, scaled to our own storage).
 --
 -- Companion compiled migration: manifest_entries_custom version 161.
+-- The `house_item_id` column is added by 20261029_housing_house_item.sql (version 264).
 -- Idempotent.
 -- ============================================================================
 

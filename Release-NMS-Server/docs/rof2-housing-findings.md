@@ -536,3 +536,107 @@ and the client silently ignored every plot object and area manifest ever sent. F
 copying `utils/patches/patch_RoF2.conf` over `Build/bin/Release/patch_RoF2.conf` and
 restarting the stack. **Any new opcode in `emu_oplist.h`/`utils/patches/patch_RoF2.conf`
 must be followed by syncing the conf to `Build/bin/Release/` before it exists on the wire.**
+
+---
+
+## 14. Seventh batch (2026-10-29): canonical bodies from the public reconstruction
+
+Adopted the documented field layouts from
+[nightstalker6669/eqemu-rof2-housing](https://github.com/nightstalker6669/eqemu-rof2-housing)
+(`protocol/STRUCTS.md`, `overlay/common/housing/estate_wire.h` and `placement_wire.h`,
+GPLv3). Provenance, the licensing note and the upstream-requirements checklist are in
+[rof2-housing-upstream-adoption.md](rof2-housing-upstream-adoption.md). What changed in
+`zone/nms_housing.cpp`:
+
+- `SendRealEstateDefinitions` now emits the full eleven-u32 record with capacities, the address,
+  the icon/NPC fields, the four switch floats and a count-driven child list, followed by the
+  cost-scheme list (currently empty). The tenth u32 is still the kind.
+  Fields `area_id` (index 1) and `zone_id` (index 7) are both written as the neighborhood id:
+  our decode says the spatial resolver reads the first u32 after the id, their struct calls
+  index 7 `zone_id`. Writing the same value to both satisfies either reading until a capture
+  separates them.
+- `SendRealEstateIdentity` and `SendRealEstatePlotObjects` share `WriteEstateSnapshot`. The old
+  bodies put the definition kind in what is actually the `default_upkeep_component` slot; the
+  field is now emitted with its documented meaning (upkeep component 0, expiry = the plot's
+  `upkeep_paid_until`, voting 0). The kind never lived there — `+144` comes from the definition
+  lookup (§9) — so the gate is unaffected.
+- The neighborhood object now lists the player's owned plots as child estates, and plot objects
+  carry their owner name.
+- The `0x626e` exterior is a real `ActorRecord` + 34-byte preview suffix (`WritePlacementActor`,
+  `SendPlacementPreview`) instead of the four swept variants. It is sent by `#housing place`
+  and re-sent for every placed lot on zone-in (`SendRealEstateExteriors`).
+- The lot remembers its building item (`nms_plot.house_item_id`, custom migration 264), because
+  the preview's model is that item's `idfile`.
+
+**Variant sweep removed.** The four `#housing exterior <door> [variant]` encodings are gone; the
+command is now `#housing exterior <door> [item_id] [model]` and sends the canonical packet.
+
+**Why the layout is trusted:** the `0x49df` record is 88 bytes in both decodes with the same field
+order (`id + 16 floats + 3 floats + 2 dwords`). Two independent recoveries agreeing on one packet
+is a strong signal; the other bodies come from the same codec family.
+
+**Pending in-game verify (batch 7):** plot search still renders (0x6fd0 regression), the house
+actually draws after `#housing place`, and it is still drawn after a re-zone. The model-name
+assumption (item `idfile`) is the one thing that may need the override form.
+
+---
+
+## 15. Eighth batch (2026-10-29): opcode names fixed, and 0x626e is PlacementBegin
+
+Twenty symbols in `common/emu_oplist.h`, both `patch_RoF2.conf` copies and the
+`Client::Handle_OP_*` table now carry the recovered names; no wire number changed. The old and new
+names are tabulated in [rof2-housing-upstream-adoption.md](rof2-housing-upstream-adoption.md) §7.
+
+**The rename found a bug.** `0x626e` is `PlacementBegin`, and the recovered body puts *screen*
+coordinates at 52/56. Our handler read those as world X/Y and called `TryClaimPlot`, so every
+placement attempt claimed whichever lot happened to be nearest to a screen coordinate. That is
+gone: the handler now decodes the estate id (offset 32) and item id (36) and, when the estate is a
+lot this character may build on, answers with the placement preview from §14. It never claims and
+never consumes — `#housing claim` stays the explicit path.
+
+**Cross-check on the preview body.** Their `sub_505400` reading (string, u8, u32, u32, string16,
+nine u32s, three u8s, eight u32s) is exactly the `ActorRecord` `WritePlacementActor` emits: model,
+is_npc, height, record, guid, estate + item, seven transform floats, three flags, placement type,
+six bound floats, light type. Two decodes of the same parser agreeing is the best evidence we have
+short of a capture.
+
+**Still unmapped:** `0x711a` (`PlacementCommit`). A placement begun in the client previews and then
+cannot commit.
+
+---
+
+## 16. Ninth batch (2026-10-29): the building spawns; the gate now gets a real experiment
+
+In-game confirmed: **0x1045 is the packet that draws a placed building.** The zone log shows
+`OP_RealEstateWorldItem [0x1045] 105B` on zone-in and the house appears on the lot. `0x626e` is
+only the placement ghost, as suspected.
+
+### eqstr 727 is still up, and the axis order is the prime suspect
+
+Lot 19 sits at (1249.1, -2017.3). Our area record centres the box at `(cy, cx, cz)` — the Y/X swap
+taken from the upstream `ServerXYZ` note. If that note is wrong, the box is centred at
+(-2017.3, 1249.1), roughly 3300 units from the lot, and no player can ever be inside it. That
+failure mode is invisible in-game: it looks exactly like "the gate is broken".
+
+The zone-in manifest therefore now carries **two** regions at the same lot:
+
+| Region id | Encoding | Resolves to |
+| --- | --- | --- |
+| `door_id` (19) | swapped, translation `(cy, cx, cz)` | the plot object (+20) |
+| `door_id + 20000` | unswapped, translation `(cx, cy, cz)` | the same plot object (+24) |
+
+The plot snapshot writes `+24 = door_id + 20000`, and `sub_5B5A90` registers an object under +20
+and +24, so either area resolves to the same object and the hierarchy walk still returns `door_id`.
+Whichever axis order the client agrees with, `+152` becomes 19 and the gate opens.
+
+`#housing areas <0-3>` still forces a single encoding (0 swapped, 1 unswapped, 2 world->local,
+3 box the player at 200 units). Variant 3 is the control: if a 200-unit box around the player
+still does not open the gate, the area ingest or the id resolution is broken and the matrix is a
+red herring.
+
+### Also: 0x218c now enters the house
+
+The client sends `0x218c` (12 bytes: estate id, item id, 0) when the player asks to enter an
+estate — observed as `13 000000 | b2 f1 0000` = estate 19, item 61874. The handler now zones the
+player into the interior linked to that lot (the same lookup `#housing enter` does), instead of
+only logging.

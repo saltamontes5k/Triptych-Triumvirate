@@ -668,29 +668,30 @@ N(OP_ShroudPointsUpdate), // 0x2507: unnamed shroud manager opcode {u32,u32} -> 
 N(OP_ShroudStateUpdate),  // 0x006e: unnamed shroud manager opcode {u32,u32} -> UI notify type 4 (monster points spent?)
 N(OP_PowerSource), // RoF2 client per-instance power source charge (opcode 0x4c89)
 N(OP_NMSLoNSession),       // Server->Client: 0x141C, the card game's one-time login token + where to relay it (world/lon_service.cpp)
-// RoF2 player housing / real estate and /racechange (client->server).
-// Recovered from eqgame.exe build #630 with IDA; upstream EQEmu has no names
-// for these. See docs/rof2-housing-racechange-opcodes.md.
-N(OP_RealEstateRequest),
-N(OP_RealEstatePlotSelect),
-N(OP_RealEstateWindowAction),
-N(OP_RealEstateSearchRequest),
-N(OP_RealEstateDataRequest),
-N(OP_RealEstateNeighborhoodRequest),
-N(OP_RealEstateNameSearch),
-N(OP_RealEstateItemsRequest),
-N(OP_RealEstateItemAction),
-N(OP_RealEstateLayoutSave),
-N(OP_RealEstateManageAction),
-N(OP_RealEstatePlacement),         // 0x626e: house/plot placement, carries world X/Y
-N(OP_RealEstateToggle),
-N(OP_RealEstateItemsAction),
-N(OP_RealEstatePurchaseSelect),    // 0x792c: CRealEstatePurchaseWnd
-N(OP_RealEstatePlotSearchRequest), // 0x796c: CRealEstatePlotSearchWnd
-N(OP_RealEstateManageRequest),     // 0x7ad1: 0x8C struct + world X/Y
-N(OP_RealEstateDefinitions),       // 0x2698: definition list; must arrive before the identity
-N(OP_RealEstateZone),              // 0x6fd0: real-estate identity; sets the client's neighborhood state
-N(OP_RealEstateObject),            // 0x63fd: real-estate object (plot/house); same wire format as 0x6fd0
-N(OP_RealEstateAreas),             // 0x49df: area manifest (plot footprints); feeds the client's spatial index
+// RoF2 player housing / real estate (both directions).
+// Numbers and names recovered from eqgame.exe build #630 with IDA and cross-checked
+// against the public reconstruction; see docs/rof2-housing-upstream-adoption.md.
+N(OP_RealEstatePickup),              // 0x2036 cursor pickup of a placed item
+N(OP_RealEstateGo),                  // 0x218c enter/visit a neighborhood or plot
+N(OP_RealEstateHouseSwap),           // 0x21ba
+N(OP_RealEstateNeighborhood),        // 0x2691 neighborhood query/response
+N(OP_RealEstateEscrow),              // 0x2aa6
+N(OP_RealEstateItemOperation),       // 0x3424
+N(OP_RealEstateTextRequest),         // 0x3c8b housing-item text prompt; operation unresolved
+N(OP_RealEstatePurchase),            // 0x45be 188-byte C2S purchase transaction
+N(OP_RealEstateItemInspect),         // 0x58c7
+N(OP_RealEstateLoadLayout),          // 0x5b41
+N(OP_RealEstatePack),                // 0x613d
+N(OP_RealEstatePlacementBegin),      // 0x626e placement begin request / preview response
+N(OP_RealEstateVotingOptOut),        // 0x6573
+N(OP_RealEstateStoreAll),            // 0x6917
+N(OP_RealEstateSale),                // 0x792c
+N(OP_RealEstateInspect),             // 0x796c
+N(OP_RealEstateAction5Request),      // 0x7ad1 unresolved item action-5 request
+N(OP_RealEstateDefinitions),         // 0x2698 definition list; must arrive before 0x6fd0
+N(OP_RealEstateZoneContext),         // 0x6fd0 estate snapshot that establishes zone context
+N(OP_RealEstateSnapshot),            // 0x63fd estate snapshot; same body as 0x6fd0
+N(OP_RealEstateRegions),             // 0x49df region manifest; feeds the client spatial index
+N(OP_RealEstateWorldItem),           // 0x1045 places a world actor (S2C, ActorRecord only)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h

@@ -1034,7 +1034,7 @@ public:
 	bool UnlockWaypoint(std::string waypoint_shortname);
 	void SendWaypointList(bool force = true);
 	void   SendLoNSession();               // OP_NMSLoNSession: card game token (zone/nms_lon_session.cpp)
-	void   SendRealEstateIdentity();       // OP_RealEstateZone: tells the client it is standing in a neighborhood
+	void   SendRealEstateIdentity();       // OP_RealEstateZoneContext: tells the client it is standing in a neighborhood
 	bool AllowAccountWaypoints();
 	bool CheckWaypointGroupFeature();
 	void EnableWaypointGroupFeature();
