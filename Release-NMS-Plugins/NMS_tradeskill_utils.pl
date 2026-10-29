@@ -166,7 +166,7 @@ my @TRADESKILL_KILL_LISTS = (
             cazic_thule keeper_of_souls sontalak xerkizh_the_creator
             final_arbiter lord_vyemm telkorenar va_xi_aten_ha_ra
             monsterous_mudwalker mystical_arbitor_of_earth hulcror
-            vrex_barxt_qurat nexona master_of_the_guard
+            vrex_barxt_qurat nexona master_of_the_guard xygoz
         )],
     },
     {
