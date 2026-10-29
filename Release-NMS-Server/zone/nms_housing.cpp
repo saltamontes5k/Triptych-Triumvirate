@@ -22,8 +22,10 @@
 #include "fmt/format.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstring>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace {
@@ -776,6 +778,68 @@ void SendRealEstatePlotObjects(Client *c)
 	if (sent) {
 		LogInfo("[Housing] sent [{}] plot object(s) to [{}]", sent, c->GetName());
 	}
+}
+
+// Delayed re-burst state. The identity/defs/plot-object/area burst is ALSO sent during
+// CAuth, but the client constructs its area manager (dword_DCEE30, sub_5338A0) partway
+// through its zone-load sequence, and the 0x49df dispatcher case silently drops the
+// manifest while that pointer is null. So after the client has been in the neighborhood
+// for a settle period, resend the whole burst with the client fully loaded.
+struct HousingZoneInState {
+	std::string zone_key;
+	uint32_t    seen_ms = 0;
+	uint32_t    last_seen_ms = 0;
+	bool        sent = false;
+};
+static std::unordered_map<uint32_t, HousingZoneInState> s_housing_zonein;
+
+constexpr uint32_t kHousingSettleDelayMs = 8000;   // after zone-in before the re-burst
+constexpr uint32_t kHousingVisitGapMs    = 30000;  // absence longer than this = new visit
+
+static uint32_t HousingNowMs()
+{
+	return static_cast<uint32_t>(
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now().time_since_epoch()).count());
+}
+
+// Called from Client::Process every tick. Sends the housing burst once per neighborhood
+// visit, kHousingSettleDelayMs after the client was first seen in-zone.
+void HousingClientProcess(Client *c)
+{
+	if (!c || !c->Connected() || !zone || std::string(zone->GetShortName()) != "neighborhood") {
+		return;
+	}
+
+	const uint32_t char_id = c->CharacterID();
+	const uint32_t now_ms  = HousingNowMs();
+	const std::string zone_key = fmt::format("{}:{}", zone->GetZoneID(), zone->GetInstanceID());
+
+	auto it = s_housing_zonein.find(char_id);
+	if (it == s_housing_zonein.end()) {
+		s_housing_zonein[char_id] = {zone_key, now_ms, now_ms, false};
+		return;
+	}
+
+	auto &st = it->second;
+	if (now_ms - st.last_seen_ms > kHousingVisitGapMs) {
+		// back after a long absence: treat as a fresh zone-in
+		st.zone_key = zone_key;
+		st.seen_ms = now_ms;
+		st.sent = false;
+	}
+	st.last_seen_ms = now_ms;
+
+	if (st.sent || st.zone_key != zone_key) {
+		return;
+	}
+	if (now_ms - st.seen_ms < kHousingSettleDelayMs) {
+		return;
+	}
+
+	st.sent = true;
+	LogInfo("[Housing] re-sending housing burst to [{}] after zone settle", c->GetName());
+	c->SendRealEstateIdentity();
 }
 
 // Sends the owned plots' FOOTPRINTS as an area manifest on 0x49df (18911). This is what

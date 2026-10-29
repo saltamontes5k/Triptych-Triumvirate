@@ -60,6 +60,8 @@ extern volatile bool is_zone_loaded;
 extern WorldServer worldserver;
 extern EntityList entity_list;
 
+void HousingClientProcess(Client *c); // delayed housing burst after zone settle (zone/nms_housing.cpp)
+
 bool Client::Process() {
 	bool ret = true;
 
@@ -72,6 +74,8 @@ bool Client::Process() {
 		if (!IsLD() && zoneinpacket_timer.Check()) {
 			SendAllPackets();
 		}
+
+		HousingClientProcess(this);
 
 		ProcessAchievementRewards();
 
