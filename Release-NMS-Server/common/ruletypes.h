@@ -1213,6 +1213,11 @@ RULE_BOOL(Custom, 	MulticlassingEnabled, 					true, "Enable this to enable all m
 RULE_BOOL(Custom, 	UseDynamicAATimers, 					true, "Enable using dynamic AA timers. Required to deconflict multiclass AA timers")
 RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that share a name, showing and granting only the strongest line per name.")
 
+// Fellowships (native RoF2; see docs/rof2-fellowship.md)
+RULE_BOOL(Custom, 	Fellowships, 						false, 	"Enable the RoF2 fellowship system: membership, roster window, /fsay chat, campsites and vitality.")
+RULE_BOOL(Custom, 	FellowshipCamps, 					true, 	"Enable fellowship campsite creation and campsite effects (requires Fellowships).")
+RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP/AA banking and sharing (requires Fellowships).")
+
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
 RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")

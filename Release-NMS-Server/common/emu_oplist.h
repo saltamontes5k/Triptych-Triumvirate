@@ -181,7 +181,12 @@ N(OP_ExpUpdate),
 N(OP_FaceChange),
 N(OP_Feedback),
 N(OP_FeignDeath),
-N(OP_FellowshipUpdate),
+N(OP_FellowshipUpdate),             // 0x6e4d roster + campfire snapshot (zone -> client)
+N(OP_FellowshipAction),             // 0x7121 native fellowship action (client -> zone)
+N(OP_FellowshipInvite),             // 0x62ab invitation dialog (zone -> client)
+N(OP_FellowshipCampRequest),        // 0x0c12 campsite catalogue request (client -> zone)
+N(OP_FellowshipCampList),           // 0x074d campsite catalogue reply (zone -> client)
+N(OP_FellowshipVitality),           // 0x2cc6 vitality gauges (zone -> client)
 N(OP_FindPersonReply),
 N(OP_FindPersonRequest),
 N(OP_FinishTrade),
