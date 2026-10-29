@@ -525,3 +525,14 @@ box at the lot is therefore `[hx 0 0 0 / 0 hy 0 0 / 0 0 hz 0 / cx cy cz 1]`.
 Zone in → defs (field 7 = 1) → identity (+140 = 1) → 0x63fd plot objects (plot map) →
 0x49df areas (spatial index) → 1 Hz updater: player on lot ⇒ inside area ⇒ +148 = door_id ⇒
 plot object kind 8 ⇒ +152 = door_id ⇒ **Manage no longer prints eqstr 727**.
+
+### Deploy gotcha found 2026-10-25: the runtime opcode conf is a separate copy
+
+The zone/world processes read `Build/bin/Release/patch_RoF2.conf` (cwd of the launched
+processes), NOT `utils/patches/patch_RoF2.conf`. The runtime copy was stale — missing the
+achievement block, the shroud opcodes, and both new real-estate opcodes — so
+`OP_RealEstateObject` (0x63fd) and `OP_RealEstateAreas` (0x49df) resolved to unmapped values
+and the client silently ignored every plot object and area manifest ever sent. Fixed by
+copying `utils/patches/patch_RoF2.conf` over `Build/bin/Release/patch_RoF2.conf` and
+restarting the stack. **Any new opcode in `emu_oplist.h`/`utils/patches/patch_RoF2.conf`
+must be followed by syncing the conf to `Build/bin/Release/` before it exists on the wire.**
