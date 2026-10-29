@@ -904,13 +904,16 @@ void SendRealEstateAreaManifest(Client *c)
 		const float cz = Strings::ToFloat(row[3] ? row[3] : "0");
 
 		w.U32(door_id);          // area id == plot object id
-		w.Float(kHalfX); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
-		w.Float(0.0f); w.Float(kHalfY); w.Float(0.0f); w.Float(0.0f);
+		// The native region space is Y/X/Z ordered (the upstream recovery's ServerXYZ helper
+		// swaps extents [1]/[0] into m[0]/m[5] and stores translation Y/X/Z at m[12..14]).
+		// Sending server X/Y unswapped mirrors the box across the diagonal, so the player is
+		// never "inside" unless x ~ y.
+		w.Float(kHalfY); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
+		w.Float(0.0f); w.Float(kHalfX); w.Float(0.0f); w.Float(0.0f);
 		w.Float(0.0f); w.Float(0.0f); w.Float(kHalfZ); w.Float(0.0f);
-		w.Float(cx); w.Float(cy); w.Float(cz); w.Float(1.0f);
-		for (int i = 0; i < 5; ++i) {
-			w.U32(0);
-		}
+		w.Float(cy); w.Float(cx); w.Float(cz); w.Float(1.0f);
+		w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);   // opaque vector (defaults)
+		w.U32(0xFFFFFFFF); w.U32(0xFFFFFFFF);          // opaque ids (native defaults)
 		++sent;
 	}
 
