@@ -20,6 +20,8 @@ SET(zone_sources
     client.cpp
     client_achievements.cpp
     client_evolving_items.cpp
+    client_fellowship.cpp
+    client_fellowship_vitality.cpp
     client_bot.cpp
     client_mods.cpp
     client_packet.cpp
@@ -41,6 +43,10 @@ SET(zone_sources
     exp.cpp
     expedition_request.cpp
     fastmath.cpp
+    fellowship_campfire.cpp
+    fellowship_campsite_bonuses.cpp
+    fellowship_campsite_materials.cpp
+    fellowship_chat.cpp
     fearpath.cpp
     forage.cpp
     groups.cpp

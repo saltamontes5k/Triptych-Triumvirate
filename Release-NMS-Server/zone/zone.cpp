@@ -1,3 +1,5 @@
+#include "fellowship_campfire.h"
+
 /*	EQEMu: Everquest Server Emulator
 	Copyright (C) 2001-2003 EQEMu Development Team (http://eqemulator.net)
 
@@ -1136,6 +1138,8 @@ Zone::Zone(uint32 in_zoneid, uint32 in_instanceid, const char* in_short_name)
 Zone::~Zone() {
 	LogInfo("Zone destructor called for zone [{}]", short_name);
 
+	ClearFellowshipCampfires();
+
 	spawn2_list.Clear();
 	if (worldserver.Connected()) {
 		worldserver.SetZoneData(0);
@@ -1580,6 +1584,8 @@ uint32 Zone::CountAuth() {
 }
 
 bool Zone::Process() {
+	ProcessFellowshipCampfires();
+
 	spawn_conditions.Process();
 
 	if (spawn2_timer.Check()) {

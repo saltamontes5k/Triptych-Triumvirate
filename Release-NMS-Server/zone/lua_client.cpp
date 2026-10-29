@@ -3604,6 +3604,11 @@ int Lua_Client::GetAAEXPPercentage()
 	return self->GetAAEXPPercentage();
 }
 
+int Lua_Client::GetFellowshipID() {
+	Lua_Safe_Call_Int();
+	return static_cast<int>(self->FellowshipID());
+}
+
 int Lua_Client::GetEXPPercentage()
 {
 	Lua_Safe_Call_Int();
@@ -4185,6 +4190,7 @@ luabind::scope lua_register_client() {
 	.def("GetEXPModifier", (float(Lua_Client::*)(uint32))&Lua_Client::GetEXPModifier)
 	.def("GetEXPModifier", (float(Lua_Client::*)(uint32,int16))&Lua_Client::GetEXPModifier)
 	.def("GetEXPPercentage", (int(Lua_Client::*)(void))&Lua_Client::GetEXPPercentage)
+	.def("GetFellowshipID", (int(Lua_Client::*)(void))&Lua_Client::GetFellowshipID)
 	.def("GetEbonCrystals", (uint32(Lua_Client::*)(void))&Lua_Client::GetEbonCrystals)
 	.def("GetEndurance", (int(Lua_Client::*)(void))&Lua_Client::GetEndurance)
 	.def("GetEndurancePercent", (int(Lua_Client::*)(void))&Lua_Client::GetEndurancePercent)

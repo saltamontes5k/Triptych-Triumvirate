@@ -77,6 +77,8 @@ bool Client::Process() {
 
 		HousingClientProcess(this);
 
+		ProcessFellowship();
+
 		ProcessAchievementRewards();
 
 		if (adventure_request_timer) {

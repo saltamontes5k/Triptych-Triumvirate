@@ -274,6 +274,24 @@ public:
 	Client(); // mocking / testing
 	~Client();
 
+	// RoF2 fellowship (see docs/rof2-fellowship.md)
+	void RefreshFellowship();
+	void ProcessFellowship();
+	void SendFellowshipChat(const char* message);
+	void RefreshFellowshipVitality();
+	bool ProcessFellowshipCombatExperience(ExpSource source, uint64 experience_total, uint64 aa_total, NPC* npc);
+	bool TryFellowshipCalling();
+	uint32 FellowshipID() const { return m_fellowship_id; }
+	bool m_fellowship_xp_persistence_failed = false;
+	bool m_fellowship_xp_transaction_active = false;
+	std::vector<uint8> m_fellowship_vitality_snapshot;
+	std::vector<uint8> m_fellowship_snapshot;
+	uint32 m_fellowship_id = 0;
+	uint64 m_fellowship_refresh_at = 0;
+	uint64 m_fellowship_action_at = 0;
+	uint64 m_fellowship_invite_expires = 0;
+	uint32 m_fellowship_inviter = 0;
+
 	void ReconnectUCS();
 	void RecordStats();
 

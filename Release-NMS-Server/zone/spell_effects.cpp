@@ -35,6 +35,7 @@
 #include "lua_parser.h"
 #include "string_ids.h"
 #include "worldserver.h"
+#include "fellowship_campsite_bonuses.h"
 
 #include <math.h>
 
@@ -61,6 +62,16 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 
 	if(!IsValidSpell(spell_id))
 		return false;
+
+	// The RoF2 registration insignia uses a placeholder effect in PEQ; its
+	// authenticated cast travels to the active campsite instead.
+	if (spell_id == 7618 && IsClient() && !RuleB(Custom, Fellowships)) {
+		return false;
+	}
+	if (spell_id == 7618 && IsClient()) {
+		if (caster != this) return false;
+		return CastToClient()->TryFellowshipCalling();
+	}
 
 	const SPDat_Spell_Struct &spell = spells[spell_id];
 
@@ -7554,6 +7565,12 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 	//Non-Live like feature to allow for an additive focus bonus to be applied from foci that are placed in worn slot. (No limit checks)
 	else if (RuleB(Spells, UseAdditiveFocusFromWornSlot)) {
 		worneffect_bonus = itembonuses.FocusEffectsWorn[type];
+	}
+
+	// Campsite focus competes with the existing focus contribution; it never
+	// applies twice or adds another independent item/AA focus source.
+	if (IsClient()) {
+		realTotal2 = MergeFellowshipCampsiteFocus(realTotal2, GetFellowshipCampsiteFocus(*CastToClient(), type, spell_id));
 	}
 
 	return realTotal + realTotal2 + realTotal3 + worneffect_bonus;

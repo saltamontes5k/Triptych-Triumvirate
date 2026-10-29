@@ -987,6 +987,11 @@ void Client::ReportConnectingState() {
 
 bool Client::SaveAA()
 {
+	// A failed or in-flight fellowship XP transaction must never be masked by a
+	// later independent save; the commit outcome is authoritative.
+	if (m_fellowship_xp_persistence_failed || m_fellowship_xp_transaction_active)
+		return false;
+
 	// Live-like shroud mode: the in-memory map holds session-scoped shroud AA
 	// entries; never persist the shroud session into the real AA table (the
 	// real set is untouched in memory and restored with the real profile).
@@ -1057,6 +1062,12 @@ bool Client::Save(uint8 iCommitNow)
 
 bool Client::Save(uint8 iCommitNow, bool update_achievements) {
 	if(!ClientDataLoaded())
+		return false;
+
+	// Transactional fellowship vitality commits character XP itself; an
+	// independent save during that window (or after a failed one) would write a
+	// divergent progression state.
+	if (m_fellowship_xp_persistence_failed || m_fellowship_xp_transaction_active)
 		return false;
 
 	// Never persist a shroud form: write the real profile, but keep the live
@@ -2335,6 +2346,10 @@ void Client::ChannelMessageReceived(uint8 chan_num, uint8 language, uint8 lang_s
 
 	switch(chan_num)
 	{
+	case ChatChannel_Fellowship: { /* RoF2 /fsay, channel 21 */
+		SendFellowshipChat(message);
+		break;
+	}
 	case ChatChannel_Guild: { /* Guild Chat */
 		if (!IsInAGuild()) {
 			MessageString(Chat::DefaultText, GUILD_NOT_MEMBER2);	//You are not a member of any guild.

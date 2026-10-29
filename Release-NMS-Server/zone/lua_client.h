@@ -76,6 +76,7 @@ public:
 	int GetBaseWIS();
 	int GetWeight();
 	uint32 GetEXP();
+	int GetFellowshipID(); // NMS: natal RoF2 fellowship id (0 = none)
 	float GetEXPModifier();
 	float GetEXPModifier(uint32 zone_id);
 	float GetEXPModifier(uint32 zone_id, int16 instance_version);

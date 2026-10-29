@@ -17,6 +17,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
 #include "../common/global_define.h"
+#include "../common/fellowship/service.h"
+#include "fellowship_campfire.h"
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <string.h>
 #include <stdio.h>
@@ -280,6 +284,62 @@ void WorldServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p)
 	ServerPacket *pack = &tpack;
 
 	switch (opcode) {
+	case ServerOP_FellowshipChatDeliver: {
+		if (pack->size != sizeof(FellowshipChatDelivery)) {
+			break;
+		}
+		const auto* message = reinterpret_cast<const FellowshipChatDelivery*>(pack->pBuffer);
+		if (!message->message[0] || !std::memchr(message->message, 0, sizeof(message->message)) ||
+			!std::memchr(message->sender, 0, sizeof(message->sender))) {
+			break;
+		}
+		Client* recipient = nullptr;
+		for (const auto& entry : entity_list.GetClientList()) {
+			if (entry.second && entry.second->CharacterID() == message->recipient_id) {
+				recipient = entry.second;
+				break;
+			}
+		}
+		if (!recipient) {
+			break;
+		}
+		Fellowship::Service fellowships(database);
+		const auto group = fellowships.GetByCharacter(recipient->CharacterID(), static_cast<uint64_t>(std::time(nullptr)));
+		if (!group || !group.value.id || group.value.id != message->fellowship_id) {
+			break;
+		}
+		bool sender_is_member = false;
+		for (const auto& member : group.value.members) {
+			if (member.character_id == message->actor_id && member.name == message->sender) {
+				sender_is_member = true;
+				break;
+			}
+		}
+		if (!sender_is_member) {
+			break;
+		}
+		if (recipient->ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+			recipient->ChannelMessageSend(message->sender, nullptr, ChatChannel_Fellowship, Language::CommonTongue,
+				Language::MaxValue, "%s", message->message);
+		}
+		else {
+			recipient->Message(Chat::Group, "%s tells the fellowship, '%s'", message->sender, message->message);
+		}
+		break;
+	}
+	case ServerOP_FellowshipRefresh: {
+		if (pack->size != 0) {
+			break;
+		}
+		InvalidateFellowshipCampsites();
+		ProcessFellowshipCampfires();
+		for (const auto& entry : entity_list.GetClientList()) {
+			if (entry.second) {
+				entry.second->RefreshFellowship();
+			}
+		}
+		break;
+	}
 	case 0:
 	case ServerOP_KeepAlive: {
 		break;

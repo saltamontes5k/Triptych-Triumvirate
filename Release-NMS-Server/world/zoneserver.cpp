@@ -17,7 +17,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 #include "../common/global_define.h"
+#include "../common/fellowship/service.h"
 #include "../common/random.h"
+#include <cstring>
+#include <ctime>
 #include "zoneserver.h"
 #include "clientlist.h"
 #include "login_server.h"
@@ -188,6 +191,61 @@ void ZoneServer::HandleMessage(uint16 opcode, const EQ::Net::Packet &p) {
 	auto pack = &tpack;
 
 	switch (opcode) {
+	case ServerOP_FellowshipChat: {
+		if (pack->size != sizeof(FellowshipChatRequest)) {
+			break;
+		}
+		const auto* request = reinterpret_cast<const FellowshipChatRequest*>(pack->pBuffer);
+		if (!request->message[0] || !std::memchr(request->message, 0, sizeof(request->message))) {
+			break;
+		}
+		auto* actor = ClientList::Instance()->FindCLEByCharacterID(request->actor_id);
+		if (!actor || actor->Server() != this || actor->Online() != CLE_Status::InZone) {
+			break;
+		}
+		Fellowship::Service fellowships(database);
+		const auto group = fellowships.GetByCharacter(actor->CharID(), static_cast<uint64_t>(std::time(nullptr)));
+		if (!group || !group.value.id) {
+			break;
+		}
+		const Fellowship::Member* sender = nullptr;
+		for (const auto& member : group.value.members) {
+			if (member.character_id == actor->CharID()) {
+				sender = &member;
+				break;
+			}
+		}
+		if (!sender) {
+			break;
+		}
+		for (const auto& member : group.value.members) {
+			// The sending client already echoes its own /fsay locally.
+			if (member.character_id == actor->CharID()) {
+				continue;
+			}
+			auto* recipient = ClientList::Instance()->FindCLEByCharacterID(member.character_id);
+			if (!recipient || recipient->Online() != CLE_Status::InZone) {
+				continue;
+			}
+			ServerPacket delivery(ServerOP_FellowshipChatDeliver, sizeof(FellowshipChatDelivery));
+			auto* payload = reinterpret_cast<FellowshipChatDelivery*>(delivery.pBuffer);
+			payload->actor_id = actor->CharID();
+			payload->recipient_id = member.character_id;
+			payload->fellowship_id = group.value.id;
+			strn0cpy(payload->sender, sender->name.c_str(), sizeof(payload->sender));
+			strn0cpy(payload->message, request->message, sizeof(payload->message));
+			ClientList::Instance()->SendPacket(member.name.c_str(), &delivery);
+		}
+		break;
+	}
+	case ServerOP_FellowshipRefresh: {
+		// Reached only through the authenticated zone connection; the payload is
+		// always empty and no client-declared membership is ever forwarded.
+		if (pack->size == 0) {
+			ZSList::Instance()->SendPacket(pack);
+		}
+		break;
+	}
 		case 0:
 		case ServerOP_KeepAlive:
 		case ServerOP_ZAAuth: {
