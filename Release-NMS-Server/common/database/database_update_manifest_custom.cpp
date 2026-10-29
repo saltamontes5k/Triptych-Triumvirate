@@ -36324,4 +36324,415 @@ INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee
 SELECT 'mtypes' t, COUNT(*) c FROM merc_types WHERE merc_type_id >= 149 UNION ALL SELECT 'npc', COUNT(*) FROM merc_npc_types WHERE merc_npc_type_id >= 492 UNION ALL SELECT 'tpl', COUNT(*) FROM merc_templates WHERE merc_template_id >= 1305 UNION ALL SELECT 'stats', COUNT(*) FROM merc_stats WHERE merc_npc_type_id >= 492;)MSPEC266_3",
 		.content_schema_update = false,
 	},
+	// Achievement reward options: server-authored class eligibility (any of the
+	// character's permanent classes may claim the option).
+	ManifestEntry{
+		.version = 267,
+		.description = "20261029_achievement_reward_classes",
+		.check = "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'reward_options' AND COLUMN_NAME = 'class_mask'",
+		.condition = "match",
+		.match = "0",
+		.sql = R"(
+ALTER TABLE `reward_options`
+	ADD COLUMN `class_mask` INT UNSIGNED NOT NULL DEFAULT 65535 AFTER `enabled`;
+)",
+		.content_schema_update = false,
+	},
+		// Ogre melee DPS line: the stock seed ships no melee catalog for the
+		// ogre (nor erudite/high elf/troll); the broker rewire needs the Ogre
+		// pirate rogue line, so it is authored here as an 11-entry ladder
+		// cloned 1:1 from the human melee chain. Also corrects the broker
+		// split (Gex was 110 entries, over the MAX_MERC 100 cap) and adds the
+		// line to Hadya. Twin: utils/sql/20261029_ogre_melee_line.sql.
+	ManifestEntry{
+		.version = 268,
+		.description = "20261029_ogre_melee_line",
+		.check = "SELECT COUNT(*) FROM merc_npc_types WHERE merc_npc_type_id = 525",
+		.condition = "match",
+		.match = "0",
+		.sql = R"M268_0(-- 2026-10-29 Ogre melee DPS line. The stock seed ships no melee catalog for
+-- the ogre (also missing: erudite/high elf/troll melee) - the broker rewire
+-- needs the Ogre pirate rogue line, so it is authored here: 11-entry ladder
+-- cloned 1:1 from the human melee chain. Also fixes the broker split (Gex was
+-- 110 entries = over the MAX_MERC 100 cap; the corrected split is
+-- Gex 99 / Rul 88) and adds the Ogre melee line to Hadya.
+-- Rollback: DELETE the bands below + re-run 20261029_merc_broker_rewire.sql.
+-- Generator: hand-written (tmp/gen_merc_species.py clone machinery).
+
+DELETE FROM `merc_templates` WHERE `merc_template_id` BETWEEN 1338 AND 1348;
+DELETE FROM `merc_stats` WHERE `merc_npc_type_id` BETWEEN 525 AND 535;
+DELETE FROM `merc_armorinfo` WHERE `merc_npc_type_id` BETWEEN 525 AND 535;
+DELETE FROM `merc_weaponinfo` WHERE `merc_npc_type_id` BETWEEN 525 AND 535;
+DELETE FROM `merc_npc_types` WHERE `merc_npc_type_id` BETWEEN 525 AND 535;
+
+INSERT INTO `merc_npc_types`
+ (`merc_npc_type_id`,`proficiency_id`,`tier_id`,`class_id`,`name`) VALUES
+ (525, 1, 1, 9, 'Ogre - Apprentice Melee DPS Tier I'),
+ (526, 1, 2, 9, 'Ogre - Apprentice Melee DPS Tier II'),
+ (527, 1, 3, 9, 'Ogre - Apprentice Melee DPS Tier III'),
+ (528, 1, 4, 9, 'Ogre - Apprentice Melee DPS Tier IV'),
+ (529, 1, 5, 9, 'Ogre - Apprentice Melee DPS Tier V'),
+ (530, 2, 1, 9, 'Ogre - Journeyman Melee DPS Tier I'),
+ (531, 2, 2, 9, 'Ogre - Journeyman Melee DPS Tier II'),
+ (532, 3, 1, 9, 'Ogre - Master Melee DPS Tier I'),
+ (533, 3, 2, 9, 'Ogre - Master Melee DPS Tier II'),
+ (534, 4, 1, 9, 'Ogre - Legendary Melee DPS Tier I'),
+ (535, 4, 2, 9, 'Ogre - Legendary Melee DPS Tier II');
+
+INSERT INTO `merc_templates`
+ (`merc_template_id`,`merc_type_id`,`merc_subtype_id`,`merc_npc_type_id`,`dbstring`,`name_type_id`,`clientversion`) VALUES
+ (1338, 19, 11, 525, '10040101', 0, 4),
+ (1339, 19, 12, 526, '10040102', 0, 4),
+ (1340, 19, 13, 527, '10040103', 0, 4),
+ (1341, 19, 14, 528, '10040104', 0, 4),
+ (1342, 19, 15, 529, '10040105', 0, 4),
+ (1343, 20, 11, 530, '10040201', 0, 4),
+ (1344, 20, 12, 531, '10040202', 0, 4),
+ (1345, 73, 11, 532, '10040301', 0, 4),
+ (1346, 73, 12, 533, '10040302', 0, 4),
+ (1347, 74, 11, 534, '10040401', 0, 4),
+ (1348, 74, 12, 535, '10040402', 0, 4);
+
+-- stat/armor/weapon clones from the human melee chain
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 525,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=21;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 526,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=22;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 527,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=23;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 528,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=24;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 529,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=25;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 530,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=26;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 531,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=27;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 532,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=76;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 533,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=78;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 534,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=77;
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT 535,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale` FROM `merc_stats` WHERE `merc_npc_type_id`=79;
+
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 525,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=21;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 526,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=22;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 527,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=23;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 528,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=24;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 529,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=25;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 530,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=26;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 531,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=27;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 532,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=76;)M268_0" 
+		R"M268_1(INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 533,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=78;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 534,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=77;
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT 535,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue` FROM `merc_armorinfo` WHERE `merc_npc_type_id`=79;
+
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 525,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=21;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 526,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=22;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 527,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=23;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 528,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=24;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 529,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=25;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 530,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=26;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 531,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=27;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 532,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=76;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 533,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=78;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 534,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=77;
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT 535,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type` FROM `merc_weaponinfo` WHERE `merc_npc_type_id`=79;
+
+-- ---- corrected wiring ----
+-- Hadya (27): Ogre melee line (the missing ninth pirate line)
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=10 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Broker Gex (30): Goblin x4, Nihil x4, Aviak tank  (99)
+DELETE FROM `merc_merchant_template_entries` WHERE `merc_merchant_template_id`=30;
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 30, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE (MY.race_id, MS.class_id) IN ((433,1),(433,2),(433,9),(433,12),(385,1),(385,2),(385,9),(385,12),(13,1))
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Broker Rul (31): Aviak healer/melee/caster, Dragorn x4, Gelidran healer  (88)
+DELETE FROM `merc_merchant_template_entries` WHERE `merc_merchant_template_id`=31;
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 31, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE (MY.race_id, MS.class_id) IN ((13,2),(13,9),(13,12),(413,1),(413,2),(413,9),(413,12),(417,2))
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+SELECT E.merc_merchant_template_id g, COUNT(*) c, MAX(ME.merchant_id) liaison
+FROM merc_merchant_template_entries E
+ LEFT JOIN merc_merchant_entries ME ON ME.merc_merchant_template_id=E.merc_merchant_template_id
+WHERE E.merc_merchant_template_id IN (25,26,27,28,29,30,31)
+GROUP BY E.merc_merchant_template_id;)M268_1",
+		.content_schema_update = false,
+	},
+		// Broker rewire: species catalogs split across vendors + invisible
+		// class-71 contract brokers so no shop exceeds MAX_MERC 100 (the shop
+		// handler silently refuses more). Seasonal brokers Ahlanna (99) and
+		// Dorva (22) spawn beside Hadya under peq_halloween; Brog (99), Gex
+		// (99) and Rul (88) carry the non-seasonal species. Scarecrow liaison
+		// (26) unchanged. Requires the v268 Ogre melee line.
+		// Twin: utils/sql/20261029_merc_broker_rewire.sql.
+	ManifestEntry{
+		.version = 269,
+		.description = "20261029_merc_broker_rewire",
+		.check = "SELECT COUNT(*) FROM merc_merchant_templates WHERE merc_merchant_template_id = 28",
+		.condition = "match",
+		.match = "0",
+		.sql = R"M269_0(-- line ladder = (cat,tier) IN ((1,1)..(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2))).
+-- Rollback: reverse DELETEs + re-run 20261028_merc_species_contracts.sql.
+
+DELETE FROM `merc_merchant_template_entries`
+ WHERE `merc_merchant_template_id` IN (25, 27, 28, 29, 30, 31);
+DELETE FROM `merc_merchant_entries` WHERE `merchant_id` BETWEEN 1500200100 AND 1500200103;
+DELETE FROM `merc_merchant_templates` WHERE `merc_merchant_template_id` IN (28, 29, 30, 31);
+DELETE FROM `spawn2` WHERE `id` BETWEEN 45020092 AND 45020095;
+DELETE FROM `spawnentry` WHERE `spawngroupID` BETWEEN 60020085 AND 60020088;
+DELETE FROM `spawngroup` WHERE `id` BETWEEN 60020085 AND 60020088;
+DELETE FROM `npc_types` WHERE `id` BETWEEN 1500200100 AND 1500200103;
+
+UPDATE `merc_merchant_templates` SET `name` = 'Seasonal Contracts - Hadya Ware'
+ WHERE `merc_merchant_template_id` = 27;
+
+INSERT INTO `merc_merchant_templates`
+ (`merc_merchant_template_id`,`name`,`qglobal`) VALUES
+ (28, 'Halloween Contracts - Broker Ahlanna', ''),
+ (29, 'Halloween Contracts - Broker Dorva', ''),
+ (30, 'Monster Contracts - Broker Gex', ''),
+ (31, 'Monster Contracts - Broker Rul', '');
+
+INSERT INTO `merc_merchant_entries`
+ (`merc_merchant_template_id`,`merchant_id`) VALUES
+ (28, 1500200100), (29, 1500200101), (30, 1500200102), (31, 1500200103);
+
+-- Invisible (race 127) class-71 brokers; con indifferent (faction 0).
+INSERT INTO `npc_types`
+ (`id`,`name`,`lastname`,`level`,`race`,`class`,`texture`,`helmtexture`,
+  `size`,`gender`,`hp`,`findable`,`npc_faction_id`) VALUES
+ (1500200100, 'Contract_Broker_Ahlanna', 'Halloween Contract Broker', 80, 127, 71, 0, 0, 0, 0, 7200, 1, 0),
+ (1500200101, 'Contract_Broker_Dorva', 'Halloween Contract Broker', 80, 127, 71, 0, 0, 0, 0, 7200, 1, 0),
+ (1500200102, 'Monster_Contract_Broker_Gex', 'Monster Contract Broker', 80, 127, 71, 0, 0, 0, 0, 7200, 1, 0),
+ (1500200103, 'Monster_Contract_Broker_Rul', 'Monster Contract Broker', 80, 127, 71, 0, 0, 0, 0, 7200, 1, 0);
+
+INSERT INTO `spawngroup`
+ (`id`,`name`,`spawn_limit`,`dist`,`max_x`,`min_x`,`max_y`,`min_y`,
+  `delay`,`mindelay`,`despawn`,`despawn_timer`,`wp_spawns`) VALUES
+ (60020085, 'poknowledge60020085', 0, 0, 0, 0, 0, 0, 0, 15000, 0, 100, 0),
+ (60020086, 'poknowledge60020086', 0, 0, 0, 0, 0, 0, 0, 15000, 0, 100, 0),
+ (60020087, 'poknowledge60020087', 0, 0, 0, 0, 0, 0, 0, 15000, 0, 100, 0),
+ (60020088, 'poknowledge60020088', 0, 0, 0, 0, 0, 0, 0, 15000, 0, 100, 0);
+
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES
+ (60020085, 1500200100, 100), (60020086, 1500200101, 100),
+ (60020087, 1500200102, 100), (60020088, 1500200103, 100);
+
+INSERT INTO `spawn2`
+ (`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,
+  `respawntime`,`variance`,`pathgrid`,`_condition`,`cond_value`,`animation`,
+  `min_expansion`,`max_expansion`,`content_flags`) VALUES
+ (45020092, 60020085, 'poknowledge', 0, -16.0, -47.0, -156.625, 300, 640, 0, 0, 0, 0, 0, -1, -1, 'peq_halloween'),
+ (45020093, 60020086, 'poknowledge', 0, 12.0, -47.0, -156.625, 60, 640, 0, 0, 0, 0, 0, -1, -1, 'peq_halloween'),
+ (45020094, 60020087, 'poknowledge', 0, 1084.0, -447.0, -122.875, 220, 640, 0, 0, 0, 0, 0, -1, -1, NULL),
+ (45020095, 60020088, 'poknowledge', 0, 1084.0, -475.0, -122.875, 140, 640, 0, 0, 0, 0, 0, -1, -1, NULL);
+
+-- ---- catalog wiring (11-entry ladders per line) ----
+
+-- Hadya (27): seasonal pirates (existing catalogs) + Swinetor tank
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=6 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=6 AND MS.class_id=2
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=12 AND MS.class_id=12
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=12 AND MS.class_id=2
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=1 AND MS.class_id=1
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=1 AND MS.class_id=12
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=10 AND MS.class_id=1
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=10 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=696 AND MS.class_id=1
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Broker Ahlanna (28): Swinetor healer/melee/caster, Skeleton x4, Shissar tank/healer
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=696 AND MS.class_id=2
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=696 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=696 AND MS.class_id=12
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=60 AND MS.class_id=1
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=60 AND MS.class_id=2
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=60 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=60 AND MS.class_id=12
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=217 AND MS.class_id=1
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 28, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=217 AND MS.class_id=2
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Broker Dorva (29): Shissar melee/caster
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 29, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=217 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 29, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=217 AND MS.class_id=12
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Hadya (27) Ogre melee line (authored by 20261029_ogre_melee_line.sql / v268):
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 27, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE MY.race_id=10 AND MS.class_id=9
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Brog (25): originals + Bazu tank, Gelidran melee, Ikaav healer, Pyrilen healer+caster
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 25, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE (MY.race_id, MS.class_id) IN ((574,1),(564,2),(495,12),(529,9),(409,1),(417,9),(394,2),(411,2),(411,12))
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));)M269_0" 
+		R"M269_1(
+-- Broker Gex (30): Goblin x4, Nihil x4, Aviak tank
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 30, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE (MY.race_id, MS.class_id) IN ((433,1),(433,2),(433,9),(433,12),(385,1),(385,2),(385,9),(385,12),(13,1))
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- Broker Rul (31): Aviak healer/melee/caster, Dragorn x4, Gelidran healer
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT 31, T.merc_template_id FROM merc_templates T
+ JOIN merc_types MY ON MY.merc_type_id=T.merc_type_id
+ JOIN merc_subtypes MS ON MS.merc_subtype_id=T.merc_subtype_id
+ WHERE (MY.race_id, MS.class_id) IN ((13,2),(13,9),(13,12),(413,1),(413,2),(413,9),(413,12),(417,2))
+   AND (MY.proficiency_id, MS.tier_id) IN ((1,1),(1,2),(1,3),(1,4),(1,5),(2,1),(2,2),(3,1),(3,2),(4,1),(4,2));
+
+-- verification: per-group counts and per-liaison totals
+SELECT E.merc_merchant_template_id g, COUNT(*) c,
+       MAX(ME.merchant_id) liaison
+FROM merc_merchant_template_entries E
+ LEFT JOIN merc_merchant_entries ME ON ME.merc_merchant_template_id=E.merc_merchant_template_id
+WHERE E.merc_merchant_template_id IN (25,26,27,28,29,30,31)
+GROUP BY E.merc_merchant_template_id;)M269_1",
+		.content_schema_update = false,
+	},
 };
