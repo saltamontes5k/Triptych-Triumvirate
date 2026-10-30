@@ -84,6 +84,16 @@ sub EVENT_ENTERZONE {
         && !($zonesn eq 'kaladima' && $client->GetZoneInstanceVersion() == 25)) {
         $client->RemoveShroudSilent();
     }
+
+    # NMS: Boat Lesson cleanup. A boat shroud (race 141) that leaves oot v29
+    # -- zone-out, bind release after a failed lesson, instance expiry -- is
+    # restored here. Race 141 is the stock rowboat model (a_boat) and is only
+    # ever worn inside the version 29 expedition; the levitation goes with it.
+    if ($client->GetRace() == 141
+        && !($zonesn eq 'oot' && $client->GetZoneInstanceVersion() == 29)) {
+        $client->BuffFadeBySpellID(2894); # stock Levitation (kept in sync with #Boat_Lesson_Controller.lua)
+        $client->RemoveShroudSilent();
+    }
 }
 
 sub EVENT_RESPAWN {
