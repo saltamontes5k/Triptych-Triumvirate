@@ -640,3 +640,95 @@ The client sends `0x218c` (12 bytes: estate id, item id, 0) when the player asks
 estate — observed as `13 000000 | b2 f1 0000` = estate 19, item 61874. The handler now zones the
 player into the interior linked to that lot (the same lookup `#housing enter` does), instead of
 only logging.
+
+---
+
+## 17. Tenth batch (2026-10-29): upstream list/region model, purchase, commit, item query
+
+Four changes, three of them taken from the public reconstruction's wire headers rather than
+re-derived.
+
+### 1. List headers and row order (`neighborhood_wire.h`)
+
+The byte after the leading u32 is the **estate type**, and the recovered value is 5. We were
+sending 0, and the plot-search row was `(door_id, owner_type, 0)` where the recovered order is
+`(icon, estate type, estate id, two strings)` — the estate id sat in the icon slot and the estate
+slot was zero, so a row could render with no selectable estate. Both are fixed.
+
+### 2. Region ids are definition area ids (`region_wire.h`)
+
+`RegionWire::AxisBoxServerXYZ` produces exactly the matrix we already sent, so the axis-order
+suspicion is closed: their encoder uses the same Y/X swap. What differs is the **id model**:
+regions are looked up by `definition->area_id`, so each plot needs its own definition carrying a
+unique area id.
+
+Now: definition id `500 + door_id`, region id `900000 + door_id`, definition `area_id` = the
+region id, definition `zone_id` = the neighbourhood id, plot object `+32` = the plot's own
+definition. `#housing areas <0-2>` still forces a single encoding for diagnosis.
+
+### 3. Purchase (0x45be) and commit (0x711a)
+
+- `0x45be` C2S is a 188-byte envelope; we act on the estate id at 0, log the price/upkeep
+  component ids at 172/176 (they index cost schemes we deliberately do not publish), claim the
+  lot if it is vacant, and answer with the one-byte S2C (nonzero = show management).
+- `0x711a` C2S is 96 bytes; we persist the building pose (estate 32, item 36, heading 44,
+  position Y/X/Z 60..68) into `nms_plot.house_x/y/z/heading` (migration 274) and re-send the
+  world item. **Nothing is consumed**: furniture custody needs a slot mapping we have not
+  verified, and consuming on a guess destroys items.
+
+### 4. Item list (0x1cef) — envelope only
+
+`0x050c` now gets a well-formed **empty** `0x1cef` (estate id + zero count). The envelope is
+documented; the per-entry ItemPtr framing (`49 + names + ItemPtr`, with a 785-byte DefinitionD)
+is not implemented, and a guessed entry can crash the client. An empty list is honest and proves
+the framing.
+
+**Not done:** populating that list, furniture custody, and the remaining storage/trophy services.
+
+---
+
+## 18. The 727 resolver contract, read from the binary (IDA, 2026-10-29)
+
+Decompiled with `idat.exe` from `tmp_housing_ida/eqgame.i64`: `sub_4B2F40` (scan),
+`sub_4B30F0` (resolver), `sub_5B00E0` + `sub_4D6790` (walk), `sub_5B5A90` (apply/register),
+`sub_8D2AD0` + `sub_505BA0` + `sub_505F60` (inside test), `sub_7F6030` (kind predicate),
+`sub_7F4F70` (definition lookup), `sub_5B2500` (opcode dispatch).
+
+```c
+// scan: for every region whose inside test passes
+area_id = area[+4];
+obj     = sub_4B30F0(area_id, RealEstate[+140]);
+if (sub_7F6030(kind_of(obj)))   return obj[+20];   // -> RealEstate[+148]
+
+// resolver: first object with
+defs_lookup(obj[+32])[+28] == area_id          // definition dword 7 IS the area id
+&& (neighbourhood == -1 || obj[+20] == RealEstate[+140])
+
+// walk: tests the object ITSELF first, then +28 parents, up to 10, mask 136 = {4,8}
+```
+
+Three assumptions were wrong:
+
+1. **Definition dword 7 is the region id, not the neighbourhood link.** We had written the
+   neighbourhood id there since batch 6. The neighbourhood appears on the *object's* `+24`.
+2. **The zone-context object must carry the player's plot id in `+20`.** `0x6fd0` writes
+   `+140 = obj[+20]`, and the resolver rejects any object whose `+20` differs from `+140`.
+   With an identity of "neighbourhood 1", no plot object could ever be selected — whatever the
+   region geometry said. This is why every region experiment failed, including the 200-unit
+   box around the player. The identity keeps the *neighbourhood definition*, so `+144` is
+   still kind 5 and the "must be in a neighborhood" gate stays satisfied.
+3. **Each plot needs its own definition** (`500 + door`) whose `area_id` is the region id
+   (`900000 + door`), because the region id is resolved through the definition.
+
+Correct all along: the matrix orientation (local→world, inverted by `sub_505BA0`, applied by
+`sub_505F60`) and registration — `0x63fd` calls the same manager apply (vtable+36) as `0x6fd0`.
+Sending plot objects on both opcodes was unnecessary and actively harmful: the identity re-send
+that followed re-registered the context under the same id and shadowed the plot object the walk
+needs. Removed.
+
+### Packet order that the walk requires
+
+definitions → zone context (id = plot) → plot objects (id = plot) → regions. The apply prepends
+to the bucket, so the plot object must be applied *after* the context or it loses the id.
+
+

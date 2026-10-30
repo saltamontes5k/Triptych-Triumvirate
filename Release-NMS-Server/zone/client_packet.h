@@ -274,12 +274,14 @@
 	void Handle_OP_RealEstateHouseSwap(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateInspect(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateItemInspect(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemQuery(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateLoadLayout(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateNeighborhood(const EQApplicationPacket *app);
 	void Handle_OP_RealEstatePack(const EQApplicationPacket *app);
 	void Handle_OP_RealEstatePickup(const EQApplicationPacket *app);
 	void Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app);
 	void Handle_OP_RealEstatePurchase(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateSale(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app);

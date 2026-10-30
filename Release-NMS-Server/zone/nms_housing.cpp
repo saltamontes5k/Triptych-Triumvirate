@@ -291,7 +291,7 @@ std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
 		// The plot list's second per-entry string is the Address column (confirmed against the
 		// live client: row order is Address, Type, Owner). There is no address data column, so
 		// synthesize a stable one from the lot number and the neighborhood name.
-		r.address = fmt::format("{} {}", r.door_id, nb_name);
+		r.address = fmt::format("Lot {} {}", r.door_id, nb_name);
 
 		rows.push_back(r);
 	}
@@ -365,6 +365,14 @@ constexpr uint32_t kRealEstateKindNeighborhood = 5;
 // house-ancestor walk mask sub_7F62B0() == 0x88 = kinds {4, 8}).
 constexpr uint32_t kRealEstateKindHouse = 4;
 constexpr uint32_t kRealEstateKindPlot  = 8;
+
+// Per-plot definition and region ids. A region resolves through the estate's definition, so
+// the plot's definition carries area_id = PlotRegionId(door) and the 0x49df record repeats it.
+constexpr uint32_t kPlotDefinitionBase = 500;
+constexpr uint32_t kPlotRegionBase     = 900000;
+
+uint32_t PlotDefinitionId(uint32_t door_id) { return kPlotDefinitionBase + door_id; }
+uint32_t PlotRegionId(uint32_t door_id)     { return kPlotRegionBase + door_id; }
 
 // The client's placement payload carries the world position it acted on at
 // offsets 52 (x) and 56 (y). Resolve that to the nearest lot marker.
@@ -606,7 +614,6 @@ NMS_HOUSING_LOG_ONLY(OP_RealEstateItemOperation)   // 0x3424 item operation requ
 NMS_HOUSING_LOG_ONLY(OP_RealEstateHouseSwap)       // 0x21ba
 NMS_HOUSING_LOG_ONLY(OP_RealEstateEscrow)          // 0x2aa6
 NMS_HOUSING_LOG_ONLY(OP_RealEstateTextRequest)     // 0x3c8b
-NMS_HOUSING_LOG_ONLY(OP_RealEstatePurchase)        // 0x45be 188-byte purchase transaction
 NMS_HOUSING_LOG_ONLY(OP_RealEstateItemInspect)     // 0x58c7
 NMS_HOUSING_LOG_ONLY(OP_RealEstateLoadLayout)      // 0x5b41
 NMS_HOUSING_LOG_ONLY(OP_RealEstatePack)            // 0x613d
@@ -617,6 +624,171 @@ NMS_HOUSING_LOG_ONLY(OP_RealEstateInspect)         // 0x796c
 NMS_HOUSING_LOG_ONLY(OP_RealEstateAction5Request)  // 0x7ad1
 
 #undef NMS_HOUSING_LOG_ONLY
+
+// Defined with the wire encoders below.
+void SendRealEstateExteriors(Client *c);
+
+// Reads a float at an offset, for request bodies the client sends as floats.
+float ReadFloatAt(const EQApplicationPacket *app, size_t offset)
+{
+	if (offset + 4 > app->size) {
+		return 0.0f;
+	}
+
+	float value = 0.0f;
+	std::memcpy(&value, app->pBuffer + offset, 4);
+	return value;
+}
+
+// Claims a vacant lot for this character (or their guild, for a guild plot).
+bool ClaimPlotByDoor(Client *c, const std::string &zone_name, uint32_t door_id)
+{
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.plot_type, p.owner_char_id, p.owner_guild_id FROM nms_plot p "
+		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone_name), door_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return false;
+	}
+
+	auto row = plot.begin();
+
+	const uint32_t plot_type   = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const uint32_t owner_char  = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+	const uint32_t owner_guild = Strings::ToUnsignedInt(row[2] ? row[2] : "0");
+
+	if (owner_char || owner_guild) {
+		return owner_char == c->CharacterID() ||
+		       (plot_type == 1 && owner_guild && owner_guild == c->GuildID());
+	}
+
+	if (plot_type == 1 && !c->GuildID()) {
+		return false;
+	}
+
+	auto update = database.QueryDatabase(fmt::format(
+		"UPDATE nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"SET p.owner_char_id = {}, p.owner_guild_id = {}, p.purchased_at = NOW(), "
+		"    p.upkeep_paid_until = DATE_ADD(NOW(), INTERVAL 7 DAY) "
+		"WHERE n.zone = '{}' AND p.door_id = {} AND p.owner_char_id = 0 AND p.owner_guild_id = 0",
+		plot_type == 1 ? 0 : c->CharacterID(),
+		plot_type == 1 ? c->GuildID() : 0,
+		Strings::Escape(zone_name), door_id
+	));
+
+	LogInfo(
+		"[Housing] claim lot [{}] for [{}]: type [{}] affected [{}]",
+		door_id, c->GetName(), plot_type, update.Success() ? update.RowsAffected() : 0
+	);
+
+	return update.Success() && update.RowsAffected() > 0;
+}
+
+// 0x45be C2S purchase: 188-byte envelope, estate id at 0, price/upkeep components at 172/176.
+// The S2C side consumes one byte; nonzero shows the management window.
+void Client::Handle_OP_RealEstatePurchase(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstatePurchase");
+
+	if (!zone || app->size < 12) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 0);
+	const uint32_t price     = app->size >= 176 ? ReadU32(app, 172) : 0;
+	const uint32_t upkeep    = app->size >= 180 ? ReadU32(app, 176) : 0;
+
+	if (!ClaimPlotByDoor(this, zone->GetShortName(), estate_id)) {
+		Message(Chat::White, "[housing] that plot is not available.");
+		return;
+	}
+
+	LogInfo(
+		"[Housing] purchase by [{}]: estate [{}], price component [{}], upkeep component [{}]",
+		GetName(), estate_id, price, upkeep
+	);
+
+	Writer response;
+	response.U8(1);
+
+	const auto &bytes = response.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstatePurchase, static_cast<uint32>(bytes.size()));
+	std::memcpy(outapp->pBuffer, bytes.data(), bytes.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	Message(Chat::White, fmt::format("[housing] plot [{}] is yours.", estate_id).c_str());
+
+	SendRealEstateIdentity();
+}
+
+// 0x711a C2S commit: 96 bytes -- estate 32, item 36, heading 44, position Y/X/Z 60..68. We
+// persist the building pose and consume nothing (furniture custody is not implemented).
+void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstatePlacementCommit");
+
+	if (!zone || std::string(zone->GetShortName()) != "neighborhood" || app->size < 96) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 32);
+	const uint32_t item_id   = ReadU32(app, 36);
+
+	const float heading = ReadFloatAt(app, 44);
+	const float pos_y   = ReadFloatAt(app, 60);
+	const float pos_x   = ReadFloatAt(app, 64);
+	const float pos_z   = ReadFloatAt(app, 68);
+
+	auto update = database.QueryDatabase(fmt::format(
+		"UPDATE nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"SET p.house_x = {}, p.house_y = {}, p.house_z = {}, p.house_heading = {} "
+		"WHERE n.zone = '{}' AND p.door_id = {} AND p.house_item_id = {} "
+		"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
+		pos_x, pos_y, pos_z, heading,
+		Strings::Escape(zone->GetShortName()), estate_id, item_id,
+		CharacterID(), GuildID()
+	));
+
+	LogInfo(
+		"[Housing] placement commit from [{}]: estate [{}], item [{}], pose ({:.1f}, {:.1f}, {:.1f}) "
+		"heading {:.1f}, rows [{}]",
+		GetName(), estate_id, item_id, pos_x, pos_y, pos_z, heading,
+		update.Success() ? update.RowsAffected() : 0
+	);
+
+	if (update.Success() && update.RowsAffected()) {
+		SendRealEstateExteriors(this);
+	}
+}
+
+// 0x050c C2S item query: answered with a well-formed EMPTY 0x1cef (estate id + zero count).
+// The per-entry ItemPtr framing is not implemented, and a guessed entry can crash the client.
+void Client::Handle_OP_RealEstateItemQuery(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateItemQuery");
+
+	if (app->size < 4) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 0);
+
+	Writer w;
+	w.U32(estate_id);
+	w.U32(0);
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemList, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] answered item query for estate [{}] with an empty list", estate_id);
+}
 
 
 void Client::Handle_OP_RealEstateNeighborhood(const EQApplicationPacket *app)
@@ -943,21 +1115,14 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id, uint32_t neigh
 	constexpr uint32_t kMaxNpcItems     = 5;
 	constexpr uint32_t kMaxChildEstates = 1;
 
+	std::vector<EstateDefinition> entries;
+
 	EstateDefinition neighborhood;
 	neighborhood.id      = definition_id;
 	neighborhood.area_id = neighborhood_id;
 	neighborhood.zone_id = neighborhood_id;
 	neighborhood.type    = kRealEstateKindNeighborhood;
-
-	EstateDefinition plot;
-	plot.id                   = 1;
-	plot.area_id              = neighborhood_id;
-	plot.zone_id              = neighborhood_id;
-	plot.type                 = kRealEstateKindPlot;
-	plot.max_items            = kMaxItems;
-	plot.max_non_estate_items = kMaxNonEstate;
-	plot.max_children         = kMaxChildEstates;
-	plot.max_npc_items        = kMaxNpcItems;
+	entries.push_back(neighborhood);
 
 	EstateDefinition house;
 	house.id                   = 2;
@@ -968,11 +1133,43 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id, uint32_t neigh
 	house.max_non_estate_items = kMaxNonEstate;
 	house.max_children         = kMaxChildEstates;
 	house.max_npc_items        = kMaxNpcItems;
+	entries.push_back(house);
 
-	const EstateDefinition entries[3] = { neighborhood, plot, house };
+	// One definition per owned plot: the region id is the definition's area_id, so a shared
+	// "plot" definition cannot describe two lots.
+	auto owned = database.QueryDatabase(fmt::format(
+		"SELECT p.door_id FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
+		"ORDER BY p.door_id",
+		Strings::Escape(zone ? zone->GetShortName() : ""), c->CharacterID(), c->GuildID()
+	));
+
+	if (owned.Success() && owned.RowCount()) {
+		for (auto row : owned) {
+			if (!row[0]) {
+				continue;
+			}
+
+			const uint32_t door_id = Strings::ToUnsignedInt(row[0]);
+
+			EstateDefinition plot;
+			plot.id                   = PlotDefinitionId(door_id);
+			plot.area_id              = PlotRegionId(door_id);
+			// Definition dword 7 is what sub_4B30F0 compares against the AREA ID:
+			//   v9 = defmap_lookup(obj+32); v10 = *(v9 + 28); if (v10 == area_id) ...
+			// It is not the neighbourhood link. The neighbourhood link is the object's +24.
+			plot.zone_id              = PlotRegionId(door_id);
+			plot.type                 = kRealEstateKindPlot;
+			plot.max_items            = kMaxItems;
+			plot.max_non_estate_items = kMaxNonEstate;
+			plot.max_children         = kMaxChildEstates;
+			plot.max_npc_items        = kMaxNpcItems;
+			entries.push_back(plot);
+		}
+	}
 
 	Writer w;
-	w.U32(3);
+	w.U32(static_cast<uint32_t>(entries.size()));
 
 	for (const auto &entry : entries) {
 		WriteEstateDefinition(w, entry);
@@ -1015,7 +1212,7 @@ void SendRealEstatePlotObjects(Client *c)
 
 	auto rows = database.QueryDatabase(fmt::format(
 		"SELECT p.door_id, p.plot_type, COALESCE(c.name, ''), COALESCE(g.name, ''), "
-		"       p.owner_guild_id, COALESCE(UNIX_TIMESTAMP(p.upkeep_paid_until), 0) "
+		"       p.owner_guild_id, COALESCE(UNIX_TIMESTAMP(p.upkeep_paid_until), 0), n.id "
 		"FROM nms_plot p "
 		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
 		"LEFT JOIN character_data c ON c.id = p.owner_char_id "
@@ -1041,12 +1238,16 @@ void SendRealEstatePlotObjects(Client *c)
 		const std::string guild_name  = std::string(row[3] ? row[3] : "");
 		const uint32_t    owner_guild = Strings::ToUnsignedInt(row[4]);
 		const uint32_t    upkeep_unix = Strings::ToUnsignedInt(row[5]);
+		const uint32_t    neighborhood_id = Strings::ToUnsignedInt(row[6] ? row[6] : "0");
 
 		EstateSnapshot plot;
-		plot.estate_id     = door_id;         // +20: the id the plot list and area manifest use
-		plot.static_id     = door_id + 20000; // +24: second plot-map key (see the area manifest)
-		plot.parent_id     = zone_id;         // +28: the neighborhood object from the identity
-		plot.definition_id = 1;          // +32: definition 1, kind 8 (plot)
+		plot.estate_id     = door_id;                  // +20: the id the plot list and Go use
+		// +24 is a second plot-map key. sub_4B30F0 looks the object up by RealEstate[+140] and
+		// then demands obj[+20] == +140, so a plot is only reachable when it is registered
+		// under the neighbourhood id that 0x6fd0 put into +140. This field is that key.
+		plot.static_id     = neighborhood_id;
+		plot.parent_id     = zone_id;                  // +28: the neighborhood object
+		plot.definition_id = PlotDefinitionId(door_id); // +32: this plot's own definition
 		plot.guild_id      = owner_guild ? owner_guild : 0xFFFFFFFFu;
 		plot.owner_name    = plot_type == 1 ? guild_name : owner_name;
 		plot.dynamic_name  = fmt::format("Plot {}", door_id);
@@ -1056,10 +1257,16 @@ void SendRealEstatePlotObjects(Client *c)
 		WriteEstateSnapshot(w, plot);
 
 		const auto &buf = w.Buffer();
+
+		// One opcode only. IDA shows the 0x63fd branch calls the same manager apply (vtable+36)
+		// as 0x6fd0, so registration happens here; sending it again on 0x6fd0 would re-register
+		// and -- worse -- the identity re-send that followed shadowed the plot object under the
+		// same id, which is exactly what the 727 walk needs to find.
 		auto outapp = new EQApplicationPacket(OP_RealEstateSnapshot, static_cast<uint32>(buf.size()));
 		std::memcpy(outapp->pBuffer, buf.data(), buf.size());
 		c->QueuePacket(outapp);
 		safe_delete(outapp);
+
 		++sent;
 
 		LogInfo("[Housing] sent plot object to [{}]: door [{}], {} bytes", c->GetName(), door_id, buf.size());
@@ -1155,8 +1362,15 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 
 	const std::string zone_name = zone->GetShortName();
 
+	// The box size is derived from the lot markers instead of being guessed: lot markers in
+	// this zone sit 200-400 units apart, so the 15-unit box we shipped earlier covered only a
+	// corner of the lot and the player was almost never "inside". Half the distance to the
+	// nearest neighbouring marker, capped, tracks whatever the zone actually uses.
 	auto rows = database.QueryDatabase(fmt::format(
-		"SELECT p.door_id, d.pos_x, d.pos_y, d.pos_z "
+		"SELECT p.door_id, d.pos_x, d.pos_y, d.pos_z, "
+		"  (SELECT MIN(SQRT(POW(d2.pos_x - d.pos_x, 2) + POW(d2.pos_y - d.pos_y, 2))) "
+		"     FROM doors d2 WHERE d2.zone = d.zone AND d2.name = 'OBP_LOTSQUARE' "
+		"       AND d2.version = 0 AND d2.doorid <> d.doorid) AS spacing "
 		"FROM nms_plot p "
 		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
 		"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
@@ -1177,40 +1391,21 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 
 	Writer w;
 	int sent = 0;
-
-	// Count first: the client's ingest (sub_4B2AB0) reads it before the entries. We build
-	// the header after the entries because the query result is not sized ahead of time --
-	// reserve by writing a placeholder and patching the count in place.
-	w.U32(0);
+	w.U32(0);   // count placeholder; sub_4B2AB0 reads it before the records
 
 	auto write_region = [&w](uint32_t id, float cx, float cy, float cz,
-	                         float hx, float hy, float hz, int convention) {
+	                         float hx, float hy, float hz) {
 		w.U32(id);
 
-		if (convention == 1) {
-			// Server axes as-is: [hx 0 0 0 / 0 hy 0 0 / 0 0 hz 0 / cx cy cz 1].
-			w.Float(hx); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(hy); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(0.0f); w.Float(hz); w.Float(0.0f);
-			w.Float(cx); w.Float(cy); w.Float(cz); w.Float(1.0f);
-		}
-		else if (convention == 2) {
-			// World->local form: 1/h diagonal, -center/h in the 4th row.
-			w.Float(1.0f / hy); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(1.0f / hx); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(0.0f); w.Float(1.0f / hz); w.Float(0.0f);
-			w.Float(-cy / hy); w.Float(-cx / hx); w.Float(-cz / hz); w.Float(1.0f);
-		}
-		else {
-			// Shipped form: Y/X swapped, translation (cy, cx, cz) at m[12..14].
-			w.Float(hy); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(hx); w.Float(0.0f); w.Float(0.0f);
-			w.Float(0.0f); w.Float(0.0f); w.Float(hz); w.Float(0.0f);
-			w.Float(cy); w.Float(cx); w.Float(cz); w.Float(1.0f);
-		}
+		// The form the published recovery emits (RegionWire::AxisBoxServerXYZ): extents Y/X
+		// into m[0]/m[5], translation Y/X/Z at m[12..14].
+		w.Float(hy); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
+		w.Float(0.0f); w.Float(hx); w.Float(0.0f); w.Float(0.0f);
+		w.Float(0.0f); w.Float(0.0f); w.Float(hz); w.Float(0.0f);
+		w.Float(cy); w.Float(cx); w.Float(cz); w.Float(1.0f);
 
-		w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);   // opaque vector (defaults)
-		w.U32(0xFFFFFFFF); w.U32(0xFFFFFFFF);          // opaque ids (native defaults)
+		w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);   // opaque vector
+		w.U32(0xFFFFFFFF); w.U32(0xFFFFFFFF);          // opaque ids
 	};
 
 	for (auto row = rows.begin(); row != rows.end(); ++row) {
@@ -1220,33 +1415,65 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 
 		const uint32_t door_id = Strings::ToUnsignedInt(row[0]);
 
-		const float cx = Strings::ToFloat(row[1] ? row[1] : "0");
-		const float cy = Strings::ToFloat(row[2] ? row[2] : "0");
-		const float cz = Strings::ToFloat(row[3] ? row[3] : "0");
+		const float cx      = Strings::ToFloat(row[1] ? row[1] : "0");
+		const float cy      = Strings::ToFloat(row[2] ? row[2] : "0");
+		const float cz      = Strings::ToFloat(row[3] ? row[3] : "0");
+		const float spacing = Strings::ToFloat(row[4] ? row[4] : "0.0");
+
+		// 45% of the marker spacing, clamped: wide enough to cover the lot the player stands on,
+		// narrow enough not to claim the neighbour's. Labelled emulator policy.
+		float        half = spacing > 0.0f ? spacing * 0.45f : kHalfX;
+		if (half < 40.0f) {
+			half = 40.0f;
+		}
+		if (half > 160.0f) {
+			half = 160.0f;
+		}
+
+		const float kHalfX = half;
+		const float kHalfY = half;
+		const float kHalfZ = 80.0f;
+
+		if (variant == 4) {
+			// World->local form, in case the native inside test does NOT invert the matrix:
+			// 1/h diagonal with -centre/h translation. Everything we have sent so far is the
+			// local->world form, so this is the only orientation never tried.
+			w.U32(door_id);
+			w.Float(1.0f / kHalfY); w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
+			w.Float(0.0f); w.Float(1.0f / kHalfX); w.Float(0.0f); w.Float(0.0f);
+			w.Float(0.0f); w.Float(0.0f); w.Float(1.0f / kHalfZ); w.Float(0.0f);
+			w.Float(-cy / kHalfY); w.Float(-cx / kHalfX); w.Float(-cz / kHalfZ); w.Float(1.0f);
+			w.Float(0.0f); w.Float(0.0f); w.Float(0.0f);
+			w.U32(0xFFFFFFFF); w.U32(0xFFFFFFFF);
+			++sent;
+			continue;
+		}
 
 		if (variant == 3) {
-			// Box the PLAYER, 200 units: if this still leaves the client outside, the matrix is
-			// not the problem -- the id resolution or the area ingest is.
-			write_region(door_id, c->GetX(), c->GetY(), c->GetZ(), 200.0f, 200.0f, 200.0f, 0);
+			// Box the PLAYER at 200 units. If this still leaves the client outside, the
+			// geometry is not the problem -- the id resolution or the ingest is.
+			write_region(door_id, c->GetX(), c->GetY(), c->GetZ(), 200.0f, 200.0f, 200.0f);
 			++sent;
 			continue;
 		}
 
-		if (variant == 1 || variant == 2) {
-			write_region(door_id, cx, cy, cz, kHalfX, kHalfY, kHalfZ, variant);
+		if (variant == 1) {
+			write_region(door_id, cx, cy, cz, kHalfX, kHalfY, kHalfZ);
 			++sent;
 			continue;
 		}
 
-		// Default: send BOTH axis orders in one manifest. The plot object is registered under
-		// door_id and door_id + 20000 (+20 and +24 of the snapshot), so whichever area the
-		// client accepts resolves to the same object and the walk still yields door_id.
-		//
-		// The axis order matters more than the matrix layout: our lot sits at (1249, -2017),
-		// so a mirrored box is ~3300 units away and the player can never be inside it. The
-		// swapped form was the assumed one; the unswapped form is the control.
-		write_region(door_id, cx, cy, cz, kHalfX, kHalfY, kHalfZ, 0);
-		write_region(door_id + 20000, cx, cy, cz, kHalfX, kHalfY, kHalfZ, 1);
+		if (variant == 2) {
+			write_region(PlotRegionId(door_id), cx, cy, cz, kHalfX, kHalfY, kHalfZ);
+			++sent;
+			continue;
+		}
+
+		// Default: the same box under BOTH candidate keys -- the estate id (the plot map is
+		// keyed by +20) and the definition's area_id. One of them has to be what the resolver
+		// indexes; the second record is 88 wasted bytes if not.
+		write_region(door_id, cx, cy, cz, kHalfX, kHalfY, kHalfZ);
+		write_region(PlotRegionId(door_id), cx, cy, cz, kHalfX, kHalfY, kHalfZ);
 		sent += 2;
 	}
 
@@ -1262,11 +1489,11 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 	c->QueuePacket(outapp);
 	safe_delete(outapp);
 
-	LogInfo("[Housing] sent area manifest to [{}]: [{}] plot footprint(s), variant [{}], {} bytes",
-		c->GetName(), sent, variant, buf.size());
+	LogInfo(
+		"[Housing] sent area manifest to [{}]: [{}] plot region(s), variant [{}], {} bytes",
+		c->GetName(), sent, variant, buf.size()
+	);
 }
-
-
 // 0x626e S2C: the placement preview. The ActorRecord becomes the world object that draws
 // the building; the 34-byte suffix (source kind, three source slots, three flags, three
 // dwords, a region KEY/RESULT map and the required final zone KEY/RESULT pair) is what the
@@ -1402,7 +1629,71 @@ void SendRealEstateExteriors(Client *c)
 
 void Client::SendRealEstateIdentity()
 {
-	if (!zone || std::string(zone->GetShortName()) != "neighborhood") {
+	if (!zone) {
+		return;
+	}
+
+	// House interior: the neighborhood model does not apply, but the client still needs an
+	// estate context or every real-estate action -- Manage included -- is refused with
+	// "you must be inside a plot or house". One house-kind object for the lot this interior
+	// belongs to gives the client's hierarchy walk a kind-4 estate to find.
+	if (std::string(zone->GetShortName()) != "neighborhood") {
+		auto interior = database.QueryDatabase(fmt::format(
+			"SELECT p.door_id, n.id FROM house h "
+			"JOIN nms_plot p ON p.house_id = h.id "
+			"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+			"WHERE h.char_id = {} AND h.zone = '{}' LIMIT 1",
+			CharacterID(), Strings::Escape(zone->GetShortName())
+		));
+
+		if (!interior.Success() || !interior.RowCount()) {
+			return;
+		}
+
+		auto row = interior.begin();
+
+		const uint32_t door_id = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+		const uint32_t nb_id   = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+
+		EstateDefinition house_def;
+		house_def.id                   = 2;
+		house_def.area_id              = nb_id;
+		house_def.zone_id              = nb_id;
+		house_def.type                 = kRealEstateKindHouse;
+		house_def.max_items            = 300;
+		house_def.max_non_estate_items = 300;
+		house_def.max_npc_items        = 5;
+
+		Writer defs;
+		defs.U32(1);
+		WriteEstateDefinition(defs, house_def);
+		defs.U32(0);
+
+		const auto &def_bytes = defs.Buffer();
+		auto def_packet = new EQApplicationPacket(OP_RealEstateDefinitions, static_cast<uint32>(def_bytes.size()));
+		std::memcpy(def_packet->pBuffer, def_bytes.data(), def_bytes.size());
+		QueuePacket(def_packet);
+		safe_delete(def_packet);
+
+		EstateSnapshot interior_snapshot;
+		interior_snapshot.estate_id     = door_id;
+		interior_snapshot.definition_id = 2;
+		interior_snapshot.owner_name    = GetName();
+		interior_snapshot.dynamic_name  = fmt::format("Plot {}", door_id);
+
+		Writer w;
+		WriteEstateSnapshot(w, interior_snapshot);
+
+		const auto &buf = w.Buffer();
+		auto outapp = new EQApplicationPacket(OP_RealEstateZoneContext, static_cast<uint32>(buf.size()));
+		std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+		QueuePacket(outapp);
+		safe_delete(outapp);
+
+		LogInfo(
+			"[Housing] sent house context to [{}] in [{}]: lot [{}], {} bytes",
+			GetName(), zone->GetShortName(), door_id, buf.size()
+		);
 		return;
 	}
 
@@ -1462,34 +1753,49 @@ void Client::SendRealEstateIdentity()
 		}
 	}
 
+	// The zone-context object is the player's OWN PLOT when they hold one, not the
+	// neighbourhood. sub_4B2F40 resolves a region by calling sub_4B30F0(area_id, +140), and
+	// that resolver demands the found object's +20 == +140. 0x6fd0 writes +140 from this
+	// object's +20, so the identity has to carry the plot id for the plot object to be
+	// selectable. The definition stays the neighbourhood one, so +144 (defs lookup of +32)
+	// is still kind 5 and the "you must be in a neighborhood" gate stays satisfied.
 	EstateSnapshot snapshot;
-	snapshot.estate_id     = neighborhood_id;   // object +20 -> RealEstate[+140]
+	snapshot.estate_id     = owned_plots.empty() ? neighborhood_id : owned_plots.front();
 	snapshot.parent_id     = 0;
-	snapshot.definition_id = zone_id;           // +32: the defs key -> RealEstate[+144]
+	snapshot.definition_id = zone_id;           // +32: the defs key -> RealEstate[+144] = kind 5
 	snapshot.guild_id      = neighborhood_guild ? neighborhood_guild : 0xFFFFFFFFu;
 	snapshot.owner_name    = neighborhood_name;
 	snapshot.owner_handle  = zone_name;
-	snapshot.children      = owned_plots;
+	// Children stay empty: the plot objects are pushed separately, and a child list is
+	// exactly the kind of unresolved id the client would try to walk.
+	snapshot.children.clear();
 
-	Writer w;
-	WriteEstateSnapshot(w, snapshot);
+	auto send_identity = [&]() {
+		Writer w;
+		WriteEstateSnapshot(w, snapshot);
 
-	const auto &buf = w.Buffer();
+		const auto &buf = w.Buffer();
+		auto outapp = new EQApplicationPacket(OP_RealEstateZoneContext, static_cast<uint32>(buf.size()));
+		std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+		QueuePacket(outapp);
+		safe_delete(outapp);
 
-	auto outapp = new EQApplicationPacket(OP_RealEstateZoneContext, static_cast<uint32>(buf.size()));
-	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
-	QueuePacket(outapp);
-	safe_delete(outapp);
+		LogInfo(
+			"[Housing] sent real-estate identity to [{}]: neighborhood [{}] '{}', zone [{}], {} bytes",
+			GetName(), neighborhood_id, neighborhood_name, zone_id, buf.size()
+		);
+	};
 
-	LogInfo(
-		"[Housing] sent real-estate identity to [{}]: neighborhood [{}] '{}', zone [{}], {} bytes",
-		GetName(), neighborhood_id, neighborhood_name, zone_id, buf.size()
-	);
+	send_identity();
 
 	// Register the player's owned plots right after the identity so the client's plot map has
 	// the kind-8 objects the plot/manage gates look up, then send the plot footprints so the
 	// spatial updater recognizes "standing in the plot" (the eqstr-727 gate's requirement).
+	// Order matters: the zone context is applied first, then the plots. Both use id 19 (the
+	// context is the player's plot), and the apply prepends to the bucket, so the LAST one
+	// wins the id -- and it has to be the plot object, because the walk needs a kind-8 estate.
 	SendRealEstatePlotObjects(this);
+
 	SendRealEstateAreaManifest(this);
 
 	// Buildings already placed on those lots: the preview is what actually draws them, and
@@ -1553,7 +1859,7 @@ void command_housing(Client *c, const Seperator *sep)
 		c->Message(Chat::White, "#housing bind <guild_id|0> - bind this neighborhood to a guild");
 		c->Message(Chat::White, "#housing place <door_id> [item_id] - place a house item from your inventory on a lot");
 		c->Message(Chat::White, "#housing exterior <door_id> [item_id] [model] - (re)send a lot's building world item");
-		c->Message(Chat::White, "#housing areas <0-3> - resend the plot footprint manifest in a variant (0 default)");
+		c->Message(Chat::White, "#housing areas <0-4> - resend the plot regions (0 both keys, 1 estate key, 2 area-id key, 3 player box, 4 world->local)");
 		c->Message(Chat::White, "#housing send - re-send the real-estate identity packet");
 		c->Message(Chat::White, "#housing send list - identity, then the neighborhood list");
 		c->Message(Chat::White, "#housing send defs - real-estate definitions, then identity (experimental)");

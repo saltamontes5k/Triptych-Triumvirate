@@ -698,5 +698,8 @@ N(OP_RealEstateZoneContext),         // 0x6fd0 estate snapshot that establishes 
 N(OP_RealEstateSnapshot),            // 0x63fd estate snapshot; same body as 0x6fd0
 N(OP_RealEstateRegions),             // 0x49df region manifest; feeds the client spatial index
 N(OP_RealEstateWorldItem),           // 0x1045 places a world actor (S2C, ActorRecord only)
+N(OP_RealEstateItemQuery),           // 0x050c client asks for an estate's item list (C2S)
+N(OP_RealEstateItemList),            // 0x1cef estate item list (S2C)
+N(OP_RealEstatePlacementCommit),     // 0x711a placement commit (C2S, 96 bytes)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h
