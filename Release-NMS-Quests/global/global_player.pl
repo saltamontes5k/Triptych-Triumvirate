@@ -94,6 +94,16 @@ sub EVENT_ENTERZONE {
         $client->BuffFadeBySpellID(2894); # stock Levitation (kept in sync with #Boat_Lesson_Controller.lua)
         $client->RemoveShroudSilent();
     }
+    # NMS: Derelict Space Station cleanup. A Master Officer armor shroud
+    # (race 323, the animated armor hull) that leaves netherbian v66 --
+    # zone-out, bind release after a failed purge, instance expiry -- is
+    # restored here. Race 323 is the stock animated armor model; the shroud
+    # is only ever worn inside the version 66 expedition.
+    if ($client->GetRace() == 323
+        && !($zonesn eq 'netherbian' && $client->GetZoneInstanceVersion() == 66)) {
+        $client->RemoveShroudSilent();
+    }
+
 }
 
 sub EVENT_RESPAWN {
