@@ -37510,4 +37510,517 @@ INSERT INTO fellowship_campsite_catalogue VALUES (42317,42317,'Aura of Skinspike
 )F273_28",
 		.content_schema_update = false,
 	},
+
+	// Player housing: the committed pose of the building on a lot. 0x711a carries the pose the
+	// player dragged the building to; NULL keeps the lot marker's own position.
+	// Standalone copy: utils/sql/20261029_housing_house_pose.sql.
+	ManifestEntry{
+		.version = 274,
+		.description = "20261029_housing_house_pose",
+		.check = "SHOW COLUMNS FROM `nms_plot` LIKE 'house_x'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"HOUSING274(
+ALTER TABLE `nms_plot`
+  ADD COLUMN `house_x` float DEFAULT NULL,
+  ADD COLUMN `house_y` float DEFAULT NULL,
+  ADD COLUMN `house_z` float DEFAULT NULL,
+  ADD COLUMN `house_heading` float DEFAULT NULL;
+)HOUSING274",
+		.content_schema_update = false,
+	},
+	ManifestEntry{
+		.version = 275,
+		.description = "20261029_sof_hos_tasks",
+		.check = "SELECT id FROM `tasks` WHERE id = 300520",
+		.condition = "empty",
+		.match = "",
+		.sql = R"SOFTASKS275(
+-- v275: Secrets of Faydwer Hills of Shade faction tasks (Bertox Chosen 1183 + Camp Valor 1184).
+-- Rasper: factBertox.html + factValor.html + openHoShade.html. Task band 300520-300536 (EQS custom).
+-- Objectives are authored only on verified spawns/drops; deviations noted in the descriptions.
+
+INSERT INTO tasks (id, type, duration, duration_code, title, description, reward_text, reward_id_list, cash_reward, exp_reward, reward_method, reward_points, reward_point_type, min_level, max_level, level_spread, min_players, max_players, repeatable, faction_reward, completion_emote, replay_timer_group, replay_timer_seconds, request_timer_group, request_timer_seconds, dz_template_id, lock_activity_id, faction_amount, enabled) VALUES
+(300520, 2, 0, 0, 'How the Mighty Have Fallen', 'Sister Daria mourns the fall of a Kirathas champion and asks you to trace his last march through the hills.', 'Experience', '79580', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 25, 1),
+(300521, 2, 0, 0, 'Where Has Sister Donna Gone', 'Sister Daria asks you to search the Blackwater camp for word of the missing Sister Donna.', 'Experience', '79582', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 25, 1),
+(300522, 2, 0, 0, 'Recoup From the Coop', 'Shearon wants the trinkets and cloth the blood crows stole from Camp Valor recovered.', 'Experience', '79583', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 70, 1),
+(300523, 2, 0, 0, 'Undead Slayers', 'Grom offers a bounty on the restless dead that stalk the hills after dark.', 'Experience', '79581', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 100, 1),
+(300524, 2, 0, 0, 'A Mysterious Bond', 'Grom believes the sporali caves hide a bond between the dead and the fungal broods.', 'Experience', '79584', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 50, 1),
+(300525, 2, 0, 0, 'An Extract Science', 'Grom needs reagents drawn from the rampaging boneguards and the tortured treants.', 'Experience', '79585', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 50, 1),
+(300526, 2, 0, 0, 'Spark of Life', 'Grom asks you to gather stray sparks of life from the viridian ghosts.', 'Experience', '79586', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 10, 1),
+(300527, 2, 0, 0, 'Carrion My Wayward Sprout', 'Grom wants the carrion dead of the hills put down for good, one way or another.', 'Experience', '79587', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1184, '', 0, 0, 0, 0, 0, -1, 50, 1),
+(300528, 2, 0, 0, 'Recycled Arms', 'Brother Veras asks you to recover elven arms from the haunted Kirathas camp.', 'Experience', '79588', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 0, 1184, '', 0, 0, 0, 0, 0, -1, 15, 1),
+(300529, 2, 0, 0, 'Making Up for Lost Time', 'Jorun Grimblewimbus has lost time to make up for and tombs to empty.', 'Experience', '79570', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 75, 1),
+(300530, 2, 0, 0, 'I Would Exhume So', 'Arreles Bonescrounger wants the wereorc gravediggers run off their dig for good.', 'Experience', '79571', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 10, 1),
+(300531, 2, 0, 0, 'The Power of Decay', 'Nastel Greygore studies the fungal broods that spread through the hills.', 'Experience', '79572', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 25, 1),
+(300532, 2, 0, 0, 'Recoup From the Coop', 'Addle wants the bones the blood crows borrowed returned, no questions asked.', 'Experience', '79574', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 50, 1),
+(300533, 2, 0, 0, 'The Perfect Omelette', 'Banty Bourdizzle is certain the perfect omelette can be made in Hills of Shade.', 'Experience', '79575', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 50, 1),
+(300534, 2, 0, 0, 'Cartographical Nightmare', 'Banty Bourdizzle needs the landmarks of Hills of Shade charted once and for all.', 'Experience', '79576', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 0, 1183, '', 0, 0, 0, 0, 0, -1, 25, 1),
+(300535, 2, 0, 0, 'Bigger, Faster, Stronger, Dumber', 'Arreles Bonescrounger wants the rampaging boneguards culled.', 'Experience', '79577', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 10, 1),
+(300536, 2, 0, 0, 'One of Our Own', 'Reaver Lebanezer wants a bracer from Bimbalicus the Soulbleeder, one of their own.', 'Experience', '79573', 0, 250000, 0, 0, 0, 70, 0, 0, 0, 0, 1, 1183, '', 0, 0, 0, 0, 0, -1, 50, 1);
+
+INSERT INTO task_activities (taskid, activityid, req_activity_id, step, activitytype, target_name, goalmethod, goalcount, description_override, npc_match_list, item_id_list, item_list, dz_switch_id, min_x, min_y, min_z, max_x, max_y, max_z, skill_list, spell_list, zones, zone_version, optional, list_group) VALUES
+-- 300520 How the Mighty Have Fallen (Sister Daria)
+(300520, 0, -1, 1, 2, 'the aviak roost', 0, 10, 'Slay 10 blood crows at the aviak roost', '444223|444231|444238', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300520, 1, -1, 2, 4, 'Castell Cloudskate', 0, 1, 'Hail Castell Cloudskate on the islands', '444233', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300520, 2, -1, 3, 4, 'Cavalier Devolah', 0, 1, 'Hail Cavalier Devolah in the southern crypt', '444181', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300520, 3, -1, 4, 2, 'the crypt ghouls', 0, 6, 'Slay 6 ghouls in the crypts', '444105|444107|444125', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300520, 4, -1, 5, 4, 'Cavalier Devolah', 0, 1, 'Report your success to Cavalier Devolah', '444181', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300520, 5, -1, 6, 4, 'Sister Daria', 0, 1, 'Return to Sister Daria', '444203', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300521 Where Has Sister Donna Gone (Sister Daria)
+(300521, 0, -1, 1, 2, 'the Blackwater camp', 0, 15, 'Slay 15 of the Blackwater undead and search for Sister Donna', '444038|444039|444040|444042|444043|444047|444051|444054|444055|444056|444057|444063|444064|444066|444067|444069|444070|444071|444072|444073|444075|444076|444079|444081|444082|444088|444091|444096|444099|444104|444106|444111|444112|444114|444115|444116|444118|444119|444120|444121|444122|444123|444128|444129|444131|444133|444159|444161|444275|444276|444277|444278|444279|444280', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300521, 1, -1, 2, 4, 'Sister Daria', 0, 1, 'Return to Sister Daria', '444203', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300522 Recoup From the Coop (Shearon, Camp Valor)
+(300522, 0, -1, 1, 3, '', 0, 4, 'Loot 4 Colorful Cloth Scraps from the blood crows', '', '36406', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300522, 1, -1, 2, 3, '', 0, 4, 'Loot 4 Shiny Trinkets from the blood crows', '', '36407', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300522, 2, -1, 3, 4, 'Shearon', 0, 1, 'Return to Shearon', '444208', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300523 Undead Slayers (Grom)
+(300523, 0, -1, 1, 2, 'the restless dead', 0, 15, 'Slay 15 of the restless dead (many hide from sight)', '444028|444035|444036|444105|444107|444125|444142|444144|444145', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300523, 1, -1, 2, 4, 'Grom', 0, 1, 'Return to Grom', '444191', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300524 A Mysterious Bond (Grom)
+(300524, 0, -1, 1, 5, 'the southern sporali cave', 1, 1, 'Explore the back room of the southern sporali cave', '', '', '', 0, -1360, -820, -50, -1240, -700, 50, -1, 0, 444, -1, 0, 0),
+(300524, 1, -1, 2, 3, '', 0, 8, 'Loot 8 Spore Covered Bones from the fungal broods', '', '36409', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300524, 2, -1, 3, 4, 'Grom', 0, 1, 'Return to Grom', '444191', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300525 An Extract Science (Grom)
+(300525, 0, -1, 1, 3, '', 0, 4, 'Loot 4 Glowing Ichor from the rampaging boneguards', '', '36410', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300525, 1, -1, 2, 3, '', 0, 4, 'Loot 4 Cursed Bark from the tortured treants', '', '36450', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300525, 2, -1, 3, 4, 'Grom', 0, 1, 'Return to Grom', '444191', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300526 Spark of Life (Grom)
+(300526, 0, -1, 1, 3, '', 0, 5, 'Loot 5 Spark of Life from the viridian ghosts', '', '36451', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300526, 1, -1, 2, 4, 'Grom', 0, 1, 'Return to Grom', '444191', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300527 Carrion My Wayward Sprout (Grom)
+(300527, 0, -1, 1, 2, 'the walking dead', 0, 10, 'Put 10 of the walking dead to rest', '444020|444021|444024|444028|444035|444036|444105|444107|444125|444142|444144|444145', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300527, 1, -1, 2, 4, 'Grom', 0, 1, 'Return to Grom', '444191', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300528 Recycled Arms (Brother Veras)
+(300528, 0, -1, 1, 3, '', 0, 15, 'Loot 15 Elven Armaments from the haunted Kirathas camp', '', '36453', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300528, 1, -1, 2, 4, 'Brother Veras', 0, 1, 'Return to Brother Veras', '444213', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300529 Making Up for Lost Time (Jorun Grimblewimbus)
+(300529, 0, -1, 1, 3, '', 0, 6, 'Loot 6 Desiccated Remains from the tombs', '', '36402', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300529, 1, -1, 2, 3, '', 0, 10, 'Loot 10 Maggot-Ridden Heads from the undead', '', '36400', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300529, 2, -1, 3, 3, '', 0, 8, 'Loot 8 Rotting Torsos from the undead', '', '36401', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300529, 3, -1, 4, 4, 'Jorun Grimblewimbus', 0, 1, 'Return to Jorun Grimblewimbus', '444013', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300530 I Would Exhume So (Arreles Bonescrounger)
+(300530, 0, -1, 1, 2, 'the gravediggers', 0, 4, 'Slay the 4 wereorc gravediggers', '444283|444284', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300530, 1, -1, 2, 2, 'the packleader', 0, 1, 'Slay the wereorc packleader', '444282', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300530, 2, -1, 3, 3, '', 0, 1, 'Loot the Gravedigger''s Order from the packleader', '', '36403', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300530, 3, -1, 4, 4, 'Arreles Bonescrounger', 0, 1, 'Return to Arreles Bonescrounger', '444010', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300531 The Power of Decay (Nastel Greygore)
+(300531, 0, -1, 1, 2, 'the fungal broods', 0, 15, 'Slay 15 of the deathspore and rotcap broods', '444022|444023|444031|444044|444046|444049|444059|444068|444074|444083|444090|444093|444098|444132', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300531, 1, -1, 2, 4, 'Nastel Greygore', 0, 1, 'Return to Nastel Greygore', '444006', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300532 Recoup From the Coop (Addle, Bertox Chosen)
+(300532, 0, -1, 1, 3, '', 0, 8, 'Loot 8 Borrowed Bones from the blood crows', '', '36408', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300532, 1, -1, 2, 4, 'Addle', 0, 1, 'Return to Addle', '444009', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300533 The Perfect Omelette (Banty Bourdizzle)
+(300533, 0, -1, 1, 3, '', 0, 6, 'Collect 6 Borrower Eggs from the aviak roost', '', '36454', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300533, 1, -1, 2, 3, '', 0, 4, 'Collect 4 Plump Maggots from the crypt undead', '', '36455', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300533, 2, -1, 3, 3, '', 0, 4, 'Collect 4 Sprigs of Rotweed from the mulch creatures', '', '36456', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300533, 3, -1, 4, 4, 'Banty Bourdizzle', 0, 1, 'Return to Banty Bourdizzle', '444004', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300534 Cartographical Nightmare (Banty Bourdizzle) -- Rasper map points converted from map Y,X,Z to server X,Y,Z
+(300534, 0, -1, 1, 5, 'the Ancient Statue', 1, 1, 'Discover the Ancient Statue', '', '', '', 0, -2482, -1893, -47, -2321, -1733, 33, -1, 0, 444, -1, 0, 0),
+(300534, 1, -1, 2, 5, 'the Gnarled Oak', 1, 1, 'Discover the Gnarled Oak', '', '', '', 0, -525, -395, 20, -365, -235, 100, -1, 0, 444, -1, 0, 0),
+(300534, 2, -1, 3, 5, 'the Ship of the Damned', 1, 1, 'Discover the Ship of the Damned', '', '', '', 0, -2821, -104, -41, -2661, 57, 39, -1, 0, 444, -1, 0, 0),
+(300534, 3, -1, 4, 5, 'the Graveyard', 1, 1, 'Discover the Graveyard', '', '', '', 0, -889, 993, 16, -729, 1153, 96, -1, 0, 444, -1, 0, 0),
+(300534, 4, -1, 5, 5, 'the Fungal Decay', 1, 1, 'Discover the heart of the Fungal Decay', '', '', '', 0, 349, 1207, -632, 509, 1367, -552, -1, 0, 444, -1, 0, 0),
+(300534, 5, -1, 6, 5, 'the Crypts of Shade', 1, 1, 'Discover the Crypts of Shade', '', '', '', 0, 78, -1034, -109, 238, -874, -29, -1, 0, 444, -1, 0, 0),
+(300534, 6, -1, 7, 5, 'the Haunted Elven Camp', 1, 1, 'Discover the Haunted Elven Camp', '', '', '', 0, 483, -1872, -35, 643, -1712, 45, -1, 0, 444, -1, 0, 0),
+(300534, 7, -1, 8, 5, 'Erollisi''s Grove', 1, 1, 'Discover Erollisi''s Grove', '', '', '', 0, -618, -2067, -29, -458, -1907, 51, -1, 0, 444, -1, 0, 0),
+(300534, 8, -1, 9, 5, 'the Borrower''s Roost', 1, 1, 'Discover the Borrower''s Roost', '', '', '', 0, -1298, -1799, 43, -1138, -1639, 123, -1, 0, 444, -1, 0, 0),
+(300534, 9, -1, 10, 5, 'the Port of the Damned', 1, 1, 'Discover the Port of the Damned', '', '', '', 0, -1828, 340, -22, -1668, 500, 58, -1, 0, 444, -1, 0, 0),
+-- 300535 Bigger, Faster, Stronger, Dumber (Arreles Bonescrounger)
+(300535, 0, -1, 1, 2, 'the boneguards', 0, 3, 'Slay 3 rampaging boneguards', '444020|444021|444024', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300535, 1, -1, 2, 4, 'Arreles Bonescrounger', 0, 1, 'Return to Arreles Bonescrounger', '444010', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+-- 300536 One of Our Own (Reaver Lebanezer)
+(300536, 0, -1, 1, 2, 'Bimbalicus the Soulbleeder', 0, 1, 'Defeat Bimbalicus the Soulbleeder in the crypts', '444097', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300536, 1, -1, 2, 3, '', 0, 1, 'Loot a Gemmed Bracer from Bimbalicus', '', '36404', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0),
+(300536, 2, -1, 3, 4, 'Reaver Lebanezer', 0, 1, 'Return to Reaver Lebanezer', '444008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 444, -1, 0, 0);
+)SOFTASKS275",
+		.content_schema_update = false,
+	},
+	ManifestEntry{
+		.version = 276,
+		.description = "20261029_sof_faction_vendors",
+		.check = "SELECT item FROM `merchantlist` WHERE merchantid = 442032 AND item = 115089",
+		.condition = "empty",
+		.match = "",
+		.sql = R"SOFVEND276(
+-- v276: Secrets of Faydwer faction vendor stocks (Rasper factAkanon/Bertox/Valor/CoVeeshan/Fang/LoLight/Brownie).
+-- faction_required convention per existing stocks: 500 = Kindly, 1100 = Ally (see Karri 438007).
+
+-- Sydria the Elder (442032), elite Crusaders of Veeshan supplier in Dragonscale Hills:
+-- repoint merchant_id (was 999999, a mismatched SoD scroll list) and stock the CoV Rk. III set + 10 shield ornaments.
+UPDATE npc_types SET merchant_id = 442032 WHERE id = 442032;
+DELETE FROM merchantlist WHERE merchantid = 442032;
+INSERT INTO merchantlist (merchantid, slot, item, faction_required) VALUES
+(442032, 1, 116084, 1100),
+(442032, 2, 116510, 1100),
+(442032, 3, 116325, 1100),
+(442032, 4, 115733, 1100),
+(442032, 5, 115935, 1100),
+(442032, 6, 116010, 1100),
+(442032, 7, 115089, 1100),
+(442032, 8, 115780, 1100),
+(442032, 9, 115601, 1100),
+(442032, 10, 115251, 1100),
+(442032, 11, 116436, 1100),
+(442032, 12, 116216, 1100),
+(442032, 13, 115402, 1100),
+(442032, 14, 116135, 1100),
+(442032, 15, 100112, 1100),
+(442032, 16, 100113, 1100),
+(442032, 17, 100114, 1100),
+(442032, 18, 100115, 1100),
+(442032, 19, 100116, 1100),
+(442032, 20, 100117, 1100),
+(442032, 21, 100118, 1100),
+(442032, 22, 100119, 1100),
+(442032, 23, 100120, 1100),
+(442032, 24, 100121, 1100);
+
+-- Lanika Shadestepper (444002), standard Bertoxxulous' Chosen supplier in Hills of Shade:
+-- add the four Ally-tier rewards the Rasper listing names that were missing from her stock.
+INSERT INTO merchantlist (merchantid, slot, item, faction_required) VALUES
+(444002, 8, 115931, 1100),
+(444002, 9, 116492, 1100),
+(444002, 10, 100100, 1100),
+(444002, 11, 102765, 1100);
+
+-- Seridyn (442104), standard Ladies of the Light supplier in Dragonscale Hills:
+-- her stock was the generic level 76-80 SoF scroll set; replace with the faction reward list.
+DELETE FROM merchantlist WHERE merchantid = 442104;
+INSERT INTO merchantlist (merchantid, slot, item, faction_required) VALUES
+(442104, 1, 115338, 500),
+(442104, 2, 116501, 500),
+(442104, 3, 115737, 500),
+(442104, 4, 115911, 500),
+(442104, 5, 115452, 500),
+(442104, 6, 116478, 500),
+(442104, 7, 115082, 1100),
+(442104, 8, 115621, 1100),
+(442104, 9, 116048, 1100),
+(442104, 10, 115753, 1100),
+(442104, 11, 115955, 1100),
+(442104, 12, 116337, 1100),
+(442104, 13, 115797, 1100),
+(442104, 14, 100102, 1100);
+
+-- Alissa Saint Claire (442103), elite Ladies of the Light supplier:
+-- stock the Rk. III versions of the faction reward line.
+DELETE FROM merchantlist WHERE merchantid = 442103;
+INSERT INTO merchantlist (merchantid, slot, item, faction_required) VALUES
+(442103, 1, 115339, 1100),
+(442103, 2, 116502, 1100),
+(442103, 3, 115912, 1100),
+(442103, 4, 115453, 1100),
+(442103, 5, 116479, 1100),
+(442103, 6, 115083, 1100),
+(442103, 7, 115622, 1100),
+(442103, 8, 116049, 1100),
+(442103, 9, 115956, 1100),
+(442103, 10, 116338, 1100),
+(442103, 11, 115798, 1100);
+)SOFVEND276",
+		.content_schema_update = false,
+	},
+	// Old Man McKenzie (poknowledge): full McKenzie's Special Brew stock (181 items per Allakhazam npc 33870).
+	// Merchant list 202411 + npc alt_currency_id 18 (alternate_currency 18 = item 41408). Costs = live brew prices.
+	// Standalone copy: utils/sql/20261029_omm_mckenzie_stock_v277.sql.
+	ManifestEntry{
+		.version = 277,
+		.description = "20261029_omm_mckenzie_stock",
+		.check = "SELECT merchantid FROM merchantlist WHERE merchantid = 202411 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F277_A(
+INSERT INTO merchantlist (merchantid, slot, item, faction_required, level_required, min_status, max_status, alt_currency_cost, classes_required, probability, bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion, content_flags, content_flags_disabled) VALUES
+(202411, 1, 54830, -100, 0, 0, 255, 5, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 2, 50927, -100, 0, 0, 255, 6, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 3, 54910, -100, 0, 0, 255, 6, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 4, 54911, -100, 0, 0, 255, 8, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 5, 54831, -100, 0, 0, 255, 10, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 6, 50957, -100, 0, 0, 255, 10, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 7, 54879, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 8, 54863, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 9, 54870, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 10, 54874, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 11, 54836, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 12, 54872, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 13, 54857, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 14, 54904, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 15, 50911, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 16, 50920, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 17, 54898, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 18, 54880, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 19, 54876, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 20, 54883, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 21, 54856, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 22, 54862, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 23, 54895, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 24, 50908, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 25, 54839, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 26, 54887, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 27, 54889, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 28, 54868, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 29, 54849, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 30, 54842, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 31, 54837, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 32, 54858, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 33, 54892, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 34, 54850, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 35, 54888, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 36, 54873, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 37, 54843, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 38, 50922, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 39, 54909, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 40, 54901, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 41, 54869, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 42, 50921, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 43, 50919, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 44, 54903, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 45, 54855, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 46, 54878, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 47, 50907, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 48, 50917, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 49, 50918, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 50, 54861, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 51, 54847, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 52, 50902, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 53, 54907, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 54, 50915, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 55, 50910, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 56, 54897, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 57, 50912, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 58, 54835, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 59, 54896, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 60, 54908, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 61, 54840, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 62, 54853, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 63, 54838, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 64, 54841, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 65, 54852, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 66, 54851, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 67, 54893, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 68, 54894, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 69, 54877, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 70, 54902, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 71, 54865, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 72, 54875, -100, 0, 0, 255, 14, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 73, 54848, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 74, 50904, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 75, 54867, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 76, 54864, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 77, 50905, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 78, 54846, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 79, 50906, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 80, 50901, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 81, 54906, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 82, 50914, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 83, 54905, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 84, 54866, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 85, 54884, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 86, 54886, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 87, 50913, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 88, 50903, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 89, 50925, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 90, 54845, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 91, 54891, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL);)F277_A"
+		R"F277_B(
+INSERT INTO merchantlist (merchantid, slot, item, faction_required, level_required, min_status, max_status, alt_currency_cost, classes_required, probability, bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion, content_flags, content_flags_disabled) VALUES
+(202411, 92, 50909, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 93, 54871, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 94, 54854, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 95, 54890, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 96, 54844, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 97, 50916, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 98, 54882, -100, 0, 0, 255, 21, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 99, 54788, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 100, 56114, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 101, 50941, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 102, 50953, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 103, 50951, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 104, 50945, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 105, 56113, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 106, 56110, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 107, 54792, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 108, 54791, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 109, 54881, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 110, 54802, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 111, 54827, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 112, 54821, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 113, 54773, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 114, 54803, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 115, 54775, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 116, 54783, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 117, 54774, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 118, 54779, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 119, 54795, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 120, 54790, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 121, 50931, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 122, 50940, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 123, 50936, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 124, 50950, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 125, 50943, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 126, 54812, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 127, 54789, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 128, 54782, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 129, 54794, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 130, 54780, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 131, 54784, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 132, 54770, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 133, 54799, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 134, 54826, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 135, 54797, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 136, 54781, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 137, 50944, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 138, 50933, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 139, 54778, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 140, 50937, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 141, 50932, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 142, 50935, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 143, 54822, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 144, 56108, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 145, 56109, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 146, 54825, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 147, 54818, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 148, 56105, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 149, 56071, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 150, 54796, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 151, 54776, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 152, 54829, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 153, 54777, -100, 0, 0, 255, 42, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 154, 50954, -100, 0, 0, 255, 52, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 155, 56048, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 156, 54820, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 157, 50938, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 158, 56115, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 159, 54772, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 160, 56101, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 161, 56119, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 162, 54787, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 163, 56034, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 164, 56124, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 165, 50955, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 166, 54828, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 167, 54823, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 168, 56042, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 169, 50939, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 170, 56047, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 171, 50949, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 172, 50946, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 173, 56104, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 174, 56111, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 175, 56100, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 176, 54816, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 177, 54793, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 178, 56117, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 179, 50952, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 180, 54798, -100, 0, 0, 255, 63, 65535, 100, '', '', 0, -1, -1, NULL, NULL),
+(202411, 181, 50956, -100, 0, 0, 255, 74, 65535, 100, '', '', 0, -1, -1, NULL, NULL);)F277_B",
+		.content_schema_update = false,
+	},
+	// Old Man McKenzie's Boat Lesson (oot v29 monster mission). Cake-Defense
+	// style: rowboat shrouds (shrouds 502, race 141, stats cloned from Imp
+	// Wizard 40 / shrouds 67), oot v29 instance with v0 spawn2 rows cloned,
+	// Boat Lesson task 800004 (five dock explore activities, zone 69 v29),
+	// invisible controller 1520001940 + hostile race-533 ships 1520001950/51,
+	// controller spawn in oot v29 only.
+	// Standalone copy: utils/sql/20261029_boat_lesson_v278.sql.
+	ManifestEntry{
+		.version = 278,
+		.description = "20261029_boat_lesson",
+		.check = "SELECT id FROM spawn2 WHERE zone = 'oot' AND version = 29 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F278_A(
+-- Ocean of Tears version 29 expedition zone (v0 spawn2 rows cloned so the
+-- instance keeps the world zone's population), the Rusty Steamboat 40 shroud
+-- form (race 141 rowboat; quest scripts call ApplyShroud(502)), the Boat
+-- Lesson task 800004 with five dock-proximity activities, the invisible
+-- controller and two hostile ship tiers, plus the controller's spawns.
+
+-- Zone version row: clone oot (zoneidnumber 69) v0 as version 29.
+-- CREATE TABLE AS SELECT drops the auto_increment attribute, so give the id
+-- explicitly; delete-guarded so re-runs (or a world-boot retry) stay idempotent.
+DELETE FROM `zone` WHERE `zoneidnumber` = 69 AND `version` = 29;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 69 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 29, `long_name` = 'Ocean of Tears: McKenzie''s Boat Lesson';
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+-- spawn2: clone every v0 spawn into version 29 so the instance keeps the
+-- world zone's population (merchants, translocators, quest NPCs, mobs) --
+-- "don't empty the zone". spawn2.id is auto_increment, so ids are omitted
+-- and assigned on insert; the delete-guard keeps re-runs idempotent.
+DELETE FROM `spawn2` WHERE `zone` = 'oot' AND `version` = 29;
+INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`pathgrid`,`path_when_zone_idle`,`_condition`,`cond_value`,`animation`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+SELECT `spawngroupID`,`zone`,29,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`pathgrid`,`path_when_zone_idle`,`_condition`,`cond_value`,`animation`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`
+FROM `spawn2` WHERE `zone` = 'oot' AND `version` = 0;
+
+-- Rusty Steamboat 40 shroud form. Explicit id 502: quest scripts call
+-- ApplyShroud(502). Progression/branch/level/hp/mana/endurance are copied
+-- from the stock Imp Wizard 40 form (shrouds.id 67) so the boat is exactly
+-- the level-40 imp wizard with a rowboat hull; the shroud ability window
+-- comes from the same Aberrations/Imp Wizard branch. Race 141 is the
+-- rowboat model (a_boat / a_row_boat).
+DELETE FROM `shrouds` WHERE `id` = 502;
+INSERT INTO `shrouds`
+	(`id`,`name`,`progression`,`branch`,`level`,`race`,`gender`,`class`,`texture`,`helmet_texture`,`size`,`hp`,`mana`,`endurance`)
+SELECT
+	502, 'Rusty Steamboat 40', `progression`, `branch`, `level`, 141, `gender`, `class`, `texture`, `helmet_texture`, 5.0,
+	`hp`, `mana`, `endurance`
+FROM `shrouds` WHERE `id` = 67;
+
+-- Boat Lesson task: min_level 40 (shrouds only go down, never up),
+-- repeatable; the rant is the description shown in the task select window
+-- (McKenzie opens it from poknowledge via client:TaskSelector). Five explore
+-- activities (activitytype 5), one per island dock, credited only inside
+-- oot version 29 (zones = zoneidnumber 69, zone_version 29). Boxes are
+-- +/-50..60 around each dock's named landing NPCs.
+DELETE FROM `task_activities` WHERE `taskid` = 800004;
+DELETE FROM `tasks` WHERE `id` = 800004;
+INSERT INTO `tasks`
+	(`id`,`type`,`duration`,`duration_code`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`reward_points`,`reward_point_type`,`min_level`,`max_level`,`level_spread`,`min_players`,`max_players`,`repeatable`,`faction_reward`,`completion_emote`,`replay_timer_group`,`replay_timer_seconds`,`request_timer_group`,`request_timer_seconds`,`dz_template_id`,`lock_activity_id`,`faction_amount`,`enabled`)
+VALUES
+	(800004, 2, 0, 0, 'Old Man McKenzie''s Boat Lesson',
+	'Old Man McKenzie stares out past the fountain like he can still see the water. "In my day, the sight of a boat on the horizon stopped a war cold. Rivals dropped their blades mid-swing just to watch her come in. Guilds ran their raid schedules off the boat timetable, and nobody -- NOBODY -- whined. Now? You lot whine the boats are broken, and you whine louder when they actually run. You don''t respect the boats because you''ve never BEEN one. So -- be one. I''ll drop you in the Ocean of Tears as a battered little rowboat. Float past the docks of every island without being sunk, and maybe you''ll understand what we lost. My jealous old memories will be out there in full sail, and they do not want you to make it." Level 40 and up, solo or up to six. Sinking fails the lesson.',
+	'Old Man McKenzie grunts -- almost a smile. "Huh. Maybe there''s hope for your generation yet." He presses a bottle into your hands: one McKenzie''s Special Brew and a point of enlightenment.',
+	'', 0, 0, 0, 0, 0, 40, 0, 0, 1, 6, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1);
+
+INSERT INTO `task_activities`
+	(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`item_list`,`dz_switch_id`,`min_x`,`min_y`,`min_z`,`max_x`,`max_y`,`max_z`,`skill_list`,`spell_list`,`zones`,`zone_version`,`optional`,`list_group`)
+VALUES
+	(800004, 0, -1, 0, 5, 'the Sister Isle landing', 1, 1, '', NULL, NULL, '', 0, -9907, 1230, -60, -9807, 1330, 300, '-1', '0', '69', 29, 0, 0),
+	(800004, 1, -1, 0, 5, 'the Mudtoe landing',      1, 1, '', NULL, NULL, '', 0, -6623,  850, -60, -6523,  950, 300, '-1', '0', '69', 29, 0, 0),
+	(800004, 2, -1, 0, 5, 'Capt. Surestout''s dock', 1, 1, '', NULL, NULL, '', 0, -5480,  697, -60, -5360,  817, 300, '-1', '0', '69', 29, 0, 0),
+	(800004, 3, -1, 0, 5, 'the Aviak Isle shore',    1, 1, '', NULL, NULL, '', 0,  4183, 2136, -60,  4303, 2256, 300, '-1', '0', '69', 29, 0, 0),
+	(800004, 4, -1, 0, 5, 'the East Isle landing',   1, 1, '', NULL, NULL, '', 0,  7661,-2271, -60,  7781,-2151, 300, '-1', '0', '69', 29, 0, 0);
+
+-- NPCs: invisible controller (mirrors the cake controller form) and two
+-- hostile ship tiers (race 533, the real ship model behind Golden_Maiden /
+-- SirensBane / The_Seaking). Ship hp/damage and the spectre spell set (108)
+-- are tuning knobs.
+DELETE FROM `npc_types` WHERE `id` IN (1520001940,1520001950,1520001951);
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`)
+VALUES
+	(1520001940,'#Boat_Lesson_Controller','The Harbor Watch',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0),
+	(1520001950,'a_spiteful_boat','McKenzie''s green memory',40,533,12,1,3000,0,0,0,6,1.25,20,55,30,300,1,400,0,108,0,0),
+	(1520001951,'a_seething_wreck','A grudge that will not sink',40,533,12,1,4500,0,0,0,6,1.25,30,70,30,330,1,400,0,108,0,0);
+
+-- Controller spawn: oot version 29 only (v29 instances load spawn2 rows
+-- version 29/-1). Hostile ships are controller-spawned dynamically near the
+-- boats, like the cake waves -- no static ship spawns.
+DELETE FROM `spawngroup` WHERE `id` = 5004503;
+DELETE FROM `spawnentry` WHERE `spawngroupID` = 5004503;
+DELETE FROM `spawn2` WHERE `spawngroupID` = 5004503;
+INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004503,'boat_lesson_controller_oot_29');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004503,1520001940,100);
+INSERT INTO `spawn2`
+	(`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
+VALUES
+	(5004503,'oot',29,-9200,390,6,0,0,0);
+)F278_A",
+		.content_schema_update = false,
+	},
 };
