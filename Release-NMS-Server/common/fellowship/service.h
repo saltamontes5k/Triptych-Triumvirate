@@ -1,5 +1,7 @@
 #ifndef EQEMU_FELLOWSHIP_SERVICE_H
 #define EQEMU_FELLOWSHIP_SERVICE_H
+#include "../rulesys.h"
+
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -10,6 +12,34 @@ namespace Fellowship {
 constexpr uint32_t MaximumMembers = 12;
 constexpr uint64_t InvitationLifetime = 300;
 constexpr uint64_t MaximumCampfireLifetime = 14400;
+// The native roster row carries a single class id, but this server keeps up to
+// three per character in a bitmask. Pick one deterministically; the roster only
+// displays it and no server rule is derived from it.
+inline uint32_t RosterClass(uint32_t classes_bits, uint32_t base_class)
+{
+	if (!classes_bits || !RuleB(Custom, MulticlassingEnabled)) {
+		return base_class;
+	}
+	const int mode = RuleI(Custom, FellowshipRosterClass);
+	if (mode == 2) {
+		return base_class;
+	}
+	if (mode == 1) {
+		for (int class_id = 16; class_id >= 1; --class_id) {
+			if (classes_bits & (1u << (class_id - 1))) {
+				return static_cast<uint32_t>(class_id);
+			}
+		}
+	}
+	else {
+		for (int class_id = 1; class_id <= 16; ++class_id) {
+			if (classes_bits & (1u << (class_id - 1))) {
+				return static_cast<uint32_t>(class_id);
+			}
+		}
+	}
+	return base_class;
+}
 enum class Error { None, InvalidArgument, DatabaseFailure, NotFound, AlreadyMember, NotMember, NotLeader, Full, InvitationMissing, InvitationPending, LeaderMustTransfer, VitalityCapped, CommitUncertain };
 template<class T> struct Result { T value{}; Error error = Error::None; explicit operator bool() const { return error == Error::None; } };
 struct Member { uint32_t character_id{}, level{}, class_id{}, zone_id{}; std::string name; bool share_experience{}, shared_exp_capped{}; uint64_t joined_at{}, last_on{}; };

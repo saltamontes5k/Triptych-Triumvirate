@@ -83,6 +83,7 @@ string literal at 65,535 bytes). The rows must stay in step with
 | `Custom:FellowshipCamps` | `true` | Campsite creation and effects. |
 | `Custom:FellowshipVitality` | `true` | Vitality banking and XP/AA sharing. |
 | `Custom:FellowshipCampMembers` | `2` | Living members, including the camper, that must be nearby and out of combat to camp. Clamped to 1-12. |
+| `Custom:FellowshipRosterClass` | `0` | Which of a multiclass character's classes the roster shows (the native row carries one). 0 = earliest, 1 = latest, 2 = base class. |
 
 All entry points test the gate and fail closed. Flip the master rule on only
 after the schema is present: `SELECT rule_value FROM rule_values WHERE
@@ -115,8 +116,11 @@ class-agnostic by construction:
   takes on a multiclass character.
 - Caps are computed from level and the configured maximum level
   (`Character:MaxExpLevel`, falling back to `Character:MaxLevel`), not from class.
-- The roster's class column carries the character's base class only; it is a
-  display value and drives nothing.
+- The roster's class column carries exactly one class id (the native wire has
+  a single u32), so a three-class character shows one. It is chosen from the
+  `GestaltClasses` bitmask by `Custom:FellowshipRosterClass`. The base class on
+  this server is Bard for every character, so it is never a useful fallback.
+  Nothing derives from the displayed class.
 
 The camp-member floor is `Custom:FellowshipCampMembers` (default 2). The native
 client may still gate its own Camp button on a threshold it computes locally, in

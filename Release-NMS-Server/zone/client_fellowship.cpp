@@ -93,7 +93,8 @@ void Client::RefreshFellowship() {
  for (auto& member : snapshot.members) {
   auto* client = entity_list.GetClientByCharID(member.character_id);
   if (!client || !client->Connected()) continue;
-  member.level = client->GetLevel(); member.class_id = client->GetClass();
+  member.level = client->GetLevel();
+  member.class_id = Fellowship::RosterClass(client->GetClassesBits(), client->GetClass());
   member.zone_id = zone->GetZoneID(); member.last_on = 0;
  }
  const uint32_t previous = m_fellowship_id;

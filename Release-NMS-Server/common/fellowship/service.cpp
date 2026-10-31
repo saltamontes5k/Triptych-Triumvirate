@@ -2,6 +2,7 @@
 #include "../database.h"
 #include <cmath>
 #include <limits>
+#include <cstdlib>
 #include <stdexcept>
 #include <utility>
 namespace Fellowship {
@@ -13,6 +14,7 @@ MySQLRequestResult Query(Database& db, const std::string& sql) {
  if (!result.Success()) throw Failure{Error::DatabaseFailure};
  return result;
 }
+uint32_t Mask(const char* text) { if(!text||!*text)return 0;return static_cast<uint32_t>(std::strtoul(text,nullptr,10)); }
 uint64_t Number(const char* text) {
  if (!text) throw Failure{Error::DatabaseFailure};
  return std::stoull(text);
@@ -82,10 +84,10 @@ Snapshot Load(Database& db, uint32_t id, uint64_t now) {
   Campfire c; c.zone_id = Number(row[4]); c.instance_id = Number(row[5]); c.type = Number(row[6]);
   c.x = std::stof(row[7]); c.y = std::stof(row[8]); c.z = std::stof(row[9]); c.heading = std::stof(row[10]); c.expires_at = Number(row[11]); out.campfire = c;
  }
- auto m = Query(db, "SELECT m.character_id,c.name,c.level,c.class,c.zone_id,m.share_experience,m.joined_at,c.last_login,COALESCE((v.normal_cap=0 OR v.normal_pool>=v.normal_cap OR (v.aa_cap>0 AND v.aa_pool>=v.aa_cap)),0) FROM fellowship_members m JOIN character_data c ON c.id=m.character_id AND c.deleted_at IS NULL LEFT JOIN fellowship_vitality v ON v.character_id=m.character_id WHERE m.fellowship_id=" + std::to_string(id) + " ORDER BY m.joined_at,m.character_id");
+ auto m = Query(db, "SELECT m.character_id,c.name,c.level,c.class,c.zone_id,m.share_experience,m.joined_at,c.last_login,COALESCE((v.normal_cap=0 OR v.normal_pool>=v.normal_cap OR (v.aa_cap>0 AND v.aa_pool>=v.aa_cap)),0),COALESCE(b.value,'0') FROM fellowship_members m JOIN character_data c ON c.id=m.character_id AND c.deleted_at IS NULL LEFT JOIN fellowship_vitality v ON v.character_id=m.character_id LEFT JOIN data_buckets b ON b.character_id=m.character_id AND b.\`key\`='GestaltClasses' WHERE m.fellowship_id=" + std::to_string(id) + " ORDER BY m.joined_at,m.character_id");
  if (m.RowCount() > MaximumMembers) throw Failure{Error::DatabaseFailure};
  for (auto r = m.begin(); r.operator!=(m.end()); ++r) {
-  Member member; member.character_id = Number(r[0]); member.name = r[1] ? r[1] : ""; member.level = Number(r[2]); member.class_id = Number(r[3]); member.zone_id = Number(r[4]); member.share_experience = Number(r[5]) != 0; member.joined_at = Number(r[6]); member.last_on = Number(r[7]); member.shared_exp_capped = Number(r[8]) != 0; out.members.push_back(std::move(member));
+  Member member; member.character_id = Number(r[0]); member.name = r[1] ? r[1] : ""; member.level = Number(r[2]); member.class_id = RosterClass(Mask(r[9]), Number(r[3])); member.zone_id = Number(r[4]); member.share_experience = Number(r[5]) != 0; member.joined_at = Number(r[6]); member.last_on = Number(r[7]); member.shared_exp_capped = Number(r[8]) != 0; out.members.push_back(std::move(member));
  }
  return out;
 }
