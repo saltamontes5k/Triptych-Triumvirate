@@ -11,7 +11,6 @@ sub EVENT_SAY {
   if ($text=~/hail/i) {
     if (quest::istaskcompleted($TASK) && !quest::get_data($client->CharacterID() . "-tbsm-$TASK")) {
       quest::say("The garden is quiet again - the sphinx herself is pleased. Your Orux, wrangler.");
-      quest::summonitem(79911, $ORUX);
       quest::set_data($client->CharacterID() . "-tbsm-$TASK", 1);
     } elsif (quest::istaskactive($TASK)) {
       quest::say("Shelfezmaken waits in the garden. Say [enter] and mind the bugs.");
@@ -43,5 +42,12 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
-  plugin::return_items(\%itemcount);
+  # Tsaph Katta's Urn of Rejuvenation recharge: hand the drained urn back
+  # and it returns with its five charges of Deep Stasis renewed.
+  if (plugin::check_handin(\%itemcount, 79980 => 1)) {
+    quest::say("The Urn of Rejuvenation, drained dry. Tsaph's gift does not run dry while the Combine stands -- take it renewed, and mind where you spend it.");
+    quest::summonitem(79980);
+  } else {
+    plugin::return_items(\%itemcount);
+  }
 }

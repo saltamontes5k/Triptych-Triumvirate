@@ -11,7 +11,6 @@ sub EVENT_SAY {
   if ($text=~/hail/i) {
     if (quest::istaskcompleted($TASK) && !quest::get_data($client->CharacterID() . "-tbsm-$TASK")) {
       quest::say("The temple still stands. Katta pays its debts - Orux, as promised.");
-      quest::summonitem(79911, $ORUX);
       quest::set_data($client->CharacterID() . "-tbsm-$TASK", 1);
     } elsif (quest::istaskactive($TASK)) {
       quest::say("Akarahotuten commands the defense atop the pyramid. Say [enter] to join it.");

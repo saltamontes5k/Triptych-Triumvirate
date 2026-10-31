@@ -11,7 +11,6 @@ sub EVENT_SAY {
   if ($text=~/hail/i) {
     if (quest::istaskcompleted($TASK) && !quest::get_data($client->CharacterID() . "-tbsm-$TASK")) {
       quest::say("Ah, the warmth of fire coral for my experiments! Your Orux, diver.");
-      quest::summonitem(79911, $ORUX);
       quest::set_data($client->CharacterID() . "-tbsm-$TASK", 1);
     } elsif (quest::istaskactive($TASK)) {
       quest::say("The caves north of here hold the coral. Say [enter] to dive.");
