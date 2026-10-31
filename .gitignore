@@ -97,3 +97,11 @@ Release-NMS-Client/ClientFiles/Resources/*.txt
 /EQ Triune Project/
 /Loot System Plugin/
 Release-NMS-Client/ClientFiles/*.bak-*
+
+# --- Internal audit notes / staging materials (local-only, never publish) ---
+/Release-NMS-Quests/_staging/
+/Release-NMS-Server/docs/quest-audit-*.md
+/Release-NMS-Server/docs/sod-progression.md
+
+# Python scratch
+__pycache__/
