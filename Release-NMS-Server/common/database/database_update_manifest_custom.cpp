@@ -38023,4 +38023,2349 @@ VALUES
 )F278_A",
 		.content_schema_update = false,
 	},
+
+	// One mercenary per (owner, slot). The table only had PRIMARY(MercID), so two rows could
+	// claim the same slot for one owner; the index makes that fail instead of silently picking
+	// one. Existing duplicates would break this migration by design -- the shipped database has
+	// none (4 rows, 4 distinct pairs).
+	// Standalone copy: utils/sql/20261030_mercs_owned_slot_v279.sql.
+	ManifestEntry{
+		.version = 279,
+		.description = "20261030_mercs_owned_slot_unique",
+		.check = "SELECT index_name FROM information_schema.statistics WHERE table_schema = DATABASE() AND table_name = 'mercs' AND index_name = 'merc_owned_slot' LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F279_A(
+ALTER TABLE `mercs` ADD UNIQUE KEY `merc_owned_slot` (`OwnerCharacterID`,`Slot`);
+)F279_A",
+		.content_schema_update = false,
+	},
+
+	// Zone-level mercenary permission. Default 1 keeps today's behaviour for every existing
+	// row; content can now forbid mercs in a zone by setting 0. Consumed by Zone::allow_mercs
+	// and checked at hire/unsuspend (merc.cpp) and liaison spawn (npc.cpp).
+	// Standalone copy: utils/sql/20261030_zone_allow_mercs_v280.sql.
+	ManifestEntry{
+		.version = 280,
+		.description = "20261030_zone_allow_mercs",
+		.check = "SELECT column_name FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'zone' AND column_name = 'allow_mercs' LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F280_A(
+ALTER TABLE `zone` ADD COLUMN `allow_mercs` TINYINT(1) UNSIGNED NOT NULL DEFAULT 1;
+)F280_A",
+		.content_schema_update = false,
+	},
+
+	// 281: Old Man McKenzie's King of the Monsters (moors v40 monster mission,
+	// solo-only). Blightfire Moors version 40 expedition zone (v0 spawn2 rows
+	// cloned so the instance keeps the world zone's population -- wildlife
+	// stays and hunts the whelps; the real Western Moorwalker, spawn group
+	// 60299, is excluded -- the shrouded player takes his place), the Western
+	// Moorwalker 40 shroud form (race 436 basilisk, id 503 copied from the
+	// stock Basilisk Beast 40 form so it serves the stock basilisk ability
+	// kit; quest scripts call ApplyShroud(503)), the King of the Monsters
+	// task 800005 (solo-only, six devour-per-color activities), six drakkin
+	// whelps 1520001971-76 + the confused froglok 1520001977 + invisible
+	// controller 1520001970, the McKenzie's Prey faction 1520000112 whose
+	// scowl entries make moors wildlife attack the prey, and the controller
+	// spawn in moors v40 only.
+	// Standalone copy: utils/sql/20261030_mckenzie_king_of_monsters_v281.sql.
+	ManifestEntry{
+		.version = 281,
+		.description = "20261030_mckenzie_king_of_monsters",
+		.check = "SELECT id FROM spawn2 WHERE zone = 'moors' AND version = 40 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F281_A(
+-- Blightfire Moors version 40 expedition zone.
+DELETE FROM `zone` WHERE `zoneidnumber` = 395 AND `version` = 40;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 395 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 40, `long_name` = 'Blightfire Moors: King of the Monsters';
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+-- Clone every v0 spawn into version 40 except the real Western Moorwalker
+-- (spawngroup 60299): the zone keeps its population, minus the one kaiju.
+DELETE FROM `spawn2` WHERE `zone` = 'moors' AND `version` = 40;
+INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`pathgrid`,`path_when_zone_idle`,`_condition`,`cond_value`,`animation`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+SELECT `spawngroupID`,`zone`,40,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`pathgrid`,`path_when_zone_idle`,`_condition`,`cond_value`,`animation`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`
+FROM `spawn2` WHERE `zone` = 'moors' AND `version` = 0 AND `spawngroupID` <> 60299;
+
+-- Western Moorwalker 40 shroud form (id 503, race 436, hp pinned to 900 so
+-- two froglok death bursts kill): abilities come from the stock Basilisk
+-- Beast 40 form (shrouds.id 389, same progression/branch).
+DELETE FROM `shrouds` WHERE `id` = 503;
+INSERT INTO `shrouds`
+	(`id`,`name`,`progression`,`branch`,`level`,`race`,`gender`,`class`,`texture`,`helmet_texture`,`size`,`hp`,`mana`,`endurance`)
+SELECT
+	503, 'Western Moorwalker 40', `progression`, `branch`, `level`, 436, `gender`, `class`, `texture`, `helmet_texture`, 40.0,
+	900, `mana`, `endurance`
+FROM `shrouds` WHERE `id` = 389;
+
+-- King of the Monsters task: level 40+, solo-only, repeatable. Six devour
+-- activities, one per whelp color, credited only inside moors version 40.
+DELETE FROM `task_activities` WHERE `taskid` = 800005;
+DELETE FROM `tasks` WHERE `id` = 800005;
+INSERT INTO `tasks`
+	(`id`,`type`,`duration`,`duration_code`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`reward_points`,`reward_point_type`,`min_level`,`max_level`,`level_spread`,`min_players`,`max_players`,`repeatable`,`faction_reward`,`completion_emote`,`replay_timer_group`,`replay_timer_seconds`,`request_timer_group`,`request_timer_seconds`,`dz_template_id`,`lock_activity_id`,`faction_amount`,`enabled`)
+VALUES
+	(800005, 2, 300, 1, 'Old Man McKenzie''s King of the Monsters',
+	'Old Man McKenzie''s face curdles. "Drakkin. Ugly as a rockslide, can''t dance a step, mope from the cradle, and somehow every last family of them dies in some grand tragedy -- and STILL they hatch 666 whelps a brood. Sixty-six six! Who eats that many? NOBODY, that''s who. They waddle out of Crescent Reach and straight for the Plane of Knowledge stone, every litter of them." He jabs a scarred finger at the moors. "But once -- ONCE -- there was a Moorwalker in those blighted flats. Western Moorwalker. Worked himself to the bone saving the planes, saving Norrath''s eyes and feelings, and what thanks did he get? Forgotten, like the rest of us." He shoves a vial at you. "Be him. Be the monster the moors remember. You have five minutes: devour twelve whelps -- two of EVERY color -- before they touch the stone. The gold ones cheat death once; the black ones wear a harmstring; the blue and white ones are drunk on their own phase tricks. And whatever you do, do NOT swallow the confused froglok. His passing is... explosive." Level 40 and up. Alone. This hunt is McKenzie''s alone, and no circus of helpers is invited.',
+	'The last whelp slides down. Old Man McKenzie cackles somewhere behind your eyes: "HA! Twelve! The moors remember, all right -- and so do I." A bottle of the Special Brew finds your hand.',
+	'', 0, 0, 0, 0, 0, 40, 0, 0, 1, 1, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1);
+
+INSERT INTO `task_activities`
+	(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`item_list`,`dz_switch_id`,`min_x`,`min_y`,`min_z`,`max_x`,`max_y`,`max_z`,`skill_list`,`spell_list`,`zones`,`zone_version`,`optional`,`list_group`)
+VALUES
+	(800005, 0, -1, 0, 1, 'green drakkin whelps', 1, 2, 'Devour 2 of the green whelps.', '1520001971', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0),
+	(800005, 1, -1, 0, 1, 'red drakkin whelps',   1, 2, 'Devour 2 of the red whelps.',   '1520001972', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0),
+	(800005, 2, -1, 0, 1, 'blue drakkin whelps',  1, 2, 'Devour 2 of the drunk blue whelps.',  '1520001973', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0),
+	(800005, 3, -1, 0, 1, 'white drakkin whelps', 1, 2, 'Devour 2 of the drunk white whelps.', '1520001974', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0),
+	(800005, 4, -1, 0, 1, 'gold drakkin whelps',  1, 2, 'Devour 2 of the gold whelps. The first taste always escapes -- Veeshan''s brats get up again.', '1520001975', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0),
+	(800005, 5, -1, 0, 1, 'black drakkin whelps', 1, 2, 'Devour 2 of the black whelps. Their harmstring lasts a breath -- wait it out.', '1520001976', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '395', 40, 0, 0);
+
+-- Mission cast: invisible controller, six whelp colors, the confused froglok.
+DELETE FROM `npc_types` WHERE `id` IN (1520001970,1520001971,1520001972,1520001973,1520001974,1520001975,1520001976,1520001977);
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_details`)
+VALUES
+	(1520001970,'#King_of_the_Monsters_Controller','The Moorwalker''s Legacy',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001971,'a_green_drakkin_whelp','Green',5,522,1,1,120,0,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,2,3,3,8,8,2,255,1,1),
+	(1520001972,'a_red_drakkin_whelp','Red',5,522,1,1,120,1,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,3,3,2,8,8,2,255,2,2),
+	(1520001973,'a_blue_drakkin_whelp','Drunk',5,522,1,1,120,0,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,4,3,4,8,8,2,255,3,3),
+	(1520001974,'a_white_drakkin_whelp','Drunk',5,522,1,1,120,1,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,5,3,6,8,8,2,255,4,4),
+	(1520001975,'a_gold_drakkin_whelp','Gold',5,522,1,1,120,0,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,6,3,5,8,8,2,255,5,5),
+	(1520001976,'a_black_drakkin_whelp','Black',5,522,1,1,120,1,3,255,3.0,1.40,0,0,30,50,0,0,1520000112,0,0,0,7,3,7,8,8,2,255,6,6),
+	(1520001977,'a_confused_froglok','Where am I? Who are you?',1,330,1,1,200,0,0,255,6.0,1.25,0,0,30,40,0,0,1520000112,0,0,0,0,0,0,0,0,0,255,0,0);
+
+-- McKenzie's Prey: NPC-vs-NPC aggro reads the VICTIM's npc_faction_entries,
+-- so these scowls make every moors wildlife faction hunt the whelps. The
+-- wildlife factions themselves are untouched.
+DELETE FROM `npc_faction_entries` WHERE `npc_faction_id` = 1520000112;
+DELETE FROM `npc_faction` WHERE `id` = 1520000112;
+INSERT INTO `npc_faction` (`id`,`name`,`primaryfaction`,`ignore_primary_assist`) VALUES (1520000112,'Mackenzie''s Prey',0,0);
+INSERT INTO `npc_faction_entries` (`npc_faction_id`,`faction_id`,`value`,`npc_value`,`temp`) VALUES
+	(1520000112,16,-100,-100,0),
+	(1520000112,1520000047,-100,-100,0),
+	(1520000112,1520000048,-100,-100,0),
+	(1520000112,1520000049,-100,-100,0),
+	(1520000112,1520000051,-100,-100,0),
+	(1520000112,1520000053,-100,-100,0);
+
+-- Controller spawn: moors v40 only, beside the Plane of Knowledge stone.
+DELETE FROM `spawngroup` WHERE `id` = 5004504;
+DELETE FROM `spawnentry` WHERE `spawngroupID` = 5004504;
+DELETE FROM `spawn2` WHERE `spawngroupID` = 5004504;
+INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004504,'king_of_monsters_controller_moors_40');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004504,1520001970,100);
+INSERT INTO `spawn2`
+	(`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
+VALUES
+	(5004504,'moors',40,-1340,-600,25,0,0,0);
+)F281_A",
+		.content_schema_update = false,
+	},
+
+	// 282: the Rasper collection lines. The seventy collection combines
+	// (SoF faycite/wereorc-circum/oculus chains + the six SoD theme
+	// collections), the SoD theme task reward wiring (119 tasks), two SoF
+	// reward miswire fixes and the twenty-five missing tasks (the Field of
+	// Scale set, Blunting the Spears, five Circum missions).
+	// Standalone copy: utils/sql/20261030_collections_v282.sql.
+	ManifestEntry{
+		.version = 282,
+		.description = "20261030_collections",
+		.check = "SELECT id FROM tradeskill_recipe WHERE id = 1600000000 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F282_A(
+-- v282: the Rasper collection lines (SoF faycite/circum/oculus + SoD themes).
+-- Sources: raspersrealm colCursed/colBlessed/colCircum/colOculus/miscCollection;
+-- Bonzz oculus.htm + fallen.htm for the combine chains. Every piece,
+-- intermediate, final and container item already exists in the item table;
+-- this migration adds the missing combines, wires the SoD task rewards,
+-- fixes two SoF reward miswires and authors the 20 missing SoD tasks.
+
+INSERT INTO tradeskill_recipe (id, name, tradeskill, skillneeded, trivial, nofail, replace_container, notes, must_learn, learned_by_item_id, quest, enabled) VALUES
+(1600000000, 'Cursed Obsidian Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000001, 'Blessed Celestine Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000002, 'Dull Were-Orc Knuckle Bone', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000003, 'Polished Were-Orc Knuckle Bone', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000004, 'Smooth Were-Orc Knuckle Bone', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000005, 'Worn Were-Orc Knuckle Bone', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000006, 'Normal Were-Orc Knuckle Bone', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000007, 'Were-Orc Bone Circum', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000008, 'Ancient Emerald Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000009, 'Ancient Citrine Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000010, 'Ancient Aquamarine Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000011, 'Ancient Amber Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000012, 'Ancient Sapphire Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000013, 'Ancient Garnet Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000014, 'Ancient Amethyst Faycite', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000015, 'Ancient Faycite Bone Circum (Emerald)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000016, 'Ancient Faycite Bone Circum (Citrine)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000017, 'Ancient Faycite Bone Circum (Aquamarine)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000018, 'Ancient Faycite Bone Circum (Amber)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000019, 'Ancient Faycite Bone Circum (Sapphire)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000020, 'Ancient Faycite Bone Circum (Garnet)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000021, 'Ancient Faycite Bone Circum (Amethyst)', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000022, 'Intraternal Timing Control Mechanism', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000023, 'Two Dimensional Rotational Cam Pivot', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000024, 'Three Dimensional Rotational Cam Pivot', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000025, 'Four Dimensional Spatial Pivot', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000026, 'Convex Focal Disc Mark II', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000027, 'Zeka Stabilized Rotator', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000028, 'Beza Stabilized Rotator', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000029, 'Azia Stabilized Rotator', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000030, 'Model XLII Spatial Temporal Oculus', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000031, 'Crest Upper Field', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000032, 'Heraldic Keep', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000033, 'Crest Left Field', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000034, 'Crest Right Field', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000035, 'Crest Lower Field', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000036, 'Bayle''s Heraldic Crest', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000037, 'Blood of Medicine', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000038, 'Blood of Oblivion', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000039, 'Blood of Light', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000040, 'Blood of the Fallen', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000041, 'Iksar Left Leg Bone Assembly', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000042, 'Iksar Right Leg Bone Assembly', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000043, 'Iksar Left Arm Bone Assembly', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000044, 'Iksar Right Arm Bone Assembly', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000045, 'Iksar Torso Bone Assembly', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000046, 'Baron Yosig''s Skeleton', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000047, 'Miniature Rallosian Left Bracer', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000048, 'Miniature Rallosian Right Bracer', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000049, 'Miniature Rallosian Boot', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000050, 'Miniature Rallosian Helm', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000051, 'Miniature Rallosian Gloves', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000052, 'Miniature Rallosian Vambraces', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000053, 'Miniature Rallosian Greaves', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000054, 'Miniature Rallosian Breastplate', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000055, 'Rallosian Battle Figure', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000056, 'Babel Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000057, 'Entropy Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000058, 'Turmoil Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000059, 'Chaos Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000060, 'Anarchy Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000061, 'Bedlam Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000062, 'Dark Soul Crystal', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000063, 'Timeshear Orange Moon Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000064, 'Timeshear Blue Moon Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000065, 'Timeshear Green Hexagonal Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000066, 'Timeshear Purple Octagonal Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000067, 'Timeshear Red Hexagonal Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000068, 'Timeshear Black Square Fragment', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1),
+(1600000069, 'Timeshear', 68, 0, 0, 1, 0, 'Rasper collection combine', 0, 0, 0, 1);
+
+INSERT INTO tradeskill_recipe_entries (recipe_id, item_id, successcount, failcount, componentcount, salvagecount, iscontainer) VALUES
+(1600000000, 79579, 1, 0, 0, 0, 0),
+(1600000000, 79570, 0, 0, 1, 0, 0),
+(1600000000, 79571, 0, 0, 1, 0, 0),
+(1600000000, 79572, 0, 0, 1, 0, 0),
+(1600000000, 79573, 0, 0, 1, 0, 0),
+(1600000000, 79574, 0, 0, 1, 0, 0),
+(1600000000, 79575, 0, 0, 1, 0, 0),
+(1600000000, 79576, 0, 0, 1, 0, 0),
+(1600000000, 79577, 0, 0, 1, 0, 0),
+(1600000000, 79578, 0, 0, 0, 0, 1),
+(1600000001, 79590, 1, 0, 0, 0, 0),
+(1600000001, 79580, 0, 0, 1, 0, 0),
+(1600000001, 79581, 0, 0, 1, 0, 0),
+(1600000001, 79582, 0, 0, 1, 0, 0),
+(1600000001, 79583, 0, 0, 1, 0, 0),
+(1600000001, 79584, 0, 0, 1, 0, 0),
+(1600000001, 79585, 0, 0, 1, 0, 0),
+(1600000001, 79586, 0, 0, 1, 0, 0),
+(1600000001, 79587, 0, 0, 1, 0, 0),
+(1600000001, 79588, 0, 0, 1, 0, 0),
+(1600000001, 79589, 0, 0, 0, 0, 1),
+(1600000002, 79710, 1, 0, 0, 0, 0),
+(1600000002, 79705, 0, 0, 1, 0, 0),
+(1600000002, 79699, 0, 0, 0, 0, 1),
+(1600000003, 79711, 1, 0, 0, 0, 0),
+(1600000003, 79706, 0, 0, 1, 0, 0),
+(1600000003, 79699, 0, 0, 0, 0, 1),
+(1600000004, 79712, 1, 0, 0, 0, 0),
+(1600000004, 79707, 0, 0, 1, 0, 0),
+(1600000004, 79699, 0, 0, 0, 0, 1),
+(1600000005, 79713, 1, 0, 0, 0, 0),
+(1600000005, 79708, 0, 0, 1, 0, 0),
+(1600000005, 79699, 0, 0, 0, 0, 1),
+(1600000006, 79714, 1, 0, 0, 0, 0),
+(1600000006, 79709, 0, 0, 1, 0, 0),
+(1600000006, 79699, 0, 0, 0, 0, 1),
+(1600000007, 79722, 1, 0, 0, 0, 0),
+(1600000007, 79710, 0, 0, 1, 0, 0),
+(1600000007, 79711, 0, 0, 1, 0, 0),
+(1600000007, 79712, 0, 0, 1, 0, 0),
+(1600000007, 79713, 0, 0, 1, 0, 0),
+(1600000007, 79714, 0, 0, 1, 0, 0),
+(1600000007, 79700, 0, 0, 0, 0, 1),
+(1600000008, 79715, 1, 0, 0, 0, 0),
+(1600000008, 79703, 0, 0, 1, 0, 0),
+(1600000008, 79704, 0, 0, 1, 0, 0),
+(1600000008, 79701, 0, 0, 0, 0, 1),
+(1600000009, 79716, 1, 0, 0, 0, 0),
+(1600000009, 79730, 0, 0, 1, 0, 0),
+(1600000009, 79731, 0, 0, 1, 0, 0),
+(1600000009, 79732, 0, 0, 1, 0, 0),
+(1600000009, 79701, 0, 0, 0, 0, 1),
+(1600000010, 79717, 1, 0, 0, 0, 0),
+(1600000010, 79733, 0, 0, 1, 0, 0),
+(1600000010, 79734, 0, 0, 1, 0, 0),
+(1600000010, 79735, 0, 0, 1, 0, 0),
+(1600000010, 79701, 0, 0, 0, 0, 1),
+(1600000011, 79718, 1, 0, 0, 0, 0),
+(1600000011, 79736, 0, 0, 1, 0, 0),
+(1600000011, 79737, 0, 0, 1, 0, 0),
+(1600000011, 79738, 0, 0, 1, 0, 0),
+(1600000011, 79739, 0, 0, 1, 0, 0),
+(1600000011, 79701, 0, 0, 0, 0, 1),
+(1600000012, 79719, 1, 0, 0, 0, 0),
+(1600000012, 79740, 0, 0, 1, 0, 0),
+(1600000012, 79741, 0, 0, 1, 0, 0),
+(1600000012, 79742, 0, 0, 1, 0, 0),
+(1600000012, 79701, 0, 0, 0, 0, 1),
+(1600000013, 79720, 1, 0, 0, 0, 0),
+(1600000013, 79743, 0, 0, 1, 0, 0),
+(1600000013, 79744, 0, 0, 1, 0, 0),
+(1600000013, 79745, 0, 0, 1, 0, 0),
+(1600000013, 79701, 0, 0, 0, 0, 1),
+(1600000014, 79721, 1, 0, 0, 0, 0),
+(1600000014, 79746, 0, 0, 1, 0, 0),
+(1600000014, 79747, 0, 0, 1, 0, 0),
+(1600000014, 79748, 0, 0, 1, 0, 0),
+(1600000014, 79749, 0, 0, 1, 0, 0),
+(1600000014, 79701, 0, 0, 0, 0, 1),
+(1600000015, 79723, 1, 0, 0, 0, 0),
+(1600000015, 79722, 0, 0, 1, 0, 0),
+(1600000015, 79715, 0, 0, 1, 0, 0),
+(1600000015, 79702, 0, 0, 0, 0, 1),
+(1600000016, 79724, 1, 0, 0, 0, 0),
+(1600000016, 79723, 0, 0, 1, 0, 0),
+(1600000016, 79716, 0, 0, 1, 0, 0),
+(1600000016, 79702, 0, 0, 0, 0, 1),
+(1600000017, 79725, 1, 0, 0, 0, 0),
+(1600000017, 79724, 0, 0, 1, 0, 0),
+(1600000017, 79717, 0, 0, 1, 0, 0),
+(1600000017, 79702, 0, 0, 0, 0, 1),
+(1600000018, 79726, 1, 0, 0, 0, 0),
+(1600000018, 79725, 0, 0, 1, 0, 0),
+(1600000018, 79718, 0, 0, 1, 0, 0),
+(1600000018, 79702, 0, 0, 0, 0, 1),
+(1600000019, 79727, 1, 0, 0, 0, 0),
+(1600000019, 79726, 0, 0, 1, 0, 0),
+(1600000019, 79719, 0, 0, 1, 0, 0),
+(1600000019, 79702, 0, 0, 0, 0, 1),
+(1600000020, 79728, 1, 0, 0, 0, 0),
+(1600000020, 79727, 0, 0, 1, 0, 0),
+(1600000020, 79720, 0, 0, 1, 0, 0),
+(1600000020, 79702, 0, 0, 0, 0, 1),
+(1600000021, 79729, 1, 0, 0, 0, 0),
+(1600000021, 79728, 0, 0, 1, 0, 0),
+(1600000021, 79721, 0, 0, 1, 0, 0),
+(1600000021, 79702, 0, 0, 0, 0, 1),
+(1600000022, 79782, 1, 0, 0, 0, 0),
+(1600000022, 79761, 0, 0, 1, 0, 0),
+(1600000022, 79762, 0, 0, 1, 0, 0),
+(1600000022, 79764, 0, 0, 1, 0, 0),
+(1600000022, 79765, 0, 0, 1, 0, 0),
+(1600000022, 79763, 0, 0, 1, 0, 0),
+(1600000022, 79760, 0, 0, 0, 0, 1),
+(1600000023, 79783, 1, 0, 0, 0, 0),
+(1600000023, 79767, 0, 0, 1, 0, 0),
+(1600000023, 79768, 0, 0, 1, 0, 0),
+(1600000023, 79760, 0, 0, 0, 0, 1),
+(1600000024, 79784, 1, 0, 0, 0, 0),
+(1600000024, 79783, 0, 0, 1, 0, 0),
+(1600000024, 79766, 0, 0, 1, 0, 0),
+(1600000024, 79769, 0, 0, 1, 0, 0),
+(1600000024, 79760, 0, 0, 0, 0, 1),
+(1600000025, 79788, 1, 0, 0, 0, 0),
+(1600000025, 79784, 0, 0, 1, 0, 0),
+(1600000025, 79777, 0, 0, 1, 0, 0),
+(1600000025, 79778, 0, 0, 1, 0, 0),
+(1600000025, 79760, 0, 0, 0, 0, 1),
+(1600000026, 79789, 1, 0, 0, 0, 0),
+(1600000026, 79788, 0, 0, 1, 0, 0),
+(1600000026, 79782, 0, 0, 1, 0, 0),
+(1600000026, 79760, 0, 0, 0, 0, 1),
+(1600000027, 79785, 1, 0, 0, 0, 0),
+(1600000027, 79771, 0, 0, 1, 0, 0),
+(1600000027, 79774, 0, 0, 1, 0, 0),
+(1600000027, 79779, 0, 0, 1, 0, 0),
+(1600000027, 79760, 0, 0, 0, 0, 1),
+(1600000028, 79787, 1, 0, 0, 0, 0),
+(1600000028, 79773, 0, 0, 1, 0, 0),
+(1600000028, 79776, 0, 0, 1, 0, 0),
+(1600000028, 79781, 0, 0, 1, 0, 0),
+(1600000028, 79760, 0, 0, 0, 0, 1),
+(1600000029, 79786, 1, 0, 0, 0, 0),
+(1600000029, 79772, 0, 0, 1, 0, 0),
+(1600000029, 79775, 0, 0, 1, 0, 0),
+(1600000029, 79780, 0, 0, 1, 0, 0),
+(1600000029, 79760, 0, 0, 0, 0, 1),
+(1600000030, 79790, 1, 0, 0, 0, 0),
+(1600000030, 79770, 0, 0, 1, 0, 0),
+(1600000030, 79789, 0, 0, 1, 0, 0),
+(1600000030, 79785, 0, 0, 1, 0, 0),
+(1600000030, 79786, 0, 0, 1, 0, 0),
+(1600000030, 79787, 0, 0, 1, 0, 0),
+(1600000030, 79760, 0, 0, 0, 0, 1),
+(1600000031, 42722, 1, 0, 0, 0, 0),
+(1600000031, 42700, 0, 0, 1, 0, 0),
+(1600000031, 42701, 0, 0, 1, 0, 0),
+(1600000031, 42702, 0, 0, 1, 0, 0),
+(1600000031, 42703, 0, 0, 1, 0, 0),
+(1600000031, 42704, 0, 0, 1, 0, 0),
+(1600000031, 42705, 0, 0, 1, 0, 0),
+(1600000031, 42728, 0, 0, 0, 0, 1),
+(1600000032, 42723, 1, 0, 0, 0, 0),
+(1600000032, 42706, 0, 0, 1, 0, 0),
+(1600000032, 42707, 0, 0, 1, 0, 0),
+(1600000032, 42708, 0, 0, 1, 0, 0),
+(1600000032, 42709, 0, 0, 1, 0, 0),
+(1600000032, 42710, 0, 0, 1, 0, 0),
+(1600000032, 42712, 0, 0, 1, 0, 0),
+(1600000032, 42728, 0, 0, 0, 0, 1),
+(1600000033, 42724, 1, 0, 0, 0, 0),
+(1600000033, 42711, 0, 0, 1, 0, 0),
+(1600000033, 42713, 0, 0, 1, 0, 0),
+)F282_A" R"F282_B(
+(1600000033, 42714, 0, 0, 1, 0, 0),
+(1600000033, 42717, 0, 0, 1, 0, 0),
+(1600000033, 42728, 0, 0, 0, 0, 1),
+(1600000034, 42725, 1, 0, 0, 0, 0),
+(1600000034, 42715, 0, 0, 1, 0, 0),
+(1600000034, 42716, 0, 0, 1, 0, 0),
+(1600000034, 42720, 0, 0, 1, 0, 0),
+(1600000034, 42721, 0, 0, 1, 0, 0),
+(1600000034, 42728, 0, 0, 0, 0, 1),
+(1600000035, 42726, 1, 0, 0, 0, 0),
+(1600000035, 42718, 0, 0, 1, 0, 0),
+(1600000035, 42719, 0, 0, 1, 0, 0),
+(1600000035, 42728, 0, 0, 0, 0, 1),
+(1600000036, 42727, 1, 0, 0, 0, 0),
+(1600000036, 42722, 0, 0, 1, 0, 0),
+(1600000036, 42723, 0, 0, 1, 0, 0),
+(1600000036, 42724, 0, 0, 1, 0, 0),
+(1600000036, 42725, 0, 0, 1, 0, 0),
+(1600000036, 42726, 0, 0, 1, 0, 0),
+(1600000036, 42729, 0, 0, 0, 0, 1),
+(1600000037, 42754, 1, 0, 0, 0, 0),
+(1600000037, 42745, 0, 0, 1, 0, 0),
+(1600000037, 42749, 0, 0, 1, 0, 0),
+(1600000037, 42748, 0, 0, 1, 0, 0),
+(1600000037, 42747, 0, 0, 1, 0, 0),
+(1600000037, 42746, 0, 0, 1, 0, 0),
+(1600000037, 42744, 0, 0, 1, 0, 0),
+(1600000037, 42751, 0, 0, 1, 0, 0),
+(1600000037, 42750, 0, 0, 1, 0, 0),
+(1600000037, 42756, 0, 0, 0, 0, 1),
+(1600000038, 42753, 1, 0, 0, 0, 0),
+(1600000038, 42743, 0, 0, 1, 0, 0),
+(1600000038, 42741, 0, 0, 1, 0, 0),
+(1600000038, 42737, 0, 0, 1, 0, 0),
+(1600000038, 42739, 0, 0, 1, 0, 0),
+(1600000038, 42742, 0, 0, 1, 0, 0),
+(1600000038, 42738, 0, 0, 1, 0, 0),
+(1600000038, 42740, 0, 0, 1, 0, 0),
+(1600000038, 42756, 0, 0, 0, 0, 1),
+(1600000039, 42752, 1, 0, 0, 0, 0),
+(1600000039, 42730, 0, 0, 1, 0, 0),
+(1600000039, 42731, 0, 0, 1, 0, 0),
+(1600000039, 42732, 0, 0, 1, 0, 0),
+(1600000039, 42735, 0, 0, 1, 0, 0),
+(1600000039, 42736, 0, 0, 1, 0, 0),
+(1600000039, 42733, 0, 0, 1, 0, 0),
+(1600000039, 42734, 0, 0, 1, 0, 0),
+(1600000039, 42756, 0, 0, 0, 0, 1),
+(1600000040, 42755, 1, 0, 0, 0, 0),
+(1600000040, 42754, 0, 0, 1, 0, 0),
+(1600000040, 42753, 0, 0, 1, 0, 0),
+(1600000040, 42752, 0, 0, 1, 0, 0),
+(1600000040, 42756, 0, 0, 0, 0, 1),
+(1600000041, 42776, 1, 0, 0, 0, 0),
+(1600000041, 42757, 0, 0, 1, 0, 0),
+(1600000041, 42760, 0, 0, 1, 0, 0),
+(1600000041, 42774, 0, 0, 1, 0, 0),
+(1600000041, 42782, 0, 0, 0, 0, 1),
+(1600000042, 42777, 1, 0, 0, 0, 0),
+(1600000042, 42758, 0, 0, 1, 0, 0),
+(1600000042, 42761, 0, 0, 1, 0, 0),
+(1600000042, 42775, 0, 0, 1, 0, 0),
+(1600000042, 42782, 0, 0, 0, 0, 1),
+(1600000043, 42778, 1, 0, 0, 0, 0),
+(1600000043, 42765, 0, 0, 1, 0, 0),
+(1600000043, 42762, 0, 0, 1, 0, 0),
+(1600000043, 42770, 0, 0, 1, 0, 0),
+(1600000043, 42782, 0, 0, 0, 0, 1),
+(1600000044, 42780, 1, 0, 0, 0, 0),
+(1600000044, 42766, 0, 0, 1, 0, 0),
+(1600000044, 42768, 0, 0, 1, 0, 0),
+(1600000044, 42771, 0, 0, 1, 0, 0),
+(1600000044, 42782, 0, 0, 0, 0, 1),
+(1600000045, 42779, 1, 0, 0, 0, 0),
+(1600000045, 42763, 0, 0, 1, 0, 0),
+(1600000045, 42764, 0, 0, 1, 0, 0),
+(1600000045, 42772, 0, 0, 1, 0, 0),
+(1600000045, 42773, 0, 0, 1, 0, 0),
+(1600000045, 42782, 0, 0, 0, 0, 1),
+(1600000046, 42781, 1, 0, 0, 0, 0),
+(1600000046, 42776, 0, 0, 1, 0, 0),
+(1600000046, 42777, 0, 0, 1, 0, 0),
+(1600000046, 42778, 0, 0, 1, 0, 0),
+(1600000046, 42780, 0, 0, 1, 0, 0),
+(1600000046, 42779, 0, 0, 1, 0, 0),
+(1600000046, 42759, 0, 0, 1, 0, 0),
+(1600000046, 42769, 0, 0, 1, 0, 0),
+(1600000046, 42767, 0, 0, 1, 0, 0),
+(1600000046, 42782, 0, 0, 0, 0, 1),
+(1600000047, 42811, 1, 0, 0, 0, 0),
+(1600000047, 42783, 0, 0, 1, 0, 0),
+(1600000047, 42784, 0, 0, 1, 0, 0),
+(1600000047, 42785, 0, 0, 1, 0, 0),
+(1600000047, 42820, 0, 0, 0, 0, 1),
+(1600000048, 42812, 1, 0, 0, 0, 0),
+(1600000048, 42786, 0, 0, 1, 0, 0),
+(1600000048, 42787, 0, 0, 1, 0, 0),
+(1600000048, 42788, 0, 0, 1, 0, 0),
+(1600000048, 42820, 0, 0, 0, 0, 1),
+(1600000049, 42813, 1, 0, 0, 0, 0),
+(1600000049, 42789, 0, 0, 1, 0, 0),
+(1600000049, 42790, 0, 0, 1, 0, 0),
+(1600000049, 42791, 0, 0, 1, 0, 0),
+(1600000049, 42820, 0, 0, 0, 0, 1),
+(1600000050, 42814, 1, 0, 0, 0, 0),
+(1600000050, 42792, 0, 0, 1, 0, 0),
+(1600000050, 42793, 0, 0, 1, 0, 0),
+(1600000050, 42794, 0, 0, 1, 0, 0),
+(1600000050, 42820, 0, 0, 0, 0, 1),
+(1600000051, 42815, 1, 0, 0, 0, 0),
+(1600000051, 42795, 0, 0, 1, 0, 0),
+(1600000051, 42796, 0, 0, 1, 0, 0),
+(1600000051, 42797, 0, 0, 1, 0, 0),
+(1600000051, 42798, 0, 0, 1, 0, 0),
+(1600000051, 42820, 0, 0, 0, 0, 1),
+(1600000052, 42816, 1, 0, 0, 0, 0),
+(1600000052, 42799, 0, 0, 1, 0, 0),
+(1600000052, 42800, 0, 0, 1, 0, 0),
+(1600000052, 42801, 0, 0, 1, 0, 0),
+(1600000052, 42802, 0, 0, 1, 0, 0),
+(1600000052, 42820, 0, 0, 0, 0, 1),
+(1600000053, 42817, 1, 0, 0, 0, 0),
+(1600000053, 42803, 0, 0, 1, 0, 0),
+(1600000053, 42804, 0, 0, 1, 0, 0),
+(1600000053, 42805, 0, 0, 1, 0, 0),
+(1600000053, 42806, 0, 0, 1, 0, 0),
+(1600000053, 42820, 0, 0, 0, 0, 1),
+(1600000054, 42818, 1, 0, 0, 0, 0),
+(1600000054, 42807, 0, 0, 1, 0, 0),
+(1600000054, 42808, 0, 0, 1, 0, 0),
+(1600000054, 42809, 0, 0, 1, 0, 0),
+(1600000054, 42810, 0, 0, 1, 0, 0),
+(1600000054, 42820, 0, 0, 0, 0, 1),
+(1600000055, 42819, 1, 0, 0, 0, 0),
+(1600000055, 42811, 0, 0, 1, 0, 0),
+(1600000055, 42812, 0, 0, 1, 0, 0),
+(1600000055, 42813, 0, 0, 1, 0, 0),
+(1600000055, 42814, 0, 0, 1, 0, 0),
+(1600000055, 42815, 0, 0, 1, 0, 0),
+(1600000055, 42816, 0, 0, 1, 0, 0),
+(1600000055, 42817, 0, 0, 1, 0, 0),
+(1600000055, 42818, 0, 0, 1, 0, 0),
+(1600000055, 42821, 0, 0, 0, 0, 1),
+(1600000056, 42844, 1, 0, 0, 0, 0),
+(1600000056, 42822, 0, 0, 1, 0, 0),
+(1600000056, 42823, 0, 0, 1, 0, 0),
+(1600000056, 42824, 0, 0, 1, 0, 0),
+(1600000056, 42825, 0, 0, 1, 0, 0),
+(1600000056, 42851, 0, 0, 0, 0, 1),
+(1600000057, 42845, 1, 0, 0, 0, 0),
+(1600000057, 42826, 0, 0, 1, 0, 0),
+(1600000057, 42827, 0, 0, 1, 0, 0),
+(1600000057, 42828, 0, 0, 1, 0, 0),
+(1600000057, 42829, 0, 0, 1, 0, 0),
+(1600000057, 42851, 0, 0, 0, 0, 1),
+(1600000058, 42846, 1, 0, 0, 0, 0),
+(1600000058, 42830, 0, 0, 1, 0, 0),
+(1600000058, 42831, 0, 0, 1, 0, 0),
+(1600000058, 42832, 0, 0, 1, 0, 0),
+(1600000058, 42833, 0, 0, 1, 0, 0),
+(1600000058, 42851, 0, 0, 0, 0, 1),
+(1600000059, 42847, 1, 0, 0, 0, 0),
+(1600000059, 42834, 0, 0, 1, 0, 0),
+(1600000059, 42835, 0, 0, 1, 0, 0),
+(1600000059, 42836, 0, 0, 1, 0, 0),
+(1600000059, 42837, 0, 0, 1, 0, 0),
+(1600000059, 42851, 0, 0, 0, 0, 1),
+(1600000060, 42848, 1, 0, 0, 0, 0),
+(1600000060, 42838, 0, 0, 1, 0, 0),
+(1600000060, 42839, 0, 0, 1, 0, 0),
+(1600000060, 42840, 0, 0, 1, 0, 0),
+(1600000060, 42851, 0, 0, 0, 0, 1),
+(1600000061, 42849, 1, 0, 0, 0, 0),
+(1600000061, 42841, 0, 0, 1, 0, 0),
+(1600000061, 42842, 0, 0, 1, 0, 0),
+(1600000061, 42843, 0, 0, 1, 0, 0),
+(1600000061, 42851, 0, 0, 0, 0, 1),
+(1600000062, 42850, 1, 0, 0, 0, 0),
+(1600000062, 42844, 0, 0, 1, 0, 0),
+(1600000062, 42845, 0, 0, 1, 0, 0),
+(1600000062, 42846, 0, 0, 1, 0, 0),
+(1600000062, 42847, 0, 0, 1, 0, 0),
+(1600000062, 42848, 0, 0, 1, 0, 0),
+(1600000062, 42849, 0, 0, 1, 0, 0),
+(1600000062, 42851, 0, 0, 0, 0, 1),
+(1600000063, 42878, 1, 0, 0, 0, 0),
+(1600000063, 42852, 0, 0, 1, 0, 0),
+(1600000063, 42853, 0, 0, 1, 0, 0),
+(1600000063, 42885, 0, 0, 0, 0, 1),
+(1600000064, 42879, 1, 0, 0, 0, 0),
+(1600000064, 42854, 0, 0, 1, 0, 0),
+(1600000064, 42855, 0, 0, 1, 0, 0),
+(1600000064, 42885, 0, 0, 0, 0, 1),
+(1600000065, 42880, 1, 0, 0, 0, 0),
+(1600000065, 42856, 0, 0, 1, 0, 0),
+(1600000065, 42857, 0, 0, 1, 0, 0),
+(1600000065, 42858, 0, 0, 1, 0, 0),
+(1600000065, 42859, 0, 0, 1, 0, 0),
+(1600000065, 42860, 0, 0, 1, 0, 0),
+(1600000065, 42885, 0, 0, 0, 0, 1),
+(1600000066, 42881, 1, 0, 0, 0, 0),
+(1600000066, 42861, 0, 0, 1, 0, 0),
+(1600000066, 42862, 0, 0, 1, 0, 0),
+(1600000066, 42863, 0, 0, 1, 0, 0),
+(1600000066, 42864, 0, 0, 1, 0, 0),
+(1600000066, 42865, 0, 0, 1, 0, 0),
+(1600000066, 42866, 0, 0, 1, 0, 0),
+(1600000066, 42867, 0, 0, 1, 0, 0),
+(1600000066, 42868, 0, 0, 1, 0, 0),
+(1600000066, 42885, 0, 0, 0, 0, 1),
+(1600000067, 42882, 1, 0, 0, 0, 0),
+(1600000067, 42869, 0, 0, 1, 0, 0),
+(1600000067, 42870, 0, 0, 1, 0, 0),
+(1600000067, 42871, 0, 0, 1, 0, 0),
+(1600000067, 42872, 0, 0, 1, 0, 0),
+(1600000067, 42873, 0, 0, 1, 0, 0),
+(1600000067, 42885, 0, 0, 0, 0, 1),
+(1600000068, 42883, 1, 0, 0, 0, 0),
+(1600000068, 42874, 0, 0, 1, 0, 0),
+(1600000068, 42875, 0, 0, 1, 0, 0),
+(1600000068, 42876, 0, 0, 1, 0, 0),
+(1600000068, 42877, 0, 0, 1, 0, 0),
+(1600000068, 42885, 0, 0, 0, 0, 1),
+(1600000069, 42884, 1, 0, 0, 0, 0),
+(1600000069, 42878, 0, 0, 1, 0, 0),
+(1600000069, 42879, 0, 0, 1, 0, 0),
+(1600000069, 42880, 0, 0, 1, 0, 0),
+(1600000069, 42881, 0, 0, 1, 0, 0),
+(1600000069, 42882, 0, 0, 1, 0, 0),
+(1600000069, 42883, 0, 0, 1, 0, 0),
+(1600000069, 42886, 0, 0, 0, 0, 1);
+
+-- Four SoF task rewards were miswired onto duplicates (Rasper colOculus +
+-- colCircum): Breaking Things Down grants the Sidewards Axis Spring IV,
+-- Disable the Recycler the second Azia Clockwise Capping Rotator, and the
+-- Intelligence Gathering / Cut Off the Head pair sat one step past the
+-- Sapphire/Garnet boundary.
+UPDATE tasks SET reward_id_list = '79781' WHERE id = 300020;
+UPDATE tasks SET reward_id_list = '79772' WHERE id = 300030;
+UPDATE tasks SET reward_id_list = '79742' WHERE id = 301107;
+UPDATE tasks SET reward_id_list = '79743' WHERE id = 301108;
+
+-- The Bloodbind Cauldron (Silla Herald's container on live) was the one
+-- collection container with no purchase source; slot it onto the PoK
+-- restock list beside the rest of the collection containers.
+INSERT INTO merchantlist (merchantid, slot, item, faction_required) VALUES (999999, 780, 42756, 0);
+
+-- SoD theme tasks existed with empty reward_id_list; each now pays its
+-- collection piece (Rasper miscCollection.html).
+UPDATE tasks SET reward_id_list = '42700' WHERE id = 303070;
+UPDATE tasks SET reward_id_list = '42701' WHERE id = 303107;
+UPDATE tasks SET reward_id_list = '42702' WHERE id = 303108;
+UPDATE tasks SET reward_id_list = '42703' WHERE id = 303116;
+UPDATE tasks SET reward_id_list = '42704' WHERE id = 303109;
+UPDATE tasks SET reward_id_list = '42705' WHERE id = 303106;
+UPDATE tasks SET reward_id_list = '42707' WHERE id = 303111;
+UPDATE tasks SET reward_id_list = '42710' WHERE id = 303114;
+UPDATE tasks SET reward_id_list = '42706' WHERE id = 303110;
+UPDATE tasks SET reward_id_list = '42712' WHERE id = 303115;
+UPDATE tasks SET reward_id_list = '42708' WHERE id = 303112;
+UPDATE tasks SET reward_id_list = '42709' WHERE id = 303113;
+UPDATE tasks SET reward_id_list = '42713' WHERE id = 303100;
+UPDATE tasks SET reward_id_list = '42714' WHERE id = 303101;
+UPDATE tasks SET reward_id_list = '42711' WHERE id = 303105;
+UPDATE tasks SET reward_id_list = '42717' WHERE id = 303102;
+UPDATE tasks SET reward_id_list = '42718' WHERE id = 303104;
+UPDATE tasks SET reward_id_list = '42719' WHERE id = 303119;
+UPDATE tasks SET reward_id_list = '42720' WHERE id = 303118;
+UPDATE tasks SET reward_id_list = '42721' WHERE id = 303117;
+UPDATE tasks SET reward_id_list = '42715' WHERE id = 303000;
+UPDATE tasks SET reward_id_list = '42716' WHERE id = 303001;
+UPDATE tasks SET reward_id_list = '42730' WHERE id = 303124;
+UPDATE tasks SET reward_id_list = '42731' WHERE id = 303121;
+UPDATE tasks SET reward_id_list = '42732' WHERE id = 303120;
+UPDATE tasks SET reward_id_list = '42733' WHERE id = 303122;
+UPDATE tasks SET reward_id_list = '42734' WHERE id = 303123;
+UPDATE tasks SET reward_id_list = '42735' WHERE id = 303074;
+UPDATE tasks SET reward_id_list = '42736' WHERE id = 303075;
+UPDATE tasks SET reward_id_list = '42737' WHERE id = 303130;
+UPDATE tasks SET reward_id_list = '42738' WHERE id = 303133;
+UPDATE tasks SET reward_id_list = '42739' WHERE id = 303135;
+UPDATE tasks SET reward_id_list = '42740' WHERE id = 303131;
+UPDATE tasks SET reward_id_list = '42741' WHERE id = 303076;
+UPDATE tasks SET reward_id_list = '42742' WHERE id = 303132;
+UPDATE tasks SET reward_id_list = '42743' WHERE id = 303134;
+UPDATE tasks SET reward_id_list = '42744' WHERE id = 303141;
+UPDATE tasks SET reward_id_list = '42745' WHERE id = 303142;
+UPDATE tasks SET reward_id_list = '42746' WHERE id = 303143;
+UPDATE tasks SET reward_id_list = '42747' WHERE id = 303144;
+UPDATE tasks SET reward_id_list = '42748' WHERE id = 303145;
+UPDATE tasks SET reward_id_list = '42749' WHERE id = 303146;
+UPDATE tasks SET reward_id_list = '42750' WHERE id = 303125;
+UPDATE tasks SET reward_id_list = '42751' WHERE id = 303126;
+UPDATE tasks SET reward_id_list = '42783' WHERE id = 303148;
+UPDATE tasks SET reward_id_list = '42784' WHERE id = 303156;
+UPDATE tasks SET reward_id_list = '42785' WHERE id = 303149;
+UPDATE tasks SET reward_id_list = '42786' WHERE id = 303157;
+UPDATE tasks SET reward_id_list = '42787' WHERE id = 303152;
+UPDATE tasks SET reward_id_list = '42788' WHERE id = 303154;
+UPDATE tasks SET reward_id_list = '42789' WHERE id = 303155;
+UPDATE tasks SET reward_id_list = '42790' WHERE id = 303150;
+UPDATE tasks SET reward_id_list = '42791' WHERE id = 303158;
+UPDATE tasks SET reward_id_list = '42792' WHERE id = 303153;
+UPDATE tasks SET reward_id_list = '42793' WHERE id = 303159;
+UPDATE tasks SET reward_id_list = '42794' WHERE id = 303151;
+UPDATE tasks SET reward_id_list = '42795' WHERE id = 303147;
+UPDATE tasks SET reward_id_list = '42796' WHERE id = 303031;
+UPDATE tasks SET reward_id_list = '42797' WHERE id = 303034;
+UPDATE tasks SET reward_id_list = '42798' WHERE id = 303035;
+UPDATE tasks SET reward_id_list = '42799' WHERE id = 303164;
+UPDATE tasks SET reward_id_list = '42800' WHERE id = 303165;
+UPDATE tasks SET reward_id_list = '42801' WHERE id = 303166;
+UPDATE tasks SET reward_id_list = '42802' WHERE id = 303169;
+UPDATE tasks SET reward_id_list = '42803' WHERE id = 303170;
+UPDATE tasks SET reward_id_list = '42804' WHERE id = 303171;
+UPDATE tasks SET reward_id_list = '42805' WHERE id = 303030;
+UPDATE tasks SET reward_id_list = '42806' WHERE id = 303032;
+UPDATE tasks SET reward_id_list = '42807' WHERE id = 303033;
+UPDATE tasks SET reward_id_list = '42808' WHERE id = 303167;
+UPDATE tasks SET reward_id_list = '42809' WHERE id = 303168;
+UPDATE tasks SET reward_id_list = '42810' WHERE id = 303163;
+UPDATE tasks SET reward_id_list = '42822' WHERE id = 303175;
+UPDATE tasks SET reward_id_list = '42823' WHERE id = 303176;
+UPDATE tasks SET reward_id_list = '42824' WHERE id = 303177;
+UPDATE tasks SET reward_id_list = '42825' WHERE id = 303172;
+UPDATE tasks SET reward_id_list = '42826' WHERE id = 303174;
+)F282_B" R"F282_C(
+UPDATE tasks SET reward_id_list = '42827' WHERE id = 303179;
+UPDATE tasks SET reward_id_list = '42828' WHERE id = 303173;
+UPDATE tasks SET reward_id_list = '42829' WHERE id = 303178;
+UPDATE tasks SET reward_id_list = '42830' WHERE id = 303180;
+UPDATE tasks SET reward_id_list = '42832' WHERE id = 303181;
+UPDATE tasks SET reward_id_list = '42833' WHERE id = 303183;
+UPDATE tasks SET reward_id_list = '42834' WHERE id = 303186;
+UPDATE tasks SET reward_id_list = '42835' WHERE id = 303182;
+UPDATE tasks SET reward_id_list = '42836' WHERE id = 303184;
+UPDATE tasks SET reward_id_list = '42837' WHERE id = 303185;
+UPDATE tasks SET reward_id_list = '42838' WHERE id = 303042;
+UPDATE tasks SET reward_id_list = '42839' WHERE id = 303043;
+UPDATE tasks SET reward_id_list = '42840' WHERE id = 303044;
+UPDATE tasks SET reward_id_list = '42841' WHERE id = 303045;
+UPDATE tasks SET reward_id_list = '42842' WHERE id = 303046;
+UPDATE tasks SET reward_id_list = '42843' WHERE id = 303047;
+UPDATE tasks SET reward_id_list = '42861' WHERE id = 303071;
+UPDATE tasks SET reward_id_list = '42862' WHERE id = 303072;
+UPDATE tasks SET reward_id_list = '42863' WHERE id = 303073;
+UPDATE tasks SET reward_id_list = '42864' WHERE id = 303080;
+UPDATE tasks SET reward_id_list = '42865' WHERE id = 303005;
+UPDATE tasks SET reward_id_list = '42866' WHERE id = 303081;
+UPDATE tasks SET reward_id_list = '42867' WHERE id = 303002;
+UPDATE tasks SET reward_id_list = '42868' WHERE id = 303003;
+UPDATE tasks SET reward_id_list = '42852' WHERE id = 303011;
+UPDATE tasks SET reward_id_list = '42853' WHERE id = 303012;
+UPDATE tasks SET reward_id_list = '42869' WHERE id = 303022;
+UPDATE tasks SET reward_id_list = '42870' WHERE id = 303021;
+UPDATE tasks SET reward_id_list = '42871' WHERE id = 303024;
+UPDATE tasks SET reward_id_list = '42872' WHERE id = 303020;
+UPDATE tasks SET reward_id_list = '42873' WHERE id = 303023;
+UPDATE tasks SET reward_id_list = '42856' WHERE id = 303160;
+UPDATE tasks SET reward_id_list = '42857' WHERE id = 303161;
+UPDATE tasks SET reward_id_list = '42858' WHERE id = 303162;
+UPDATE tasks SET reward_id_list = '42859' WHERE id = 303077;
+UPDATE tasks SET reward_id_list = '42860' WHERE id = 303036;
+UPDATE tasks SET reward_id_list = '42854' WHERE id = 303041;
+UPDATE tasks SET reward_id_list = '42855' WHERE id = 303040;
+UPDATE tasks SET reward_id_list = '42874' WHERE id = 303048;
+UPDATE tasks SET reward_id_list = '42875' WHERE id = 303049;
+UPDATE tasks SET reward_id_list = '42876' WHERE id = 303050;
+UPDATE tasks SET reward_id_list = '42877' WHERE id = 303051;
+
+-- Twenty-five missing tasks: the Field of Scale set (Baron Yosig's Skeleton
+-- pieces), Blunting the Spears (Turmoil Crystal Fragment) and the five
+-- Circum missions adapted to the Mechamatic Guardian's live population.
+-- Kill targets verified against live spawns.
+INSERT INTO tasks (id, type, duration, duration_code, title, description, reward_text, reward_id_list, cash_reward, exp_reward, reward_method, reward_points, reward_point_type, min_level, max_level, level_spread, min_players, max_players, repeatable, faction_reward, completion_emote, replay_timer_group, replay_timer_seconds, request_timer_group, request_timer_seconds, dz_template_id, lock_activity_id, faction_amount, enabled) VALUES
+(303200, 0, 0, 0, 'Drake Scourge', 'Tynoc wants the sokokar drakes that harry the Burynai caravans culled.', 'Experience', '42757', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303201, 0, 0, 0, 'Broodling in the Hand', 'Tynoc wants hands on a sokokar brood before the war reaches them first.', 'Experience', '42760', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303202, 0, 0, 0, 'Sarnak Recovery (Burynai)', 'The Burynai ask the Sebilian trackers shadowing their digs to be dealt with.', 'Experience', '42774', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303203, 0, 0, 0, 'Idle Hands', 'The sarnak conscripts dig where the iksar dead lie. Tynoc wants the shovels stopped.', 'Experience', '42765', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303204, 0, 0, 0, 'Supplies', 'Intercept the Sebilian messengers carrying the siege ledgers.', 'Experience', '42762', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303205, 0, 0, 0, 'Parley with Ganak', 'Ganak''s parley requires the Sebilian scaleblades broken first.', 'Experience', '42770', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303206, 0, 0, 0, 'Dark Sentry', 'Take out the Sebilian commanders directing the night sentries.', 'Experience', '42758', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303207, 0, 0, 0, 'The Grudge', 'The racnars have taken to the iksar dead. Settle the grudge.', 'Experience', '42761', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303208, 0, 0, 0, 'Sarnak Recovery (Kurn)', 'Recover what the scaled guardians of Kurn''s Tower carry.', 'Experience', '42775', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303209, 0, 0, 0, 'Evil Afoot', 'The bonecasters raise the war dead after dark. End the casting.', 'Experience', '42766', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303210, 0, 0, 0, 'Raising Cabilis', 'Raising Cabilis begins with breaking the Sebilian crusader line.', 'Experience', '42768', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303211, 0, 0, 0, 'Food Supplies', 'The bloodclaws raid the Burynai grain carts. Stop the raids.', 'Experience', '42771', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303212, 0, 0, 0, 'The Grand Illusion', 'The hierophants weave a grand illusion over the field. Tear it down.', 'Experience', '42763', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303213, 0, 0, 0, 'Purify the Body', 'Purify the field by putting the Sebilian liches down.', 'Experience', '42764', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303214, 0, 0, 0, 'Cutting Off The Arms', 'Cut the arms off the Sebilian war machine, starting with its patrol leaders.', 'Experience', '42772', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303215, 0, 0, 0, 'Sarnak Recovery (Sokokar)', 'The escaped sarnak know the sokokar runs. Catch them before they talk.', 'Experience', '42773', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303216, 0, 0, 0, 'Havoc in the Hatchery', 'Wreak havoc in the Kaesora hatchery before the brood matures.', 'Experience', '42759', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303217, 0, 0, 0, 'Lost and Found', 'Recover what the corrupt defilers looted from the hatchery vaults.', 'Experience', '42769', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303218, 0, 0, 0, 'The Skull of the Ancient', 'The Skull of the Ancient lies with the tower guardians of Kurn''s Tower.', 'Experience', '42767', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303219, 0, 0, 0, 'Blunting the Spears', 'Herald Argoth wants the discordian kyv archers blunted before they loose on the camp.', 'Experience', '42831', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303220, 0, 0, 0, 'Disposing of Unwanted Things', 'Overvolt wants the steamwork blasters, reavers and repairers cleared out of the Guardian.', 'Experience', '79730', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303221, 0, 0, 0, 'Engine Room Schematics', 'Overvolt needs the shock steamworks swept while he copies the engine schematics.', 'Experience', '79731', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303222, 0, 0, 0, 'Security? Yeah Right', 'Overvolt doubts the Guardian''s security detail. Prove it -- break the steam sentinels.', 'Experience', '79732', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303223, 0, 0, 0, 'Tracking the Steamworks', 'Overvolt tracks the Guardian''s patrol routes. Thin the sweepers and dusters, then drop Scout Clockwork Arakyd.', 'Experience', '79733', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1),
+(303224, 0, 0, 0, 'Mechamatic Memory Manipulation', 'Overvolt wants the shockblasters that guard the memory banks pulled apart.', 'Experience', '79734', 0, 250000, 0, 0, 0, 75, 0, 0, 0, 0, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1);
+
+INSERT INTO task_activities (taskid, activityid, req_activity_id, step, activitytype, target_name, goalmethod, goalcount, description_override, npc_match_list, item_id_list, item_list, dz_switch_id, min_x, min_y, min_z, max_x, max_y, max_z, skill_list, spell_list, zones, zone_version, optional, list_group) VALUES
+(303200, 0, -1, 1, 2, 'the sokokar flocks', 0, 10, 'Slay 10 of the sokokar flocks', '452000|452001|452004|452006|452009|452279', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303200, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303201, 0, -1, 1, 2, 'the sokokar broods', 0, 10, 'Slay 10 of the sokokar broods', '452151|452258', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303201, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303202, 0, -1, 1, 2, 'the Sebilian trackers', 0, 12, 'Slay 12 of the Sebilian trackers', '452021|452024|452026', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303202, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303203, 0, -1, 1, 2, 'the sarnak conscripts', 0, 12, 'Slay 12 of the sarnak conscripts', '452018|452041', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303203, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303204, 0, -1, 1, 2, 'the Sebilian messengers', 0, 10, 'Slay 10 of the Sebilian messengers', '452211|452282|452286', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303204, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303205, 0, -1, 1, 2, 'the Sebilian scaleblades', 0, 12, 'Slay 12 of the Sebilian scaleblades', '452058|452081|452107|452115|452141|452174|452209|452224|452244|452247|452248|452250|452252|452261|452265|452271|452273', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303205, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303206, 0, -1, 1, 2, 'the Sebilian commanders', 0, 8, 'Slay 8 of the Sebilian commanders', '452037|452066|452084|452255|452259|452267', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303206, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303207, 0, -1, 1, 2, 'the racnars', 0, 10, 'Slay 10 of the racnars', '452059|452099', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303207, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303208, 0, -1, 1, 2, 'the scaled guardians', 0, 12, 'Slay 12 of the scaled guardians', '455001|455004|455050', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldkurn', -1, 0, 0),
+(303208, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303209, 0, -1, 1, 2, 'the Sebilian bonecasters', 0, 12, 'Slay 12 of the Sebilian bonecasters', '452017|452039|452042|452051|452055|452092|452097|452098|452109|452184|452186|452197|452219|452225|452231|452234|452238|452241|452243|452266|452270|452274|452275|452277|452278', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303209, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303210, 0, -1, 1, 2, 'the Sebilian crusaders', 0, 12, 'Slay 12 of the Sebilian crusaders', '452025|452030|452048|452164|452165|452166|452168|452172|452173|452175|452176', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303210, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303211, 0, -1, 1, 2, 'the Sebilian bloodclaws', 0, 10, 'Slay 10 of the Sebilian bloodclaws', '452038|452049|452050|452227', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303211, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303212, 0, -1, 1, 2, 'the Sebilian hierophants', 0, 10, 'Slay 10 of the Sebilian hierophants', '452032|452196', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303212, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303213, 0, -1, 1, 2, 'the Sebilian liches', 0, 10, 'Slay 10 of the Sebilian liches', '452034|452190|452223', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303213, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303214, 0, -1, 1, 2, 'the Sebilian patrol leaders', 0, 8, 'Slay 8 of the Sebilian patrol leaders', '452045', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+)F282_C" R"F282_D(
+(303214, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303215, 0, -1, 1, 2, 'the escaped sarnak', 0, 10, 'Slay 10 of the escaped sarnak', '452019|452239', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303215, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303216, 0, -1, 1, 2, 'the sokokar broodlings', 0, 10, 'Slay 10 of the sokokar broodlings', '454039', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldkaesorab', -1, 0, 0),
+(303216, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303217, 0, -1, 1, 2, 'the corrupt defilers', 0, 10, 'Slay 10 of the corrupt defilers', '454029|454033|454047', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldkaesorab', -1, 0, 0),
+(303217, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303218, 0, -1, 1, 2, 'the tower guardians', 0, 10, 'Slay 10 of the tower guardians', '455021|455023|455027|455040|455053|455055|455061|455063|455070|455073|455076|455078|455081|455127|455131|455132|455135|455137|455138|455145', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldkurn', -1, 0, 0),
+(303218, 1, -1, 2, 4, 'Tynoc, Herald of Scale', 0, 1, 'Return to Tynoc, Herald of Scale', '452153', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldfieldofbone', -1, 0, 0),
+(303219, 0, -1, 1, 2, 'the discordian kyv', 0, 15, 'Slay 15 of the discordian kyv', '472010|472012|472014|472016|472035', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldbloodfield', -1, 0, 0),
+(303219, 1, -1, 2, 4, 'Herald Argoth', 0, 1, 'Return to Herald Argoth', '472002', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'oldbloodfield', -1, 0, 0),
+(303220, 0, -1, 1, 2, 'the steamwork laborers', 0, 25, 'Slay 25 of the steamwork laborers', '447004|447009|447011|447002|447007|447022|447003|447008|447013', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'guardian', -1, 0, 0),
+(303220, 1, -1, 2, 4, 'Overvolt Rigster the IV', 0, 1, 'Return to Overvolt Rigster the IV', '442008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'dragonscale', -1, 0, 0),
+(303221, 0, -1, 1, 2, 'the shock steamworks', 0, 25, 'Slay 25 of the shock steamworks', '447038|447053|447054|447032|447041|447046', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'guardian', -1, 0, 0),
+(303221, 1, -1, 2, 4, 'Overvolt Rigster the IV', 0, 1, 'Return to Overvolt Rigster the IV', '442008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'dragonscale', -1, 0, 0),
+(303222, 0, -1, 1, 2, 'the mechano steam sentinels', 0, 8, 'Slay 8 of the mechano steam sentinels', '447030|447042|447063', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'guardian', -1, 0, 0),
+(303222, 1, -1, 2, 4, 'Overvolt Rigster the IV', 0, 1, 'Return to Overvolt Rigster the IV', '442008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'dragonscale', -1, 0, 0),
+(303223, 0, -1, 1, 2, 'the steamwork patrollers', 0, 15, 'Slay 15 of the steamwork patrollers', '447029|447031|447057|447058|447065|447068', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'guardian', -1, 0, 0),
+(303223, 1, -1, 2, 4, 'Overvolt Rigster the IV', 0, 1, 'Return to Overvolt Rigster the IV', '442008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'dragonscale', -1, 0, 0),
+(303224, 0, -1, 1, 2, 'the steamwork shockblasters', 0, 20, 'Slay 20 of the steamwork shockblasters', '447026|447027|447052', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'guardian', -1, 0, 0),
+(303224, 1, -1, 2, 4, 'Overvolt Rigster the IV', 0, 1, 'Return to Overvolt Rigster the IV', '442008', '', '', 0, 0, 0, 0, 0, 0, 0, -1, 0, 'dragonscale', -1, 0, 0);
+
+)F282_D",
+		.content_schema_update = false,
+	},
+
+	// 283: Old Man McKenzie's Midnight Snack (skyshrine v41 monster
+	// mission). The Pac-Man homage: a dwarven ghost (race 117 texture 3, the
+	// Garanel Rucksif hull; class 16 berserker with the stock Tiger Beast 40
+	// ability kit through shrouds.id 504's Animals/Tiger Beast progression+
+	// branch; quest scripts call ApplyShroud(504)) eats 24 frosted cakes in
+	// an EMPTY skyshrine v41 instance while four chasers hunt it -- the Sad
+	// blue drake, the Mad red drake, the Glad shimmering drake and the Bad
+	// drixie. Every fourth cake spawns the invulnerable Sugar Rage golem and
+	// a 45s frightened window in which the chasers turn killable and
+	// scatter. Win = all four chasers + all 24 cakes; payout is four
+	// McKenzie's Special Brews (41408) plus an 18h replay lockout, runtime
+	// side. The Midnight Snack task is 800006, solo-only. Cakes and chasers
+	// are controller-spawned dynamically (npc ids 1520001978-84); their
+	// coordinates were sampled from the zone's own collision geometry.
+	// Standalone copy: utils/sql/20261030_mckenzie_midnight_snack_v283.sql.
+	ManifestEntry{
+		.version = 283,
+		.description = "20261030_mckenzie_midnight_snack",
+		.check = "SELECT id FROM spawn2 WHERE zone = 'skyshrine' AND version = 41 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = 		R"F283_A(
+-- Skyshrine version 41 expedition zone, shipped EMPTY: the zone row only --
+-- no v0 spawn2 clone, the Pac-Man maze holds nothing but the mission's own
+-- controller-spawned cast.
+DELETE FROM `zone` WHERE `zoneidnumber` = 114 AND `version` = 41;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 114 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 41, `long_name` = 'Skyshrine: Midnight Snack';
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+-- Dwarven Ghost 40 shroud form (id 504, race 117 texture 3 -- the Garanel
+-- Rucksif hull; class 16 berserker): abilities come from the stock Tiger
+-- Beast 40 form (shrouds.id 95, same Animals/Tiger Beast progression and
+-- branch). HP pinned to 900 -- the chasers make being cornered death.
+DELETE FROM `shrouds` WHERE `id` = 504;
+INSERT INTO `shrouds`
+	(`id`,`name`,`progression`,`branch`,`level`,`race`,`gender`,`class`,`texture`,`helmet_texture`,`size`,`hp`,`mana`,`endurance`)
+SELECT
+	504, 'Dwarven Ghost 40', `progression`, `branch`, `level`, 117, 0, `class`, 3, 3, 6.0,
+	900, `mana`, `endurance`
+FROM `shrouds` WHERE `id` = 95;
+
+-- Midnight Snack task: level 40+, solo-only, repeatable. One eat activity
+-- for the cakes and one kill activity per chaser, credited only inside
+-- skyshrine version 41.
+DELETE FROM `task_activities` WHERE `taskid` = 800006;
+DELETE FROM `tasks` WHERE `id` = 800006;
+INSERT INTO `tasks`
+	(`id`,`type`,`duration`,`duration_code`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`reward_points`,`reward_point_type`,`min_level`,`max_level`,`level_spread`,`min_players`,`max_players`,`repeatable`,`faction_reward`,`completion_emote`,`replay_timer_group`,`replay_timer_seconds`,`request_timer_group`,`request_timer_seconds`,`dz_template_id`,`lock_activity_id`,`faction_amount`,`enabled`)
+VALUES
+	(800006, 2, 600, 1, 'Old Man McKenzie''s Midnight Snack',
+	'Old Man McKenzie turns his empty bottle over like it owes him money. "There was a maze, once. Up in the dragon shrine -- past the teleporter, past everything that matters. Winding little corridors of stone, and I sat in them for a week with a bottle of something brown, eating. Rations. Rats. Regrets. Everything is food if you''re sad enough." He taps his temple. "You know what I learned down there? The walls don''t hate you. The walls don''t do ANYTHING. It''s the colored ones that get you. The sad blue one. The mad red one. The glad yellow one. And the little bad one. They''re always hungry too, kid -- that''s the part nobody tells you. And the cakes just sit there. Round. Sweet. Completely unaware of what they are." He shoves a vial at you. "Be the ghost. Not the dead kind -- the hungry kind. Eat every cake in that maze. And when the Sugar Rage comes up out of the floor -- and it WILL -- you run. Rage makes them soft, though, so when the colored ones turn tail and scatter, you eat THEM. All four. Every last cake. Level 40 and up. Alone. It''s always alone in the maze."',
+	'The last colored one goes down and the maze goes quiet. Old Man McKenzie''s voice, somewhere behind your eyes: "There. Now you know what I know. The eating never fills the hole -- but the eating is good." Four bottles of the Special Brew find your hand.',
+	'', 0, 0, 0, 0, 0, 40, 0, 0, 1, 1, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1);
+
+INSERT INTO `task_activities`
+	(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`item_list`,`dz_switch_id`,`min_x`,`min_y`,`min_z`,`max_x`,`max_y`,`max_z`,`skill_list`,`spell_list`,`zones`,`zone_version`,`optional`,`list_group`)
+VALUES
+	(800006, 0, -1, 0, 1, 'frosted cakes', 1, 24, 'Eat 24 of the frosted cakes. Every fourth one wakes the Sugar Rage.', '1520001984', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '114', 41, 0, 0),
+	(800006, 1, -1, 0, 1, 'the Sad One', 1, 1, 'Eat the sad blue drake while the Sugar Rage holds.', '1520001979', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '114', 41, 0, 0),
+	(800006, 2, -1, 0, 1, 'the Mad One', 1, 1, 'Eat the mad red drake while the Sugar Rage holds.', '1520001980', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '114', 41, 0, 0),
+	(800006, 3, -1, 0, 1, 'the Glad One', 1, 1, 'Eat the glad yellow drake while the Sugar Rage holds.', '1520001981', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '114', 41, 0, 0),
+	(800006, 4, -1, 0, 1, 'the Bad One', 1, 1, 'Eat the little bad drixie while the Sugar Rage holds.', '1520001982', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '114', 41, 0, 0);
+
+-- Mission cast: invisible controller, the four colored ones (Sad = icy-blue
+-- drake texture 3, Mad = ruby-red drake texture 2, Glad = the shimmering
+-- drake -- the most yellow hull the client owns --, Bad = the drixie), the
+-- Sugar Rage golem, and the frosted cake. Chasers hunt by controller-forced
+-- hate (npc_aggro 0), the golem is invulnerable by script, the cake is one
+-- hp and never fights.
+DELETE FROM `npc_types` WHERE `id` IN (1520001978,1520001979,1520001980,1520001981,1520001982,1520001983,1520001984);
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_details`)
+VALUES
+	(1520001978,'#Midnight_Snack_Controller','The Ghost of Appetites',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001979,'a_sad_drake','The Sad One',40,89,1,1,1300,0,3,255,10,1.10,70,120,30,150,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001980,'a_mad_drake','The Mad One',40,89,1,1,1400,1,2,255,10,1.10,80,140,30,160,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001981,'a_glad_drake','The Glad One',40,154,1,1,1200,0,0,255,8,1.05,60,110,30,140,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001982,'a_bad_drixie','The Bad One',40,113,1,1,900,0,0,255,3,1.20,50,90,25,120,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001983,'Sugar_Rage','The Cost of Sweetness',45,17,1,1,32000,0,0,255,10,1.10,90,160,30,200,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0),
+	(1520001984,'a_frosted_cake','It Just Sits There',1,629,1,1,1,2,0,255,6,0.70,0,0,30,10,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0);
+
+-- Controller spawn: skyshrine v41 only, at the maze-level zone-in point.
+DELETE FROM `spawngroup` WHERE `id` = 5004505;
+DELETE FROM `spawnentry` WHERE `spawngroupID` = 5004505;
+DELETE FROM `spawn2` WHERE `spawngroupID` = 5004505;
+INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004505,'midnight_snack_controller_skyshrine_41');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004505,1520001978,100);
+INSERT INTO `spawn2`
+	(`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
+VALUES
+	(5004505,'skyshrine',41,-669.7,1068.2,402.8,0,0,0);
+)F283_A",
+		.content_schema_update = false,
+	},
+// 284: Old Man McKenzie's Derelict Space Station (netherbian v66 monster
+// mission, group of 1-6). Netherbian Lair version 66 expedition zone with
+// every vanilla combat point re-targeted at one of three mission
+// replacements (Leaper of the Dark / fungal fiend / zombie -- level 40,
+// ranged '11,1' special ability for the first two), one spawnentry per point
+// so the task kill-counts are exact; event actors excluded by name; 60-unit
+// safe pocket at the zone-in; respawntime 604800 so the clear stays a clear.
+// Master Officer Wizard Armor 40 shroud (race 323, id 505) copied from the
+// stock Goblin Wizard 40 form; task 800007 (groups of 1-6) with three kill
+// activities; controller 1520001985 + Watchful Spark 1520001989 + mission
+// npcs 1520001986-1988, all hostiles on faction 79 (KOS_assist).
+// Standalone copy: utils/sql/20261030_mckenzie_derelict_space_station_v284.sql.
+	ManifestEntry{
+		.version = 284,
+		.description = "20261030_mckenzie_derelict_space_station",
+		.check = "SELECT id FROM spawn2 WHERE zone = 'netherbian' AND version = 66 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"F284_A(
+-- 284: Old Man McKenzie's Derelict Space Station (netherbian v66 monster
+-- mission, group of 1-6). Netherbian Lair version 66 expedition zone: every
+-- vanilla combat spawn point is re-targeted at one of three mission
+-- replacements (a_leaper_of_the_dark / a_fungal_fiend / a_zombie), ONE
+-- spawnentry per point so the task kill-counts are exact and deterministic.
+-- Event actors (Lerin_Sardor, Strange, This_passage, Poil_Lolp, #____) and a
+-- 60-unit pocket around the zone-in are left out. respawntime 604800 = the
+-- infestation never repops: the mission is a full clear, and a respawn would
+-- make it incompletable. Event actors are excluded BY NAME (Lerin_Sardor and
+-- Poil_Lolp are race-1/229 and would otherwise map to a family).
+-- The Master Officer Wizard Armor 40 shroud (race 323 animated armor) is a
+-- 1:1 copy of the stock Goblin Wizard 40 form (shrouds.id 221) -- quest
+-- scripts call ApplyShroud(505). Task 800007 has three kill activities
+-- (Mildew / Leapers / crew). Controller 1520001985 + Watchful Spark
+-- 1520001989 spawn statically in v66 only; the mission npcs are 1520001986-
+-- 1988 and ALL wear npc_faction 79 (KOS_assist) so the engine's scowls
+-- auto-aggro keeps working; leapers are gated by aggroradius 1 (0 would be
+-- bumped to 70) until their script reveals them.
+-- Standalone copy of the manifest v284 entry. (283 went to the concurrent
+-- Midnight Snack mission while this was being authored.)
+
+-- Zone version row: clone netherbian (zoneidnumber 161) v0 as version 66.
+-- CREATE TABLE AS SELECT drops the auto_increment attribute, so give the id
+-- explicitly; delete-guarded so re-runs stay idempotent.
+DELETE FROM `zone` WHERE `zoneidnumber` = 161 AND `version` = 66;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 161 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 66, `long_name` = 'Netherbian Lair: Derelict Space Station';
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+-- Master Officer Wizard Armor 40: the Goblin Wizard 40 form (shrouds.id 221,
+-- race 433) with a race-323 animated armor hull. Same progression/branch/
+-- level/class means the shroud ability window serves the stock goblin wizard
+-- kit; texture 0 / size 5.0 dress the hull.
+DELETE FROM `shrouds` WHERE `id` = 505;
+INSERT INTO `shrouds`
+	(`id`,`name`,`progression`,`branch`,`level`,`race`,`gender`,`class`,`texture`,`helmet_texture`,`size`,`hp`,`mana`,`endurance`)
+SELECT
+	505, 'Master Officer Wizard Armor 40', `progression`, `branch`, `level`, 323, `gender`, `class`, 0, 255, 5.0,
+	`hp`, `mana`, `endurance`
+FROM `shrouds` WHERE `id` = 221;
+
+-- Mission npcs: invisible controller (moors template), the Leaper of the
+-- Dark and the fungal fiend (level 40 rangers -- special_abilities '11,1' is
+-- RangedAttack: they shoot bows at range with no bow item needed), the
+-- zombie (melee brute), and the Watchful Spark (harmless station monitor the
+-- players can hail). All hostiles wear faction 79 (KOS_assist); the leaper's
+-- aggroradius 1 keeps auto-aggro off until the script reveals it.
+DELETE FROM `npc_types` WHERE `id` IN (1520001985,1520001986,1520001987,1520001988,1520001989);
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_details`,`special_abilities`)
+VALUES
+	(1520001985,'#Derelict_Station_Controller','The Officer''s Handler',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,NULL),
+	(1520001986,'a_leaper_of_the_dark','Hides in the dark',40,229,4,1,1600,0,0,255,2.5,1.35,30,55,30,300,0,1,79,0,0,0,0,0,0,0,0,0,255,0,0,'11,1'),
+	(1520001987,'a_fungal_fiend','The Mildew''s bloom',40,218,4,1,2000,0,0,255,3.5,1.25,35,60,30,300,1,55,79,0,0,0,0,0,0,0,0,0,255,0,0,'11,1'),
+	(1520001988,'a_zombie','Still on duty',40,70,1,1,2600,0,0,0,6,1.05,40,70,30,320,1,55,79,0,0,0,0,0,0,0,0,0,255,0,0,NULL),
+	(1520001989,'a_watchful_spark','The station''s monitor',100,72,1,1,32000,0,0,255,3,0.01,0,0,30,300,0,0,0,0,0,0,0,0,0,0,0,0,255,0,0,NULL);
+
+-- Derelict Space Station task: min_level 40 (shrouds only go down, never
+-- up), groups of 1-6, repeatable, no time limit; the rant is the description
+-- shown in the task select window. Three kill activities (activitytype 1),
+-- goalcounts = the exact spawn counts emitted below, credited only inside
+-- netherbian version 66 (zones = zoneidnumber 161, zone_version 66).
+DELETE FROM `task_activities` WHERE `taskid` = 800007;
+DELETE FROM `tasks` WHERE `id` = 800007;
+INSERT INTO `tasks`
+	(`id`,`type`,`duration`,`duration_code`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`reward_points`,`reward_point_type`,`min_level`,`max_level`,`level_spread`,`min_players`,`max_players`,`repeatable`,`faction_reward`,`completion_emote`,`replay_timer_group`,`replay_timer_seconds`,`request_timer_group`,`request_timer_seconds`,`dz_template_id`,`lock_activity_id`,`faction_amount`,`enabled`)
+VALUES
+	(800007, 2, 0, 0, 'Old Man McKenzie''s Derelict Space Station',
+	'Old Man McKenzie''s eyes cross trying to focus on you. "There was a RING, see. Great big Moon-Ring, hung in the sky like a brass farthing somebody owes me. And on the ring there was a STATION -- a derlict one, out in the deep of space. DEEP space, boy. Deeper than the Deep. I was there. Who do you think taught the Watchful Spark to glow?" He hiccups into the Brew. "Then the Mildew came. Crawled off the ring and into the crew -- PWOOF -- zombies, the whole shift, still on duty and absolutely no work ethic left. And the Leapers of the Dark. Fancy armor. Beautiful capes. Hid in the dark like cowards in boots, and I never saw ONE until it was ON me. Woke up in the moon-tunnels three days later wearing somebody else''s boots." He shoves a brass helmet at you. "So suit up, Master Officer. My last squad of Master Officer armors is in the closet -- animated, level 40, wizards to a suit. Go down there: purge the Mildew, silence the Leapers, cull the crew -- EVERY last one -- and do NOT fire the station. We do not talk about who fired the station." Level 40 and up, up to six. Die and the tour''s over.',
+	'The station goes quiet. Old Man McKenzie cackles somewhere behind your eyes: "HA! Every last one! The Mildew remembers, the crew remembers, and the Spark won''t stop talking about it. Mind you don''t spill the Brew."',
+	'', 0, 0, 0, 0, 0, 40, 0, 0, 1, 6, 1, 0, '', 0, 0, 0, 0, 0, -1, 0, 1);
+
+INSERT INTO `task_activities`
+	(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`item_list`,`dz_switch_id`,`min_x`,`min_y`,`min_z`,`max_x`,`max_y`,`max_z`,`skill_list`,`spell_list`,`zones`,`zone_version`,`optional`,`list_group`)
+VALUES
+	(800007, 0, -1, 0, 1, 'the Mildew', 1, 73, 'Purge 73 of the Mildew.', '1520001987', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '161', 66, 0, 0),
+	(800007, 1, -1, 0, 1, 'the Leapers of the Dark', 1, 58, 'Silence 58 of the Leapers of the Dark. They were never there. Until they were.', '1520001986', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '161', 66, 0, 0),
+	(800007, 2, -1, 0, 1, 'the shambling crew', 1, 21, 'Cull 21 of the shambling crew. Still on duty.', '1520001988', NULL, '', 0, 0, 0, 0, 0, 0, 0, '-1', '0', '161', 66, 0, 0);
+
+-- Spawns: controller + Watchful Spark statically in v66, then one new
+-- spawngroup per combat point (single spawnentry, chance 100) so each point
+-- deterministically spawns its replacement. respawn 0 would repop instantly,
+-- so the infestation gets 604800s (the engine's own "arbitrarily large"
+-- number) -- killed stays dead for the 2h instance.
+DELETE FROM `spawn2` WHERE `zone` = 'netherbian' AND `version` = 66;
+DELETE FROM `spawnentry` WHERE `spawngroupID` BETWEEN 5004613 AND 5004766;
+DELETE FROM `spawngroup` WHERE `id` BETWEEN 5004613 AND 5004766;
+INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004613,'derelict_station_controller_netherbian_66');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004613,1520001985,100);
+INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004614,'derelict_station_watchful_spark_netherbian_66');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004614,1520001989,100);
+INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`) VALUES
+	(5004613,'netherbian',66,74,-676,4.1,0,0,0),
+	(5004614,'netherbian',66,60,-684,6,0,0,0)
+;
+
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004615,'derelict_station_v66_p29916');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004615,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004616,'derelict_station_v66_p29917');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004616,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004617,'derelict_station_v66_p29918');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004617,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004618,'derelict_station_v66_p29919');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004618,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004619,'derelict_station_v66_p29920');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004619,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004620,'derelict_station_v66_p29921');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004620,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004621,'derelict_station_v66_p29922');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004621,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004622,'derelict_station_v66_p29923');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004622,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004623,'derelict_station_v66_p29924');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004623,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004624,'derelict_station_v66_p29925');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004624,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004625,'derelict_station_v66_p29926');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004625,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004626,'derelict_station_v66_p29927');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004626,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004627,'derelict_station_v66_p29928');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004627,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004628,'derelict_station_v66_p29929');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004628,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004629,'derelict_station_v66_p29930');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004629,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004630,'derelict_station_v66_p29931');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004630,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004631,'derelict_station_v66_p29932');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004631,1520001987,100);
+)F284_A" R"F284_B(
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004632,'derelict_station_v66_p29933');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004632,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004633,'derelict_station_v66_p29934');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004633,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004634,'derelict_station_v66_p29935');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004634,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004635,'derelict_station_v66_p29936');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004635,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004636,'derelict_station_v66_p29937');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004636,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004637,'derelict_station_v66_p29938');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004637,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004638,'derelict_station_v66_p29940');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004638,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004639,'derelict_station_v66_p29942');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004639,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004640,'derelict_station_v66_p29943');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004640,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004641,'derelict_station_v66_p29944');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004641,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004642,'derelict_station_v66_p29945');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004642,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004643,'derelict_station_v66_p29946');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004643,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004644,'derelict_station_v66_p29947');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004644,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004645,'derelict_station_v66_p29948');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004645,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004646,'derelict_station_v66_p29949');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004646,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004647,'derelict_station_v66_p29950');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004647,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004648,'derelict_station_v66_p29951');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004648,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004649,'derelict_station_v66_p29952');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004649,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004650,'derelict_station_v66_p29954');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004650,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004651,'derelict_station_v66_p29955');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004651,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004652,'derelict_station_v66_p29956');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004652,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004653,'derelict_station_v66_p29957');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004653,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004654,'derelict_station_v66_p29958');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004654,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004655,'derelict_station_v66_p29959');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004655,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004656,'derelict_station_v66_p29960');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004656,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004657,'derelict_station_v66_p29961');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004657,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004658,'derelict_station_v66_p29962');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004658,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004659,'derelict_station_v66_p29963');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004659,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004660,'derelict_station_v66_p29964');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004660,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004661,'derelict_station_v66_p29965');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004661,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004662,'derelict_station_v66_p29966');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004662,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004663,'derelict_station_v66_p29968');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004663,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004664,'derelict_station_v66_p29969');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004664,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004665,'derelict_station_v66_p29970');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004665,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004666,'derelict_station_v66_p29971');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004666,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004667,'derelict_station_v66_p29972');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004667,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004668,'derelict_station_v66_p29973');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004668,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004669,'derelict_station_v66_p29975');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004669,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004670,'derelict_station_v66_p29976');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004670,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004671,'derelict_station_v66_p29977');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004671,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004672,'derelict_station_v66_p29978');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004672,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004673,'derelict_station_v66_p29979');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004673,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004674,'derelict_station_v66_p29980');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004674,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004675,'derelict_station_v66_p29981');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004675,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004676,'derelict_station_v66_p29982');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004676,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004677,'derelict_station_v66_p29983');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004677,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004678,'derelict_station_v66_p29984');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004678,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004679,'derelict_station_v66_p29985');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004679,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004680,'derelict_station_v66_p29986');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004680,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004681,'derelict_station_v66_p29987');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004681,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004682,'derelict_station_v66_p29988');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004682,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004683,'derelict_station_v66_p29989');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004683,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004684,'derelict_station_v66_p29990');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004684,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004685,'derelict_station_v66_p29991');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004685,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004686,'derelict_station_v66_p29992');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004686,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004687,'derelict_station_v66_p29993');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004687,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004688,'derelict_station_v66_p29994');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004688,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004689,'derelict_station_v66_p29995');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004689,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004690,'derelict_station_v66_p29996');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004690,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004691,'derelict_station_v66_p29997');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004691,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004692,'derelict_station_v66_p29998');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004692,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004693,'derelict_station_v66_p29999');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004693,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004694,'derelict_station_v66_p30000');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004694,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004695,'derelict_station_v66_p30001');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004695,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004696,'derelict_station_v66_p30002');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004696,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004697,'derelict_station_v66_p30003');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004697,1520001986,100);
+)F284_B" R"F284_C(
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004698,'derelict_station_v66_p30004');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004698,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004699,'derelict_station_v66_p30008');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004699,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004700,'derelict_station_v66_p30010');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004700,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004701,'derelict_station_v66_p30011');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004701,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004702,'derelict_station_v66_p30012');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004702,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004703,'derelict_station_v66_p30013');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004703,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004704,'derelict_station_v66_p30014');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004704,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004705,'derelict_station_v66_p30015');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004705,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004706,'derelict_station_v66_p30016');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004706,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004707,'derelict_station_v66_p30017');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004707,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004708,'derelict_station_v66_p30018');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004708,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004709,'derelict_station_v66_p30019');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004709,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004710,'derelict_station_v66_p30020');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004710,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004711,'derelict_station_v66_p30021');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004711,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004712,'derelict_station_v66_p30022');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004712,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004713,'derelict_station_v66_p30023');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004713,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004714,'derelict_station_v66_p30024');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004714,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004715,'derelict_station_v66_p30025');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004715,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004716,'derelict_station_v66_p30026');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004716,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004717,'derelict_station_v66_p30027');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004717,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004718,'derelict_station_v66_p30028');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004718,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004719,'derelict_station_v66_p30029');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004719,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004720,'derelict_station_v66_p30030');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004720,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004721,'derelict_station_v66_p30031');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004721,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004722,'derelict_station_v66_p30032');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004722,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004723,'derelict_station_v66_p30033');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004723,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004724,'derelict_station_v66_p30036');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004724,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004725,'derelict_station_v66_p30037');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004725,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004726,'derelict_station_v66_p30039');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004726,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004727,'derelict_station_v66_p30040');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004727,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004728,'derelict_station_v66_p30041');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004728,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004729,'derelict_station_v66_p30042');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004729,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004730,'derelict_station_v66_p30043');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004730,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004731,'derelict_station_v66_p30044');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004731,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004732,'derelict_station_v66_p30046');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004732,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004733,'derelict_station_v66_p30047');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004733,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004734,'derelict_station_v66_p30048');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004734,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004735,'derelict_station_v66_p30049');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004735,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004736,'derelict_station_v66_p30050');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004736,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004737,'derelict_station_v66_p30051');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004737,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004738,'derelict_station_v66_p30052');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004738,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004739,'derelict_station_v66_p30053');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004739,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004740,'derelict_station_v66_p30054');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004740,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004741,'derelict_station_v66_p30055');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004741,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004742,'derelict_station_v66_p30058');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004742,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004743,'derelict_station_v66_p30059');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004743,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004744,'derelict_station_v66_p30060');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004744,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004745,'derelict_station_v66_p30061');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004745,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004746,'derelict_station_v66_p30062');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004746,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004747,'derelict_station_v66_p30063');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004747,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004748,'derelict_station_v66_p30064');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004748,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004749,'derelict_station_v66_p30065');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004749,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004750,'derelict_station_v66_p30066');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004750,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004751,'derelict_station_v66_p30067');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004751,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004752,'derelict_station_v66_p30068');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004752,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004753,'derelict_station_v66_p30069');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004753,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004754,'derelict_station_v66_p30070');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004754,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004755,'derelict_station_v66_p30071');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004755,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004756,'derelict_station_v66_p30072');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004756,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004757,'derelict_station_v66_p30073');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004757,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004758,'derelict_station_v66_p30074');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004758,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004759,'derelict_station_v66_p30075');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004759,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004760,'derelict_station_v66_p30076');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004760,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004761,'derelict_station_v66_p30077');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004761,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004762,'derelict_station_v66_p30078');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004762,1520001986,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004763,'derelict_station_v66_p30079');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004763,1520001986,100);
+)F284_C" R"F284_D(
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004764,'derelict_station_v66_p30080');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004764,1520001988,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004765,'derelict_station_v66_p30081');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004765,1520001987,100);
+	INSERT INTO `spawngroup` (`id`,`name`) VALUES (5004766,'derelict_station_v66_p30082');
+	INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (5004766,1520001987,100);
+INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`) VALUES
+	(5004615,'netherbian',66,1328.63,-801.13,33.5,130,604800,0),
+	(5004616,'netherbian',66,986.25,-678.25,32.75,387,604800,0),
+	(5004617,'netherbian',66,694.13,-412.13,43.25,128.75,604800,0),
+	(5004618,'netherbian',66,-402.875,557.125,-10.75,0,604800,0),
+	(5004619,'netherbian',66,1110.88,-631.25,31.125,348,604800,0),
+	(5004620,'netherbian',66,957.375,-606.125,34.75,4,604800,0),
+	(5004621,'netherbian',66,-410.625,723.625,-9.125,320,604800,0),
+	(5004622,'netherbian',66,177.625,-16,30.125,508,604800,0),
+	(5004623,'netherbian',66,298.75,-413.125,27.75,242,604800,0),
+	(5004624,'netherbian',66,-599.125,233.75,4.125,0,604800,0),
+	(5004625,'netherbian',66,-79.125,212.125,12.75,40,604800,0),
+	(5004626,'netherbian',66,-357.625,-245.625,-2.625,14,604800,0),
+	(5004627,'netherbian',66,-472.375,223.75,-3.125,14,604800,0),
+	(5004628,'netherbian',66,-410.625,723.625,-9.125,322,604800,0),
+	(5004629,'netherbian',66,-482.75,749.125,-12.125,22,604800,0),
+	(5004630,'netherbian',66,370.5,-177.875,27.125,16,604800,0),
+	(5004631,'netherbian',66,1153.88,-774.375,33.25,322,604800,0),
+	(5004632,'netherbian',66,957.375,-453.625,36.75,2,604800,0),
+	(5004633,'netherbian',66,-20,1649,-65.13,251,604800,0),
+	(5004634,'netherbian',66,-107.38,212.13,19.5,129.25,604800,0),
+	(5004635,'netherbian',66,951,488,72.75,392,604800,0),
+	(5004636,'netherbian',66,-504.38,191.38,-1.13,381.5,604800,0),
+	(5004637,'netherbian',66,951,434,72.75,386,604800,0),
+	(5004638,'netherbian',66,-329,392,-5.38,5,604800,0),
+	(5004639,'netherbian',66,-465.13,-227.25,-2.13,245.75,604800,0),
+	(5004640,'netherbian',66,-482.88,-306.88,-0.63,13,604800,0),
+	(5004641,'netherbian',66,-404,-242,-2.75,84,604800,0),
+	(5004642,'netherbian',66,-394,-308,3,114,604800,0),
+	(5004643,'netherbian',66,-245,-456,6.75,356,604800,0),
+	(5004644,'netherbian',66,-473.88,-467.63,1.13,255.5,604800,0),
+	(5004645,'netherbian',66,389,-123,26.63,16,604800,0),
+	(5004646,'netherbian',66,454,-79,23.75,363,604800,0),
+	(5004647,'netherbian',66,369.75,-64.25,24.63,363,604800,0),
+	(5004648,'netherbian',66,369.75,-19.5,26,363,604800,0),
+	(5004649,'netherbian',66,360,118.63,21.75,363,604800,0),
+	(5004650,'netherbian',66,1168.13,-544.75,36.75,0.5,604800,0),
+	(5004651,'netherbian',66,1204.88,-800.88,31.13,363,604800,0),
+	(5004652,'netherbian',66,1168,-426.25,39.88,363,604800,0),
+	(5004653,'netherbian',66,1326.63,-609.63,34.75,0.75,604800,0),
+	(5004654,'netherbian',66,1113.38,-678.25,32.13,363,604800,0),
+	(5004655,'netherbian',66,957.38,-672.13,38.13,363,604800,0),
+	(5004656,'netherbian',66,957.38,-485.5,35.75,257.75,604800,0),
+	(5004657,'netherbian',66,272.88,-437.38,28.8,248.5,604800,0),
+	(5004658,'netherbian',66,299.5,-371.38,24.38,258,604800,0),
+	(5004659,'netherbian',66,1037.38,-426.25,35.75,129.5,604800,0),
+	(5004660,'netherbian',66,449.5,1017.13,35.75,363,604800,0),
+	(5004661,'netherbian',66,521.25,594,35.63,363,604800,0),
+	(5004662,'netherbian',66,1174,-834,57.88,363,604800,0),
+	(5004663,'netherbian',66,-318.362,413.753,-4.02426,344,604800,0),
+	(5004664,'netherbian',66,644.63,1017.13,38.75,363,604800,0),
+	(5004665,'netherbian',66,1102,-834,31.75,363,604800,0),
+	(5004666,'netherbian',66,-260.778,475.258,0.127006,127.75,604800,0),
+	(5004667,'netherbian',66,-673.053,675.933,-8.43222,414,604800,0),
+	(5004668,'netherbian',66,-708.137,731.804,-5.87727,224.25,604800,0),
+	(5004669,'netherbian',66,-305.75,212.13,-4.13,5,604800,0),
+	(5004670,'netherbian',66,49,1650,-65.13,268,604800,0),
+	(5004671,'netherbian',66,-472.38,3.25,3.13,0.5,604800,0),
+	(5004672,'netherbian',66,-418.63,472.5,-1,1,604800,0),
+	(5004673,'netherbian',66,369.75,62.25,23.5,0.5,604800,0),
+	(5004674,'netherbian',66,-353.13,-279.13,0.75,5,604800,0),
+	(5004675,'netherbian',66,-564,661.25,-1,226,604800,0),
+	(5004676,'netherbian',66,-599.13,418,-1.25,257.75,604800,0),
+	(5004677,'netherbian',66,-182.13,-304.63,7.75,127,604800,0),
+	(5004678,'netherbian',66,-357.63,-137.5,1.13,258.25,604800,0),
+	(5004679,'netherbian',66,453.75,-246.88,23.75,257.75,604800,0),
+	(5004680,'netherbian',66,774.88,-597,39.38,363,604800,0),
+	(5004681,'netherbian',66,997,-414,39,334,604800,0),
+	(5004682,'netherbian',66,519.88,-246.63,26.3,508.5,604800,0),
+	(5004683,'netherbian',66,808,-630,39,382,604800,0),
+	(5004684,'netherbian',66,1168.13,-483.25,39.63,0,604800,0),
+	(5004685,'netherbian',66,1265.75,-800.88,29.75,363,604800,0),
+	(5004686,'netherbian',66,234.88,-437.38,28.75,363,604800,0),
+	(5004687,'netherbian',66,957.38,-548.88,34.8,4.5,604800,0),
+	(5004688,'netherbian',66,203.13,-437.38,29.75,363,604800,0),
+	(5004689,'netherbian',66,1326.63,-638,34.8,497,604800,0),
+	(5004690,'netherbian',66,1175,-656,34.88,363,604800,0),
+	(5004691,'netherbian',66,1085,-748,48.63,363,604800,0),
+	(5004692,'netherbian',66,188,55,21,504,604800,0),
+	(5004693,'netherbian',66,-319.434,546.92,-2.77667,326.5,604800,0),
+	(5004694,'netherbian',66,-402.581,620.975,-12.3902,256.25,604800,0),
+	(5004695,'netherbian',66,-745.18,735.937,-4.0337,117.75,604800,0),
+	(5004696,'netherbian',66,1013.88,-678.25,32.75,363,604800,0),
+	(5004697,'netherbian',66,-351.369,519.403,-9.87298,227,604800,0),
+	(5004698,'netherbian',66,370.63,-221,30.25,258.5,604800,0),
+	(5004699,'netherbian',66,-367.5,453.75,-8.25,424.75,604800,0),
+	(5004700,'netherbian',66,369.75,9.5,26,363,604800,0),
+	(5004701,'netherbian',66,-402.88,699,-12.13,0.5,604800,0),
+	(5004702,'netherbian',66,-411.13,411.38,0.5,247.75,604800,0),
+	(5004703,'netherbian',66,-587.75,716.5,-8.63,222.75,604800,0),
+	(5004704,'netherbian',66,-511,749.13,-8.38,385.25,604800,0),
+	(5004705,'netherbian',66,-472.38,-99.38,2.75,258.5,604800,0),
+	(5004706,'netherbian',66,519.63,621.63,39.13,5,604800,0),
+	(5004707,'netherbian',66,139,42,25.25,363,604800,0),
+	(5004708,'netherbian',66,-776,705,18.75,5,604800,0),
+	(5004709,'netherbian',66,16,418,3.8,363,604800,0),
+	(5004710,'netherbian',66,945,-409,37,256,604800,0),
+	(5004711,'netherbian',66,1097,-704,40.75,363,604800,0),
+	(5004712,'netherbian',66,1129,-708,33.88,363,604800,0),
+	(5004713,'netherbian',66,1329.63,-689,32,2.5,604800,0),
+	(5004714,'netherbian',66,-149.935,457.6,1.14698,127,604800,0),
+	(5004715,'netherbian',66,-456.25,749.125,-12.125,8,604800,0),
+	(5004716,'netherbian',66,-707,674,-6.125,384,604800,0),
+	(5004717,'netherbian',66,-472.375,67.25,-0.75,40,604800,0),
+	(5004718,'netherbian',66,361.375,461.125,26.75,24,604800,0),
+	(5004719,'netherbian',66,325.625,-412.125,26.625,344,604800,0),
+	(5004720,'netherbian',66,1168.12,-622.375,33.25,344,604800,0),
+	(5004721,'netherbian',66,626,-412.125,46.125,344,604800,0),
+	(5004722,'netherbian',66,815,-677,37,476,604800,0),
+	(5004723,'netherbian',66,-650.323,750.37,-8.0078,280.25,604800,0),
+	(5004724,'netherbian',66,-599.125,382.875,-0.75,40,604800,0),
+	(5004725,'netherbian',66,-472.375,-140.75,2.625,40,604800,0),
+	(5004726,'netherbian',66,1093,-652,60.75,344,604800,0),
+	(5004727,'netherbian',66,1157,-838,-197.625,344,604800,0),
+	(5004728,'netherbian',66,94,1847,74,344,604800,0),
+	(5004729,'netherbian',66,448,855,65.5,344,604800,0),
+	(5004730,'netherbian',66,812,-571,37,484,604800,0),
+	(5004731,'netherbian',66,-535.375,191.375,1.75,8,604800,0),
+	(5004732,'netherbian',66,-599.125,275.25,2.375,40,604800,0),
+	(5004733,'netherbian',66,127,1777,21.75,344,604800,0),
+	(5004734,'netherbian',66,1094,-613,31.75,40,604800,0),
+	(5004735,'netherbian',66,-758.75,772.75,18.75,464,604800,0),
+	(5004736,'netherbian',66,-607.334,651.717,-3.56442,244.75,604800,0),
+	(5004737,'netherbian',66,-320.798,525.546,-9.87298,389.25,604800,0),
+	(5004738,'netherbian',66,-241,449.63,0.5,259.25,604800,0),
+	(5004739,'netherbian',66,-411.13,411.38,0.5,292.5,604800,0),
+	(5004740,'netherbian',66,-106.25,-12.75,4.13,0,604800,0),
+	(5004741,'netherbian',66,520.5,-300.88,23.8,3.5,604800,0),
+	(5004742,'netherbian',66,9,137.63,3.75,385.5,604800,0),
+	(5004743,'netherbian',66,228.5,121.38,22.75,386.25,604800,0),
+	(5004744,'netherbian',66,-106.25,-278,14.13,258.25,604800,0),
+	(5004745,'netherbian',66,-225.63,-305.38,5.13,1.5,604800,0),
+	(5004746,'netherbian',66,177.63,-85.75,30.63,0.25,604800,0),
+	(5004747,'netherbian',66,329.625,121.375,22,344,604800,0),
+	(5004748,'netherbian',66,-472.25,380.125,-6.625,22,604800,0),
+	(5004749,'netherbian',66,-267.75,212.125,-1.5,14,604800,0),
+	(5004750,'netherbian',66,-258.5,414.875,-3.75,8,604800,0),
+	(5004751,'netherbian',66,-148.25,-305.125,8.75,2,604800,0),
+	(5004752,'netherbian',66,-472.375,223.75,-3.125,0,604800,0),
+	(5004753,'netherbian',66,-280.875,-467,1.125,472,604800,0),
+	(5004754,'netherbian',66,299.5,-246.625,22.875,2,604800,0),
+	(5004755,'netherbian',66,175.5,132.5,22.375,336,604800,0),
+	(5004756,'netherbian',66,-69.375,212.125,11,0,604800,0),
+	(5004757,'netherbian',66,-354.125,-467.5,0.75,0,604800,0),
+	(5004758,'netherbian',66,15.5,1037.38,-45,0,604800,0),
+	(5004759,'netherbian',66,511.25,-412.5,29.625,24,604800,0),
+	(5004760,'netherbian',66,-402.875,571.125,-12.125,12,604800,0),
+	(5004761,'netherbian',66,-419.125,748.75,-7.5,14,604800,0),
+	(5004762,'netherbian',66,-472.5,187.25,-4.125,8,604800,0),
+	(5004763,'netherbian',66,-377,212.125,-3.125,24,604800,0),
+	(5004764,'netherbian',66,-319.875,91.875,7,504,604800,0),
+	(5004765,'netherbian',66,453.75,-147.75,23.75,4,604800,0),
+	(5004766,'netherbian',66,1168.12,-483.25,39.625,16,604800,0)
+;
+
+-- verification
+SELECT 'zone66' k, COUNT(*) c FROM `zone` WHERE `zoneidnumber` = 161 AND `version` = 66
+UNION ALL SELECT 'spawn66', COUNT(*) FROM `spawn2` WHERE `zone` = 'netherbian' AND `version` = 66
+UNION ALL SELECT 'shroud505', COUNT(*) FROM `shrouds` WHERE `id` = 505 AND `race` = 323
+UNION ALL SELECT 'task', COUNT(*) FROM `tasks` WHERE `id` = 800007
+UNION ALL SELECT 'activities', COUNT(*) FROM `task_activities` WHERE `taskid` = 800007
+UNION ALL SELECT 'npcs', COUNT(*) FROM `npc_types` WHERE `id` BETWEEN 1520001985 AND 1520001989
+UNION ALL SELECT 'leaper_pts', COUNT(*) FROM `spawnentry` WHERE `npcID` = 1520001986
+UNION ALL SELECT 'fiend_pts', COUNT(*) FROM `spawnentry` WHERE `npcID` = 1520001987
+UNION ALL SELECT 'zombie_pts', COUNT(*) FROM `spawnentry` WHERE `npcID` = 1520001988
+UNION ALL SELECT 'no_respawn', COUNT(*) FROM `spawn2` WHERE `zone` = 'netherbian' AND `version` = 66 AND `respawntime` < 604800 AND `spawngroupID` >= 5004615;
+)F284_D",
+		.content_schema_update = false,
+	},
+	// ------------------------------------------------------------------
+	// Void Zebuxoruk page stock + Kunark partisan task faction (v285).
+	// Twin content of utils/sql/20261030_sod_zeb_stock_v285.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 285,
+		.description = "20261030_sod_zeb_stock",
+		.check = "SELECT item FROM merchantlist WHERE merchantid = 461000 AND item = 106928 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"SODZEB285_A(
+-- 285: Void Zebuxoruk stock brought to the raspersrealm themeVoid.html
+-- page, plus the Kunark partisan task faction fix (v282's 19 duty tasks
+-- paid no Tynoc faction; the v147 convention pays 1224 +150).
+-- Zebuxoruk merchants 459000-465000 = thevoida..thevoidg (v110). The
+-- page's live-EQ scroll ids do not exist here (19015 is Ingot of
+-- Sacrament in this Al'Kabor-lineage set); every page spell/tome maps
+-- to this set's native base-rank item instead: 'Spell: X' / 'Song: X'
+-- / 'Tome of X' (their scrolleffect values ARE the live page ids, so
+-- the scribe path is identical).
+-- Prices are plat stand-ins for the live purity points (v110
+-- convention): spells/tomes = page points x 1000 (155k-195k by
+-- version), Chronal Shears = purity x 10k, the Void C gear = page
+-- points x 100 (matches the v110 Archaic 150k armor scale), Lesser /
+-- Major quartzites interpolated (150k / 200k between v110's Minor
+-- 100k / Greater 250k / Glowing 500k).
+
+START TRANSACTION;
+
+-- ============================================================
+-- 1. Prices for the newly stocked page items.
+-- ============================================================
+UPDATE `items` SET `price` = 155000 WHERE `id` IN (118765,118250,119105,119150,118026,119429,118645,39306);
+UPDATE `items` SET `price` = 165000 WHERE `id` IN (117846,118395,118770,118818,119066,118470,119207,118592,118967,119235,119452,118458,118102,118902);
+UPDATE `items` SET `price` = 175000 WHERE `id` IN (117843,118244,119254,118434,119186,117907,118809,119438,119364,118089,118407,118020,117870,118741,118281,118190,118797,119305);
+UPDATE `items` SET `price` = 185000 WHERE `id` IN (118126,118257,118108,118979,119446,119385,117932,118782,118887,118929,118446,117966,119033,118651);
+UPDATE `items` SET `price` = 195000 WHERE `id` IN (117816,117828,117780,118869,118086,118148,119117,118428,119257,118860,118570,118791,118762,118630,119248,117913,117969,119030,118669,119093,117920,119299,118973);
+UPDATE `items` SET `price` = 50000  WHERE `id` = 105873;  -- Faintly Pulsating Chronal Shear (5 purity)
+UPDATE `items` SET `price` = 100000 WHERE `id` = 105874;  -- Dimly Pulsating Chronal Shear (10)
+UPDATE `items` SET `price` = 150000 WHERE `id` = 105875;  -- Pulsating Chronal Shear (15)
+UPDATE `items` SET `price` = 200000 WHERE `id` = 105876;  -- Brightly Pulsating Chronal Shear (20)
+UPDATE `items` SET `price` = 250000 WHERE `id` = 105967;  -- Brilliantly Pulsating Chronal Shear (25)
+UPDATE `items` SET `price` = 150000 WHERE `id` IN (103111,103121); -- Lesser Corrupted/Dyadic Quartzite
+UPDATE `items` SET `price` = 200000 WHERE `id` IN (103112,103122); -- Major Corrupted/Dyadic Quartzite
+-- Void C gear, page points x 100 (1425-1685):
+UPDATE `items` SET `price` = 142500 WHERE `id` IN (106928,106940);
+UPDATE `items` SET `price` = 143500 WHERE `id` IN (106929,106936,106941,106948);
+UPDATE `items` SET `price` = 144500 WHERE `id` IN (106937,106949);
+UPDATE `items` SET `price` = 145500 WHERE `id` IN (106939,106951);
+UPDATE `items` SET `price` = 146500 WHERE `id` IN (106934,106946);
+UPDATE `items` SET `price` = 147500 WHERE `id` IN (106930,106942);
+UPDATE `items` SET `price` = 148500 WHERE `id` IN (106931,106943);
+UPDATE `items` SET `price` = 151000 WHERE `id` IN (106932,106944);
+UPDATE `items` SET `price` = 152500 WHERE `id` IN (106933,106945);
+UPDATE `items` SET `price` = 153500 WHERE `id` IN (106938,106950);
+UPDATE `items` SET `price` = 168500 WHERE `id` IN (106935,106947);
+
+-- ============================================================
+-- 2. Zebuxoruk stock, page-faithful per version.
+-- ============================================================
+DELETE FROM `merchantlist` WHERE `merchantid` BETWEEN 459000 AND 465000;
+
+-- Void A: Silenced/Quiet Tinea, the Deviation Chamber, 16 cocoons.
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,1,103049);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,2,103050);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,3,103078);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,4,103062);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,5,103063);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,6,103064);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,7,103065);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,8,103066);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,9,103067);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,10,103068);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,11,103069);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,12,103070);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,13,103071);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,14,103072);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,15,103073);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,16,103074);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,17,103075);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,18,103076);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (459000,19,103077);
+
+-- Void B: Archaic set, Chronal Shear, 6 spells + 2 tomes, Hushed/
+-- Whispering Tinea, Minor Corrupted/Dyadic Quartzite (+ the two
+-- non-page Minor Quartz grades v110 stocked, kept).
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,1,103300);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,2,103301);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,3,103302);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,4,103303);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,5,103304);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,6,103305);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,7,103306);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,8,103307);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,9,103308);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,10,103309);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,11,103310);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,12,103311);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,13,103312);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,14,103313);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,15,103314);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,16,103315);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,17,103316);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,18,103317);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,19,103318);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,20,103319);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,21,103320);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,22,103321);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,23,103322);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,24,103323);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,25,103324);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,26,103325);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,27,103326);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,28,103327);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,29,105873);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,30,118765); -- Spell: Finsternacht Orb
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,31,118250); -- Spell: Frondspur
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,32,119105); -- Spell: Mindshear Horror
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,33,119150); -- Spell: Talisman of the Lynx
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,34,118026); -- Spell: Vow of Valiance
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,35,119429); -- Spell: Wildmagic Blast
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,36,118645); -- Tome of Calanin's Synergy
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,37,39306);  -- Tome of Overpowering Frenzy
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,38,103051);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,39,103052);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,40,103110);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,41,103120);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,42,103115);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (460000,43,103125);
+
+-- Void C: the 24-page gear set (Kithicor drop duplicates), Chronal
+-- Shear, 13 spells + 1 tome, Rustling/Humming Tinea, Lesser pair +
+-- the Minor combat band.
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,1,106928);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,2,106929);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,3,106930);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,4,106931);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,5,106932);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,6,106933);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,7,106934);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,8,106935);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,9,106936);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,10,106937);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,11,106938);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,12,106939);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,13,106940);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,14,106941);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,15,106942);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,16,106943);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,17,106944);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,18,106945);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,19,106946);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,20,106947);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,21,106948);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,22,106949);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,23,106950);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,24,106951);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,25,105874);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,26,117846); -- Song: Aura of Rodcet
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,27,118395); -- Spell: Befuddler's Aura
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,28,118770); -- Spell: Bonestitch Effigy
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,29,118818); -- Spell: Charge for Honor
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,30,119066); -- Spell: Charge for Power
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,31,118470); -- Spell: Dominating Aura
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,32,119207); -- Spell: Grezan's Drowse
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,33,118592); -- Spell: Jolt of Many
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,34,118967); -- Spell: Jolting Swings
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,35,119235); -- Spell: Listlessness
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,36,119452); -- Spell: Mindfreeze
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,37,118458); -- Spell: Runic Shimmer Aura
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,38,118102); -- Spell: Twelfth Night
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,39,118902); -- Tome of Jolting Frontkicks
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,40,103053);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,41,103054);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,42,103111);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,43,103121);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,44,103130);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,45,103135);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,46,103140);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,47,103145);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,48,103150);
+)SODZEB285_A" R"SODZEB285_B(
+-- Void D: Temporal Polymorphic Cell, Culling Vortexes, Chronal Shear,
+-- 17 spells + 1 tome, Murmuring Tinea, Major pair + 105 combat band.
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,1,42961);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,2,103057);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,3,103058);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,4,105875);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,5,117843);  -- Song: Pests of the Piper
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,6,118244);  -- Spell: Annihilate the Anomalous
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,7,119254);  -- Spell: Antecedent's Intervention
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,8,118434);  -- Spell: Aura of Abstract Acumen
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,9,119186);  -- Spell: Bite of the Ukun
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,10,117907); -- Spell: Bite of the Vitrik
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,11,118809); -- Spell: Burst of Dawnlight
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,12,119438); -- Spell: Funnel of Frigidity
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,13,119364); -- Spell: Gelid Snap
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,14,118089); -- Spell: Holy Ground
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,15,118407); -- Spell: Mana Reiterate
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,16,118020); -- Spell: Promised Recuperation
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,17,117870); -- Spell: Promised Rejuvenation (page: Rejuvination)
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,18,118741); -- Spell: Pyre of the Forgotten
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,19,118281); -- Spell: Survival of the Felicitous
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,20,118190); -- Spell: Winter's Flare
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,21,118797); -- Spell: Withering Decay
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,22,119305); -- Tome of Shield Topple
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,23,103055);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,24,103112);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,25,103122);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,26,103131);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,27,103136);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,28,103141);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,29,103146);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,30,103151);
+
+-- Void E: Chronal Shear, 11 spells + 3 tomes, Temporal Molting Cell,
+-- the three Prismatic Mutation Nexuses, Greater pair (+ the two
+-- non-page Greater Quartz grades v110 stocked, kept) + 125 combat band.
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,1,105876);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,2,118126);  -- Spell: Blessed Aquifer
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,3,118257);  -- Spell: Carapace of the Reptile
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,4,118108);  -- Spell: Chromassail
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,5,118979);  -- Spell: Devastating Blades
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,6,119446);  -- Spell: Ethereal Iceblight
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,7,119385);  -- Spell: Flashblaze
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,8,117932);  -- Spell: Growl of the Jaguar
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,9,118782);  -- Spell: Soul Reaper's Pyre
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,10,118887); -- Spell: Steely Stance
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,11,118929); -- Spell: Summer's Mist
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,12,118446); -- Spell: Twincast Aura
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,13,117966); -- Tome of Eradicator's Volley
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,14,119033); -- Tome of Procure Sap
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,15,118651); -- Tome of Whorl of Fists
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,16,103056);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,17,103059);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,18,103060);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,19,103061);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,20,103113);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,21,103123);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,22,103118);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,23,103128);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,24,103132);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,25,103137);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,26,103142);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,27,103147);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (463000,28,103152);
+
+-- Void F: Chronal Shear, 16 spells/songs + 7 tomes, the Greater combat
+-- band, Glowing Corrupted/Dyadic Quartzite (moved here from G per page).
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,1,105967);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,2,117816);  -- Song: Arcane Arietta
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,3,117828);  -- Song: Cantata of Courage
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,4,117780);  -- Song: Gruber's Lively Crescendo
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,5,118869);  -- Spell: Aurora of Dawnlight
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,6,118086);  -- Spell: Blood of the Unsullied
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,7,118148);  -- Spell: Nature's Searing Wrath
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,8,119117);  -- Spell: Malarian Skin
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,9,118428);  -- Spell: Mana Reiterate Aura (page: Reiturate)
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,10,119257); -- Spell: Pack of Aina
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,11,118860); -- Spell: Preservation of Tunare
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,12,118570); -- Spell: Rumbling Servant
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,13,118791); -- Spell: Scorching Shadow
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,14,118762); -- Spell: Slitheren Venom
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,15,118630); -- Spell: Twincast
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,16,119248); -- Spell: Ward of Restoration
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,17,117913); -- Spell: Yowl at the Moon
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,18,117969); -- Tome of Combat Frenzy
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,19,119030); -- Tome of Daggerlunge
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,20,118669); -- Tome of Defer Death
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,21,119093); -- Tome of Final Breath
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,22,117920); -- Tome of Foray
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,23,119299); -- Tome of Knuckle Crush
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,24,118973); -- Tome of Sureshot Discipline
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,25,103133);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,26,103138);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,27,103143);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,28,103148);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,29,103153);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,30,103114);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (464000,31,103124);
+
+-- Void G: the Glowing Quartz family (page G list; the two Glowing
+-- Quartzites moved to F).
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,1,103119);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,2,103129);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,3,103134);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,4,103139);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,5,103144);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,6,103149);
+INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (465000,7,103154);
+
+-- ============================================================
+-- 3. Kunark partisan tasks raise Tynoc, Herald of Scale (1224),
+--    the v147 theme convention (page: theme quests raise Tynoc).
+-- ============================================================
+UPDATE `tasks` SET `faction_reward` = 1224, `faction_amount` = 150 WHERE `id` BETWEEN 303200 AND 303218;
+
+COMMIT;
+)SODZEB285_B",
+		.content_schema_update = false,
+	},
+	// ------------------------------------------------------------------
+	// Manifest twin of the hand-applied 2026-10-16 SoD quest->achievement
+	// criteria pass (it was never registered, so a fresh DB import lost
+	// it). Twin content of utils/sql/20261030_sod_criteria_twin_v286.sql
+	// (keep in sync); the ON DUPLICATE KEY UPDATE clause makes re-apply
+	// safe. See 20261016_sod_quest_criteria_rollback.sql for the inverse.
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 286,
+		.description = "20261030_sod_criteria_twin",
+		.check = "SELECT achievement_id FROM achievement_criteria WHERE achievement_id = 1645610 AND component_id = 1645618 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"SODCRIT286(
+-- 286: Phase 2 SoD quest hooks: the SoD quest components name a task
+-- title, so they are credited as TaskComplete criteria. Manifest twin
+-- of utils/sql/20261016_sod_quest_criteria.sql (applied by hand
+-- 2026-10-16, never registered; byte-identical content).
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO achievement_criteria (achievement_id, component_type, component_sequence, component_id, event_type, progress_mode, behavior, target_id, target_id2, target_value, required_count, enabled) VALUES
+  (1645610, 1, 1, 1645610, 4, 3, 0, 303120, 0, 0, 1, 1),
+  (1645610, 1, 2, 1645611, 4, 3, 0, 303074, 0, 0, 1, 1),
+  (1645610, 1, 3, 1645612, 4, 3, 0, 303075, 0, 0, 1, 1),
+  (1645610, 1, 4, 1645613, 4, 3, 0, 303121, 0, 0, 1, 1),
+  (1645610, 1, 5, 1645614, 4, 3, 0, 303122, 0, 0, 1, 1),
+  (1645610, 1, 6, 1645615, 4, 3, 0, 303123, 0, 0, 1, 1),
+  (1645610, 1, 7, 1645616, 4, 3, 0, 303124, 0, 0, 1, 1),
+  (1645610, 1, 8, 1645617, 4, 3, 0, 303126, 0, 0, 1, 1),
+  (1645610, 1, 9, 1645618, 4, 3, 0, 303125, 0, 0, 1, 1),
+  (1645620, 1, 1, 1645620, 4, 3, 0, 303076, 0, 0, 1, 1),
+  (1645620, 1, 2, 1645621, 4, 3, 0, 303010, 0, 0, 1, 1),
+  (1645620, 1, 3, 1645622, 4, 3, 0, 303130, 0, 0, 1, 1),
+  (1645620, 1, 4, 1645623, 4, 3, 0, 303131, 0, 0, 1, 1),
+  (1645620, 1, 5, 1645624, 4, 3, 0, 303132, 0, 0, 1, 1),
+  (1645620, 1, 6, 1645625, 4, 3, 0, 303133, 0, 0, 1, 1),
+  (1645620, 1, 7, 1645626, 4, 3, 0, 303134, 0, 0, 1, 1),
+  (1645620, 1, 8, 1645627, 4, 3, 0, 303135, 0, 0, 1, 1),
+  (1645710, 1, 1, 1645710, 4, 3, 0, 303140, 0, 0, 1, 1),
+  (1645710, 1, 2, 1645711, 4, 3, 0, 303141, 0, 0, 1, 1),
+  (1645710, 1, 3, 1645712, 4, 3, 0, 303142, 0, 0, 1, 1),
+  (1645710, 1, 4, 1645713, 4, 3, 0, 303143, 0, 0, 1, 1),
+  (1645710, 1, 5, 1645714, 4, 3, 0, 303144, 0, 0, 1, 1),
+  (1645710, 1, 6, 1645715, 4, 3, 0, 303145, 0, 0, 1, 1),
+  (1645710, 1, 7, 1645716, 4, 3, 0, 303146, 0, 0, 1, 1),
+  (1646610, 1, 1, 1646610, 4, 3, 0, 303000, 0, 0, 1, 1),
+  (1646610, 1, 2, 1646611, 4, 3, 0, 303001, 0, 0, 1, 1),
+  (1646610, 1, 3, 1646612, 4, 3, 0, 303110, 0, 0, 1, 1),
+  (1646610, 1, 4, 1646613, 4, 3, 0, 303111, 0, 0, 1, 1),
+  (1646610, 1, 5, 1646614, 4, 3, 0, 303112, 0, 0, 1, 1),
+  (1646610, 1, 6, 1646615, 4, 3, 0, 303002, 0, 0, 1, 1),
+  (1646610, 1, 7, 1646616, 4, 3, 0, 303113, 0, 0, 1, 1),
+  (1646610, 1, 8, 1646617, 4, 3, 0, 303114, 0, 0, 1, 1),
+  (1646610, 1, 9, 1646618, 4, 3, 0, 303115, 0, 0, 1, 1),
+  (1646610, 1, 10, 1646619, 4, 3, 0, 303116, 0, 0, 1, 1),
+  (1646620, 1, 1, 1646620, 4, 3, 0, 303100, 0, 0, 1, 1),
+  (1646620, 1, 2, 1646621, 4, 3, 0, 303101, 0, 0, 1, 1),
+  (1646620, 1, 3, 1646622, 4, 3, 0, 303102, 0, 0, 1, 1),
+  (1646620, 1, 4, 1646623, 4, 3, 0, 303103, 0, 0, 1, 1),
+  (1646620, 1, 5, 1646624, 4, 3, 0, 303104, 0, 0, 1, 1),
+  (1646620, 1, 6, 1646625, 4, 3, 0, 303105, 0, 0, 1, 1),
+  (1646620, 1, 7, 1646626, 4, 3, 0, 303106, 0, 0, 1, 1),
+  (1646620, 1, 8, 1646627, 4, 3, 0, 303109, 0, 0, 1, 1),
+  (1646620, 1, 9, 1646628, 4, 3, 0, 303107, 0, 0, 1, 1),
+  (1646620, 1, 10, 1646629, 4, 3, 0, 303108, 0, 0, 1, 1),
+  (1646710, 1, 1, 1646710, 4, 3, 0, 303117, 0, 0, 1, 1),
+  (1646710, 1, 2, 1646711, 4, 3, 0, 303118, 0, 0, 1, 1),
+  (1646710, 1, 3, 1646712, 4, 3, 0, 303119, 0, 0, 1, 1),
+  (1646710, 1, 4, 1646713, 4, 3, 0, 303070, 0, 0, 1, 1),
+  (1647010, 1, 1, 1647010, 4, 3, 0, 303042, 0, 0, 1, 1),
+  (1647010, 1, 2, 1647011, 4, 3, 0, 303043, 0, 0, 1, 1),
+  (1647010, 1, 3, 1647012, 4, 3, 0, 303044, 0, 0, 1, 1),
+  (1647010, 1, 4, 1647013, 4, 3, 0, 303045, 0, 0, 1, 1),
+  (1647010, 1, 5, 1647014, 4, 3, 0, 303046, 0, 0, 1, 1),
+  (1647010, 1, 6, 1647015, 4, 3, 0, 303047, 0, 0, 1, 1),
+  (1647210, 1, 1, 1647210, 4, 3, 0, 303172, 0, 0, 1, 1),
+  (1647210, 1, 2, 1647211, 4, 3, 0, 303173, 0, 0, 1, 1),
+  (1647210, 1, 3, 1647212, 4, 3, 0, 303174, 0, 0, 1, 1),
+  (1647210, 1, 4, 1647213, 4, 3, 0, 303175, 0, 0, 1, 1),
+  (1647210, 1, 5, 1647214, 4, 3, 0, 303176, 0, 0, 1, 1),
+  (1647210, 1, 6, 1647215, 4, 3, 0, 303177, 0, 0, 1, 1),
+  (1647210, 1, 7, 1647216, 4, 3, 0, 303178, 0, 0, 1, 1),
+  (1647210, 1, 8, 1647217, 4, 3, 0, 303179, 0, 0, 1, 1),
+  (1647410, 1, 1, 1647410, 4, 3, 0, 303180, 0, 0, 1, 1),
+  (1647410, 1, 2, 1647411, 4, 3, 0, 303181, 0, 0, 1, 1),
+  (1647410, 1, 3, 1647412, 4, 3, 0, 303182, 0, 0, 1, 1),
+  (1647410, 1, 4, 1647413, 4, 3, 0, 303183, 0, 0, 1, 1),
+  (1647410, 1, 5, 1647414, 4, 3, 0, 303184, 0, 0, 1, 1),
+  (1647410, 1, 6, 1647415, 4, 3, 0, 303185, 0, 0, 1, 1),
+  (1647410, 1, 7, 1647416, 4, 3, 0, 303186, 0, 0, 1, 1),
+  (1647510, 1, 1, 1647510, 4, 3, 0, 303154, 0, 0, 1, 1),
+  (1647510, 1, 2, 1647511, 4, 3, 0, 303155, 0, 0, 1, 1),
+  (1647510, 1, 3, 1647512, 4, 3, 0, 303156, 0, 0, 1, 1),
+  (1647510, 1, 4, 1647513, 4, 3, 0, 303157, 0, 0, 1, 1),
+  (1647510, 1, 5, 1647514, 4, 3, 0, 303158, 0, 0, 1, 1),
+  (1647510, 1, 6, 1647515, 4, 3, 0, 303159, 0, 0, 1, 1),
+  (1647520, 1, 1, 1647520, 4, 3, 0, 303147, 0, 0, 1, 1),
+  (1647520, 1, 2, 1647521, 4, 3, 0, 303148, 0, 0, 1, 1),
+  (1647520, 1, 3, 1647522, 4, 3, 0, 303149, 0, 0, 1, 1),
+  (1647520, 1, 4, 1647523, 4, 3, 0, 303150, 0, 0, 1, 1),
+  (1647520, 1, 5, 1647524, 4, 3, 0, 303151, 0, 0, 1, 1),
+  (1647520, 1, 6, 1647525, 4, 3, 0, 303152, 0, 0, 1, 1),
+  (1647520, 1, 7, 1647526, 4, 3, 0, 303153, 0, 0, 1, 1),
+  (1647610, 1, 1, 1647610, 4, 3, 0, 303031, 0, 0, 1, 1),
+  (1647610, 1, 2, 1647611, 4, 3, 0, 303032, 0, 0, 1, 1),
+  (1647610, 1, 3, 1647612, 4, 3, 0, 303033, 0, 0, 1, 1),
+  (1647610, 1, 4, 1647613, 4, 3, 0, 303034, 0, 0, 1, 1),
+  (1647610, 1, 5, 1647614, 4, 3, 0, 303035, 0, 0, 1, 1),
+  (1647610, 1, 6, 1647615, 4, 3, 0, 303030, 0, 0, 1, 1),
+  (1647620, 1, 1, 1647620, 4, 3, 0, 303164, 0, 0, 1, 1),
+  (1647620, 1, 2, 1647621, 4, 3, 0, 303165, 0, 0, 1, 1),
+  (1647620, 1, 3, 1647622, 4, 3, 0, 303166, 0, 0, 1, 1),
+  (1647620, 1, 4, 1647623, 4, 3, 0, 303167, 0, 0, 1, 1),
+  (1647620, 1, 5, 1647624, 4, 3, 0, 303168, 0, 0, 1, 1),
+  (1647620, 1, 6, 1647625, 4, 3, 0, 303169, 0, 0, 1, 1),
+  (1647620, 1, 7, 1647626, 4, 3, 0, 303170, 0, 0, 1, 1),
+  (1647620, 1, 8, 1647627, 4, 3, 0, 303171, 0, 0, 1, 1),
+  (1647620, 1, 9, 1647628, 4, 3, 0, 303163, 0, 0, 1, 1)
+ON DUPLICATE KEY UPDATE progress_mode=VALUES(progress_mode), behavior=VALUES(behavior), target_value=VALUES(target_value), required_count=VALUES(required_count), enabled=VALUES(enabled);
+COMMIT;
+)SODCRIT286",
+		.content_schema_update = false,
+	},
+	// ------------------------------------------------------------------
+	// Mudshoes' Pottery Trial (beholder v80 tradeskill shroud mission).
+	// Twin content of utils/sql/20261030_mudshoes_pottery_v287.sql (keep
+	// in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 287,
+		.description = "20261030_mudshoes_pottery",
+		.check = "SELECT id FROM shrouds WHERE id = 506 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"POTTERY287(
+-- 287: Mudshoes' Pottery Trial (beholder v80 tradeskill shroud mission).
+-- Twin of the manifest v287 entry (common/database/database_update_manifest_custom.cpp).
+-- Second mission in the Wendel cake-defense family (v121). A halfling potter
+-- shroud quest: players enter a cleared beholder v80 expedition as a tiny
+-- clay golem (shrouds.id 506, race 17), survive the water-elemental camp at
+-- the entrance until the halfling potter lands one hit (the shaping), then
+-- grow +30% per stage via the instant SE_ModelSize spell 44032 while they
+-- fight 10 shaper's hands, then 10 fire elementals (kiln flames 1520001999
+-- are melee/magic/client-harm immune scenery), then march back and one-shot
+-- the potter, the gnomish magician and his elementals. Pays Pottery (skill
+-- 69) +30 capped at 300 like the cake pays Baking.
+--
+-- Idempotent: every block is delete-guarded. Rollback:
+-- 20261030_mudshoes_pottery_v287_rollback.sql
+--
+-- NOTE: three new spell ids require a spells_us.txt re-export
+-- (shared_memory.bat, export-client-files.bat, restart zone layer) or the
+-- buff icons / cast text are blank on the RoF2 client.
+-- NOTE: re-running 20260922_shroud_catalog.sql wipes the shrouds table and
+-- drops the clay golem row; re-run this file afterwards if that ever happens.
+
+SET NAMES utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- 1. Zone version row: clone beholder (zoneidnumber 16) v0 as version 80.
+-- CREATE TABLE AS SELECT drops the auto_increment attribute, so give the id
+-- explicitly; delete-guarded so re-runs stay idempotent. The instance is a
+-- CLEARED clone: no spawn2 rows are copied from v0, so only the controller
+-- (spawned below) and the controller-spawned stage actors exist in v80.
+-- ---------------------------------------------------------------------------
+DELETE FROM `zone` WHERE `zoneidnumber` = 16 AND `version` = 80;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 16 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 80, `long_name` = 'Gorge of King Xorbb: Mudshoes'' Pottery Trial';
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+-- ---------------------------------------------------------------------------
+-- 2. Clay Golem 25 shroud form (id 506). Explicit id: quest scripts call
+-- ApplyShroud(506). Race 17 is the clay golem/muddite model the zone already
+-- uses; class 1 (warrior) is the form's class. size 2.0 is deliberately
+-- tiny (the local muddites are 4-5): the grow spell (44032) multiplies the
+-- CURRENT size, so the growth story reads tiny -> shaped -> kiln-fired.
+-- Stats derive from base_data like the shroud catalog.
+-- ---------------------------------------------------------------------------
+DELETE FROM `shrouds` WHERE `id` = 506 OR `progression` = 'Earthenwares';
+INSERT INTO `shrouds`
+	(`id`,`name`,`progression`,`branch`,`level`,`race`,`gender`,`class`,`texture`,`helmet_texture`,`size`,`hp`,`mana`,`endurance`)
+SELECT
+	506, 'Clay Golem 25', 'Earthenwares', 'Clay Golem', b.`level`, 17, 2, 1, 0, 255, 2.0,
+	CAST(ROUND(5 + b.`hp` + b.`hp_fac` * 75) AS SIGNED),
+	CASE WHEN b.`mana` > 0 THEN CAST(ROUND(b.`mana` + b.`mana_fac` * 75) AS SIGNED) ELSE 0 END,
+	CAST(ROUND(b.`end` + b.`end_fac` * 75) AS SIGNED)
+FROM base_data b
+WHERE b.`level` = 25 AND b.`class` = 1;
+
+-- ---------------------------------------------------------------------------
+-- 3. Mission spells (custom band below the RoF2 client spell ceiling of
+-- 45001; next free after 44031). Clone-and-modify like the deity-blessing
+-- spells, classes1-16 = 255, resisttype 0 (unresistable, like Parsing Root).
+--   44032 Kiln Growth       instant SE_ModelSize base 130 = +30% of current
+--                           size; the engine self-caps at two growths from
+--                           base size, which is exactly the two-cast design.
+--   44033 Clay Toughening I   permanent SE_MaxHPChange +400 max HP  (stage 2)
+--   44034 Clay Toughening II  permanent SE_MaxHPChange +1200 max HP (stage 3)
+-- No shroud_abilities rows: the golem fights with its own hands (doc section
+-- 6 is the place to add a kit later).
+-- ---------------------------------------------------------------------------
+DELETE FROM `spells_new` WHERE `id` IN (44032, 44033, 44034);
+
+-- 44032 Kiln Growth (from stock Shrink 40838: single target, beneficial,
+-- instant -- buffdurationformula 0 means no buff slot; the size change is
+-- sticky and survives the cast, which is what "grow" wants).
+DROP TEMPORARY TABLE IF EXISTS `tmp_spell`;
+CREATE TEMPORARY TABLE `tmp_spell` AS SELECT * FROM `spells_new` WHERE `id` = 40838;
+UPDATE `tmp_spell` SET
+	`id` = 44032, `name` = 'Kiln Growth',
+	`you_cast` = 'Your clay body swells as it takes shape.', `other_casts` = '',
+	`cast_on_you` = 'Your clay body swells as it takes shape.', `cast_on_other` = ' swells with shaped clay.',
+	`effect_base_value1` = 130,
+	`classes1` = 255, `classes2` = 255, `classes3` = 255, `classes4` = 255, `classes5` = 255, `classes6` = 255,
+	`classes7` = 255, `classes8` = 255, `classes9` = 255, `classes10` = 255, `classes11` = 255,
+	`classes12` = 255, `classes13` = 255, `classes14` = 255, `classes15` = 255, `classes16` = 255
+WHERE `id` = 40838;
+INSERT INTO `spells_new` SELECT * FROM `tmp_spell`;
+DROP TEMPORARY TABLE `tmp_spell`;
+
+-- 44033 Clay Toughening I (from Plague of Hulcror 5713, a flat SE_MaxHPChange
+-- debuff: flip the sign, make it a beneficial permanent buff).
+DROP TEMPORARY TABLE IF EXISTS `tmp_spell`;
+CREATE TEMPORARY TABLE `tmp_spell` AS SELECT * FROM `spells_new` WHERE `id` = 5713;
+UPDATE `tmp_spell` SET
+	`id` = 44033, `name` = 'Clay Toughening I',
+	`goodEffect` = 1, `buffdurationformula` = 50, `buffduration` = 0, `resisttype` = 0,
+	`you_cast` = 'You knead yourself into shape.', `other_casts` = '',
+	`cast_on_you` = 'Your clay firms up under firm hands.',
+	`cast_on_other` = ' firms up under firm hands.', `spell_fades` = 'Your clay softens.',
+	`effect_base_value1` = 400,
+	`classes1` = 255, `classes2` = 255, `classes3` = 255, `classes4` = 255, `classes5` = 255, `classes6` = 255,
+	`classes7` = 255, `classes8` = 255, `classes9` = 255, `classes10` = 255, `classes11` = 255,
+	`classes12` = 255, `classes13` = 255, `classes14` = 255, `classes15` = 255, `classes16` = 255
+WHERE `id` = 5713;
+INSERT INTO `spells_new` SELECT * FROM `tmp_spell`;
+DROP TEMPORARY TABLE `tmp_spell`;
+
+-- 44034 Clay Toughening II (same donor, kiln-fired magnitude).
+DROP TEMPORARY TABLE IF EXISTS `tmp_spell`;
+CREATE TEMPORARY TABLE `tmp_spell` AS SELECT * FROM `spells_new` WHERE `id` = 5713;
+UPDATE `tmp_spell` SET
+	`id` = 44034, `name` = 'Clay Toughening II',
+	`goodEffect` = 1, `buffdurationformula` = 50, `buffduration` = 0, `resisttype` = 0,
+	`you_cast` = 'The kiln hardens you.', `other_casts` = '',
+	`cast_on_you` = 'The kiln fire hardens your clay to stoneware.',
+	`cast_on_other` = ' hardens to stoneware in the kiln fire.', `spell_fades` = 'Your stoneware softens.',
+	`effect_base_value1` = 1200,
+	`classes1` = 255, `classes2` = 255, `classes3` = 255, `classes4` = 255, `classes5` = 255, `classes6` = 255,
+	`classes7` = 255, `classes8` = 255, `classes9` = 255, `classes10` = 255, `classes11` = 255,
+	`classes12` = 255, `classes13` = 255, `classes14` = 255, `classes15` = 255, `classes16` = 255
+WHERE `id` = 5713;
+INSERT INTO `spells_new` SELECT * FROM `tmp_spell`;
+DROP TEMPORARY TABLE `tmp_spell`;
+
+-- ---------------------------------------------------------------------------
+-- 4. NPCs. 1520001995 intentionally unused (kept as a spare in the band).
+-- Elemental/mage/potter damage is enormous against the tiny golem (one hit
+-- kills it, which is the stage-1 hazard) but their HP is a sliver, so the
+-- twice-grown, toughened golem one-shots them in stage 4 -- the same three
+-- actors serve both stages and never despawn between them.
+-- The kiln flame is unkillable scenery: 'ABZ' = melee/magic/client-harm
+-- immunity (npc.cpp NPCSpecialAttacks letters), npc_aggro 0.
+-- ---------------------------------------------------------------------------
+DELETE FROM `npc_types` WHERE `id` IN
+	(1520001990,1520001991,1520001992,1520001993,1520001994,1520001996,1520001997,1520001998,1520001999);
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`,`npcspecialattks`)
+VALUES
+	(1520001990,'Pimm_Mudshoes','Wheeler of the Bazaar',30,128,1,1,1500,0,0,0,3,1.25,0,0,30,300,0,0,0,0,0,0,''),
+	(1520001991,'#Pottery_Trial_Controller','The Kiln Ward',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0,''),
+	(1520001992,'a_halfling_potter','Wheeler of Clay',25,128,1,1,45,1,0,0,3,1.25,40,90,30,100,1,250,0,0,0,0,''),
+	(1520001993,'a_gnomish_magician','Keeper of the Rite',25,12,1,1,60,0,0,0,3,1.25,8000,12000,30,100,1,250,0,0,0,0,''),
+	(1520001994,'a_water_elemental','Bound to the Magician',25,211,1,1,60,2,0,0,5,1.25,9000,14000,30,150,1,400,0,0,0,0,''),
+	(1520001996,'a_shapers_hand','Won''t Hold Still',10,80,1,1,180,2,0,0,4,1.25,10,24,30,120,1,600,0,0,0,0,''),
+	(1520001997,'a_shapers_hand','Patient as Clay',10,80,1,1,180,2,1,0,4,1.25,10,24,30,120,0,0,0,0,0,0,''),
+	(1520001998,'a_fire_elemental','Kiln-Bound',25,212,1,1,300,2,0,0,5,1.25,30,55,30,200,1,300,0,0,0,0,''),
+	(1520001999,'a_kiln_flame','Cannot Be Shaped',30,212,1,1,32000,2,1,0,5,0.75,0,0,30,300,0,0,0,0,0,0,'ABZ');
+
+-- ---------------------------------------------------------------------------
+-- 5. Spawns: Mudshoes in the Bazaar v0 (next to Wendel_Sweetcrumb), the
+-- invisible controller in beholder v80 (version column MUST be the instance
+-- version or -1 or the instance boots with no controller). Stage actors are
+-- NOT spawned here -- the controller spawns them per stage so the elemental
+-- count can scale with the party.
+-- spawn2 id band is shared across sessions: re-grep MAX(id) before reusing.
+-- ---------------------------------------------------------------------------
+DELETE FROM `spawngroup` WHERE `id` IN (5004767,5004768);
+DELETE FROM `spawnentry` WHERE `spawngroupID` IN (5004767,5004768);
+DELETE FROM `spawn2` WHERE `id` IN (1520028328,1520028329);
+INSERT INTO `spawngroup` (`id`,`name`) VALUES
+	(5004767,'pimm_mudshoes_bazaar'),
+	(5004768,'pottery_trial_controller_beholder_80');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES
+	(5004767,1520001990,100),
+	(5004768,1520001991,100);
+INSERT INTO `spawn2`
+	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
+VALUES
+	(1520028328,5004767,'bazaar',    0,162,-489,3,128,7200,0),
+	(1520028329,5004768,'beholder', 80,-1840,720,9,0,0,0);
+
+-- ---------------------------------------------------------------------------
+-- 6. Roam grids (type 3, random, matching beholder's stock grid style) for
+-- the entrance water elementals and the hunter shaper's hands. The passive
+-- hands and every other stage actor get grid 0 (stand and wait).
+-- grid ids are global: 1520000000 was already taken, these two were free.
+-- ---------------------------------------------------------------------------
+DELETE FROM `grid` WHERE `id` IN (1520000001,1520000002) AND `zoneid` = 16;
+DELETE FROM `grid_entries` WHERE `gridid` IN (1520000001,1520000002) AND `zoneid` = 16;
+INSERT INTO `grid` (`id`,`zoneid`,`type`,`type2`) VALUES
+	(1520000001,16,3,0),
+	(1520000002,16,3,0);
+INSERT INTO `grid_entries` (`gridid`,`zoneid`,`number`,`x`,`y`,`z`,`heading`,`pause`,`centerpoint`) VALUES
+	(1520000001,16,1,-1905,690,9,-1,15,0),
+	(1520000001,16,2,-1770,775,9,-1,0,0),
+	(1520000001,16,3,-1710,660,9,-1,0,0),
+	(1520000001,16,4,-1855,805,9,-1,0,0),
+	(1520000002,16,1,135,-100,7,-1,10,0),
+	(1520000002,16,2,20,-205,7,-1,0,0),
+	(1520000002,16,3,-100,-110,7,-1,0,0),
+	(1520000002,16,4,15,-15,7,-1,0,0);
+)POTTERY287",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// TBS Blacksail aug line wiring (v288): makes "Jonas Dagmire's
+	// Skeletal Hand" (tasks 625010-625048, Blacksail Smugglers faction
+	// 1169) completable end to end. The 27 bone tasks pay 10 Doubloons
+	// each (alternate_currency 10 -> 79910) so Halon Griere's Bone Joint
+	// Compound (79918, 10 Doubloons) is buyable; the 15 quest NPCs carry
+	// npc_faction 1520000063 (primaryfaction 1169) and member kills lower
+	// 1169 by 50; the container row gets the live Indifferent gate
+	// (faction_required 0, fresh players start -100); Lock of Siren Hair
+	// (28520) gets 10% droppers on the five buriedsea siren loottables;
+	// Fire Totem Piece (54748) chances raised 0.015-0.026% -> 15%/35%;
+	// 26 spawns added in buriedsea (Sharpeye recruits 17->25, tigers/
+	// raptors/basilisks 6->12 each, under task goalcounts 20/10/10/10);
+	// the clobbered duplicate Jonas recipe set 991100/991103-991106 is
+	// disabled and 992000-992006 gets tradeskill 69; the 132 stale
+	// jardelshook spawns (spawngroups 95146-95277, unreachable zone) are
+	// removed -- the Echo spawn (1520004232) is kept. 625014's package
+	// items are script-side (Murderous_Mal.pl / barren/Silverlip_Slim.pl).
+	// Twin: utils/sql/20261030_tbs_blacksail_augline_wiring.sql
+	// (keep in sync); rollback twin alongside it.
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 288,
+		.description = "20261030_tbs_blacksail_augline_wiring",
+		.check = "SELECT id FROM tasks WHERE id = 625010 AND reward_point_type = 10 AND reward_points = 10 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"AUG288(
+SET NAMES utf8mb4;
+START TRANSACTION;
+UPDATE `tasks` SET `reward_point_type` = 10, `reward_points` = 10 WHERE `id` IN (
+    625010, 625011, 625012, 625013, 625014, 625015, 625016, 625017, 625018,
+    625021, 625022, 625023, 625026, 625027, 625028, 625031, 625032, 625033,
+    625036, 625037, 625038, 625041, 625042, 625043, 625046, 625047, 625048
+);
+UPDATE `npc_types` SET `npc_faction_id` = 1520000063 WHERE `id` IN (
+    422004, 422009, 422012, 422019, 423079, 423091, 423105, 423107, 423122,
+    423124, 423144, 423146, 423148, 423152, 423900
+);
+INSERT INTO `npc_faction_entries` (`npc_faction_id`, `faction_id`, `value`, `npc_value`, `temp`) VALUES
+    (1520000063, 1169, -50, 0, 0);
+UPDATE `merchantlist` SET `faction_required` = 0 WHERE `merchantid` = 423124 AND `item` = 79918;
+INSERT INTO `lootdrop` (`id`, `name`) VALUES
+    (1520009420, 'jdas_siren_hair_enticer'),
+    (1520009421, 'jdas_siren_hair_pirate'),
+    (1520009422, 'jdas_siren_hair_razorfin'),
+    (1520009423, 'jdas_siren_hair_tormentor'),
+    (1520009424, 'jdas_siren_hair_spitfire');
+INSERT INTO `lootdrop_entries` (`lootdrop_id`, `item_id`, `item_charges`, `equip_item`, `chance`, `disabled_chance`, `trivial_min_level`, `trivial_max_level`, `multiplier`, `npc_min_level`, `npc_max_level`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`) VALUES
+    (1520009420, 28520, 1, 0, 10, 0, 0, 0, 1, 0, 0, -1, -1, NULL, NULL),
+    (1520009421, 28520, 1, 0, 10, 0, 0, 0, 1, 0, 0, -1, -1, NULL, NULL),
+    (1520009422, 28520, 1, 0, 10, 0, 0, 0, 1, 0, 0, -1, -1, NULL, NULL),
+    (1520009423, 28520, 1, 0, 10, 0, 0, 0, 1, 0, 0, -1, -1, NULL, NULL),
+    (1520009424, 28520, 1, 0, 10, 0, 0, 0, 1, 0, 0, -1, -1, NULL, NULL);
+INSERT INTO `loottable_entries` (`loottable_id`, `lootdrop_id`, `multiplier`, `droplimit`, `mindrop`, `probability`) VALUES
+    (93582, 1520009420, 1, 1, 0, 100),
+    (93545, 1520009421, 1, 1, 0, 100),
+    (93585, 1520009422, 1, 1, 0, 100),
+    (93589, 1520009423, 1, 1, 0, 100),
+    (93588, 1520009424, 1, 1, 0, 100);
+UPDATE `lootdrop_entries` SET `chance` = 15 WHERE `lootdrop_id` = 112698 AND `item_id` = 54748;
+UPDATE `lootdrop_entries` SET `chance` = 35 WHERE `lootdrop_id` = 112787 AND `item_id` = 54748;
+INSERT INTO `spawngroup` (`id`, `name`, `spawn_limit`, `dist`, `max_x`, `min_x`, `max_y`, `min_y`, `delay`, `mindelay`, `despawn`, `despawn_timer`, `wp_spawns`) VALUES
+    (1900000100, 'blacksail_aug_rec1', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000101, 'blacksail_aug_rec2', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000102, 'blacksail_aug_rec3', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000103, 'blacksail_aug_rec4', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000104, 'blacksail_aug_rec5', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000105, 'blacksail_aug_rec6', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000106, 'blacksail_aug_rec7', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000107, 'blacksail_aug_rec8', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000108, 'blacksail_aug_tig1', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000109, 'blacksail_aug_tig2', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000110, 'blacksail_aug_tig3', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000111, 'blacksail_aug_tig4', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000112, 'blacksail_aug_tig5', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000113, 'blacksail_aug_tig6', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000114, 'blacksail_aug_rap1', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000115, 'blacksail_aug_rap2', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000116, 'blacksail_aug_rap3', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000117, 'blacksail_aug_rap4', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000118, 'blacksail_aug_rap5', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000119, 'blacksail_aug_rap6', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000120, 'blacksail_aug_bas1', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000121, 'blacksail_aug_bas2', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000122, 'blacksail_aug_bas3', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000123, 'blacksail_aug_bas4', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000124, 'blacksail_aug_bas5', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0),
+    (1900000125, 'blacksail_aug_bas6', 0, 0, 0, 0, 0, 0, 45000, 15000, 0, 100, 0);
+INSERT INTO `spawnentry` (`spawngroupID`, `npcID`, `chance`, `condition_value_filter`, `min_time`, `max_time`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`) VALUES
+    (1900000100, 423227, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000101, 423238, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000102, 423244, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000103, 423308, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000104, 423313, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000105, 423317, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000106, 423320, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000107, 423327, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000108, 423085, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000109, 423085, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000110, 423101, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000111, 423101, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000112, 423136, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000113, 423136, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000114, 423071, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000115, 423071, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000116, 423071, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000117, 423100, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000118, 423100, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000119, 423100, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000120, 423114, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000121, 423114, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000122, 423128, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000123, 423128, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000124, 423180, 100, 1, 0, 0, -1, -1, NULL, NULL),
+    (1900000125, 423180, 100, 1, 0, 0, -1, -1, NULL, NULL);
+INSERT INTO `spawn2` (`id`, `spawngroupID`, `zone`, `version`, `x`, `y`, `z`, `heading`, `respawntime`) VALUES
+    (1520028400, 1900000100, 'buriedsea', 0, 1180.000, 4420.000, 318.000, 511, 640),
+    (1520028401, 1900000101, 'buriedsea', 0, 1120.000, 4520.000, 312.000, 511, 640),
+    (1520028402, 1900000102, 'buriedsea', 0, 1500.000, 4400.000, 314.000, 380, 640),
+    (1520028403, 1900000103, 'buriedsea', 0, 1130.000, 4740.000, 316.000, 511, 640),
+    (1520028404, 1900000104, 'buriedsea', 0, 1125.000, 4765.000, 312.000, 160, 640),
+    (1520028405, 1900000105, 'buriedsea', 0, 1290.000, 4745.000, 309.000, 511, 640),
+    (1520028406, 1900000106, 'buriedsea', 0, 1285.000, 4790.000, 312.000, 220, 640),
+    (1520028407, 1900000107, 'buriedsea', 0, 1340.000, 4860.000, 319.000, 95, 640),
+    (1520028408, 1900000108, 'buriedsea', 0, -2960.000, -1380.000, 315.000, 511, 640),
+    (1520028409, 1900000109, 'buriedsea', 0, -4050.000, -300.000, 309.000, 511, 640),
+    (1520028410, 1900000110, 'buriedsea', 0, -3150.000, -1290.000, 320.000, 511, 640),
+    (1520028411, 1900000111, 'buriedsea', 0, -4180.000, -100.000, 308.000, 511, 640),
+    (1520028412, 1900000112, 'buriedsea', 0, -3400.000, -1200.000, 311.000, 511, 640),
+    (1520028413, 1900000113, 'buriedsea', 0, -3100.000, -1350.000, 318.000, 511, 640),
+    (1520028414, 1900000114, 'buriedsea', 0, -2800.000, -1270.000, 309.000, 511, 640),
+    (1520028415, 1900000115, 'buriedsea', 0, -3350.000, -1220.000, 309.000, 511, 640),
+    (1520028416, 1900000116, 'buriedsea', 0, -4100.000, -200.000, 309.000, 511, 640),
+    (1520028417, 1900000117, 'buriedsea', 0, -2950.000, -1180.000, 338.000, 511, 640),
+    (1520028418, 1900000118, 'buriedsea', 0, -3900.000, -250.000, 340.000, 511, 640),
+    (1520028419, 1900000119, 'buriedsea', 0, -4150.000, -130.000, 339.000, 511, 640),
+    (1520028420, 1900000120, 'buriedsea', 0, -3050.000, -1200.000, 330.000, 511, 640),
+    (1520028421, 1900000121, 'buriedsea', 0, -3990.000, -30.000, 306.500, 511, 640),
+    (1520028422, 1900000122, 'buriedsea', 0, -3200.000, -1450.000, 306.500, 511, 640),
+    (1520028423, 1900000123, 'buriedsea', 0, -4000.000, -70.000, 310.000, 511, 640),
+    (1520028424, 1900000124, 'buriedsea', 0, -4250.000, 45.000, 305.000, 511, 640),
+    (1520028425, 1900000125, 'buriedsea', 0, -4300.000, 50.000, 305.000, 511, 640);
+UPDATE `tradeskill_recipe` SET `enabled` = 0 WHERE `id` IN (991100, 991103, 991104, 991105, 991106);
+UPDATE `tradeskill_recipe` SET `tradeskill` = 69 WHERE `id` BETWEEN 992000 AND 992006;
+DELETE se FROM `spawnentry` se JOIN `spawngroup` sg ON se.spawngroupID = sg.id WHERE sg.id BETWEEN 95146 AND 95277;
+DELETE s2 FROM `spawn2` s2 WHERE s2.zone = 'jardelshook' AND s2.spawngroupID BETWEEN 95146 AND 95277;
+DELETE FROM `spawngroup` WHERE `id` BETWEEN 95146 AND 95277;
+COMMIT;
+)AUG288",
+		.content_schema_update = false,
+	},
 };
