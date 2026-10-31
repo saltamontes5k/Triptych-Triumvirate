@@ -697,6 +697,62 @@ N(OP_RealEstateDefinitions),         // 0x2698 definition list; must arrive befo
 N(OP_RealEstateZoneContext),         // 0x6fd0 estate snapshot that establishes zone context
 N(OP_RealEstateSnapshot),            // 0x63fd estate snapshot; same body as 0x6fd0
 N(OP_RealEstateRegions),             // 0x49df region manifest; feeds the client spatial index
+// Names recovered from the public rof2-* reconstruction branches; see
+// docs/rof2-opcode-harvest.md. Mapping a name is not behaviour: a handler is attached in
+// Client::MapOpcodes only where this server implements one, and the rest are logged.
+N(OP_RealEstatePlotSearchOpen),       // 0x2b35 S2C one byte, opens the native Plot Search window
+N(OP_RealEstateOwnedList),            // 0x2aa7
+N(OP_RealEstateAccess),               // 0x485d
+N(OP_RealEstateAccessEdit),           // 0x3146
+N(OP_RealEstateTransfer),             // 0x507f
+N(OP_RealEstateItemDelta),            // 0x087f
+N(OP_RealEstateWorldRemove),          // 0x2a9e
+N(OP_RealEstatePlacementSource),      // 0x2523
+N(OP_RealEstatePlacementEnd),         // 0x6213
+N(OP_RealEstateOperationResult),      // 0x1228
+N(OP_RealEstateItemMenu),             // 0x21ec 768-byte item menu query/response
+N(OP_RealEstateCustomInteraction),    // 0x51e3
+N(OP_RealEstateExit),                 // 0x1da9
+N(OP_RealEstateTrophyOpen),           // 0x51a9
+N(OP_RealEstateTrophyToggle),         // 0x756a
+N(OP_RealEstateTrophy),               // 0x4b65
+N(OP_RealEstateTrophyList),           // 0x7697
+N(OP_RealEstateTrophyTimer),          // 0x51ae
+N(OP_RealEstateTrophyClear),          // 0x08bf
+N(OP_RealEstateAnchorConfirm),        // 0x7bb1
+N(OP_RealEstateOwnerItemPurge),       // 0x1967
+N(OP_RealEstateOwnedItemList),        // 0x3e00
+N(OP_RealEstateArchivedList),         // 0x66df
+N(OP_RealEstateSaleResult),           // 0x66bf
+N(OP_RealEstateTransferResult),       // 0x68ba
+N(OP_RealEstateTransferConsent),      // 0x5a63
+N(OP_RealEstateBindSpawn),            // 0x21ea
+N(OP_GuildTrophyAvailable),           // 0x7db5
+N(OP_GuildTrophyActive),              // 0x7dd2
+N(OP_GuildTrophyToggle),              // 0x039d
+N(OP_GuildTrophySave),                // 0x7c1d
+N(OP_GuildTrophyModify),              // 0x7a41
+N(OP_GuildTrophyOptIn),               // 0x02bc
+N(OP_MercenaryAutoAssist),            // 0x0b72
+N(OP_MercenaryAssist),                // 0x7e6f
+N(OP_MercenarySwitch),                // 0x1b37
+N(OP_MercenaryTransferRequest),       // 0x5df8
+N(OP_MercenaryTransferResponse),      // 0x4333
+N(OP_MercenaryUnshroud),              // 0x69ca
+N(OP_MercenaryUnshroudResponse),      // 0x6e9f
+N(OP_MercenaryDead),                  // 0x038f
+N(OP_MercenaryRestricted),            // 0x0e52
+N(OP_MercenaryRestoreReady),          // 0x2749
+N(OP_MercenaryUpkeep),                // 0x5f88
+N(OP_MercenaryCostUpdate),            // 0x3cbc
+N(OP_MercenaryCurrencyMessage),       // 0x29ec
+N(OP_MercenaryTimerUpdate),           // 0x2b4f
+N(OP_SpiritShroudAbilityRequest),     // 0x3acc
+N(OP_SpiritShroudEquipmentRequest),   // 0x4b25
+N(OP_SpiritShroudComplete),           // 0x7786
+N(OP_SpiritShroudBank),               // 0x7b71 keeper storage window
+N(OP_SpiritShroudBankItems),          // 0x1115
+N(OP_SpiritShroudBankEmpty),          // 0x0728
 N(OP_RealEstateWorldItem),           // 0x1045 places a world actor (S2C, ActorRecord only)
 N(OP_RealEstateItemQuery),           // 0x050c client asks for an estate's item list (C2S)
 N(OP_RealEstateItemList),            // 0x1cef estate item list (S2C)

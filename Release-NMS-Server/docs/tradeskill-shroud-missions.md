@@ -897,6 +897,7 @@ Track the line here so ids and timers do not collide.
 | Mission | Skill | ID | Zone / ver | Form | Giver | Controller | Lockout |
 |---|---|---|---|---|---|---|---|
 | Fool's Gold Cake Defense | Baking (60) | 500 | rivervale / 202 | Birthday Cake 25 (race 629) | 1520001800 | 1520001801 | 18 h |
+| Mudshoes' Pottery Trial | Pottery (69) | 506 | beholder / 80 | Clay Golem 25 (race 17, +379 pot illusion) | 1520001990 | 1520001991 | 18 h |
 | _(next)_ | | | | | | | |
 
 Each row gets its own expedition name (its own timer), its own giver NPC, and —

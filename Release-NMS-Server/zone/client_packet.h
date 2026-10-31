@@ -274,6 +274,7 @@
 	void Handle_OP_RealEstateHouseSwap(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateInspect(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateItemInspect(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemMenu(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateItemQuery(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateLoadLayout(const EQApplicationPacket *app);
@@ -286,8 +287,10 @@
 	void Handle_OP_RealEstateSale(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateTextRequest(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTransfer(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateVotingOptOut(const EQApplicationPacket *app);
 	void Handle_OP_ReadBook(const EQApplicationPacket *app);
+	void Handle_OP_Unimplemented(const EQApplicationPacket *app);
 	void Handle_OP_RecipeAutoCombine(const EQApplicationPacket *app);
 	void Handle_OP_RecipeDetails(const EQApplicationPacket *app);
 	void Handle_OP_RecipesFavorite(const EQApplicationPacket *app);

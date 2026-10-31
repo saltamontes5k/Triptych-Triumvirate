@@ -58,6 +58,7 @@ public:
 	const std::vector<RewardSelectionReward> &Rewards(uint32_t achievement_id) const;
 	const RewardSelectionSet *RewardSet(uint32_t achievement_id) const;
 	// True when the achievement has criteria and every one is a zone enter.
+	// Such achievements never deliver rewards.
 	bool IsExplorationOnly(uint32_t achievement_id) const;
 	const std::vector<AchievementCastRequirement> &CastRequirements(uint32_t restriction_id) const;
 	std::optional<uint8_t> RequiredClass(uint32_t achievement_id) const;

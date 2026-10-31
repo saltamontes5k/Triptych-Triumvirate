@@ -1171,7 +1171,10 @@ Mob *EntityList::GetMob(uint16 get_id)
 	if (get_id == 0)
 		return nullptr;
 
-	if ((ent = entity_list.GetEntityMob(get_id)))
+	// A stale map key can still name a mob whose current ID differs (a hovering client
+	// keeps its former spawn entry). Returning it would hide a corpse that legitimately
+	// holds the requested ID, so the key has to agree with the live ID.
+	if ((ent = entity_list.GetEntityMob(get_id)) && ent->GetID() == get_id)
 		return ent->CastToMob();
 	else if ((ent = entity_list.GetEntityCorpse(get_id)))
 		return ent->CastToMob();

@@ -88,18 +88,35 @@ well-formed, and `#housing exterior <door_id> <item_id> <model>` is the probe.
 | Item/content database and housing database identical | True here (single `peq`) |
 | They do not merge custom C++ | Applies to us the other way round: nothing of theirs is merged |
 
-## 6. Still missing locally
+## 6. Still missing locally (rechecked 2026-10-30)
 
-- `0x45be` purchase (188-byte C2S envelope; price/upkeep component ids at +172/+176, cached
-  roster count at +180) and its one-byte S2C — the path that would replace `#housing place`.
-- `0x711a` placement commit (96 bytes: heading/pitch/roll/scale at 44..56, y/x/z at 60..68,
-  extents 72..80, centre 84..92) — the path that would replace `#housing exterior`.
-- Storage: `0x613d` pack, `0x6917` store-all, `0x5b41` layout load, escrow `0x2aa6`.
-- Guild trophies: the six `0x7db5/0x7dd2/0x039d/0x7c1d/0x7a41/0x02bc` opcodes.
-- `0x21ec` item menu records, without which the item-action menu is inert.
+Two entries from the first version of this list are implemented and are no longer gaps:
 
-Each of those is a layout we can now take from `protocol/STRUCTS.md` when we want the feature;
-none of them blocks the current gate work.
+- `0x45be` purchase, `zone/nms_housing.cpp:692` — the 188-byte C2S envelope is decoded, the
+  plot is claimed and the one-byte S2C is sent. It logs the price/upkeep components at
+  +172/+176; it does not charge them, so there is still no tariff behind the window.
+- `0x711a` placement commit, `zone/nms_housing.cpp:730` — the building pose is persisted and
+  the item is not consumed.
+
+Everything below is mapped now. Anything without a handler is registered against
+`Client::Handle_OP_Unimplemented` (`k_log_only_rof2` in `zone/client_packet.cpp`), so the
+client's clicks reach the zone log with the opcode's name instead of vanishing.
+
+- Implemented: `0x2b35` plot-search opener (sent before the plot list, and `#housing plotsearch`),
+  `0x21ec` item menu (Inspect, plus Enter for the lot's owner), `0x58c7` item inspect (replies
+  with the serialized building item, gated on what the lot actually holds), `0x796c` estate
+  inspect (the inspection record for a plot: type, ids, owner, display name) and `0x2aa7` owned
+  list (count + estate ids, sent last so every estate it names is already registered).
+- Storage: `0x613d` pack, `0x6917` store-all, `0x5b41` layout load, escrow `0x2aa6` — log-only.
+- Guild trophies: `0x7db5/0x7dd2/0x039d/0x7c1d/0x7a41/0x02bc` — log-only.
+- Owned/archived lists (`0x2aa7/0x3e00/0x66df`), ACLs (`0x485d/0x3146`), transfer
+  (`0x507f/0x68ba/0x5a63`), per-item delta (`0x087f`), world remove (`0x2a9e`), placement
+  source/end (`0x2523/0x6213`), operation result (`0x1228`), custom interaction (`0x51e3`),
+  exit (`0x1da9`), anchor confirm (`0x7bb1`), owner purge (`0x1967`), sale result (`0x66bf`),
+  bind spawn (`0x21ea`) — log-only.
+
+Recovered field layouts for all of the above, including the storage, escrow and trophy bodies,
+are catalogued in [rof2-opcode-harvest.md](rof2-opcode-harvest.md).
 
 
 ## 7. Opcode names (fixed 2026-10-29)
@@ -144,4 +161,74 @@ and never consumes; `#housing claim` stays the explicit path.
 
 `0x711a` (`OP_RealEstatePlacementCommit`) is still unmapped. A placement begun in the client can
 be previewed but not committed, so the client-side build flow stops there.
+
+## 8. Fork-integration parity check + interior furniture v1 (2026-10-30)
+
+The author of the housing overlay rebased their whole RoF2 stack onto upstream `develop`
+(`c9c8747a`) as `nightstalker6669/EQEmu@rof2-integration`: six linear feature layers —
+shared-core (inventory-session custody), housing (`710ecb75`), fellowship, mercenaries,
+spirit-shrouds (`e32ca155`) and achievements. Checked for parity against that branch:
+
+- **Opcode contract: full parity.** Their `extensions/rof2/housing/protocol/OPCODES.md`
+  (snapshot 2026-10-25) lists 56 RealEstate/GuildTrophy opcodes; every name and number matches
+  this tree's §7 renames. We additionally name `0x3c8b`/`0x7ad1`, which their snapshot does not.
+- **Field layouts: still current.** The four big overlay artifacts in their source manifest are
+  byte-for-byte the sizes §4 recorded — same snapshot era we reviewed; nothing new to re-decode.
+- **Feature depth: divergent by design** (§4 stands). Their layer runs the whole overlay —
+  charged purchases (coin wallet/escrow), interior furniture with geometry, crates/vaults,
+  upkeep/billing, retirement/returns, guild halls/trophies/portals, ACLs, transfers, service
+  NPCs, pets, ~80 migrations. We run the lean `nms_plot`/`nms_neighborhood` loop.
+- **Tariff note:** their overlay now ships `plot_pricing_defaults` (small 21pp/2.1 daily,
+  market 42/4.2, ordinary 84/8.4, large 126/12.6, premium 168/16.8, guild 21/2) — explicitly
+  "approximate emulator defaults, using later community price tables, not an authenticated May
+  2013 catalogue". That supersedes the *informational* half of §2 ("no cost scheme is
+  published"): a scheme exists now, but it is still invented policy, so our purchase path still
+  logs price/upkeep and charges nothing.
+- **Shroud cross-reference:** their `spirit-shrouds` extension is a DoN-style player-facing
+  progression system (16 opcodes, native transform 0x6562 + 0x7786 ack, XP/AA escrow, 112-form
+  catalog, 47 paid AA groups), a different feature from our mission shrouds;
+  `rof2-opcode-harvest.md` already maps the shared numbers.
+- **Achievements:** same engine origin (PR5119 `c68d0074`) both sides; theirs adds 8 hardening
+  patches (class-reward column, NPC-bound task selector, restricted targeting, idle-zone task
+  reload), ours adds the multiclass/wildcard/cross-zone work. Their real value is 14 RoF-zone
+  quest/task packages our tree lacks entirely.
+
+### Furniture v1 (built this pass)
+
+Interior furniture, cherry-picked layouts only — no overlay C++ ported:
+
+- **Storage** (custom migration **289**, twin `utils/sql/20261030_housing_furniture_v289.sql`):
+  `nms_house_item` (one row per placed item) and `nms_housing_placeable` (GM-curated
+  allowlist — no itemtype/name heuristic decides placeability).
+- **GUID**: furniture rows pack the row id into the raw bytes the building GUID leaves zero
+  (`MakeFurnitureId`/`DecodeRealEstateId`), so every placed item is addressable for pickup and
+  the 0x1045 `record_num` is the row id (STRUCTS.md: it must not be the item id).
+- **Handlers now real**: `0x2036` pickup (GUID → row → ownership gate → item returned via the
+  merchant-buy inventory order, row deleted, `0x2a9e` retire) and `0x6917` store-all (0-byte
+  body; stows the interior). The placement Begin/Commit handlers grew the interior furniture
+  half (preview at the player's feet; commit consumes the item and persists the 7-float pose
+  from 44..68) — **dormant until v2**, because the client's own Place action needs the
+  72-byte item-metadata tail this tree does not emit.
+- **Commands** (`#housing` remains GM-admin): `item place <item_id>` (consumes into
+  `nms_house_item` where you stand, inside your interior), `item remove <row_id|all>`,
+  `item list [door_id]`, `placeable <item_id> [off]`. Rendering rides the existing identity
+  burst: `SendRealEstateIdentity`'s interior branch now sends every row as a 0x1045 actor on
+  zone-in and `#housing send`.
+- **Skipped, on purpose**: crates/vault/escrow/custody sessions, upkeep, geometry/collision
+  validation (no `maps/base` here), wall/curved/planar mounting, housepets (no authenticated
+  bindings), the 0x1cef item-list entries and 0x087f deltas (still the deliberate empty form —
+  the manage window shows no list; placement/pickup do not depend on it).
+
+**v2 list**: real 0x1cef entries + 0x087f deltas (needs the fork's `housing-wire-reference.json`
+D-block map), 0x5b41 layout load, a per-house item-cap rule, the 72-byte item-metadata tail on
+`common/patches/rof2.cpp` serialization for allowlisted items (our item serialization already
+deviates from Live — the con-tooltip precedent — so that surface needs its own client pass),
+and promotion of placement/pickup to the player surface once the tail lands.
+
+**Status**: compile-green (zone target); the final link was deferred because the live server
+held the exes — `stop-servers.bat` → `rebuild_server.bat` → `start-servers.bat` finishes it, and
+migration 289 applies on that world boot. In-game checks owed: `#housing placeable <item>` →
+enter interior → `#housing item place` → render → re-zone persistence → `item remove`; building
+flow regression (plot search, purchase, exterior swap); `0x2036`/`0x6917` stay quiet until a
+client can actually send them.
 

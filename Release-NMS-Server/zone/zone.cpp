@@ -1440,7 +1440,20 @@ bool Zone::LoadZoneCFG(const char* filename, uint16 instance_version)
 	is_hotzone            = z->hotzone != 0;
 	m_client_update_range = z->client_update_range;
 	default_ruleset       = z->ruleset;
-	allow_mercs           = true;
+	// Mercenary permission for this zone. zone.allow_mercs is optional schema: if the column
+	// is absent the query fails and mercs stay allowed, which is the pre-v280 behaviour. The
+	// hire/unsuspend path already consults AllowMercs(); until now nothing ever set it false.
+	allow_mercs = true;
+	{
+		auto merc_zone = content_db.QueryDatabase(fmt::format(
+			"SELECT allow_mercs FROM zone WHERE zoneidnumber = {} AND version = {} LIMIT 1",
+			ZoneID(filename), static_cast<int>(z->version)
+		));
+		if (merc_zone.Success() && merc_zone.RowCount() && merc_zone.begin()[0]) {
+			allow_mercs = Strings::ToInt(merc_zone.begin()[0]) != 0;
+		}
+		LogInfo("[Mercs] zone [{}] allow_mercs [{}]", filename, allow_mercs ? 1 : 0);
+	}
 	m_graveyard_id        = z->graveyard_id;
 	m_max_clients         = z->maxclients;
 

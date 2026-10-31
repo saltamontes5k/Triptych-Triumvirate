@@ -61,11 +61,11 @@ deferral reasons: `docs/achievements_expansion_classic_deferred.csv`.
   stay enabled as documented accepted partials.
 - The 13 event-0 manual criteria (4 PoP Progression keys without items, 9 PoP
   raid phase rows) were left inert and in place.
-- Exploration rewards are separately togglable: the
-  `Achievements:ExplorationRewards` rule (default on) gates reward delivery
-  for every zone-enter-only achievement, so an operator who finds "an AA for
-  zoning in" too generous can withhold just those rewards while the
-  achievements keep tracking and awarding points.
+- Exploration rewards are permanently withheld: zone-enter-only achievements
+  do not deliver rewards (entry 292 removed the former
+  `Achievements:ExplorationRewards` togglable gate and made the off behavior
+  the standing policy). The achievements keep tracking and awarding points;
+  the expansion traveler metas are unaffected.
 
 ## Prerequisite (not reproducible from the repo alone)
 

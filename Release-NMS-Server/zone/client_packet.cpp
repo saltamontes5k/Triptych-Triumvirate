@@ -95,6 +95,94 @@ std::map<uint32, ClientPacketProc> ConnectingOpcodes;
 //Use a static array for connected, for speed
 ClientPacketProc ConnectedOpcodes[_maxEmuOpcode];
 
+struct LogOnlyOpcode {
+	EmuOpcode opcode;
+	const char *name;
+};
+
+// Recovered RoF2 messages (housing, mercenary, spirit shroud) that this server names but does
+// not implement. Registering a handler keeps the client's action in the zone log with its
+// opcode name instead of dropping it as unknown; it grants no behaviour.
+#define NMS_LOG_ONLY(op) { op, #op },
+static const LogOnlyOpcode k_log_only_rof2[] = {
+	NMS_LOG_ONLY(OP_RealEstateItemOperation)
+	NMS_LOG_ONLY(OP_RealEstateHouseSwap)
+	NMS_LOG_ONLY(OP_RealEstateEscrow)
+	NMS_LOG_ONLY(OP_RealEstateTextRequest)
+	NMS_LOG_ONLY(OP_RealEstateLoadLayout)
+	NMS_LOG_ONLY(OP_RealEstatePack)
+	NMS_LOG_ONLY(OP_RealEstateVotingOptOut)
+	NMS_LOG_ONLY(OP_RealEstateAction5Request)
+	NMS_LOG_ONLY(OP_RealEstatePlotSearchOpen)
+	NMS_LOG_ONLY(OP_RealEstateAccess)
+	NMS_LOG_ONLY(OP_RealEstateAccessEdit)
+	NMS_LOG_ONLY(OP_RealEstateItemDelta)
+	NMS_LOG_ONLY(OP_RealEstateWorldRemove)
+	NMS_LOG_ONLY(OP_RealEstatePlacementSource)
+	NMS_LOG_ONLY(OP_RealEstatePlacementEnd)
+	NMS_LOG_ONLY(OP_RealEstateOperationResult)
+	NMS_LOG_ONLY(OP_RealEstateCustomInteraction)
+	NMS_LOG_ONLY(OP_RealEstateExit)
+	NMS_LOG_ONLY(OP_RealEstateTrophyOpen)
+	NMS_LOG_ONLY(OP_RealEstateTrophyToggle)
+	NMS_LOG_ONLY(OP_RealEstateTrophy)
+	NMS_LOG_ONLY(OP_RealEstateTrophyList)
+	NMS_LOG_ONLY(OP_RealEstateTrophyTimer)
+	NMS_LOG_ONLY(OP_RealEstateTrophyClear)
+	NMS_LOG_ONLY(OP_RealEstateAnchorConfirm)
+	NMS_LOG_ONLY(OP_RealEstateOwnerItemPurge)
+	NMS_LOG_ONLY(OP_RealEstateOwnedItemList)
+	NMS_LOG_ONLY(OP_RealEstateArchivedList)
+	NMS_LOG_ONLY(OP_RealEstateSaleResult)
+	NMS_LOG_ONLY(OP_RealEstateTransferResult)
+	NMS_LOG_ONLY(OP_RealEstateTransferConsent)
+	NMS_LOG_ONLY(OP_RealEstateBindSpawn)
+	NMS_LOG_ONLY(OP_GuildTrophyAvailable)
+	NMS_LOG_ONLY(OP_GuildTrophyActive)
+	NMS_LOG_ONLY(OP_GuildTrophyToggle)
+	NMS_LOG_ONLY(OP_GuildTrophySave)
+	NMS_LOG_ONLY(OP_GuildTrophyModify)
+	NMS_LOG_ONLY(OP_GuildTrophyOptIn)
+	NMS_LOG_ONLY(OP_MercenaryAutoAssist)
+	NMS_LOG_ONLY(OP_MercenaryAssist)
+	NMS_LOG_ONLY(OP_MercenarySwitch)
+	NMS_LOG_ONLY(OP_MercenaryTransferRequest)
+	NMS_LOG_ONLY(OP_MercenaryTransferResponse)
+	NMS_LOG_ONLY(OP_MercenaryUnshroud)
+	NMS_LOG_ONLY(OP_MercenaryUnshroudResponse)
+	NMS_LOG_ONLY(OP_MercenaryDead)
+	NMS_LOG_ONLY(OP_MercenaryRestricted)
+	NMS_LOG_ONLY(OP_MercenaryRestoreReady)
+	NMS_LOG_ONLY(OP_MercenaryUpkeep)
+	NMS_LOG_ONLY(OP_MercenaryCostUpdate)
+	NMS_LOG_ONLY(OP_MercenaryCurrencyMessage)
+	NMS_LOG_ONLY(OP_MercenaryTimerUpdate)
+	NMS_LOG_ONLY(OP_SpiritShroudAbilityRequest)
+	NMS_LOG_ONLY(OP_SpiritShroudEquipmentRequest)
+	NMS_LOG_ONLY(OP_SpiritShroudComplete)
+	NMS_LOG_ONLY(OP_SpiritShroudBank)
+	NMS_LOG_ONLY(OP_SpiritShroudBankItems)
+	NMS_LOG_ONLY(OP_SpiritShroudBankEmpty)
+};
+#undef NMS_LOG_ONLY
+
+void Client::Handle_OP_Unimplemented(const EQApplicationPacket *app)
+{
+	if (!app) {
+		return;
+	}
+
+	const char *name = "OP_Unknown";
+	for (const auto &entry : k_log_only_rof2) {
+		if (entry.opcode == app->GetOpcode()) {
+			name = entry.name;
+			break;
+		}
+	}
+
+	LogInfo("[Opcodes] unimplemented {} from [{}]: {} byte(s)", name, GetName(), app->size);
+}
+
 void MapOpcodes()
 {
 	ConnectingOpcodes.clear();
@@ -372,25 +460,27 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RaidDelegateAbility] = &Client::Handle_OP_RaidDelegateAbility;
 	ConnectedOpcodes[OP_RaidClearNPCMarks] = &Client::Handle_OP_RaidClearNPCMarks;
 	ConnectedOpcodes[OP_RandomReq] = &Client::Handle_OP_RandomReq;
-	ConnectedOpcodes[OP_RealEstateAction5Request] = &Client::Handle_OP_RealEstateAction5Request;
-	ConnectedOpcodes[OP_RealEstateEscrow] = &Client::Handle_OP_RealEstateEscrow;
 	ConnectedOpcodes[OP_RealEstateGo] = &Client::Handle_OP_RealEstateGo;
-	ConnectedOpcodes[OP_RealEstateHouseSwap] = &Client::Handle_OP_RealEstateHouseSwap;
-	ConnectedOpcodes[OP_RealEstateInspect] = &Client::Handle_OP_RealEstateInspect;
-	ConnectedOpcodes[OP_RealEstateItemInspect] = &Client::Handle_OP_RealEstateItemInspect;
 	ConnectedOpcodes[OP_RealEstateItemQuery] = &Client::Handle_OP_RealEstateItemQuery;
-	ConnectedOpcodes[OP_RealEstateItemOperation] = &Client::Handle_OP_RealEstateItemOperation;
-	ConnectedOpcodes[OP_RealEstateLoadLayout] = &Client::Handle_OP_RealEstateLoadLayout;
 	ConnectedOpcodes[OP_RealEstateNeighborhood] = &Client::Handle_OP_RealEstateNeighborhood;
-	ConnectedOpcodes[OP_RealEstatePack] = &Client::Handle_OP_RealEstatePack;
-	ConnectedOpcodes[OP_RealEstatePickup] = &Client::Handle_OP_RealEstatePickup;
 	ConnectedOpcodes[OP_RealEstatePlacementBegin] = &Client::Handle_OP_RealEstatePlacementBegin;
 	ConnectedOpcodes[OP_RealEstatePlacementCommit] = &Client::Handle_OP_RealEstatePlacementCommit;
 	ConnectedOpcodes[OP_RealEstatePurchase] = &Client::Handle_OP_RealEstatePurchase;
+	ConnectedOpcodes[OP_RealEstateItemMenu] = &Client::Handle_OP_RealEstateItemMenu;
+	ConnectedOpcodes[OP_RealEstateItemInspect] = &Client::Handle_OP_RealEstateItemInspect;
+	ConnectedOpcodes[OP_RealEstateInspect] = &Client::Handle_OP_RealEstateInspect;
 	ConnectedOpcodes[OP_RealEstateSale] = &Client::Handle_OP_RealEstateSale;
+	ConnectedOpcodes[OP_RealEstateTransfer] = &Client::Handle_OP_RealEstateTransfer;
+	ConnectedOpcodes[OP_RealEstatePickup] = &Client::Handle_OP_RealEstatePickup;
 	ConnectedOpcodes[OP_RealEstateStoreAll] = &Client::Handle_OP_RealEstateStoreAll;
-	ConnectedOpcodes[OP_RealEstateTextRequest] = &Client::Handle_OP_RealEstateTextRequest;
-	ConnectedOpcodes[OP_RealEstateVotingOptOut] = &Client::Handle_OP_RealEstateVotingOptOut;
+
+	// Named but unimplemented: see k_log_only_rof2 above. Registered last, and only where no
+	// real handler claimed the opcode, so a log-only entry can never shadow an implementation.
+	for (const auto &entry : k_log_only_rof2) {
+		if (!ConnectedOpcodes[entry.opcode]) {
+			ConnectedOpcodes[entry.opcode] = &Client::Handle_OP_Unimplemented;
+		}
+	}
 	ConnectedOpcodes[OP_ReadBook] = &Client::Handle_OP_ReadBook;
 	ConnectedOpcodes[OP_RecipeAutoCombine] = &Client::Handle_OP_RecipeAutoCombine;
 	ConnectedOpcodes[OP_RecipeDetails] = &Client::Handle_OP_RecipeDetails;
@@ -5305,6 +5395,9 @@ void Client::Handle_OP_ClickDoor(const EQApplicationPacket *app)
 		currentdoor->GetDoorID(),
 		distance
 	);
+
+	// A lot marker is a door; the click is how the client asks about the plot.
+	HousingDoorClick(cd->doorid);
 
 	bool within_distance = distance < RuleI(Range, MaxDistanceToClickDoors);
 

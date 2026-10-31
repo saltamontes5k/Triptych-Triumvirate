@@ -1158,25 +1158,55 @@ void Client::MigrateDuplicateAALines()
 
 //New AA
 void Client::SendAlternateAdvancementTable() {
+	// One packet per usable rank, so a burst of these is pure lag: zone-in reaches here from
+	// auto-grant, refund, level sync and the client's own table request. Coalesce the repeats
+	// and let Client::Process flush once.
+	const uint32 now_ms = Timer::GetCurrentTime();
+	if (m_aa_table_last_send_ms && (now_ms - m_aa_table_last_send_ms) < kAaTableCoalesceMs) {
+		m_aa_table_send_pending = true;
+		LogDebug("[AA] table send coalesced; flush pending");
+		return;
+	}
+	m_aa_table_last_send_ms = now_ms;
+
 	LogDebug("Sending AA Table");
 	InvalidateAAWinnerMap();
 	GetDynamicAATimers();
 	GetAllToggleAAStatus();
 
+	const bool shroud_usable = IsShrouded() && RuleI(Custom, ShroudLiveMode) != 0;
+	uint32 ability_count    = 0;
+	uint32 rank_candidates  = 0;
+
 	for(auto &aa : zone->aa_abilities) {
+		AA::Ability *ability = aa.second.get();
+
+		// Shroud-only lines are usable solely while shrouded with the feature enabled.
+		// Skipping them here avoids building and discarding a packet per rank -- and the
+		// per-rank gate evaluation behind it -- on every unshrouded zone-in.
+		if (Client::IsShroudAA(ability) && !shroud_usable) {
+			continue;
+		}
+
+		++ability_count;
+
 		uint32 charges = 0;
-		auto ranks = GetAA(aa.second->first_rank_id, &charges);
+		auto ranks = GetAA(ability->first_rank_id, &charges);
 		if(ranks) {
-			if(aa.second->GetMaxLevel(this) == ranks) {
-				SendAlternateAdvancementRank(aa.first, ranks);
-			} else {
-				SendAlternateAdvancementRank(aa.first, ranks);
+			SendAlternateAdvancementRank(aa.first, ranks);
+			++rank_candidates;
+			if(ability->GetMaxLevel(this) != ranks) {
 				SendAlternateAdvancementRank(aa.first, ranks + 1);
+				++rank_candidates;
 			}
 		} else {
 			SendAlternateAdvancementRank(aa.first, 1);
+			++rank_candidates;
 		}
 	}
+
+	LogInfo("[AA] table sent to [{}]: {} abilities, {} rank candidates, {} ms",
+		GetName(), ability_count, rank_candidates, Timer::GetCurrentTime() - now_ms);
 }
 
 void Client::SendAlternateAdvancementRank(int aa_id, int level) {
@@ -2270,7 +2300,7 @@ bool Mob::CanUseAlternateAdvancementRank(AA::Rank *rank)
 			&& CastToClient()->IsShrouded()
 			&& RuleI(Custom, ShroudLiveMode) != 0;
 		if (IsClient()) {
-			LogInfo("[SHROUD-AA] gate aa [{}] rank [{}] shrouded [{}] rule [{}] -> {}",
+			LogDebug("[SHROUD-AA] gate aa [{}] rank [{}] shrouded [{}] rule [{}] -> {}",
 				a->id, rank->id, CastToClient()->IsShrouded() ? 1 : 0,
 				RuleI(Custom, ShroudLiveMode), ok ? 1 : 0);
 		}

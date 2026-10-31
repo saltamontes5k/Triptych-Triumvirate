@@ -40786,4 +40786,613 @@ COMMIT;
 )ORUM291",
 		.content_schema_update = false,
 	},
+	// Retire the per-zone (exploration) achievement rewards: every achievement
+	// whose enabled criteria are all ZoneEnter (event_type 5) loses its
+	// selectable reward set (298 achievements / 178 claimable sets). Zone-enter
+	// achievements still track, complete, and award points; the expansion
+	// traveler metas (200090/300050/400050/500050), Trailblazer (9500040), and
+	// the Norrathian Explorer title chain (9600255 -> title 301001) are not
+	// zone-enter achievements and keep their claims. The code no longer has an
+	// ExplorationRewards rule: QueueRewards, SendRewardDisplay,
+	// RestorePendingRewardSelection, and ClaimReward refuse exploration-only
+	// achievements outright. Backups: nms_ach_exploration_rewards_*.
+	// Twin: utils/sql/20261031_ach_remove_exploration_rewards.sql (keep in sync).
+	ManifestEntry{
+		.version = 292,
+		.description = "20261031_ach_remove_exploration_rewards",
+		.check = "SELECT COUNT(*) FROM reward_sources rs JOIN achievements a ON a.id = rs.source_id WHERE rs.source_type = 1 AND EXISTS (SELECT 1 FROM achievement_criteria c WHERE c.achievement_id = a.id AND c.enabled = 1) AND NOT EXISTS (SELECT 1 FROM achievement_criteria c WHERE c.achievement_id = a.id AND c.enabled = 1 AND c.event_type <> 5)",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"ACHX292(
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+DROP TEMPORARY TABLE IF EXISTS tmp_exploration_achievements;
+CREATE TEMPORARY TABLE tmp_exploration_achievements (
+	achievement_id INT UNSIGNED NOT NULL PRIMARY KEY);
+
+-- Enabled-criteria mirror of AchievementManager::IsExplorationOnly
+-- (achievement_manager.cpp: disabled criteria never load).
+INSERT IGNORE INTO tmp_exploration_achievements
+SELECT a.id
+FROM achievements a
+WHERE EXISTS (
+		SELECT 1 FROM achievement_criteria c
+		WHERE c.achievement_id = a.id AND c.enabled = 1)
+AND NOT EXISTS (
+		SELECT 1 FROM achievement_criteria c
+		WHERE c.achievement_id = a.id AND c.enabled = 1
+		AND c.event_type <> 5);
+
+DROP TEMPORARY TABLE IF EXISTS tmp_exploration_reward_sets;
+CREATE TEMPORARY TABLE tmp_exploration_reward_sets (
+	reward_set_id INT UNSIGNED NOT NULL PRIMARY KEY);
+
+INSERT IGNORE INTO tmp_exploration_reward_sets
+SELECT rs.reward_set_id
+FROM reward_sources rs
+JOIN tmp_exploration_achievements t ON t.achievement_id = rs.source_id
+WHERE rs.source_type = 1;
+
+-- Backups (idempotent; re-runs find nothing new to snapshot).
+CREATE TABLE IF NOT EXISTS nms_ach_exploration_rewards_sources (
+	source_type TINYINT UNSIGNED NOT NULL,
+	source_id INT UNSIGNED NOT NULL,
+	reward_set_id INT UNSIGNED NOT NULL,
+	enabled TINYINT UNSIGNED NOT NULL DEFAULT 1,
+	PRIMARY KEY (source_type, source_id));
+INSERT IGNORE INTO nms_ach_exploration_rewards_sources
+SELECT rs.source_type, rs.source_id, rs.reward_set_id, rs.enabled
+FROM reward_sources rs
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = rs.reward_set_id;
+
+CREATE TABLE IF NOT EXISTS nms_ach_exploration_rewards_sets (
+	reward_set_id INT UNSIGNED NOT NULL PRIMARY KEY,
+	title VARCHAR(255) NOT NULL DEFAULT '',
+	enabled TINYINT UNSIGNED NOT NULL DEFAULT 1);
+INSERT IGNORE INTO nms_ach_exploration_rewards_sets
+SELECT rset.reward_set_id, rset.title, rset.enabled
+FROM reward_sets rset
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = rset.reward_set_id;
+
+CREATE TABLE IF NOT EXISTS nms_ach_exploration_rewards_options (
+	reward_set_id INT UNSIGNED NOT NULL,
+	option_id INT UNSIGNED NOT NULL,
+	sequence INT UNSIGNED NOT NULL DEFAULT 0,
+	label VARCHAR(255) NOT NULL DEFAULT '',
+	common_to_all TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	flags TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	enabled TINYINT UNSIGNED NOT NULL DEFAULT 1,
+	class_mask INT UNSIGNED NOT NULL DEFAULT 65535,
+	PRIMARY KEY (reward_set_id, option_id));
+INSERT IGNORE INTO nms_ach_exploration_rewards_options
+SELECT ro.reward_set_id, ro.option_id, ro.sequence, ro.label,
+	ro.common_to_all, ro.flags, ro.enabled, ro.class_mask
+FROM reward_options ro
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = ro.reward_set_id;
+
+CREATE TABLE IF NOT EXISTS nms_ach_exploration_rewards_option_entries (
+	reward_set_id INT UNSIGNED NOT NULL,
+	option_id INT UNSIGNED NOT NULL,
+	sequence INT UNSIGNED NOT NULL DEFAULT 0,
+	reward_id INT UNSIGNED NOT NULL,
+	PRIMARY KEY (reward_set_id, option_id, reward_id));
+INSERT IGNORE INTO nms_ach_exploration_rewards_option_entries
+SELECT oe.reward_set_id, oe.option_id, oe.sequence, oe.reward_id
+FROM reward_option_entries oe
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = oe.reward_set_id;
+
+CREATE TABLE IF NOT EXISTS nms_ach_exploration_rewards_selections (
+	character_id INT UNSIGNED NOT NULL,
+	achievement_id INT UNSIGNED NOT NULL,
+	reward_set_id INT UNSIGNED NOT NULL,
+	selected_option_id INT UNSIGNED NOT NULL DEFAULT 0,
+	status TINYINT UNSIGNED NOT NULL DEFAULT 0,
+	attempt_count INT UNSIGNED NOT NULL DEFAULT 0,
+	claimed_at INT UNSIGNED NOT NULL DEFAULT 0,
+	last_attempt_at INT UNSIGNED NOT NULL DEFAULT 0,
+	last_error VARCHAR(255) NOT NULL DEFAULT '',
+	PRIMARY KEY (character_id, achievement_id, reward_set_id));
+INSERT IGNORE INTO nms_ach_exploration_rewards_selections
+SELECT csr.character_id, csr.achievement_id, csr.reward_set_id,
+	csr.selected_option_id, csr.status, csr.attempt_count, csr.claimed_at,
+	csr.last_attempt_at, csr.last_error
+FROM character_achievement_reward_selections csr
+JOIN tmp_exploration_achievements t ON t.achievement_id = csr.achievement_id;
+
+-- Purge, children first. No reward set in this purge is sourced by any
+-- non-exploration achievement (verified: no reward_sources row count > 1).
+DELETE oe FROM reward_option_entries oe
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = oe.reward_set_id;
+DELETE ro FROM reward_options ro
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = ro.reward_set_id;
+DELETE rset FROM reward_sets rset
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = rset.reward_set_id;
+DELETE rs FROM reward_sources rs
+JOIN tmp_exploration_reward_sets t ON t.reward_set_id = rs.reward_set_id
+WHERE rs.source_type = 1;
+DELETE csr FROM character_achievement_reward_selections csr
+JOIN tmp_exploration_achievements t ON t.achievement_id = csr.achievement_id;
+
+-- The rule is retired from the code; drop its seeded row (world also
+-- self-deletes orphaned rule rows at boot).
+DELETE FROM rule_values WHERE rule_name = 'Achievements:ExplorationRewards';
+
+DROP TEMPORARY TABLE IF EXISTS tmp_exploration_reward_sets;
+DROP TEMPORARY TABLE IF EXISTS tmp_exploration_achievements;
+
+COMMIT;
+)ACHX292",
+		.content_schema_update = false,
+	},
+	// Progression spoiler NPC - Librarian of Lost Ages (Plane of Knowledge).
+	// One read-only guide NPC explaining, per expansion PoP onward, how each
+	// access flag is earned with live per-account status. Quest script:
+	// Release-NMS-Quests/poknowledge/Librarian_of_Lost_Ages.pl.
+	// Twin: utils/sql/20261031_progression_spoiler_npc.sql (keep in sync).
+	ManifestEntry{
+		.version = 293,
+		.description = "20261031_progression_spoiler_npc",
+		.check = "SELECT id FROM npc_types WHERE id = 12000211 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"LIBRARIAN293(
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+-- Librarian_of_Lost_Ages (12000211)
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+CREATE TEMPORARY TABLE tmp_npc LIKE npc_types;
+INSERT INTO tmp_npc SELECT * FROM npc_types WHERE id = 12000157;
+UPDATE tmp_npc SET id = 12000211, name = 'Librarian_of_Lost_Ages', lastname = 'Keeper of the Paths', race = 3;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_npc;
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+
+-- Spawn group (flag-NPC convention: delay 45000, mindelay 15000)
+INSERT IGNORE INTO spawngroup
+(id,name,spawn_limit,dist,max_x,min_x,max_y,min_y,delay,mindelay,despawn,despawn_timer,wp_spawns) VALUES
+(5003842,'poknowledge-Librarian_of_Lost_Ages000',0,0,0,0,0,0,45000,15000,0,100,0);
+
+-- Spawn entry (chance 100: the Librarian is a fixture, not a rare)
+INSERT IGNORE INTO spawnentry (spawngroupID,npcID,chance) VALUES
+(5003842,12000211,100);
+
+-- Spawn point: beside Seer_Mal_Nae`Shi (-225,-43,-156) in poknowledge
+INSERT IGNORE INTO spawn2 (id,spawngroupID,zone,version,x,y,z,heading,respawntime,variance) VALUES
+(2141210,5003842,'poknowledge',0,-214,-36,-156.125,128,1200,0);
+
+COMMIT;
+)LIBRARIAN293",
+		.content_schema_update = false,
+	},
+	// Frostefreeze: joke Frostfell ice cream expedition zone. Frostcrypt (402)
+	// cloned to version 220 and renamed 'frostefreeze' (the version row's short
+	// name is what the client resolves its geometry from); spawns are
+	// version-220-only, so base Frostcrypt and its raids are untouched.
+	// Grimble_Underhollow in PoK hands out expeditions; his zone is full of
+	// ice-cream-named retro frost giants dropping the existing
+	// 75005/75006/75007, plus candy golems and shop-order rares renamed from
+	// Frostcrypt's own fallen Krithgor. Turn-ins: any 20 ice creams -> the
+	// EXISTING glamour 701463 ("Glamour - 'Ice Cream Cone'"); 10 Rock Candy ->
+	// a bonus glamour. No new items. Client installs need frostcrypt.* copied
+	// to frostefreeze.* (7 files).
+	// Twin: utils/sql/20261031_frostefreeze.sql (keep in sync).
+	ManifestEntry{
+		.version = 294,
+		.description = "20261031_frostefreeze",
+		.check = "SELECT 1 FROM (SELECT 1) x WHERE NOT EXISTS (SELECT 1 FROM zone WHERE zoneidnumber = 402 AND version = 220)",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"SODFRZ294(
+DELETE FROM `zone` WHERE `zoneidnumber` = 402 AND `version` = 220;
+DROP TEMPORARY TABLE IF EXISTS `tmp_zone`;
+CREATE TEMPORARY TABLE `tmp_zone` AS SELECT * FROM `zone` WHERE `zoneidnumber` = 402 AND `version` = 0 LIMIT 1;
+UPDATE `tmp_zone` SET `id` = (SELECT COALESCE(MAX(`id`), 0) + 1 FROM `zone`),
+                    `version` = 220,
+                    `short_name` = 'frostefreeze',
+                    `long_name` = 'Frostefreeze',
+                    `min_expansion` = 0,
+                    `flag_needed` = '',
+                    `min_level` = 0;
+INSERT INTO `zone` SELECT * FROM `tmp_zone`;
+DROP TEMPORARY TABLE `tmp_zone`;
+
+DELETE FROM `faction_list` WHERE `id` = 5062 AND `name` = 'Frostefreeze Ice Cream Men';
+INSERT INTO `faction_list` (`id`,`name`,`base`) VALUES (5062,'Frostefreeze Ice Cream Men',-2000);
+DELETE FROM `npc_faction` WHERE `id` = 1520000113;
+INSERT INTO `npc_faction` (`id`,`name`,`primaryfaction`,`ignore_primary_assist`) VALUES (1520000113,'frostefreeze_kos',5062,0);
+
+DELETE FROM `npc_types` WHERE `id` BETWEEN 1120002550 AND 1120002558;
+INSERT INTO `npc_types`
+	(`id`,`Name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`gender`,`texture`,`helmtexture`,`size`,`runspeed`,`mindmg`,`maxdmg`,`attack_delay`,`AC`,`npc_aggro`,`aggroradius`,`npc_faction_id`,`npc_spells_id`,`merchant_id`,`loottable_id`)
+VALUES
+	(1120002550,'Grimble_Underhollow','He Means Well',65,11,1,1,30000,0,0,0,2.8,1.25,0,0,30,500,0,0,0,0,0,0),
+	(1120002551,'#Frostefreeze_Controller','The Freezer',100,587,1,3,32000,0,0,0,6,1.25,0,0,30,300,0,0,0,0,0,0);
+
+DROP TEMPORARY TABLE IF EXISTS `tmp_nt`;
+CREATE TEMPORARY TABLE `tmp_nt` AS SELECT * FROM `npc_types` WHERE `id` = 116019 LIMIT 1;
+UPDATE `tmp_nt` SET `id` = 1120002552, `Name` = 'a_Vanilla_Ice_Cream_Cone', `lastname` = '',
+	`level` = 60, `hp` = 12000, `AC` = 230, `mindmg` = 50, `maxdmg` = 120,
+	`npc_faction_id` = 1520000113, `loottable_id` = 1520009320;
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+UPDATE `tmp_nt` SET `id` = 1120002553, `Name` = 'a_Chocolate_Ice_Cream_Cone',
+	`level` = 62, `hp` = 14000, `AC` = 245, `mindmg` = 55, `maxdmg` = 130,
+	`loottable_id` = 1520009321;
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+UPDATE `tmp_nt` SET `id` = 1120002554, `Name` = 'a_Cherry_Ice_Cream_Cone',
+	`level` = 65, `hp` = 17000, `AC` = 260, `mindmg` = 60, `maxdmg` = 145,
+	`loottable_id` = 1520009322;
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+DROP TEMPORARY TABLE `tmp_nt`;
+
+DROP TEMPORARY TABLE IF EXISTS `tmp_nt`;
+CREATE TEMPORARY TABLE `tmp_nt` AS SELECT * FROM `npc_types` WHERE `id` = 402010 LIMIT 1;
+UPDATE `tmp_nt` SET `id` = 1120002555, `Name` = 'a_Rock_Candy_Golem', `lastname` = 'Certified Organic',
+	`level` = 75, `hp` = 7000, `mindmg` = 70, `maxdmg` = 170,
+	`npc_faction_id` = 1520000113, `loottable_id` = 1520009323;
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+UPDATE `tmp_nt` SET `id` = 1120002556, `Name` = 'Rocky_Road', `lastname` = 'A Hard Place',
+	`level` = 76, `hp` = 16000, `AC` = 380, `mindmg` = 80, `maxdmg` = 190,
+	`loottable_id` = 1520009324;
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+UPDATE `tmp_nt` SET `id` = 1120002557, `Name` = 'Banana_Split', `lastname` = 'Split Personality';
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+UPDATE `tmp_nt` SET `id` = 1120002558, `Name` = 'Neapolitan', `lastname` = 'Three Faces';
+INSERT INTO `npc_types` SELECT * FROM `tmp_nt`;
+DROP TEMPORARY TABLE `tmp_nt`;
+
+DELETE FROM `loottable` WHERE `id` BETWEEN 1520009320 AND 1520009324;
+DELETE FROM `loottable_entries` WHERE `loottable_id` BETWEEN 1520009320 AND 1520009324;
+DELETE FROM `lootdrop` WHERE `id` BETWEEN 1520009430 AND 1520009434;
+DELETE FROM `lootdrop_entries` WHERE `lootdrop_id` BETWEEN 1520009430 AND 1520009434;
+INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES
+	(1520009320,'frostefreeze_vanilla',0,0,0,0),
+	(1520009321,'frostefreeze_chocolate',0,0,0,0),
+	(1520009322,'frostefreeze_cherry',0,0,0,0),
+	(1520009323,'frostefreeze_candy_golem',0,0,0,0),
+	(1520009324,'frostefreeze_rare',0,0,0,0);
+INSERT INTO `lootdrop` (`id`,`name`) VALUES
+	(1520009430,'frostefreeze_vanilla_drop'),
+	(1520009431,'frostefreeze_chocolate_drop'),
+	(1520009432,'frostefreeze_cherry_drop'),
+	(1520009433,'frostefreeze_candy_drop'),
+	(1520009434,'frostefreeze_rare_drop');
+INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES
+	(1520009320,1520009430,1,0,0,100),
+	(1520009321,1520009431,1,0,0,100),
+	(1520009322,1520009432,1,0,0,100),
+	(1520009323,1520009433,1,0,0,100),
+	(1520009324,1520009434,1,0,0,100);
+INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`) VALUES
+	(1520009430,75005,1,0,100),
+	(1520009431,75006,1,0,100),
+	(1520009432,75007,1,0,100),
+	(1520009433,64352,2,0,60),
+	(1520009434,75005,5,0,100),
+	(1520009434,75006,5,0,100),
+	(1520009434,75007,5,0,100);
+
+DELETE FROM `spawngroup` WHERE `id` BETWEEN 1520009300 AND 1520009308;
+DELETE FROM `spawnentry` WHERE `spawngroupID` BETWEEN 1520009300 AND 1520009308;
+INSERT INTO `spawngroup` (`id`,`name`) VALUES
+	(1520009300,'grimble_underhollow_pok'),
+	(1520009301,'frostefreeze_controller_v220'),
+	(1520009302,'frostefreeze_vanilla'),
+	(1520009303,'frostefreeze_chocolate'),
+	(1520009304,'frostefreeze_cherry'),
+	(1520009305,'frostefreeze_rock_candy_golem'),
+	(1520009306,'frostefreeze_rocky_road'),
+	(1520009307,'frostefreeze_banana_split'),
+	(1520009308,'frostefreeze_neapolitan');
+INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES
+	(1520009300,1120002550,100),
+	(1520009301,1120002551,100),
+	(1520009302,1120002552,100),
+	(1520009303,1120002553,100),
+	(1520009304,1120002554,100),
+	(1520009305,1120002555,100),
+	(1520009306,1120002556,100),
+	(1520009307,1120002557,100),
+	(1520009308,1120002558,100);
+
+DELETE FROM `spawn2` WHERE `id` BETWEEN 1520028450 AND 1520028494;
+INSERT INTO `spawn2`
+	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
+VALUES
+	(1520028450,1520009300,'poknowledge',  0,497,-30,-90,250,640,0),
+	(1520028451,1520009301,'frostcrypt',220,10,-40,2,0,640,0),
+	(1520028452,1520009302,'frostcrypt',220,99.625,98.0,-14.0,0,600,0),
+	(1520028453,1520009302,'frostcrypt',220,-0.125,181.25,-53.625,0,600,0),
+	(1520028454,1520009302,'frostcrypt',220,180.75,93.5,-62.5,0,600,0),
+	(1520028455,1520009302,'frostcrypt',220,-207.25,56.625,-52.0,0,600,0),
+	(1520028456,1520009302,'frostcrypt',220,255.75,22.875,-62.5,0,600,0),
+	(1520028457,1520009302,'frostcrypt',220,182.75,188.0,-62.375,0,600,0),
+	(1520028458,1520009302,'frostcrypt',220,-257.125,96.375,-62.5,0,600,0),
+	(1520028459,1520009302,'frostcrypt',220,74.0,259.0,-62.5,0,600,0),
+	(1520028460,1520009302,'frostcrypt',220,248.875,155.125,-62.375,0,600,0),
+	(1520028461,1520009302,'frostcrypt',220,20.0,320.0,-62.625,0,600,0),
+	(1520028462,1520009303,'frostcrypt',220,181.625,28.5,-62.5,0,600,0),
+	(1520028463,1520009303,'frostcrypt',220,32.0,178.0,-53.625,0,600,0),
+	(1520028464,1520009303,'frostcrypt',220,-179.375,95.0,-62.5,0,600,0),
+	(1520028465,1520009303,'frostcrypt',220,220.5,84.0,-62.5,0,600,0),
+	(1520028466,1520009303,'frostcrypt',220,-252.5,30.375,-62.5,0,600,0),
+	(1520028467,1520009303,'frostcrypt',220,-180.625,188.5,-62.375,0,600,0),
+	(1520028468,1520009303,'frostcrypt',220,267.0,89.875,-62.5,0,600,0),
+	(1520028469,1520009303,'frostcrypt',220,-73.125,265.5,-63.375,0,600,0),
+	(1520028470,1520009303,'frostcrypt',220,-250.0,150.5,-62.375,0,600,0),
+	(1520028471,1520009303,'frostcrypt',220,-19.0,320.0,-62.625,0,600,0),
+	(1520028472,1520009304,'frostcrypt',220,-186.25,31.25,-62.5,0,600,0),
+	(1520028473,1520009304,'frostcrypt',220,-30.0,178.0,-53.625,0,600,0),
+	(1520028474,1520009304,'frostcrypt',220,230.625,57.25,-52.0,0,600,0),
+	(1520028475,1520009304,'frostcrypt',220,-73.0,221.0,-62.5,0,600,0),
+	(1520028476,1520009304,'frostcrypt',220,219.5,219.625,-62.375,0,600,0),
+	(1520028477,1520009304,'frostcrypt',220,-204.125,274.25,-61.625,0,600,0),
+	(1520028478,1520009304,'frostcrypt',220,-232.375,275.125,-61.625,0,600,0),
+	(1520028479,1520009304,'frostcrypt',220,-257.375,181.875,-62.0,0,600,0),
+	(1520028480,1520009304,'frostcrypt',220,313.0,215.125,-62.375,0,600,0),
+	(1520028481,1520009304,'frostcrypt',220,306.625,240.25,-62.375,0,600,0),
+	(1520028482,1520009305,'frostcrypt',220,18.875,59.875,-32.5,0,600,0),
+	(1520028483,1520009305,'frostcrypt',220,-15.625,62.75,-32.5,0,600,0),
+	(1520028484,1520009305,'frostcrypt',220,-249.25,57.25,-62.5,0,600,0),
+	(1520028485,1520009305,'frostcrypt',220,-73.0,266.0,-62.5,0,600,0),
+	(1520028486,1520009305,'frostcrypt',220,-342.875,172.75,-62.375,0,600,0),
+	(1520028487,1520009305,'frostcrypt',220,356.0,181.625,-52.625,0,600,0),
+	(1520028488,1520009305,'frostcrypt',220,188.0,348.875,-63.25,0,600,0),
+	(1520028489,1520009305,'frostcrypt',220,-305.75,239.375,-62.375,0,600,0),
+	(1520028490,1520009305,'frostcrypt',220,314.25,264.25,-62.375,0,600,0),
+	(1520028494,1520009305,'frostcrypt',220,376.125,182.125,-62.0,0,600,0),
+	(1520028491,1520009306,'frostcrypt',220,-244.25,335.75,-62.375,0,600,0),
+	(1520028492,1520009307,'frostcrypt',220,208.375,343.25,-62.375,0,600,0),
+	(1520028493,1520009308,'frostcrypt',220,74.0,223.0,-62.5,0,600,0);
+)SODFRZ294",
+		.content_schema_update = false,
+	},
+	// Blessing rank-2 favor items (976210-976244) were authored in v113 as
+	// Spiderling Silk clones: no click effect, spider-web icon. Give every
+	// item a themed icon (lifted from the stock Allakhazam 10th Anniversary
+	// originals that already exist live) and real click effects on the items
+	// that read as clickies. The originals' own clicky spells (7651/7653
+	// "Use Ability", Dire* 17647-17654) are cosmetic no-ops (SE_CHA +1), so
+	// effects come from live spells instead: Dyn's Dizzying Draught (619),
+	// Call of Karana (1553, the rod's real charm, 5s cast), Flame Lick
+	// (33661), Lifedraw (6853), and the blessing kit (44014/44015/44016/
+	// 44017/44029). All clickies unlimited (maxcharges -1, clicktype 1) with
+	// a 60s per-item recast (recasttype -1): the avatar scripts summon these
+	// with charges=1 and never re-give, so finite charges would brick the
+	// favor item after one click. Item data is server-sent, so existing
+	// holders pick this up on relog/zone-in.
+	// Twin: utils/sql/20261031_blessing_favor_clicky_icons.sql (keep in sync).
+	ManifestEntry{
+		.version = 295,
+		.description = "20261031_blessing_favor_clicky_icons",
+		.check = "SELECT id FROM items WHERE id = 976210 AND icon = 943 AND clickeffect = 619 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"BLESSCLIK295(
+SET NAMES utf8mb4;
+
+-- ---- clickies -------------------------------------------------------------
+
+-- Eye of Valor (Mithaniel Marr): gargoyle-eye icon, stun
+UPDATE `items` SET
+    `icon`=943, `clickeffect`=619, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976210;
+
+-- True Karanite Rod of Rainfall (Karana): authentic charm, 5s wind-up
+UPDATE `items` SET
+    `icon`=2454, `clickeffect`=1553, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=5000, `casttime`=5000, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976211;
+
+-- Flames of Solusek Ro: instant fire nuke
+UPDATE `items` SET
+    `icon`=1082, `clickeffect`=33661, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976212;
+
+-- Quellious' Wand of Tranquility: 10% self mend
+UPDATE `items` SET
+    `icon`=810, `clickeffect`=44016, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976213;
+
+-- Innoruuk's Needle of Hatred: instant lifetap
+UPDATE `items` SET
+    `icon`=2884, `clickeffect`=6853, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976214;
+
+-- Minor Trinket of Rodcet Nife: 4% self balm
+UPDATE `items` SET
+    `icon`=1882, `clickeffect`=44029, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976216;
+
+-- Cazic-Thule's three wands (his Fear/Disease/Root kit; the wands' original
+-- "Use Ability" spell was a no-op)
+UPDATE `items` SET
+    `icon`=1550, `clickeffect`=44017, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976222;
+
+UPDATE `items` SET
+    `icon`=1459, `clickeffect`=44014, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976223;
+
+UPDATE `items` SET
+    `icon`=1282, `clickeffect`=44015, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id`=976224;
+
+-- Bertoxxulous plague set (originals were no-op clickies; now real disease)
+UPDATE `items` SET
+    `icon`=1006, `clickeffect`=44014, `clicktype`=1, `clicklevel`=0, `clicklevel2`=0,
+    `casttime_`=0, `casttime`=0, `recastdelay`=60, `recasttype`=-1, `maxcharges`=-1
+WHERE `id` IN (976225, 976226, 976227, 976228, 976229);
+
+-- ---- icons only -----------------------------------------------------------
+
+UPDATE `items` SET `icon`=2461 WHERE `id`=976215; -- Bag of Mysterious Seeds (orig 38488)
+UPDATE `items` SET `icon`=778  WHERE `id`=976217; -- Brell's Party Plans (orig 42899)
+UPDATE `items` SET `icon`=778  WHERE `id`=976218; -- Book of Love Vol 1 (orig 60391)
+UPDATE `items` SET `icon`=789  WHERE `id`=976219; -- Book of Love Vol 2 (orig 60392)
+UPDATE `items` SET `icon`=865  WHERE `id`=976220; -- Book of Love Vol 3 (orig 60393)
+UPDATE `items` SET `icon`=1019 WHERE `id`=976221; -- Strawberry-Jumjum Pie (orig 60394)
+UPDATE `items` SET `icon`=775  WHERE `id`=976230; -- Blessed Barren Flounder (orig 40414)
+UPDATE `items` SET `icon`=774  WHERE `id`=976231; -- Blessed Gunthak Mackerel (orig 40413)
+UPDATE `items` SET `icon`=775  WHERE `id`=976232; -- Blessed Timorous Tuna (orig 40412)
+UPDATE `items` SET `icon`=775  WHERE `id`=976233; -- Blessed Iceclad Cutlassfish (orig 40415)
+UPDATE `items` SET `icon`=775  WHERE `id`=976234; -- Blessed Kunark Mullet (orig 40411)
+UPDATE `items` SET `icon`=775  WHERE `id`=976235; -- Blessed 15 lb. Saltwater Tuna
+UPDATE `items` SET `icon`=775  WHERE `id`=976236; -- Blessed Kedge Grunion
+UPDATE `items` SET `icon`=819  WHERE `id`=976237; -- Blessed Ovate Jellyfish (orig 40418)
+UPDATE `items` SET `icon`=790  WHERE `id`=976240; -- Silk Napkin (orig 42889)
+UPDATE `items` SET `icon`=1013 WHERE `id`=976241; -- Unfired Plain Dining Plate (orig 42890)
+UPDATE `items` SET `icon`=1013 WHERE `id`=976242; -- Plain Dining Plate (orig 42891)
+UPDATE `items` SET `icon`=1939 WHERE `id`=976243; -- Kiola Nut Brew (orig 42892)
+UPDATE `items` SET `icon`=785  WHERE `id`=976244; -- Celebratory Seafood Medley (orig 42893)
+)BLESSCLIK295",
+		.content_schema_update = false,
+	},
+
+	// Bot-brain mercs: the spell list rows that power Custom:MercBotBrain (the rule ships in
+	// the same migration, upserted to true). Only the Master/Legendary lists change:
+	// WIZ lists 15/16 gain Escape (Concussive hate drop — the existing Escape branch had zero
+	// rows so it was dead), Root (Fetter line for the new fleeing-target policy) and stun-rider
+	// nukes (Telekin line feeds the existing 15% stun roll, which found nothing before); CLR
+	// lists 11/12 gain the single-target stun ladder as SpellType_Debuff for the new
+	// interrupt-when-nobody-needs-healing policy. Every spell is native to its class kit
+	// (SE_Stun = 21 single-target, SE_Root = 99, SE_InstantHate = 92 negative). This server's
+	// mercs are the four role classes (1/2/9/12), so no mez/slow/dot kit exists to author —
+	// those types stay future work for the multiclass phase. Apprentice/Journeyman lists are
+	// untouched; a tier without the rows simply behaves stock even with the rule on.
+	// Twin: utils/sql/20261031_merc_bot_brain_v296.sql (keep in sync).
+	ManifestEntry{
+		.version = 296,
+		.description = "20261031_merc_bot_brain_v296",
+		// gate on the data, not the rule: world's rules bootstrap inserts every missing rule
+		// row (compiled default) BEFORE manifest checks run, so a rule-row gate always sees a
+		// row and never fires (this bit on the first live boot of v296 - manually applied the
+		// twin there). Rows absent = run.
+		.check = "SELECT `spell_id` FROM `merc_spell_list_entries` WHERE `merc_spell_list_id` = 15 AND `spell_type` = 16 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"MRBB296(
+DELETE FROM `merc_spell_list_entries`
+WHERE `merc_spell_list_id` IN (11, 12, 15, 16)
+  AND `spell_type` IN (4, 16, 16384);
+
+INSERT INTO `merc_spell_list_entries`
+	(`merc_spell_list_id`,`spell_id`,`spell_type`,`stance_id`,`minlevel`,`maxlevel`,`slot`,`procChance`)
+VALUES
+	(15, 10782, 16, 0, 71, 255, 1, 0),
+	(16, 10784, 16, 0, 71, 255, 1, 0);
+
+INSERT INTO `merc_spell_list_entries`
+	(`merc_spell_list_id`,`spell_id`,`spell_type`,`stance_id`,`minlevel`,`maxlevel`,`slot`,`procChance`)
+VALUES
+	(15, 1633, 4, 0, 58, 62, 1, 0),
+	(15, 3194, 4, 0, 63, 255, 2, 0),
+	(16, 1633, 4, 0, 58, 62, 1, 0),
+	(16, 3194, 4, 0, 63, 255, 2, 0);
+
+INSERT INTO `merc_spell_list_entries`
+	(`merc_spell_list_id`,`spell_id`,`spell_type`,`stance_id`,`minlevel`,`maxlevel`,`slot`,`procChance`)
+VALUES
+	(15, 3333, 1, 0, 64, 69, 1, 0),
+	(15, 5456, 1, 0, 70, 255, 1, 0),
+	(16, 3333, 1, 0, 64, 69, 1, 0),
+	(16, 5456, 1, 0, 70, 255, 1, 0);
+
+INSERT INTO `merc_spell_list_entries`
+	(`merc_spell_list_id`,`spell_id`,`spell_type`,`stance_id`,`minlevel`,`maxlevel`,`slot`,`procChance`)
+VALUES
+	(11, 3481, 16384, 0, 61, 65, 1, 0),
+	(11, 5254, 16384, 0, 66, 70, 1, 0),
+	(11, 9717, 16384, 0, 71, 75, 1, 0),
+	(11, 14221, 16384, 0, 76, 80, 1, 0),
+	(11, 18242, 16384, 0, 81, 255, 1, 0),
+	(12, 3481, 16384, 0, 61, 65, 1, 0),
+	(12, 5254, 16384, 0, 66, 70, 1, 0),
+	(12, 9717, 16384, 0, 71, 75, 1, 0),
+	(12, 14221, 16384, 0, 76, 80, 1, 0),
+	(12, 18242, 16384, 0, 81, 255, 1, 0);
+
+INSERT INTO `rule_values` (`ruleset_id`,`rule_name`,`rule_value`,`notes`)
+VALUES (1, 'Custom:MercBotBrain', 'true', 'Master/Legendary mercs use the bot-grade brain (priority dispatch, Concussive hate drop, root fleeing targets, stun-rider nukes, healer interrupts). Tier lists need the v296 spell rows.')
+ON DUPLICATE KEY UPDATE `rule_value` = VALUES(`rule_value`);
+)MRBB296",
+		.content_schema_update = false,
+	},
+	// Corrections to v295 after design review against the favor quests
+	// themselves: Quellious' wand becomes Wake of Tranquility (1541, the AE
+	// pacify the content called for), Rodcet's trinket becomes Light Healing
+	// (17, the favor is "Healing Touch": mend wounded creatures). The rod and
+	// needle become scripted clickies -- quest::rain(1) and AddToHateList(200)
+	// in global_player.pl (EVENT_ITEM_CLICK_CAST_CLIENT) -- because no spell
+	// SPA in this set starts weather or adds hate. Their clickeffect ids are
+	// label spells the script cancels: the rod reuses the existing flavor
+	// spell 44031 "Karanite Rainfall"; 44035 "Instill Hatred" is authored
+	// here (no-op, instant, classless, self). Icons, unlimited charges and
+	// the 60s per-item recast carry over from v295 untouched; the Bertoxx
+	// plague set keeps 44014 and the Eye keeps 619.
+	// Twin: utils/sql/20261031_blessing_favor_clickies_v297.sql (keep in sync).
+	ManifestEntry{
+		.version = 297,
+		.description = "20261031_blessing_favor_clickies_v297",
+		.check = "SELECT id FROM items WHERE id = 976213 AND clickeffect = 1541 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"BLESSV297(
+SET NAMES utf8mb4;
+
+-- ---- item corrections -------------------------------------------------------
+
+UPDATE `items` SET `clickeffect`=44031, `casttime_`=0, `casttime`=0 WHERE `id`=976211;
+UPDATE `items` SET `clickeffect`=44035, `casttime_`=0, `casttime`=0 WHERE `id`=976214;
+UPDATE `items` SET `clickeffect`=1541 WHERE `id`=976213;
+UPDATE `items` SET `clickeffect`=17   WHERE `id`=976216;
+
+-- ---- new label spell: 44035 "Instill Hatred" --------------------------------
+
+DELETE FROM `db_str`     WHERE `id`=910000014 AND `type`=6;
+DELETE FROM `spells_new` WHERE `id`=44035;
+
+DROP TEMPORARY TABLE IF EXISTS `tmp_spell`;
+CREATE TEMPORARY TABLE `tmp_spell` AS SELECT * FROM `spells_new` WHERE `id`=12;
+UPDATE `tmp_spell` SET
+    `id`=44035, `name`='Instill Hatred', `descnum`=910000014,
+    `cast_on_you`='Hatred stirs in your heart.', `cast_on_other`=' eyes burn with hatred.',
+    `targettype`=6, `goodEffect`=1, `range`=100, `aoerange`=0,
+    `cast_time`=0, `recovery_time`=0, `recast_time`=0, `mana`=0,
+    `buffdurationformula`=0, `buffduration`=0, `AEDuration`=0,
+    `effectid1`=254, `effect_base_value1`=0, `effect_limit_value1`=0, `max1`=0, `formula1`=100,
+    `resisttype`=0, `skill`=5,
+    `classes1`=255,
+    `classes2`=255,
+    `classes3`=255,
+    `classes4`=255,
+    `classes5`=255,
+    `classes6`=255,
+    `classes7`=255,
+    `classes8`=255,
+    `classes9`=255,
+    `classes10`=255,
+    `classes11`=255,
+    `classes12`=255,
+    `classes13`=255,
+    `classes14`=255,
+    `classes15`=255,
+    `classes16`=255
+WHERE `id`=12;
+INSERT INTO `spells_new` SELECT * FROM `tmp_spell`;
+DROP TEMPORARY TABLE `tmp_spell`;
+
+INSERT INTO `db_str` (`id`,`type`,`value`) VALUES
+    (910000014, 6, 'Stokes the hatred of your target, turning its wrath upon you.');
+)BLESSV297",
+		.content_schema_update = false,
+	},
 };

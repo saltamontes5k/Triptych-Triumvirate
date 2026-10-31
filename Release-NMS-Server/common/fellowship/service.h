@@ -21,6 +21,11 @@ inline uint32_t RosterClass(uint32_t classes_bits, uint32_t base_class)
 		return base_class;
 	}
 	const int mode = RuleI(Custom, FellowshipRosterClass);
+	if (mode == 3) {
+		// The NMS client detour (CEverQuest::GetClassDesc) renders any id >= 1000
+		// as the decoded bitmask, so the roster can show every class.
+		return 1000u + classes_bits;
+	}
 	if (mode == 2) {
 		return base_class;
 	}

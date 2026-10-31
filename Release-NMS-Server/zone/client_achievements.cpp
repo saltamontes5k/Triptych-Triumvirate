@@ -2271,8 +2271,11 @@ void ClientAchievementState::ProcessPendingNotifications()
 
 void ClientAchievementState::QueueRewards(uint32_t achievement_id)
 {
+	// Zone-enter-only (exploration) achievements never deliver rewards; their
+	// achievements still track, complete, and award points.
 	if (
 		AchievementManager::Instance().Rewards(achievement_id).empty() ||
+		AchievementManager::Instance().IsExplorationOnly(achievement_id) ||
 		!m_pending_reward_ids.insert(achievement_id).second
 	) {
 		return;
@@ -2667,8 +2670,7 @@ void ClientAchievementState::SendRewardDisplay(uint32_t definition_index)
 		m_states[definition_index].status ==
 			EQ::Achievements::Status::Completed &&
 		RuleB(Achievements, GrantRewards) &&
-		(RuleB(Achievements, ExplorationRewards) ||
-		 !manager.IsExplorationOnly(definition.achievement_id))
+		!manager.IsExplorationOnly(definition.achievement_id)
 	) {
 		std::vector<PersistedAchievementRewardSelection> persisted;
 		auto rows = database.QueryDatabase(fmt::format(
@@ -2885,10 +2887,7 @@ bool ClientAchievementState::RestorePendingRewardSelection()
 			continue;
 		}
 
-		if (
-			!RuleB(Achievements, ExplorationRewards) &&
-			manager.IsExplorationOnly(definition.achievement_id)
-		) {
+		if (manager.IsExplorationOnly(definition.achievement_id)) {
 			continue;
 		}
 
@@ -2952,8 +2951,7 @@ RewardSelectionDeliveryResult ClientAchievementState::ClaimReward(
 	if (
 		!m_loaded ||
 		!RuleB(Achievements, GrantRewards) ||
-		(!RuleB(Achievements, ExplorationRewards) &&
-		 AchievementManager::Instance().IsExplorationOnly(pending_reward_id))
+		AchievementManager::Instance().IsExplorationOnly(pending_reward_id)
 	) {
 		return RewardSelectionDeliveryResult::RetryableFailure;
 	}

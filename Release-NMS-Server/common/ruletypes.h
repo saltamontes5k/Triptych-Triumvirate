@@ -767,7 +767,6 @@ RULE_CATEGORY_END()
 RULE_CATEGORY(Achievements)
 RULE_BOOL(Achievements, EnableAchievements, true, "Enable the server-side achievement system")
 RULE_BOOL(Achievements, GrantRewards, true, "Grant configured achievement rewards when an achievement is completed")
-RULE_BOOL(Achievements, ExplorationRewards, true, "Grant claimable rewards for achievements whose only enabled criteria are zone-enter (exploration). Off keeps tracking and points but withholds their rewards")
 RULE_BOOL(Achievements, GuildMemberNotifications, true, "Notify guild members when a player completes an achievement")
 RULE_BOOL(Achievements, NearbyPlayerNotifications, true, "Notify nearby players in the same zone when a player completes an achievement")
 RULE_INT(Achievements, NearbyPlayerNotificationDistance, 200, "Maximum distance for nearby achievement completion notifications; set to 0 to disable")
@@ -1217,8 +1216,8 @@ RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that
 RULE_BOOL(Custom, 	Fellowships, 						false, 	"Enable the RoF2 fellowship system: membership, roster window, /fsay chat, campsites and vitality.")
 RULE_BOOL(Custom, 	FellowshipCamps, 					true, 	"Enable fellowship campsite creation and campsite effects (requires Fellowships).")
 RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP/AA banking and sharing (requires Fellowships).")
-RULE_INT(Custom, 	FellowshipRosterClass, 				0, 		"Which class the native fellowship roster shows for a multiclass character (the row has room for one). 0 = earliest class in the game's order, 1 = latest, 2 = the character's base class.")
 RULE_INT(Custom, 	FellowshipCampMembers, 				2, 		"Living fellowship members, including the camper, that must be within 100 units and out of combat to create a campsite. Clamped to 1-12; the native client may still gate its Camp button on its own threshold.")
+RULE_INT(Custom, 	FellowshipRosterClass, 				0, 		"Which class the native fellowship roster shows for a multiclass character (the row has room for one). 0 = earliest class in the game's order, 1 = latest, 2 = the character's base class, 3 = the class bitmask encoded for the NMS client (id 1000+mask), which renders every class.")
 
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
@@ -1403,6 +1402,8 @@ RULE_STRING(Custom, LoNForumsUrl,                           "",      "Legends of
 RULE_STRING(Custom, LoNLeaderboardUrl,                      "",      "Legends of Norrath: the page the Leaderboards menu item and the home screen's View More... open (http:// or https://, at most 255 characters). Empty = greyed out. Needs bit 8 in Custom:LoNLinkButtons.")
 RULE_STRING(Custom, LoNWebsiteUrl,                          "",      "Legends of Norrath: the page the Website menu item opens (http:// or https://, at most 255 characters). Empty = Website stays greyed out. Needs bit 16 in Custom:LoNLinkButtons.")
 RULE_STRING(Custom, LoNMOTD,                                "Welcome to Legends of Norrath! Learn the game in Tutorials, build your decks, trade with other players, and good luck at the table.", "Legends of Norrath: the home screen's Message of the Day, sent at card-game login. Plain text (HTML is shown as text). Empty = the box stays blank.")
+RULE_BOOL(Custom,   SoDMercTiers,                           true,    "Seeds of Destruction: theme progression raises the mercenary tier cap (the v89 OG=T2..Rathe=T5 design). Tier 1 is open to everyone; each completed SoD theme (Oceangreen, Kithicor, Kunark/Field of Scale, Rathe) adds one tier, capped at 5. The cap is read from the '<accountid>-sod-merc-tier' data bucket that plugins/NMS_sod_utils.pl keeps current (on every SoD chain-flag change and on zone-in); a missing bucket = Tier 1 only. GMs bypass. Set false for the old global behavior.")
+RULE_BOOL(Custom,   MercBotBrain,                           false,   "Master and Legendary mercenaries (proficiency 3+) think like bots instead of using the stock merc brain: priority-ordered cast dispatch, hate-drop Concussive nukes when aggro looms, roots on fleeing targets, stun-rider nukes, and healer mercs interrupt enemy casts once nobody needs healing. Apprentice/Journeyman keep the stock merc brain regardless. The new spell behaviors also need the v296 merc spell list rows; a tier whose lists lack them simply behaves stock. Fail-closed: false = stock behavior everywhere.")
 
 RULE_CATEGORY_END()
 

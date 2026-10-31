@@ -77,6 +77,13 @@ bool Client::Process() {
 
 		HousingClientProcess(this);
 
+		// Coalesced AA table flush: see Client::SendAlternateAdvancementTable.
+		if (m_aa_table_send_pending &&
+			(Timer::GetCurrentTime() - m_aa_table_last_send_ms) >= kAaTableCoalesceMs) {
+			m_aa_table_send_pending = false;
+			SendAlternateAdvancementTable();
+		}
+
 		ProcessFellowship();
 
 		ProcessAchievementRewards();

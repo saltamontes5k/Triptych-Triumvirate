@@ -592,7 +592,10 @@ bool AchievementManager::LoadSnapshot()
 		m_criteria_by_achievement[criterion.achievement_id].push_back(&criterion);
 	}
 
-	// Zone-enter-only achievements drive the ExplorationRewards rule gate.
+	// Zone-enter-only (exploration) achievements never deliver rewards: the
+	// automatic lane refuses to queue them (QueueRewards) and the claim lane
+	// refuses to present or grant them. Tracking, completion, and points are
+	// unaffected.
 	for (const auto &[achievement_id, criteria] : m_criteria_by_achievement) {
 		if (criteria.empty()) {
 			continue;

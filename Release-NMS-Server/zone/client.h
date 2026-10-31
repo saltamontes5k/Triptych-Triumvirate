@@ -1053,6 +1053,7 @@ public:
 	void SendWaypointList(bool force = true);
 	void   SendLoNSession();               // OP_NMSLoNSession: card game token (zone/nms_lon_session.cpp)
 	void   SendRealEstateIdentity();       // OP_RealEstateZoneContext: tells the client it is standing in a neighborhood
+	void   HousingDoorClick(uint32_t door_id); // lot marker clicked: 0x796c estate details
 	bool AllowAccountWaypoints();
 	bool CheckWaypointGroupFeature();
 	void EnableWaypointGroupFeature();
@@ -1299,6 +1300,11 @@ public:
 	void SendAlternateAdvancementRank(int aa_id, int level);
 	void SendAlternateAdvancementTable();
 	void SendAlternateAdvancementStats();
+	// An AA table send is one packet per usable rank (~1.5k at current table size), so the
+	// zone-in burst of callers is coalesced into one flush instead of being resent.
+	static constexpr uint32 kAaTableCoalesceMs = 400;
+	uint32 m_aa_table_last_send_ms = 0;
+	bool   m_aa_table_send_pending = false;
 	void PurchaseAlternateAdvancementRank(int rank_id);
 	void PurchaseAllAlternateAdvancementRanks(int starting_rank_id);
 	bool GrantAlternateAdvancementAbility(int aa_id, int points, bool ignore_cost = false);
@@ -2135,6 +2141,7 @@ public:
 	void InitializeMercInfo();
 	bool CheckCanSpawnMerc(uint32 template_id);
 	bool CheckCanHireMerc(Mob* merchant, uint32 template_id);
+	uint8 GetSoDMercTierCap();
 	bool CheckCanRetainMerc(uint32 upkeep);
 	bool CheckCanUnsuspendMerc();
 	bool DismissMerc(uint32 MercID);

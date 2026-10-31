@@ -209,9 +209,10 @@ When changing selectable reward content, avoid reusing a reward, option, or set
 ID for a different semantic grant. Stable IDs are part of claim validation and
 idempotency.
 
-`Achievements:ExplorationRewards` (default `true`) scopes the claim lanes for
-exploration achievements — definitions whose only enabled criteria are
-zone-enter. With it off, their pending selections are not presented in the
-claimable lane, View Reward renders nothing for them, and `ClaimReward`
-refuses the delivery; tracking, completion, and points are untouched. See
+Exploration achievements — definitions whose only enabled criteria are
+zone-enter — sit permanently outside the claim lanes: their pending
+selections are not presented, View Reward renders nothing for them, and
+`ClaimReward` refuses the delivery; the automatic lane never queues them.
+Tracking, completion, and points are untouched. The former
+`Achievements:ExplorationRewards` rule was retired (entry 292). See
 [Achievement runtime](achievements.md) under Operational controls.

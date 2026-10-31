@@ -35,6 +35,22 @@ namespace {
 constexpr uint32_t kPlotOwnerPlayer = 4;
 constexpr uint32_t kPlotOwnerGuild  = 8;
 
+// Street address for a lot. The native windows title a plot "<neighbourhood>, <address>", and
+// the address is a server-supplied string -- the client has no per-lot address of its own.
+// Numbered off the door id so it is stable across restarts; street names follow the same
+// convention the retail neighbourhoods use ("101 Bazaar Street").
+std::string PlotStreetAddress(uint32_t door_id)
+{
+	static const char *streets[] = {
+		"Bazaar Street", "Sunrise Lane", "Market Row", "Willow Way",
+		"Lantern Court", "Harvest Row", "Beacon Street", "Orchard Lane"
+	};
+
+	constexpr size_t street_count = sizeof(streets) / sizeof(streets[0]);
+
+	return fmt::format("{} {}", 100 + door_id, streets[door_id % street_count]);
+}
+
 struct NeighborhoodRow {
 	uint32_t    id               = 0;
 	std::string name;
@@ -51,14 +67,8 @@ struct NeighborhoodRow {
 // reproduces it exactly, so the value has to be produced with this alphabet.
 constexpr char kRealEstateIdAlphabet[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+-";
 
-std::string MakeRealEstateId(uint32_t zone_id, uint32_t door_id)
+std::string EncodeRealEstateId(const uint8_t raw[12])
 {
-	const uint8_t raw[12] = {
-		0, 0, 0, 0,
-		static_cast<uint8_t>(zone_id & 0xFF), static_cast<uint8_t>((zone_id >> 8) & 0xFF), 0, 0,
-		static_cast<uint8_t>(door_id & 0xFF), 0, 0, 0
-	};
-
 	auto A = [](int i) { return kRealEstateIdAlphabet[i & 0x3F]; };
 
 	std::string s(16, '\0');
@@ -79,6 +89,82 @@ std::string MakeRealEstateId(uint32_t zone_id, uint32_t door_id)
 	s[14] = A((raw[11] >> 6) | (4 * (raw[10] & 0xF)));
 	s[15] = A(raw[11] & 0x3F);
 	return s;
+}
+
+std::string MakeRealEstateId(uint32_t zone_id, uint32_t door_id)
+{
+	const uint8_t raw[12] = {
+		0, 0, 0, 0,
+		static_cast<uint8_t>(zone_id & 0xFF), static_cast<uint8_t>((zone_id >> 8) & 0xFF), 0, 0,
+		static_cast<uint8_t>(door_id & 0xFF), 0, 0, 0
+	};
+
+	return EncodeRealEstateId(raw);
+}
+
+// Interior furniture needs a distinct GUID per placed item on one lot: the building GUID
+// leaves raw bytes 6/7 and 9..11 zero, so the furniture row id rides in 9..11 (24 bits).
+// The custom-alphabet round-trip (sub_80C920) still validates because the encoding stays
+// canonical, and the door byte (8) is untouched.
+std::string MakeFurnitureId(uint32_t zone_id, uint32_t door_id, uint32_t row_id)
+{
+	const uint8_t raw[12] = {
+		0, 0, 0, 0,
+		static_cast<uint8_t>(zone_id & 0xFF), static_cast<uint8_t>((zone_id >> 8) & 0xFF), 0, 0,
+		static_cast<uint8_t>(door_id & 0xFF),
+		static_cast<uint8_t>(row_id & 0xFF),
+		static_cast<uint8_t>((row_id >> 8) & 0xFF),
+		static_cast<uint8_t>((row_id >> 16) & 0xFF)
+	};
+
+	return EncodeRealEstateId(raw);
+}
+
+// Inverse of the alphabet encode: decodes a 16-character real-estate id back to its raw
+// fields. False when the string is not a valid id (length or alphabet). Pickup resolves
+// the furniture row from this, since the C2S body's exact field layout is only partly
+// recovered while the GUID is echoed verbatim from the actor the client saw.
+bool DecodeRealEstateId(const std::string &id, uint32_t &zone_id, uint32_t &door_id, uint32_t &row_id)
+{
+	zone_id = 0;
+	door_id = 0;
+	row_id  = 0;
+
+	if (id.size() != 16) {
+		return false;
+	}
+
+	auto index = [](char c) -> int {
+		if (c >= '0' && c <= '9') { return c - '0'; }
+		if (c >= 'A' && c <= 'Z') { return c - 'A' + 10; }
+		if (c >= 'a' && c <= 'z') { return c - 'a' + 36; }
+		if (c == '+') { return 62; }
+		if (c == '-') { return 63; }
+		return -1;
+	};
+
+	uint8_t raw[12] = {};
+
+	for (size_t g = 0; g < 4; ++g) {
+		const int v0 = index(id[g * 4 + 0]);
+		const int v1 = index(id[g * 4 + 1]);
+		const int v2 = index(id[g * 4 + 2]);
+		const int v3 = index(id[g * 4 + 3]);
+
+		if (v0 < 0 || v1 < 0 || v2 < 0 || v3 < 0) {
+			return false;
+		}
+
+		raw[g * 3 + 0] = static_cast<uint8_t>((v0 << 2) | (v1 >> 4));
+		raw[g * 3 + 1] = static_cast<uint8_t>(((v1 & 0xF) << 4) | (v2 >> 2));
+		raw[g * 3 + 2] = static_cast<uint8_t>(((v2 & 0x3) << 6) | v3);
+	}
+
+	zone_id = raw[4] | (static_cast<uint32_t>(raw[5]) << 8);
+	door_id = raw[8];
+	row_id  = raw[9] | (static_cast<uint32_t>(raw[10]) << 8) | (static_cast<uint32_t>(raw[11]) << 16);
+
+	return true;
 }
 
 class Writer {
@@ -291,7 +377,7 @@ std::vector<PlotRow> LoadOwnedPlots(const std::string &zone_short_name)
 		// The plot list's second per-entry string is the Address column (confirmed against the
 		// live client: row order is Address, Type, Owner). There is no address data column, so
 		// synthesize a stable one from the lot number and the neighborhood name.
-		r.address = fmt::format("Lot {} {}", r.door_id, nb_name);
+		r.address = PlotStreetAddress(r.door_id);
 
 		rows.push_back(r);
 	}
@@ -599,31 +685,306 @@ bool SendPlacementPreview(Client *c, uint32_t door_id, uint32_t item_id, const s
                           uint32_t zone_id, uint32_t neighborhood_id,
                           float x, float y, float z, float heading);
 
-// Log-only handlers for the real-estate messages this server does not implement yet.
-// They exist so the client's own clicks land in the zone log with a name and a hex dump:
-// without them the packets arrive as unknown opcodes and vanish, which is why the UI looked
-// dead while it was in fact talking to us.
-#define NMS_HOUSING_LOG_ONLY(op)                                      \
-	void Client::Handle_##op(const EQApplicationPacket *app)          \
-	{                                                                 \
-		LogHousingOpcode(this, app, #op);                              \
+// Interior furniture (v1), defined with the wire encoders below. The placement Begin/Commit
+// handlers call these, and the identity burst renders the rows.
+bool IsPlaceableHousingItem(uint32_t item_id);
+bool ResolveOwnedInterior(Client *c, uint32_t &door_id, uint32_t &nb_id);
+bool FurniturePlotIsMine(Client *c, uint32_t door_id);
+bool SendRealEstateFurnitureWorldItem(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
+                                      const std::string &model, uint32_t zone_id,
+                                      float x, float y, float z, float heading, float scale);
+bool SendRealEstateFurnitureWorldRemove(Client *c, uint32_t door_id, uint32_t row_id,
+                                        uint32_t item_id, uint32_t zone_id);
+void SendRealEstateFurniture(Client *c, uint32_t door_id);
+bool ReturnFurnitureRow(Client *c, uint32_t row_id);
+
+// Log-only coverage for the remaining real-estate messages lives in Client::MapOpcodes
+// (k_log_only_rof2), which registers them against Client::Handle_OP_Unimplemented.
+
+// 0x2b35 S2C: the native client consumes exactly one mode byte. Mode 1 opens the Plot Search
+// window and enables selected-row 0x796c inspection; see docs/rof2-opcode-harvest.md.
+void SendRealEstatePlotSearchOpen(Client *c, uint8_t mode);
+
+// 0x21ec C2S item menu: a fixed 768-byte frame. Recovered layout: 16-character GUID + 2 zero
+// bytes, 2 bytes of padding, three u32 location words at 20/24/28, estate id at 32, item id
+// at 36, opaque at 40, title field 44..107, action records 108..747 (16 bytes each: type,
+// parameter, eqstr label, UINT32_MAX), profile byte 748, mouse at 752/756, opaque 760/764.
+// The reply reuses that frame with our own GUID and only the actions this server can honour.
+void Client::Handle_OP_RealEstateItemMenu(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateItemMenu");
+
+	if (!zone || app->size != 768) {
+		return;
 	}
 
-NMS_HOUSING_LOG_ONLY(OP_RealEstatePickup)          // 0x2036 cursor pickup of a placed item
-NMS_HOUSING_LOG_ONLY(OP_RealEstateItemOperation)   // 0x3424 item operation request
-NMS_HOUSING_LOG_ONLY(OP_RealEstateHouseSwap)       // 0x21ba
-NMS_HOUSING_LOG_ONLY(OP_RealEstateEscrow)          // 0x2aa6
-NMS_HOUSING_LOG_ONLY(OP_RealEstateTextRequest)     // 0x3c8b
-NMS_HOUSING_LOG_ONLY(OP_RealEstateItemInspect)     // 0x58c7
-NMS_HOUSING_LOG_ONLY(OP_RealEstateLoadLayout)      // 0x5b41
-NMS_HOUSING_LOG_ONLY(OP_RealEstatePack)            // 0x613d
-NMS_HOUSING_LOG_ONLY(OP_RealEstateVotingOptOut)    // 0x6573
-NMS_HOUSING_LOG_ONLY(OP_RealEstateStoreAll)        // 0x6917
-NMS_HOUSING_LOG_ONLY(OP_RealEstateSale)            // 0x792c
-NMS_HOUSING_LOG_ONLY(OP_RealEstateInspect)         // 0x796c
-NMS_HOUSING_LOG_ONLY(OP_RealEstateAction5Request)  // 0x7ad1
+	const uint32_t estate_id = ReadU32(app, 32);
+	const uint32_t item_id   = ReadU32(app, 36);
 
-#undef NMS_HOUSING_LOG_ONLY
+	if (!estate_id || estate_id == UINT32_MAX || !item_id || item_id == UINT32_MAX) {
+		return;
+	}
+
+	// Only the building this server actually placed on the lot is interactive: there is no
+	// furniture custody here, so any other item id would offer actions that cannot be kept.
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.house_item_id, p.owner_char_id, p.owner_guild_id "
+		"FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		LogInfo("[Housing] item menu for unknown estate [{}] from [{}]", estate_id, GetName());
+		return;
+	}
+
+	auto row = plot.begin();
+
+	const uint32_t house_item_id  = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const uint32_t owner_char_id  = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+	const uint32_t owner_guild_id = Strings::ToUnsignedInt(row[2] ? row[2] : "0");
+
+	if (!house_item_id || item_id != house_item_id) {
+		LogInfo(
+			"[Housing] item menu for estate [{}] item [{}] ignored: the lot's building is [{}]",
+			estate_id, item_id, house_item_id
+		);
+		return;
+	}
+
+	const auto *data = database.GetItem(item_id);
+	if (!data) {
+		return;
+	}
+
+	const bool owner = owner_char_id == CharacterID() ||
+		(owner_guild_id && owner_guild_id == GuildID());
+
+	std::string title(data->Name);
+	if (title.size() > 63) {
+		title.resize(63);
+	}
+	for (char &ch : title) {
+		const auto c = static_cast<unsigned char>(ch);
+		if (c < 32 || c > 126) {
+			ch = ' ';
+		}
+	}
+
+	std::vector<uint8_t> frame(768, 0);
+	auto put32 = [&frame](size_t at, uint32_t value) {
+		for (int i = 0; i < 4; ++i) {
+			frame[at + i] = static_cast<uint8_t>((value >> (8 * i)) & 0xFF);
+		}
+	};
+
+	const std::string guid = MakeRealEstateId(zone->GetZoneID(), estate_id);
+	std::memcpy(frame.data(), guid.data(), guid.size() < 16 ? guid.size() : 16);
+
+	put32(20, UINT32_MAX);
+	put32(24, UINT32_MAX);
+	put32(28, UINT32_MAX);
+	put32(32, estate_id);
+	put32(36, item_id);
+
+	std::memcpy(frame.data() + 44, title.data(), title.size());
+	std::fill(frame.begin() + 108, frame.begin() + 748, 0xFF);
+
+	size_t record = 108;
+	auto action = [&](uint32_t type, uint32_t parameter, uint32_t label) {
+		if (record + 16 > 748) {
+			return;
+		}
+		put32(record, type);
+		put32(record + 4, parameter);
+		put32(record + 8, label);
+		put32(record + 12, UINT32_MAX);
+		record += 16;
+	};
+
+	action(7, 0, 720);            // eqstr 720: Inspect
+	if (owner) {
+		action(1, 0, 723);        // eqstr 723: Enter
+	}
+
+	frame[748] = 0;              // the frame carries actions
+	put32(752, ReadU32(app, 752));
+	put32(756, ReadU32(app, 756));
+
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemMenu, static_cast<uint32>(frame.size()));
+	std::memcpy(outapp->pBuffer, frame.data(), frame.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo(
+		"[Housing] item menu for [{}]: estate [{}] item [{}] '{}', owner [{}], actions [{}]",
+		GetName(), estate_id, item_id, title, owner, record > 108 ? (record - 108) / 16 : 0
+	);
+}
+
+// 0x796c C2S inspect: exactly 4 bytes, the estate id. The recovered reply is:
+// u32 request, u8 type (4 house / 8 plot), u32 0, u8 1, u8 0, five u32 ids (estate, parent,
+// definition, guild, fellowship), four length-prefixed strings (context, display name, owner
+// name, owner handle), four opaque words, u8 show. We answer for plots only, with the ids the
+// 0x6fd0/0x63fd snapshot already registered for the same door: estate = door id,
+// parent = zone id, definition = PlotDefinitionId(door).
+bool SendRealEstateInspection(Client *c, uint32_t estate_id, bool show);
+
+void Client::Handle_OP_RealEstateInspect(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateInspect");
+
+	if (!zone || app->size != 4) {
+		return;
+	}
+
+	SendRealEstateInspection(this, ReadU32(app, 0), true);
+}
+
+// Builds and sends the 0x796c reply for one estate. show=true opens the window (the answer to
+// a client inspect); show=false just seeds the client's estate data, which is what we push on
+// zone-in so the Manage window has something to render the moment it is opened.
+bool SendRealEstateInspection(Client *c, uint32_t estate_id, bool show)
+{
+	if (!c || !zone || !estate_id || estate_id == UINT32_MAX) {
+		return false;
+	}
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.plot_type, COALESCE(c.name, ''), COALESCE(g.name, ''), p.owner_guild_id, "
+		"       COALESCE(nb.name, '') "
+		"FROM nms_plot p "
+		"JOIN nms_neighborhood nb ON nb.id = p.neighborhood_id "
+		"LEFT JOIN character_data c ON c.id = p.owner_char_id "
+		"LEFT JOIN guilds g ON g.id = p.owner_guild_id "
+		"WHERE nb.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		LogInfo("[Housing] inspect for unknown estate [{}] from [{}]", estate_id, c->GetName());
+		return false;
+	}
+
+	auto row = plot.begin();
+
+	const uint32_t    plot_type   = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const std::string char_name   = std::string(row[1] ? row[1] : "");
+	const std::string guild_name  = std::string(row[2] ? row[2] : "");
+	const uint32_t    owner_guild = Strings::ToUnsignedInt(row[3] ? row[3] : "0");
+	const std::string context     = std::string(row[4] ? row[4] : "");
+
+	Writer w;
+	w.U32(estate_id);                              // request: echo the estate that was asked about
+	w.U8(8);                                       // type 8 = plot
+	w.U32(0);
+	w.U8(1);
+	w.U8(0);
+	w.U32(estate_id);
+	w.U32(zone->GetZoneID());                      // parent: the neighbourhood object, as 0x6fd0 sent it
+	w.U32(PlotDefinitionId(estate_id));
+	w.U32(owner_guild ? owner_guild : 0xFFFFFFFFu);
+	w.U32(0);                                      // fellowship
+	w.Str(context);                                // the native title reads "<context>, <address>"
+	w.Str(PlotStreetAddress(estate_id));
+	w.Str(plot_type == 1 ? guild_name : char_name);
+	w.Str("");                                     // owner handle: not modelled here
+	for (int i = 0; i < 4; ++i) {
+		w.U32(0);                                  // opaque tail: four unwitnessed words
+	}
+	w.U8(show ? 1 : 0);                            // 1 opens the window, 0 only seeds the data
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateInspect, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo(
+		"[Housing] inspect for [{}]: estate [{}] type [{}] owner '{}' context '{}' show [{}] ({} bytes)",
+		c->GetName(), estate_id, plot_type, plot_type == 1 ? guild_name : char_name, context,
+		show ? 1 : 0, buf.size()
+	);
+
+	return true;
+}
+
+// 0x58c7 C2S item inspect: 8 bytes, estate id + item id. The client consumes a direct
+// serialized item here -- no estate ids, result word or item-type prefix -- so the reply is
+// the same body an ItemPacket carries.
+void Client::Handle_OP_RealEstateItemInspect(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateItemInspect");
+
+	if (!zone || app->size < 8) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 0);
+	const uint32_t item_id   = ReadU32(app, 4);
+
+	if (!estate_id || estate_id == UINT32_MAX || !item_id || item_id == UINT32_MAX) {
+		return;
+	}
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.house_item_id FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return;
+	}
+
+	const uint32_t house_item_id = Strings::ToUnsignedInt(plot.begin()[0] ? plot.begin()[0] : "0");
+	if (!house_item_id || item_id != house_item_id) {
+		return;
+	}
+
+	const auto *data = database.GetItem(item_id);
+	if (!data) {
+		return;
+	}
+
+	auto *inst = database.CreateBaseItem(data, 1);
+	if (!inst) {
+		return;
+	}
+
+	const std::string body = inst->Serialize(EQ::invslot::slotCursor);
+	safe_delete(inst);
+
+	if (body.empty()) {
+		return;
+	}
+
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemInspect, static_cast<uint32>(body.size()));
+	std::memcpy(outapp->pBuffer, body.data(), body.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] inspected item [{}] on estate [{}] for [{}]: {} bytes", item_id, estate_id, GetName(), body.size());
+}
+
+void SendRealEstatePlotSearchOpen(Client *c, uint8_t mode)
+{
+	if (!c) {
+		return;
+	}
+
+	Writer w;
+	w.U8(mode ? 1 : 0);
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstatePlotSearchOpen, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] sent plot-search open mode [{}] to [{}]", mode ? 1 : 0, c->GetName());
+}
 
 // Defined with the wire encoders below.
 void SendRealEstateExteriors(Client *c);
@@ -725,13 +1086,228 @@ void Client::Handle_OP_RealEstatePurchase(const EQApplicationPacket *app)
 	SendRealEstateIdentity();
 }
 
-// 0x711a C2S commit: 96 bytes -- estate 32, item 36, heading 44, position Y/X/Z 60..68. We
-// persist the building pose and consume nothing (furniture custody is not implemented).
+
+// 0x2a9e S2C: retires a world actor. The consumer reads the GUID at 0..15 and the
+// estate/item pair at 32/36; 16..31 is padding.
+bool SendRealEstateWorldRemove(Client *c, uint32_t door_id, uint32_t item_id, uint32_t zone_id)
+{
+	if (!c) {
+		return false;
+	}
+
+	const std::string guid = MakeRealEstateId(zone_id, door_id);
+
+	Writer w;
+	w.CStr(guid);          // 16 characters plus NUL
+	w.U8(0);               // pad the GUID field to the fixed 18 bytes the layout uses
+	w.U32(0); w.U32(0); w.U32(0);   // 20..31: not read by the retire path
+	w.U32(door_id);        // 32: estate id
+	w.U32(item_id);        // 36: item id
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateWorldRemove, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] sent world remove to [{}]: estate [{}] item [{}]", c->GetName(), door_id, item_id);
+	return true;
+}
+
+
+// A lot marker is a door. Clicking it is the client's only way to ask about a plot, and the
+// window that comes up is filled from the 0x796c inspection -- which the client never requests
+// by itself. So the click is the request: answer it with show=true and the plot's details.
+void Client::HousingDoorClick(uint32_t door_id)
+{
+	if (!zone || std::string(zone->GetShortName()) != "neighborhood") {
+		return;
+	}
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT 1 FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), door_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return;
+	}
+
+	LogInfo("[Housing] lot marker [{}] clicked by [{}]", door_id, GetName());
+
+	SendRealEstateInspection(this, door_id, true);
+}
+
+// 0x792c C2S "Move Out": a 188-byte envelope whose only recovered field is the estate id at 0.
+// Relinquishes the plot, its building and its interior. The result goes back on 0x66bf as a
+// single u32 (0 = applied), and the client gets a fresh identity so the windows redraw.
+void Client::Handle_OP_RealEstateSale(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateSale");
+
+	if (!zone || app->size < 4) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 0);
+
+	uint32_t result = 1;
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.id, p.plot_type, p.owner_char_id, p.owner_guild_id, p.house_id, p.house_item_id "
+		"FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	if (plot.Success() && plot.RowCount()) {
+		auto row = plot.begin();
+
+		const uint32_t plot_row    = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+		const uint32_t plot_type   = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+		const uint32_t owner_char  = Strings::ToUnsignedInt(row[2] ? row[2] : "0");
+		const uint32_t owner_guild = Strings::ToUnsignedInt(row[3] ? row[3] : "0");
+		const uint32_t house_id    = Strings::ToUnsignedInt(row[4] ? row[4] : "0");
+		const uint32_t house_item  = Strings::ToUnsignedInt(row[5] ? row[5] : "0");
+
+		const bool mine = plot_type == 1
+			? (owner_guild != 0 && owner_guild == GuildID())
+			: (owner_char != 0 && owner_char == CharacterID());
+
+		if (mine) {
+			database.QueryDatabase(fmt::format(
+				"UPDATE nms_plot SET owner_char_id = 0, owner_guild_id = 0, purchased_at = NULL, "
+				"upkeep_paid_until = NULL, house_id = 0, house_zone = '', house_item_id = 0, "
+				"house_x = NULL, house_y = NULL, house_z = NULL, house_heading = NULL "
+				"WHERE id = {}", plot_row
+			));
+
+			if (house_id) {
+				database.QueryDatabase(fmt::format("DELETE FROM house WHERE id = {}", house_id));
+			}
+
+			if (house_item) {
+				SendRealEstateWorldRemove(this, estate_id, house_item, zone->GetZoneID());
+			}
+
+			result = 0;
+
+			Message(
+				Chat::White,
+				fmt::format("[housing] you have moved out of [{}].", PlotStreetAddress(estate_id)).c_str()
+			);
+
+			LogInfo(
+				"[Housing] move out by [{}]: estate [{}] released, house [{}] retired",
+				GetName(), estate_id, house_id
+			);
+		}
+	}
+
+	Writer w;
+	w.U32(result);
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateSaleResult, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	if (result == 0) {
+		SendRealEstateIdentity();
+	}
+}
+
+// 0x507f C2S ownership transfer: 188 bytes, estate id at 0, recipient name in a fixed 64-byte
+// field at 108. Result on 0x68ba (u32 at 0, 0 = applied).
+void Client::Handle_OP_RealEstateTransfer(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateTransfer");
+
+	if (!zone || app->size < 172) {
+		return;
+	}
+
+	const uint32_t estate_id = ReadU32(app, 0);
+
+	char target[65] = {};
+	std::memcpy(target, app->pBuffer + 108, 64);
+
+	if (!target[0]) {
+		return;
+	}
+
+	uint32_t result = 1;
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.id, p.plot_type, p.owner_char_id, p.owner_guild_id "
+		"FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	auto recipient = database.QueryDatabase(fmt::format(
+		"SELECT id FROM character_data WHERE name = '{}' LIMIT 1",
+		Strings::Escape(target)
+	));
+
+	if (plot.Success() && plot.RowCount() && recipient.Success() && recipient.RowCount()) {
+		auto row = plot.begin();
+
+		const uint32_t plot_row    = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+		const uint32_t plot_type   = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+		const uint32_t owner_char  = Strings::ToUnsignedInt(row[2] ? row[2] : "0");
+		const uint32_t owner_guild = Strings::ToUnsignedInt(row[3] ? row[3] : "0");
+		const uint32_t target_id   = Strings::ToUnsignedInt(recipient.begin()[0] ? recipient.begin()[0] : "0");
+
+		const bool mine = plot_type == 1
+			? (owner_guild != 0 && owner_guild == GuildID())
+			: (owner_char != 0 && owner_char == CharacterID());
+
+		if (mine && target_id && target_id != owner_char) {
+			database.QueryDatabase(fmt::format(
+				"UPDATE nms_plot SET owner_char_id = {}, owner_guild_id = 0 WHERE id = {}",
+				target_id, plot_row
+			));
+
+			result = 0;
+
+			Message(
+				Chat::White,
+				fmt::format("[housing] [{}] is now owned by [{}].", PlotStreetAddress(estate_id), target).c_str()
+			);
+
+			LogInfo(
+				"[Housing] transfer by [{}]: estate [{}] -> [{}] (char {})",
+				GetName(), estate_id, target, target_id
+			);
+		}
+	}
+
+	Writer w;
+	w.U32(result);
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateTransferResult, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	QueuePacket(outapp);
+	safe_delete(outapp);
+
+	if (result == 0) {
+		SendRealEstateIdentity();
+	}
+}
+
+// 0x711a C2S commit: 96 bytes -- estate 32, item 36, heading/pitch/roll/scale 44..56,
+// position Y/X/Z 60..68, actor-local extents 72..80, center 84..92. Neighborhood commits
+// persist the building pose and consume nothing; interior commits place one furniture row
+// and consume the item.
 void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
 {
 	LogHousingOpcode(this, app, "OP_RealEstatePlacementCommit");
 
-	if (!zone || std::string(zone->GetShortName()) != "neighborhood" || app->size < 96) {
+	if (!zone || app->size < 96) {
 		return;
 	}
 
@@ -739,30 +1315,125 @@ void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
 	const uint32_t item_id   = ReadU32(app, 36);
 
 	const float heading = ReadFloatAt(app, 44);
+	const float pitch   = ReadFloatAt(app, 48);
+	const float roll    = ReadFloatAt(app, 52);
+	const float scale   = ReadFloatAt(app, 56);
 	const float pos_y   = ReadFloatAt(app, 60);
 	const float pos_x   = ReadFloatAt(app, 64);
 	const float pos_z   = ReadFloatAt(app, 68);
 
-	auto update = database.QueryDatabase(fmt::format(
-		"UPDATE nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
-		"SET p.house_x = {}, p.house_y = {}, p.house_z = {}, p.house_heading = {} "
-		"WHERE n.zone = '{}' AND p.door_id = {} AND p.house_item_id = {} "
-		"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
-		pos_x, pos_y, pos_z, heading,
-		Strings::Escape(zone->GetShortName()), estate_id, item_id,
-		CharacterID(), GuildID()
+	if (std::string(zone->GetShortName()) == "neighborhood") {
+		auto update = database.QueryDatabase(fmt::format(
+			"UPDATE nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+			"SET p.house_x = {}, p.house_y = {}, p.house_z = {}, p.house_heading = {} "
+			"WHERE n.zone = '{}' AND p.door_id = {} AND p.house_item_id = {} "
+			"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
+			pos_x, pos_y, pos_z, heading,
+			Strings::Escape(zone->GetShortName()), estate_id, item_id,
+			CharacterID(), GuildID()
+		));
+
+		LogInfo(
+			"[Housing] placement commit from [{}]: estate [{}], item [{}], pose ({:.1f}, {:.1f}, {:.1f}) "
+			"heading {:.1f}, rows [{}]",
+			GetName(), estate_id, item_id, pos_x, pos_y, pos_z, heading,
+			update.Success() ? update.RowsAffected() : 0
+		);
+
+		if (update.Success() && update.RowsAffected()) {
+			SendRealEstateExteriors(this);
+		}
+		return;
+	}
+
+	// House interior: furniture commit. The estate at 32 is the interior's lot door id and
+	// the item at 36 the furniture being placed. Dormant until the v2 item-metadata tail
+	// (same as Begin); #housing item place is the v1 path.
+	uint32_t door_id = 0, nb_id = 0;
+
+	if (!ResolveOwnedInterior(this, door_id, nb_id)) {
+		LogInfo("[Housing] furniture commit from [{}]: zone [{}] is not their interior",
+		        GetName(), zone->GetShortName());
+		return;
+	}
+	(void) nb_id;
+
+	if (estate_id != door_id) {
+		LogInfo("[Housing] furniture commit from [{}]: body estate [{}] vs interior lot [{}]",
+		        GetName(), estate_id, door_id);
+	}
+
+	// The interior is the character's, but the lot behind it may have changed hands since
+	// the identity went out: the owner gate here is fail-closed.
+	if (!FurniturePlotIsMine(this, door_id)) {
+		LogInfo("[Housing] furniture commit from [{}]: lot [{}] is not theirs", GetName(), door_id);
+		return;
+	}
+
+	if (!IsPlaceableHousingItem(item_id)) {
+		LogInfo("[Housing] furniture commit from [{}]: item [{}] is not placeable furniture",
+		        GetName(), item_id);
+		return;
+	}
+
+	// The model has to exist before anything is consumed: a consumed item with nothing
+	// placed is the outcome the building path learned to refuse.
+	auto model_row = database.QueryDatabase(fmt::format(
+		"SELECT COALESCE(idfile, ''), COALESCE(Name, '') FROM items WHERE id = {} LIMIT 1", item_id
 	));
 
-	LogInfo(
-		"[Housing] placement commit from [{}]: estate [{}], item [{}], pose ({:.1f}, {:.1f}, {:.1f}) "
-		"heading {:.1f}, rows [{}]",
-		GetName(), estate_id, item_id, pos_x, pos_y, pos_z, heading,
-		update.Success() ? update.RowsAffected() : 0
+	if (!model_row.Success() || !model_row.RowCount()) {
+		LogInfo("[Housing] furniture commit from [{}]: item [{}] does not exist", GetName(), item_id);
+		return;
+	}
+
+	auto m = model_row.begin();
+	const std::string model = (m[0] && *m[0]) ? m[0] : (m[1] ? m[1] : "");
+
+	if (model.empty()) {
+		LogInfo("[Housing] furniture commit from [{}]: item [{}] has no model", GetName(), item_id);
+		return;
+	}
+
+	if (!CountItem(item_id)) {
+		LogInfo("[Housing] furniture commit from [{}]: item [{}] not carried", GetName(), item_id);
+		return;
+	}
+
+	auto insert = database.QueryDatabase(fmt::format(
+		"INSERT INTO nms_house_item "
+		"(door_id, item_id, charges, pos_x, pos_y, pos_z, heading, pitch, roll, scale, placement_type, placed_by, placed_at) "
+		"VALUES ({}, {}, 1, {}, {}, {}, {}, {}, {}, {}, 0, {}, NOW())",
+		door_id, item_id, pos_x, pos_y, pos_z, heading, pitch, roll,
+		scale > 0.0f ? scale : 1.0f, CharacterID()
+	));
+
+	if (!insert.Success()) {
+		LogInfo("[Housing] furniture commit from [{}]: insert failed for item [{}]", GetName(), item_id);
+		return;
+	}
+
+	const uint32_t row_id = static_cast<uint32_t>(insert.LastInsertedID());
+
+	// Consume only once the row exists.
+	RemoveItem(item_id, 1);
+
+	SendRealEstateFurnitureWorldItem(
+		this, door_id, row_id, item_id, model, zone->GetZoneID(), pos_x, pos_y, pos_z, heading,
+		scale > 0.0f ? scale : 1.0f
 	);
 
-	if (update.Success() && update.RowsAffected()) {
-		SendRealEstateExteriors(this);
-	}
+	Message(
+		Chat::White,
+		fmt::format("[housing] placed item [{}] in your house (row {}).", item_id, row_id).c_str()
+	);
+
+	LogInfo(
+		"[Housing] furniture commit from [{}]: lot [{}], row [{}], item [{}], "
+		"pose ({:.1f}, {:.1f}, {:.1f}) heading {:.1f} pitch {:.1f} roll {:.1f} scale {:.2f}",
+		GetName(), door_id, row_id, item_id, pos_x, pos_y, pos_z, heading, pitch, roll,
+		scale > 0.0f ? scale : 1.0f
+	);
 }
 
 // 0x050c C2S item query: answered with a well-formed EMPTY 0x1cef (estate id + zero count).
@@ -803,6 +1474,10 @@ void Client::Handle_OP_RealEstateNeighborhood(const EQApplicationPacket *app)
 	if (search_type == 4 || search_type == 5) {
 		// Only ever on an explicit client request, never from a GM claim: the layout is
 		// parser-derived and one omission in it already crashed the client once.
+		//
+		// The window opener goes first: the native client expects the single-byte 0x2b35
+		// before the list, and it is what enables inspection of a selected row.
+		SendRealEstatePlotSearchOpen(this, 1);
 		SendPlotList(this, zone->GetShortName(), search_type);
 	}
 	else {
@@ -859,50 +1534,99 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 	// The two floats are SCREEN coordinates, not world units. The previous handler claimed
 	// the nearest lot from them, which would have claimed an essentially arbitrary plot on
 	// every placement. Claiming is now only the explicit #housing claim path.
-	if (!zone || std::string(zone->GetShortName()) != "neighborhood" || app->size < 60) {
+	if (!zone || app->size < 60) {
 		return;
 	}
 
 	const uint32_t estate_id = ReadU32(app, 32);
 	const uint32_t item_id   = ReadU32(app, 36);
 
-	// Answer with the placement preview -- the documented server side of Begin -- when the
-	// estate is a lot this character may build on. Anything else is logged and dropped: no
-	// claim, no consume, no preview.
-	auto rows = database.QueryDatabase(fmt::format(
-		"SELECT d.pos_x, d.pos_y, d.pos_z, d.heading, n.id, COALESCE(it.idfile, ''), COALESCE(it.Name, '') "
-		"FROM nms_plot p "
-		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
-		"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
-		"LEFT JOIN items it ON it.id = {} "
-		"WHERE n.zone = '{}' AND p.door_id = {} "
-		"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
-		"LIMIT 1",
-		item_id, Strings::Escape(zone->GetShortName()), estate_id, CharacterID(), GuildID()
-	));
+	// Neighborhood: the building flow. Answer with the placement preview -- the documented
+	// server side of Begin -- when the estate is a lot this character may build on.
+	// Anything else is logged and dropped: no claim, no consume, no preview.
+	if (std::string(zone->GetShortName()) == "neighborhood") {
+		auto rows = database.QueryDatabase(fmt::format(
+			"SELECT d.pos_x, d.pos_y, d.pos_z, d.heading, n.id, COALESCE(it.idfile, ''), COALESCE(it.Name, '') "
+			"FROM nms_plot p "
+			"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+			"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
+			"LEFT JOIN items it ON it.id = {} "
+			"WHERE n.zone = '{}' AND p.door_id = {} "
+			"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
+			"LIMIT 1",
+			item_id, Strings::Escape(zone->GetShortName()), estate_id, CharacterID(), GuildID()
+		));
 
-	if (!rows.Success() || !rows.RowCount()) {
-		LogInfo(
-			"[Housing] placement begin from [{}]: estate [{}] item [{}] is not a buildable lot for this character",
-			GetName(), estate_id, item_id
+		if (!rows.Success() || !rows.RowCount()) {
+			LogInfo(
+				"[Housing] placement begin from [{}]: estate [{}] item [{}] is not a buildable lot for this character",
+				GetName(), estate_id, item_id
+			);
+			return;
+		}
+
+		auto row = rows.begin();
+
+		const std::string model = (row[5] && *row[5]) ? row[5] : (row[6] ? row[6] : "");
+
+		if (model.empty()) {
+			return;
+		}
+
+		SendPlacementPreview(
+			this, estate_id, item_id, model, zone->GetZoneID(), Strings::ToUnsignedInt(row[4]),
+			static_cast<float>(Strings::ToFloat(row[0] ? row[0] : "0")),
+			static_cast<float>(Strings::ToFloat(row[1] ? row[1] : "0")),
+			static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0")),
+			static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"))
 		);
 		return;
 	}
 
-	auto row = rows.begin();
+	// House interior: furniture. The identity packet put the client's current estate at
+	// the lot's door id, and Begin carries the furniture item at 36. The preview spawns
+	// where the player stands; the client drags it and answers with the commit.
+	//
+	// Dormant until the v2 item-metadata tail lets the client offer "Place" in the item
+	// menu; #housing item place is the v1 way in.
+	uint32_t door_id = 0, nb_id = 0;
 
-	const std::string model = (row[5] && *row[5]) ? row[5] : (row[6] ? row[6] : "");
+	if (!ResolveOwnedInterior(this, door_id, nb_id)) {
+		LogInfo(
+			"[Housing] placement begin from [{}]: zone [{}] is not their interior",
+			GetName(), zone->GetShortName()
+		);
+		return;
+	}
+
+	if (!IsPlaceableHousingItem(item_id)) {
+		LogInfo(
+			"[Housing] placement begin from [{}]: item [{}] is not placeable furniture",
+			GetName(), item_id
+		);
+		return;
+	}
+
+	auto model_row = database.QueryDatabase(fmt::format(
+		"SELECT COALESCE(idfile, ''), COALESCE(Name, '') FROM items WHERE id = {} LIMIT 1", item_id
+	));
+
+	if (!model_row.Success() || !model_row.RowCount()) {
+		LogInfo("[Housing] placement begin from [{}]: item [{}] does not exist", GetName(), item_id);
+		return;
+	}
+
+	auto m = model_row.begin();
+	const std::string model = (m[0] && *m[0]) ? m[0] : (m[1] ? m[1] : "");
 
 	if (model.empty()) {
+		LogInfo("[Housing] placement begin from [{}]: item [{}] has no model", GetName(), item_id);
 		return;
 	}
 
 	SendPlacementPreview(
-		this, estate_id, item_id, model, zone->GetZoneID(), Strings::ToUnsignedInt(row[4]),
-		static_cast<float>(Strings::ToFloat(row[0] ? row[0] : "0")),
-		static_cast<float>(Strings::ToFloat(row[1] ? row[1] : "0")),
-		static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0")),
-		static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"))
+		this, door_id, item_id, model, zone->GetZoneID(), nb_id,
+		GetX(), GetY(), GetZ(), GetHeading()
 	);
 }
 
@@ -1160,6 +1884,9 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id, uint32_t neigh
 			// It is not the neighbourhood link. The neighbourhood link is the object's +24.
 			plot.zone_id              = PlotRegionId(door_id);
 			plot.type                 = kRealEstateKindPlot;
+			plot.address              = PlotStreetAddress(door_id);
+			plot.purchase_scheme      = 1;   // the emulator tariff published below
+			plot.upkeep_scheme        = 2;
 			plot.max_items            = kMaxItems;
 			plot.max_non_estate_items = kMaxNonEstate;
 			plot.max_children         = kMaxChildEstates;
@@ -1175,12 +1902,30 @@ void SendRealEstateDefinitions(Client *c, uint32_t definition_id, uint32_t neigh
 		WriteEstateDefinition(w, entry);
 	}
 
-	// Cost schemes. The native purchase window prices from this second list, and the
-	// recovered grammar is known (scheme id, components, 16-byte type/subtype/amount
-	// values -- WriteEstateDefinition already emits the count), but the 2013 tariff is
-	// not recovered. Publishing no scheme is deliberate: a fabricated price would be a
-	// claim about Live data we do not have.
+	// Cost schemes. The grammar is recovered (scheme id, components, then 16-byte
+	// type/subtype/amount values); the Live tariff is not -- those numbers lived in the 2013
+	// server's catalogue, not in the client. What follows is a labelled emulator tariff so the
+	// purchase window has a price and an upkeep to render at all: 420 platinum to buy and 3
+	// platinum per period to keep, both in copper (type/subtype 0, the only pair we have a
+	// witness for). If the client renders nothing, the type domain is wrong and the next test
+	// should sweep it.
+	w.U32(2);          // two schemes
+
+	w.U32(1);          // scheme 1: purchase
+	w.U32(1);          // one component
+	w.U32(1);          // component id 1
+	w.U32(1);          // one value
+	w.U32(0);          // type
+	w.U32(0);          // subtype
+	w.Wide(4200000);   // 420 platinum, in copper
+
+	w.U32(2);          // scheme 2: upkeep
+	w.U32(1);
+	w.U32(1);
+	w.U32(1);
 	w.U32(0);
+	w.U32(0);
+	w.Wide(30000);     // 3 platinum, in copper
 
 	const auto &buf = w.Buffer();
 	auto outapp = new EQApplicationPacket(OP_RealEstateDefinitions, static_cast<uint32>(buf.size()));
@@ -1245,12 +1990,17 @@ void SendRealEstatePlotObjects(Client *c)
 		// +24 is a second plot-map key. sub_4B30F0 looks the object up by RealEstate[+140] and
 		// then demands obj[+20] == +140, so a plot is only reachable when it is registered
 		// under the neighbourhood id that 0x6fd0 put into +140. This field is that key.
-		plot.static_id     = neighborhood_id;
+		// +24 is the STATIC id: the plot-marker identity the client associates with the pedestal
+		// it just clicked. The upstream plot-marker resolver keys on exactly this value
+		// (PlotMarker::Resolve(..., static_id)), so mirroring the lot id here is what lets a
+		// pedestal click resolve to an estate. The +140 resolver chain does not need it any
+		// more: the zone context now carries the plot id itself.
+		plot.static_id     = door_id;
 		plot.parent_id     = zone_id;                  // +28: the neighborhood object
 		plot.definition_id = PlotDefinitionId(door_id); // +32: this plot's own definition
 		plot.guild_id      = owner_guild ? owner_guild : 0xFFFFFFFFu;
 		plot.owner_name    = plot_type == 1 ? guild_name : owner_name;
-		plot.dynamic_name  = fmt::format("Plot {}", door_id);
+		plot.dynamic_name  = PlotStreetAddress(door_id);
 		plot.expiry_time   = upkeep_unix;   // 0 = no paid-upkeep timestamp
 
 		Writer w;
@@ -1579,6 +2329,349 @@ bool SendRealEstateWorldItem(Client *c, uint32_t door_id, uint32_t item_id, cons
 	return true;
 }
 
+// ---------------------------------------------------------------------------
+// Interior furniture (v1).
+//
+// Placement/pickup of ordinary items inside a house interior, on our own tables
+// (nms_house_item) and the recovered wire layouts only: the placement commit 0x711a is
+// 96 bytes with heading/pitch/roll/scale at 44..56 and Y/X/Z at 60..68, and the world
+// item 0x1045 is one bare ActorRecord whose record num must not be the item id. The
+// overlay's custody/escrow machinery is deliberately not ported (adoption doc §4): a
+// placed item is consumed from the inventory and lives in nms_house_item until it is
+// picked back up.
+//
+// v1 placement is GM-driven (#housing item place); the client's own Place action needs
+// the item-metadata tail this tree does not emit yet, so the furniture half of the
+// placement Begin/Commit handlers is wired but dormant until that tail lands (v2).
+// ---------------------------------------------------------------------------
+
+// An item may be placed only when a GM allowlisted it (nms_housing_placeable). No
+// itemtype or name heuristic decides this: which items are furniture is server policy.
+bool IsPlaceableHousingItem(uint32_t item_id)
+{
+	auto r = database.QueryDatabase(fmt::format(
+		"SELECT 1 FROM nms_housing_placeable WHERE item_id = {} LIMIT 1", item_id
+	));
+
+	return r.Success() && r.RowCount() > 0;
+}
+
+// The interior identity's own lookup: the current zone is a house interior when the
+// character's house row lives here. Returns the lot door id -- which is also the client's
+// current estate id inside the interior -- and the neighborhood id. One house row per
+// character; with several owned plots the lowest door id wins (documented v1 limitation:
+// the shared interior cannot tell which plot was entered through).
+bool ResolveOwnedInterior(Client *c, uint32_t &door_id, uint32_t &nb_id)
+{
+	door_id = 0;
+	nb_id   = 0;
+
+	if (!c || !zone) {
+		return false;
+	}
+
+	auto interior = database.QueryDatabase(fmt::format(
+		"SELECT p.door_id, n.id FROM house h "
+		"JOIN nms_plot p ON p.house_id = h.id "
+		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE h.char_id = {} AND h.zone = '{}' "
+		"ORDER BY p.door_id LIMIT 1",
+		c->CharacterID(), Strings::Escape(zone->GetShortName())
+	));
+
+	if (!interior.Success() || !interior.RowCount() || !interior.begin()[0]) {
+		return false;
+	}
+
+	door_id = Strings::ToUnsignedInt(interior.begin()[0]);
+	nb_id   = Strings::ToUnsignedInt(interior.begin()[1] ? interior.begin()[1] : "0");
+
+	return door_id != 0;
+}
+
+// True when the plot behind a door id belongs to this client (guild plots to the guild).
+bool FurniturePlotIsMine(Client *c, uint32_t door_id)
+{
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.plot_type, p.owner_char_id, p.owner_guild_id FROM nms_plot p "
+		"WHERE p.door_id = {} LIMIT 1",
+		door_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return false;
+	}
+
+	auto row = plot.begin();
+
+	const uint32_t plot_type   = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const uint32_t owner_char  = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+	const uint32_t owner_guild = Strings::ToUnsignedInt(row[2] ? row[2] : "0");
+
+	return plot_type == 1
+		? (owner_guild != 0 && owner_guild == c->GuildID())
+		: (owner_char != 0 && owner_char == c->CharacterID());
+}
+
+// 0x1045 S2C for one furniture row: the same ActorRecord grammar as a building's world
+// item, but the GUID packs the row id (MakeFurnitureId) and record_num IS the row id --
+// the client keys placed actors by it, and STRUCTS.md warns it must not be the item id.
+bool SendRealEstateFurnitureWorldItem(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
+                                      const std::string &model, uint32_t zone_id,
+                                      float x, float y, float z, float heading, float scale)
+{
+	if (!c || !zone || model.empty()) {
+		return false;
+	}
+
+	PlacementActor actor;
+	actor.model      = model;
+	actor.guid       = MakeFurnitureId(zone_id, door_id, row_id);
+	actor.record_num = row_id;
+	actor.estate_id  = door_id;
+	actor.item_id    = item_id;
+	actor.scale      = scale > 0.0f ? scale : 1.0f;
+	actor.heading    = heading;
+	actor.x          = x;
+	actor.y          = y;
+	actor.z          = z;
+	// No collision maps exist in this tree (adoption doc §5), so the client-side collision
+	// flag is cleared: there is no server-side validation for it to mirror.
+	actor.ignore_collisions = 1;
+
+	Writer w;
+	WritePlacementActor(w, actor);
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateWorldItem, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo(
+		"[Housing] sent furniture world item to [{}]: lot [{}], row [{}], item [{}], model [{}], "
+		"({:.1f}, {:.1f}, {:.1f}), {} bytes",
+		c->GetName(), door_id, row_id, item_id, model, x, y, z, buf.size()
+	);
+
+	return true;
+}
+
+// 0x2a9e S2C retire for one furniture row. The client matches the actor by the GUID it was
+// sent, so this must carry the MakeFurnitureId form, not the building one.
+bool SendRealEstateFurnitureWorldRemove(Client *c, uint32_t door_id, uint32_t row_id,
+                                        uint32_t item_id, uint32_t zone_id)
+{
+	if (!c) {
+		return false;
+	}
+
+	Writer w;
+	w.CStr(MakeFurnitureId(zone_id, door_id, row_id));  // 16 characters plus NUL
+	w.U8(0);                        // pad the GUID field to the fixed 18 bytes the layout uses
+	w.U32(0); w.U32(0); w.U32(0);   // 20..31: not read by the retire path
+	w.U32(door_id);                 // 32: estate id
+	w.U32(item_id);                 // 36: item id
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateWorldRemove, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	return true;
+}
+
+// Draws every furniture row recorded for a lot. Sent from the interior identity (zone-in
+// and #housing send); the building path keeps its own SendRealEstateExteriors.
+void SendRealEstateFurniture(Client *c, uint32_t door_id)
+{
+	if (!c || !zone || !door_id) {
+		return;
+	}
+
+	const uint32_t zone_id = zone->GetZoneID();
+
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT f.id, f.item_id, f.pos_x, f.pos_y, f.pos_z, f.heading, f.scale, "
+		"       COALESCE(it.idfile, ''), COALESCE(it.Name, '') "
+		"FROM nms_house_item f "
+		"LEFT JOIN items it ON it.id = f.item_id "
+		"WHERE f.door_id = {} ORDER BY f.id",
+		door_id
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		return;
+	}
+
+	for (auto row : rows) {
+		const uint32_t    row_id  = Strings::ToUnsignedInt(row[0]);
+		const uint32_t    item_id = Strings::ToUnsignedInt(row[1]);
+		const float       px      = static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0"));
+		const float       py      = static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"));
+		const float       pz      = static_cast<float>(Strings::ToFloat(row[4] ? row[4] : "0"));
+		const float       heading = static_cast<float>(Strings::ToFloat(row[5] ? row[5] : "0"));
+		const float       scale   = static_cast<float>(Strings::ToFloat(row[6] ? row[6] : "1"));
+		const std::string idfile  = std::string(row[7] ? row[7] : "");
+		const std::string name    = std::string(row[8] ? row[8] : "");
+
+		// Same model rule as the exteriors: the idfile is the world model, the display
+		// name only a fallback that will not render but keeps the packet shape valid.
+		const std::string model = idfile.empty() ? name : idfile;
+
+		if (model.empty()) {
+			LogInfo("[Housing] furniture row [{}] item [{}] has no model; skipped", row_id, item_id);
+			continue;
+		}
+
+		SendRealEstateFurnitureWorldItem(c, door_id, row_id, item_id, model, zone_id, px, py, pz, heading, scale);
+	}
+}
+
+// Puts one placed furniture row back into the client's inventory, deletes the row and
+// retires the world actor. False keeps the row (nothing was consumed): the item data is
+// gone or the caller's ownership gate failed before this ran. Inventory-full falls back
+// to the cursor, the same order the merchant-buy path uses (client_packet.cpp:2759).
+bool ReturnFurnitureRow(Client *c, uint32_t row_id)
+{
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT f.door_id, f.item_id, f.charges FROM nms_house_item f WHERE f.id = {} LIMIT 1",
+		row_id
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		return false;
+	}
+
+	auto row = rows.begin();
+
+	const uint32_t door_id = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const uint32_t item_id = Strings::ToUnsignedInt(row[1] ? row[1] : "0");
+	const int32_t  charges = Strings::ToInt(row[2] ? row[2] : "1");
+
+	const EQ::ItemData *item_data = item_id ? database.GetItem(item_id) : nullptr;
+
+	if (!item_data) {
+		LogInfo("[Housing] furniture row [{}] item [{}] no longer exists; row kept", row_id, item_id);
+		return false;
+	}
+
+	EQ::ItemInstance *inst = database.CreateItem(item_data, charges > 0 ? charges : 1);
+
+	if (!inst) {
+		LogInfo("[Housing] furniture row [{}] item [{}] could not be instantiated; row kept", row_id, item_id);
+		return false;
+	}
+
+	if (!c->AutoPutLootInInventory(*inst, true, true)) {
+		c->PutLootInInventory(EQ::invslot::slotCursor, *inst);
+	}
+
+	database.QueryDatabase(fmt::format("DELETE FROM nms_house_item WHERE id = {}", row_id));
+
+	if (zone) {
+		SendRealEstateFurnitureWorldRemove(c, door_id, row_id, item_id, zone->GetZoneID());
+	}
+
+	LogInfo("[Housing] furniture row [{}] (item [{}]) returned to [{}]", row_id, item_id, c->GetName());
+	return true;
+}
+
+// 0x2036 C2S cursor pickup of a placed item. The exact C2S field layout is only partly
+// recovered, but the GUID the client echoes at 0 is verbatim from the actor it was sent,
+// and furniture GUIDs pack the row id -- so the GUID alone resolves the row. The
+// estate/item fields the building shapes use (32/36) corroborate when the body is long
+// enough; a mismatch is logged, the GUID still wins.
+void Client::Handle_OP_RealEstatePickup(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstatePickup");
+
+	if (!zone || app->size < 16) {
+		return;
+	}
+
+	const char *raw_guid = reinterpret_cast<const char *>(app->pBuffer);
+	std::string guid(raw_guid, strnlen(raw_guid, 16));
+
+	uint32_t guid_zone = 0, door_id = 0, row_id = 0;
+
+	if (!DecodeRealEstateId(guid, guid_zone, door_id, row_id) || !row_id) {
+		LogInfo("[Housing] pickup from [{}]: GUID [{}] does not resolve to furniture", GetName(), guid);
+		return;
+	}
+
+	// The row's plot must still belong to the sender: the GUID is client-echoed data.
+	if (!FurniturePlotIsMine(this, door_id)) {
+		LogInfo("[Housing] pickup from [{}]: row [{}] lot [{}] (guid zone [{}]) is not theirs",
+		        GetName(), row_id, door_id, guid_zone);
+		return;
+	}
+
+	if (app->size >= 40) {
+		const uint32_t estate_field = ReadU32(app, 32);
+
+		if (estate_field != door_id) {
+			LogInfo(
+				"[Housing] pickup from [{}]: body estate [{}] vs row lot [{}] (GUID wins)",
+				GetName(), estate_field, door_id
+			);
+		}
+	}
+
+	if (!ReturnFurnitureRow(this, row_id)) {
+		Message(Chat::White, "[housing] that item could not be picked up.");
+		return;
+	}
+
+	Message(Chat::White, "[housing] item picked up.");
+}
+
+// 0x6917 C2S store-all: the frame carries no application bytes; the estate context is
+// wherever the player stands. Stows every furniture row in the sender's interior, stopping
+// only when rows refuse to return (the placed items stay until picked up one by one).
+void Client::Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app)
+{
+	LogHousingOpcode(this, app, "OP_RealEstateStoreAll");
+
+	uint32_t door_id = 0, nb_id = 0;
+
+	if (!ResolveOwnedInterior(this, door_id, nb_id)) {
+		LogInfo("[Housing] store-all from [{}]: not inside their own interior", GetName());
+		return;
+	}
+	(void) nb_id;
+
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT id FROM nms_house_item WHERE door_id = {} ORDER BY id", door_id
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		Message(Chat::White, "[housing] nothing is placed here.");
+		return;
+	}
+
+	uint32_t stored = 0;
+	uint32_t left   = 0;
+
+	for (auto row : rows) {
+		if (ReturnFurnitureRow(this, Strings::ToUnsignedInt(row[0]))) {
+			++stored;
+		}
+		else {
+			++left;
+		}
+	}
+
+	Message(
+		Chat::White,
+		fmt::format(
+			"[housing] stored [{}] item(s){}.",
+			stored, left ? fmt::format("; [{}] left placed", left) : ""
+		).c_str()
+	);
+}
+
 // Re-sends the exterior preview for every building placed on a lot this character may see.
 // Placement consumes the item, so the building survives a client restart only because the
 // lot records which item built it (nms_plot.house_item_id, custom migration 264).
@@ -1625,6 +2718,46 @@ void SendRealEstateExteriors(Client *c)
 
 		SendRealEstateWorldItem(c, door_id, item_id, model, zone_id, px, py, pz, heading);
 	}
+}
+
+// 0x2aa7 S2C: full replacement list of the estates this character may act on. Frame is a
+// u32 count followed by that many estate ids (door ids), which is what fills the client's
+// My Plots window. Always sent -- an empty list is how the window learns the player has none.
+void SendRealEstateOwnedList(Client *c)
+{
+	if (!c || !zone) {
+		return;
+	}
+
+	auto owned = database.QueryDatabase(fmt::format(
+		"SELECT p.door_id FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
+		"WHERE n.zone = '{}' AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
+		"ORDER BY p.door_id",
+		Strings::Escape(zone->GetShortName()), c->CharacterID(), c->GuildID()
+	));
+
+	std::vector<uint32_t> ids;
+	if (owned.Success() && owned.RowCount()) {
+		for (auto row : owned) {
+			if (row[0]) {
+				ids.push_back(Strings::ToUnsignedInt(row[0]));
+			}
+		}
+	}
+
+	Writer w;
+	w.U32(static_cast<uint32_t>(ids.size()));
+	for (uint32_t id : ids) {
+		w.U32(id);
+	}
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateOwnedList, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] sent owned list to [{}]: {} estate(s), {} bytes", c->GetName(), ids.size(), buf.size());
 }
 
 void Client::SendRealEstateIdentity()
@@ -1694,6 +2827,10 @@ void Client::SendRealEstateIdentity()
 			"[Housing] sent house context to [{}] in [{}]: lot [{}], {} bytes",
 			GetName(), zone->GetShortName(), door_id, buf.size()
 		);
+		SendRealEstateOwnedList(this);
+		// The placed furniture draws the same way the building exteriors do in the
+		// neighborhood: the client keeps no copy, so every identity burst re-sends it.
+		SendRealEstateFurniture(this, door_id);
 		return;
 	}
 
@@ -1796,11 +2933,21 @@ void Client::SendRealEstateIdentity()
 	// wins the id -- and it has to be the plot object, because the walk needs a kind-8 estate.
 	SendRealEstatePlotObjects(this);
 
+	// Seed the estate data the Manage window renders. The client opens that window without
+	// asking for anything, so the inspection body has to be pushed: show=false fills the data
+	// without popping the window, which is what the client does when it answers its own 0x796c.
+	for (uint32_t plot_id : owned_plots) {
+		SendRealEstateInspection(this, plot_id, false);
+	}
+
 	SendRealEstateAreaManifest(this);
 
 	// Buildings already placed on those lots: the preview is what actually draws them, and
 	// it has to be re-sent on every zone-in because the client keeps no copy.
 	SendRealEstateExteriors(this);
+
+	// Last, so every estate it names is already registered: the My Plots window.
+	SendRealEstateOwnedList(this);
 }
 
 // Leaves a house interior. Retail houses have no doors on purpose -- you leave with the real
@@ -1858,6 +3005,10 @@ void command_housing(Client *c, const Seperator *sep)
 		c->Message(Chat::White, "#housing release <door_id> - give a lot back");
 		c->Message(Chat::White, "#housing bind <guild_id|0> - bind this neighborhood to a guild");
 		c->Message(Chat::White, "#housing place <door_id> [item_id] - place a house item from your inventory on a lot");
+		c->Message(Chat::White, "#housing item place <item_id> - place furniture from your inventory where you stand (inside your house)");
+		c->Message(Chat::White, "#housing item remove <row_id|all> - pick placed furniture back up");
+		c->Message(Chat::White, "#housing item list [door_id] - list placed furniture");
+		c->Message(Chat::White, "#housing placeable <item_id> [off] - allow/disallow an item as furniture");
 		c->Message(Chat::White, "#housing exterior <door_id> [item_id] [model] - (re)send a lot's building world item");
 		c->Message(Chat::White, "#housing areas <0-4> - resend the plot regions (0 both keys, 1 estate key, 2 area-id key, 3 player box, 4 world->local)");
 		c->Message(Chat::White, "#housing send - re-send the real-estate identity packet");
@@ -1865,6 +3016,7 @@ void command_housing(Client *c, const Seperator *sep)
 		c->Message(Chat::White, "#housing send defs - real-estate definitions, then identity (experimental)");
 		c->Message(Chat::White, "#housing enter - zone into your house interior");
 		c->Message(Chat::White, "#housing leave - return from a house interior to the neighborhood");
+		c->Message(Chat::White, "#housing plotsearch [mode] - send the plot-search window opener (0x2b35)");
 		c->Message(Chat::White, "#housing guildplot <door_id> [off] - make a lot a guild plot");
 		return;
 	}
@@ -1875,6 +3027,17 @@ void command_housing(Client *c, const Seperator *sep)
 	// Places a house item the character is carrying onto a lot: the item is consumed, the
 	// lot is claimed, and the house row + interior instance persist. This is the
 	// item-driven placement the client's own purchase window is meant to do.
+	// The client's own Plot Search button takes the same path as the search request this
+	// answers; the subcommand exists so the single-byte opener can be tested on its own.
+	if (sub == "plotsearch") {
+		const uint8_t mode = sep->IsNumber(2)
+			? static_cast<uint8_t>(Strings::ToUnsignedInt(sep->arg[2]) & 0xFF)
+			: 1;
+		SendRealEstatePlotSearchOpen(c, mode);
+		c->Message(Chat::White, "[housing] plot-search open sent with mode [{}].", mode);
+		return;
+	}
+
 	if (sub == "place" && sep->IsNumber(2)) {
 		const uint32_t door_id = Strings::ToUnsignedInt(sep->arg[2]);
 
@@ -2038,6 +3201,189 @@ void command_housing(Client *c, const Seperator *sep)
 			Chat::White,
 			fmt::format("[housing] placed house item [{}] on lot [{}]; it is now yours.", item_id, door_id).c_str()
 		);
+		return;
+	}
+
+	// Interior furniture (v1). GM-driven placement: the client's own Place action needs the
+	// item-metadata tail this tree does not emit yet. The item is consumed into
+	// nms_house_item at the player's feet and drawn with the same ActorRecord the building
+	// flow uses; pickup returns it to the inventory.
+	if (sub == "item") {
+		const std::string op = sep->arg[2] ? sep->arg[2] : "";
+
+		if (op == "place" && sep->IsNumber(3)) {
+			const uint32_t item_id = Strings::ToUnsignedInt(sep->arg[3]);
+
+			uint32_t door_id = 0, nb_id = 0;
+
+			if (!ResolveOwnedInterior(c, door_id, nb_id)) {
+				c->Message(Chat::White, "[housing] stand inside your own house interior to place furniture.");
+				return;
+			}
+			(void) nb_id;
+
+			if (!IsPlaceableHousingItem(item_id)) {
+				c->Message(
+					Chat::White,
+					fmt::format(
+						"[housing] item [{}] is not on the placeable allowlist. "
+						"Add it with #housing placeable <item_id> first.",
+						item_id
+					).c_str()
+				);
+				return;
+			}
+
+			if (!c->CountItem(item_id)) {
+				c->Message(Chat::White, fmt::format("[housing] you are not carrying item [{}].", item_id).c_str());
+				return;
+			}
+
+			auto model_row = database.QueryDatabase(fmt::format(
+				"SELECT COALESCE(idfile, ''), COALESCE(Name, '') FROM items WHERE id = {} LIMIT 1", item_id
+			));
+
+			if (!model_row.Success() || !model_row.RowCount()) {
+				c->Message(Chat::White, fmt::format("[housing] item [{}] does not exist.", item_id).c_str());
+				return;
+			}
+
+			auto m = model_row.begin();
+			const std::string model = (m[0] && *m[0]) ? m[0] : (m[1] ? m[1] : "");
+
+			if (model.empty()) {
+				c->Message(Chat::White, fmt::format("[housing] item [{}] has no idfile; nothing would draw.", item_id).c_str());
+				return;
+			}
+
+			auto insert = database.QueryDatabase(fmt::format(
+				"INSERT INTO nms_house_item "
+				"(door_id, item_id, charges, pos_x, pos_y, pos_z, heading, pitch, roll, scale, placement_type, placed_by, placed_at) "
+				"VALUES ({}, {}, 1, {}, {}, {}, {}, 0, 0, 1, 0, {}, NOW())",
+				door_id, item_id, c->GetX(), c->GetY(), c->GetZ(), c->GetHeading(), c->CharacterID()
+			));
+
+			if (!insert.Success()) {
+				c->Message(Chat::White, fmt::format("[housing] insert failed for item [{}].", item_id).c_str());
+				return;
+			}
+
+			const uint32_t row_id = static_cast<uint32_t>(insert.LastInsertedID());
+
+			// Consume only once the row exists.
+			c->RemoveItem(item_id, 1);
+
+			SendRealEstateFurnitureWorldItem(
+				c, door_id, row_id, item_id, model, zone->GetZoneID(),
+				c->GetX(), c->GetY(), c->GetZ(), c->GetHeading(), 1.0f
+			);
+
+			c->Message(
+				Chat::White,
+				fmt::format("[housing] placed item [{}] (row {}) in lot [{}]'s interior.", item_id, row_id, door_id).c_str()
+			);
+			return;
+		}
+
+		if (op == "remove") {
+			uint32_t door_id = 0, nb_id = 0;
+
+			if (!ResolveOwnedInterior(c, door_id, nb_id)) {
+				c->Message(Chat::White, "[housing] stand inside your own house interior to pick furniture up.");
+				return;
+			}
+			(void) nb_id;
+
+			// "all" stows the whole interior; a number picks one row.
+			if (sep->arg[3] && !strcasecmp(sep->arg[3], "all")) {
+				auto rows = database.QueryDatabase(fmt::format(
+					"SELECT id FROM nms_house_item WHERE door_id = {} ORDER BY id", door_id
+				));
+
+				if (!rows.Success() || !rows.RowCount()) {
+					c->Message(Chat::White, "[housing] nothing is placed here.");
+					return;
+				}
+
+				uint32_t stored = 0;
+				uint32_t left   = 0;
+
+				for (auto row : rows) {
+					if (ReturnFurnitureRow(c, Strings::ToUnsignedInt(row[0]))) {
+						++stored;
+					}
+					else {
+						++left;
+					}
+				}
+
+				c->Message(
+					Chat::White,
+					fmt::format(
+						"[housing] stored [{}] item(s){}.",
+						stored, left ? fmt::format("; [{}] left placed", left) : ""
+					).c_str()
+				);
+				return;
+			}
+
+			if (sep->IsNumber(3)) {
+				const uint32_t row_id = Strings::ToUnsignedInt(sep->arg[3]);
+
+				if (!ReturnFurnitureRow(c, row_id)) {
+					c->Message(Chat::White, fmt::format("[housing] row [{}] did not come back.", row_id).c_str());
+					return;
+				}
+
+				c->Message(Chat::White, fmt::format("[housing] row [{}] picked up.", row_id).c_str());
+				return;
+			}
+
+			c->Message(Chat::White, "[housing] usage: #housing item remove <row_id|all>");
+			return;
+		}
+
+		if (op == "list") {
+			uint32_t door_id = 0, nb_id = 0;
+
+			// A door id answers from anywhere (GM inspection); without one the interior
+			// the player stands in is used.
+			if (sep->IsNumber(3)) {
+				door_id = Strings::ToUnsignedInt(sep->arg[3]);
+			}
+			else if (!ResolveOwnedInterior(c, door_id, nb_id)) {
+				c->Message(Chat::White, "[housing] stand inside your house interior or pass a door id.");
+				return;
+			}
+			(void) nb_id;
+
+			auto rows = database.QueryDatabase(fmt::format(
+				"SELECT f.id, f.item_id, COALESCE(it.Name, ''), f.pos_x, f.pos_y, f.pos_z, f.heading "
+				"FROM nms_house_item f LEFT JOIN items it ON it.id = f.item_id "
+				"WHERE f.door_id = {} ORDER BY f.id", door_id
+			));
+
+			if (!rows.Success() || !rows.RowCount()) {
+				c->Message(Chat::White, fmt::format("[housing] lot [{}] has no furniture placed.", door_id).c_str());
+				return;
+			}
+
+			for (auto row : rows) {
+				c->Message(
+					Chat::White,
+					fmt::format(
+						"[housing] row [{}] item [{}] '{}' at ({:.1f}, {:.1f}, {:.1f}) heading {:.1f}",
+						Strings::ToUnsignedInt(row[0]), Strings::ToUnsignedInt(row[1]),
+						row[2] ? row[2] : "",
+						Strings::ToFloat(row[3] ? row[3] : "0"), Strings::ToFloat(row[4] ? row[4] : "0"),
+						Strings::ToFloat(row[5] ? row[5] : "0"), Strings::ToFloat(row[6] ? row[6] : "0")
+					).c_str()
+				);
+			}
+			return;
+		}
+
+		c->Message(Chat::White, "[housing] usage: #housing item place <item_id> | item remove <row_id|all> | item list [door_id]");
 		return;
 	}
 
@@ -2308,6 +3654,45 @@ void command_housing(Client *c, const Seperator *sep)
 				door_id, on ? "guild" : "player"
 			).c_str()
 		);
+		return;
+	}
+
+	// Furniture allowlist. Placement is allowlist-gated, so this is the switch that makes an
+	// item placeable at all; there is no itemtype or name heuristic behind it.
+	if (sub == "placeable" && sep->IsNumber(2)) {
+		const uint32_t item_id = Strings::ToUnsignedInt(sep->arg[2]);
+		const bool     on      = !(sep->arg[3] && !strcasecmp(sep->arg[3], "off"));
+
+		if (on) {
+			auto exists = database.QueryDatabase(fmt::format(
+				"SELECT 1 FROM items WHERE id = {} LIMIT 1", item_id
+			));
+
+			if (!exists.Success() || !exists.RowCount()) {
+				c->Message(Chat::White, fmt::format("[housing] item [{}] does not exist.", item_id).c_str());
+				return;
+			}
+
+			database.QueryDatabase(fmt::format(
+				"INSERT IGNORE INTO nms_housing_placeable (item_id, added_by, added_at) VALUES ({}, {}, NOW())",
+				item_id, c->CharacterID()
+			));
+
+			c->Message(Chat::White, fmt::format("[housing] item [{}] is now placeable furniture.", item_id).c_str());
+		}
+		else {
+			auto r = database.QueryDatabase(fmt::format(
+				"DELETE FROM nms_housing_placeable WHERE item_id = {}", item_id
+			));
+
+			c->Message(
+				Chat::White,
+				fmt::format(
+					"[housing] item [{}] placeability {}.",
+					item_id, (r.Success() && r.RowsAffected()) ? "removed" : "was not set"
+				).c_str()
+			);
+		}
 		return;
 	}
 
