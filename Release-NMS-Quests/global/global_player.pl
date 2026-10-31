@@ -37,6 +37,9 @@ sub EVENT_ENTERZONE {
     # Catch-up grant for existing Drakkin characters (and re-verifies on every zone).
     plugin::GrantDrakkinBreathWeapon($client);
 
+    # SoD mercenary tier cap backfill (Custom:SoDMercTiers bucket refresh).
+    eval { plugin::SodMercTierBackfill($client); };
+
 	if (!plugin::is_eligible_for_zone($client, $zonesn)) {
 		$client->Message(4, "Your vision blurs. You lose conciousness and wake up in a familiar place.");
 		$client->MovePC(151, 185, -835, 4, 390); # Bazaar Safe Location.
@@ -94,6 +97,27 @@ sub EVENT_ENTERZONE {
         $client->BuffFadeBySpellID(2894); # stock Levitation (kept in sync with #Boat_Lesson_Controller.lua)
         $client->RemoveShroudSilent();
     }
+
+    # NMS: King of the Monsters cleanup. A Moorwalker kaiju shroud (race 436,
+    # the basilisk) that leaves moors v40 -- zone-out, bind release after a
+    # failed hunt, instance expiry -- is restored here. Race 436 is the stock
+    # basilisk model; the shroud is only ever worn inside the version 40
+    # expedition.
+    if ($client->GetRace() == 436
+        && !($zonesn eq 'moors' && $client->GetZoneInstanceVersion() == 40)) {
+        $client->RemoveShroudSilent();
+    }
+
+    # NMS: Midnight Snack cleanup. A dwarven ghost shroud (race 117 texture
+    # 3, the Garanel Rucksif hull) that leaves skyshrine v41 -- zone-out,
+    # bind release after a failed binge, instance expiry -- is restored here.
+    # Race 117 is the stock dwarf ghost model; the shroud is only ever worn
+    # inside the version 41 expedition.
+    if ($client->GetRace() == 117
+        && !($zonesn eq 'skyshrine' && $client->GetZoneInstanceVersion() == 41)) {
+        $client->RemoveShroudSilent();
+    }
+
     # NMS: Derelict Space Station cleanup. A Master Officer armor shroud
     # (race 323, the animated armor hull) that leaves netherbian v66 --
     # zone-out, bind release after a failed purge, instance expiry -- is
@@ -104,6 +128,18 @@ sub EVENT_ENTERZONE {
         $client->RemoveShroudSilent();
     }
 
+    # NMS: Pottery Trial cleanup. A clay golem shroud (race 17, the muddite
+    # hull -- or race 379, the a_clay_vase pot illusion the controller lays
+    # over it from the baking stage on) that leaves beholder v80 -- zone-out,
+    # bind release after a failed trial, instance expiry -- is restored here.
+    # Race 17 is only ever worn inside the version 80 expedition; the clay
+    # toughenings go with it.
+    if (($client->GetRace() == 17 || $client->GetRace() == 379)
+        && !($zonesn eq 'beholder' && $client->GetZoneInstanceVersion() == 80)) {
+        $client->BuffFadeBySpellID(44033); # Clay Toughening I (kept in sync with #Pottery_Trial_Controller.lua)
+        $client->BuffFadeBySpellID(44034); # Clay Toughening II
+        $client->RemoveShroudSilent();
+    }
 }
 
 sub EVENT_RESPAWN {
@@ -684,6 +720,47 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
 			 [2048, 156, 5018]);
 	$ret_id = 59907;
         check_map(\@spell_map, $ret_id);
+    }
+
+    # =====================================================================
+    # Blessing rank-2 favor clickies that need engine actions no spell
+    # effect can express. Their clickeffect ids are label spells only --
+    # returning 1 here cancels the cast; the click branch still fires
+    # because client_packet requires Click.Effect > 0.
+    #   True Karanite Rod of Rainfall (976211, label 44031 "Karanite
+    #     Rainfall"): starts real rain via quest::rain(1) -- there is no
+    #     weather SPA in this spell set.
+    #   Innoruuk's Needle of Hatred (976214, label 44035 "Instill Hatred"):
+    #     stokes hate like Innoruuk's blessing bundle {hate=>200} does --
+    #     there is no usable hate-add spell effect.
+    # =====================================================================
+    if ($spell_id == 44031 && $item_id == 976211) {
+        # The old legend, kept: this is a Stop Rain stick. The first cast stops
+        # the rain; a second Stop Rain cast on an already-stilled sky is the
+        # one that brings it back. The bucket marks "I stopped this rain" so
+        # only the caster's own consecutive cast inverts.
+        if ($zone->IsRaining()) {
+            quest::rain(0);
+            $client->SetBucket("karanite-rain-stilled", 1);
+            $client->Message(15, "The Rod murmurs, and the rain stops falling.");
+        } elsif ($client->GetBucket("karanite-rain-stilled")) {
+            $client->SetBucket("karanite-rain-stilled", 0);
+            quest::rain(1);
+            $client->Message(15, "Twice-stilled, the sky remembers how to rain: rain begins to fall across the land.");
+        } else {
+            $client->Message(15, "The Rod whispers for stillness, but no rain falls to stop.");
+        }
+        return 1;
+    }
+    if ($spell_id == 44035 && $item_id == 976214) {
+        my $target = $client->GetTarget();
+        if (!$target || !$target->IsNPC()) {
+            $client->Message(15, "The Needle thirsts for a soul that can hate you back.");
+            return 1;
+        }
+        $target->AddToHateList($client, 200);
+        $client->Message(15, "The Needle drinks deep: your target's hatred turns upon you.");
+        return 1;
     }
 }
 
