@@ -413,6 +413,8 @@ public:
 	);
 	bool CompleteSharedTaskAchievement(uint32 achievement_id);
 	std::string GetSharedTaskIdentity();
+	uint32 GetZoneInstanceVersion();
+	int GetTaskActivityDoneCount(int task_id, int activity_id);
 	void LockSharedTask(bool lock);
 	void EndSharedTask();
 	void EndSharedTask(bool send_fail);

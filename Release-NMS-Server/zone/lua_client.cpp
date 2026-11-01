@@ -1678,6 +1678,21 @@ std::string Lua_Client::GetSharedTaskIdentity()
 	return identity > 0 ? std::to_string(identity) : std::string{};
 }
 
+// NMS: instance version of the zone this client is in (lua mirror of the perl
+// binding used by the King of the Monsters moors v40 monster mission gating).
+uint32 Lua_Client::GetZoneInstanceVersion()
+{
+	Lua_Safe_Call_Int();
+	return zone ? zone->GetInstanceVersion() : 0;
+}
+
+// NMS: lua mirror of the perl GetTaskActivityDoneCount(task_id, activity_id).
+int Lua_Client::GetTaskActivityDoneCount(int task_id, int activity_id)
+{
+	Lua_Safe_Call_Int();
+	return self->GetTaskActivityDoneCountFromTaskID(task_id, activity_id);
+}
+
 void Lua_Client::LockSharedTask(bool lock) {
 	Lua_Safe_Call_Void();
 	return self->LockSharedTask(lock);
@@ -4060,6 +4075,8 @@ luabind::scope lua_register_client() {
 	.def("CompleteAchievement", (bool(Lua_Client::*)(uint32))&Lua_Client::CompleteAchievement)
 	.def("CompleteSharedTaskAchievement", &Lua_Client::CompleteSharedTaskAchievement)
 	.def("GetSharedTaskIdentity", &Lua_Client::GetSharedTaskIdentity)
+	.def("GetZoneInstanceVersion", &Lua_Client::GetZoneInstanceVersion)
+	.def("GetTaskActivityDoneCount", (int(Lua_Client::*)(int,int))&Lua_Client::GetTaskActivityDoneCount)
 	.def("CompleteTask", (bool(Lua_Client::*)(int))&Lua_Client::CompleteTask)
 	.def("Connected", (bool(Lua_Client::*)(void))&Lua_Client::Connected)
 	.def("CountAugmentEquippedByID", (uint32(Lua_Client::*)(uint32))&Lua_Client::CountAugmentEquippedByID)

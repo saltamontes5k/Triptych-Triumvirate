@@ -41097,9 +41097,12 @@ INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES
 
 DELETE FROM `spawn2` WHERE `id` BETWEEN 1520028450 AND 1520028494;
 INSERT INTO `spawn2`
+	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`content_flags`)
+VALUES
+	(1520028450,1520009300,'poknowledge',  0,497,-30,-90,250,640,0,'frostfell');
+INSERT INTO `spawn2`
 	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
 VALUES
-	(1520028450,1520009300,'poknowledge',  0,497,-30,-90,250,640,0),
 	(1520028451,1520009301,'frostcrypt',220,10,-40,2,0,640,0),
 	(1520028452,1520009302,'frostcrypt',220,99.625,98.0,-14.0,0,600,0),
 	(1520028453,1520009302,'frostcrypt',220,-0.125,181.25,-53.625,0,600,0),
@@ -41395,4 +41398,1326 @@ INSERT INTO `db_str` (`id`,`type`,`value`) VALUES
 )BLESSV297",
 		.content_schema_update = false,
 	},
+	// Convorteum raid requester fix - Convorteum_Herald_Dagna npc_types row.
+	// The Underfoot finale was unrequestable: brellsrest/480260.lua and the
+	// committed spawn (20260930_uf_convorteum.sql, spawngroup 1520008521)
+	// existed, but the migration cloned Dagna from nonexistent npc 480060, so
+	// the npc_types row silently never landed. This creates the row with the
+	// 20260930-intended stats; placement stays with the committed spawn.
+	// Twin: utils/sql/20261031_convorteum_herald_spawn.sql (keep in sync).
+	ManifestEntry{
+		.version = 298,
+		.description = "20261031_convorteum_herald_spawn",
+		.check = "SELECT id FROM npc_types WHERE id = 480260 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"CONVORT298(
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+-- Convorteum_Herald_Dagna (480260) - the row 20260930_uf_convorteum.sql meant to create
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+CREATE TEMPORARY TABLE tmp_npc LIKE npc_types;
+INSERT INTO tmp_npc SELECT * FROM npc_types WHERE id = 12000157;
+UPDATE tmp_npc SET id = 480260, name = 'Convorteum_Herald_Dagna', lastname = 'Keeper of the Convorteum Door',
+	race = 12, level = 85, hp = 40000, mindmg = 0, maxdmg = 100, AC = 500,
+	loottable_id = 0, npc_faction_id = 0, npc_spells_id = 0, aggroradius = 0, see_invis = 1,
+	special_abilities = '', raid_target = 0;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_npc;
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+
+COMMIT;
+)CONVORT298",
+		.content_schema_update = false,
+	},
+
+	// poknowledge werewolf merchant dedupe - the seven race-14 'a'-suffixed twins
+	// of the stock PoK class vendors (Elementalist_Somata/Siewtha, Illusionist_Jerupa/Sevata,
+	// Wanderer_Astobina/Qendaa, Vicar_Thirana). Each was poknowledge-exclusive with a
+	// dedicated spawngroup, empty loottable, and 1:1 spawnentry; the stock twins remain.
+	// Known content loss: 202466 Elementalist_Siewtha was the only vendor of spells
+	// 16341, 21646, 21669, 28430, 28431, 28462, 59639.
+	// Twin: utils/sql/20261101_pok_werewolf_dedupe.sql (keep in sync).
+	ManifestEntry{
+		.version = 299,
+		.description = "20261101_pok_werewolf_dedupe",
+		.check = "SELECT id FROM npc_types WHERE id IN (202465,202466,202467,202468,202469,202470,202471) LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"POKWW299(
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+-- werewolf twin class-merchants in poknowledge: spawn entries, points, groups, stock, rows
+DELETE FROM spawnentry WHERE npcID IN (202465,202466,202467,202468,202469,202470,202471);
+DELETE FROM spawn2 WHERE id IN (241657,241658,241659,241660,241661,241662,241663);
+DELETE FROM spawngroup WHERE id IN (259491,259492,259493,259494,259495,259496,259497);
+DELETE FROM merchantlist WHERE merchantid IN (202465,202466,202467,202468,202469,202470,202471);
+DELETE FROM npc_types WHERE id IN (202465,202466,202467,202468,202469,202470,202471);
+
+COMMIT;
+)POKWW299",
+		.content_schema_update = false,
+	},
+
+	// Bindral Argaff illusion stock - #Bindral_Argaff (202431, poknowledge sarnak,
+	// merchant 7010100) was stocked by the v261-263 goldfish batch with 11 generic
+	// level-1 ENC scrolls, but he is the Legendary Enchanter Illusions NPC; his
+	// shop should be the enchanter illusion line. Replace his stock with every
+	// ENC-castable illusion scroll (linked spell classes14 1-85, illusion SPA 58),
+	// deduped by spell name (lowest item id wins), slotted by class level then
+	// name - 74 slots, under the ~100 shop display cap.
+	// Twin: utils/sql/20261101_bindral_illusion_stock.sql (keep in sync).
+	ManifestEntry{
+		.version = 300,
+		.description = "20261101_bindral_illusion_stock",
+		.check = "SELECT item FROM merchantlist WHERE merchantid = 7010100 AND item = 15040 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"BINDRAL300(
+SET NAMES utf8mb4;
+START TRANSACTION;
+
+DELETE FROM merchantlist WHERE merchantid = 7010100;
+
+INSERT INTO merchantlist (merchantid, slot, item)
+SELECT 7010100,
+       ROW_NUMBER() OVER (ORDER BY t.enc_lvl, t.name),
+       t.item
+FROM (
+  SELECT i.id AS item, i.name AS name, s.classes14 AS enc_lvl,
+         ROW_NUMBER() OVER (PARTITION BY s.name ORDER BY i.id) AS rn
+  FROM items i
+  JOIN spells_new s ON s.id = i.scrolleffect
+  WHERE s.classes14 BETWEEN 1 AND 85
+    AND (s.effectid1 = 58 OR s.effectid2 = 58 OR s.effectid3 = 58
+      OR s.effectid4 = 58 OR s.effectid5 = 58 OR s.effectid6 = 58
+      OR s.effectid7 = 58 OR s.effectid8 = 58 OR s.effectid9 = 58
+      OR s.effectid10 = 58 OR s.effectid11 = 58 OR s.effectid12 = 58)
+) t
+WHERE t.rn = 1;
+
+COMMIT;
+)BINDRAL300",
+		.content_schema_update = false,
+	},
+
+	// 301: Remove the inert umbral #Keymaster prop (npc 176110) in front of
+	// the Vex Thal gate. No quest script exists for it in any tree - it is an
+	// invulnerable race-224 prop that teleports nobody. VT entry is already
+	// native: door UMDOOR301 (doorid 1, opentype 58, keyitem 22198 Scepter of
+	// Shadows) + walk-in zone_point 45 behind the gate. Side finding, NOT
+	// changed: 22198 is unobtainable on EQS, so VT stays GM-only entry.
+	// Deliberately NOT touched: the bothunder porter NPCs (1120001034,
+	// 1120001055-1068) - unlike this prop they are load-bearing: stock
+	// zone_points 983-1006 there carry target_instance=0, so inside an
+	// instanced BoT the client pad lines would ZoneToZone players to static
+	// BoT; the porters' MovePCInstance keeps expeditions together (see
+	// bothunder/player.lua Agnarr door entry).
+	// Twin: utils/sql/20261101_umbral_keymaster_cleanup.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 301,
+		.description = "20261101_umbral_keymaster_cleanup",
+		.check = "SELECT `id` FROM `npc_types` WHERE `id` = 176110 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"UMBKEYMASTER301(
+DELETE FROM `spawn2` WHERE `id` = 57829 AND `zone` = 'umbral';
+DELETE FROM `spawnentry` WHERE `spawngroupID` = 47317;
+DELETE FROM `spawngroup` WHERE `id` = 47317;
+DELETE FROM `npc_types` WHERE `id` = 176110;
+)UMBKEYMASTER301",
+		.content_schema_update = false,
+	},
+	// 302: Blightfire Moors job board (14 partisan tasks 3039801-14, achievement parents 500020500-700, npc_faction 30398001/2, lootdrop tuning).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear  zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_moors.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 302,
+		.description = "20261101_rof2_blightfire_moors",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3039801 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF302A(-- RoF2 zone content: blightfire-moors (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+-- Three historically admitted Blightfire identities; no inferred achievement rewards.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories` (`id`,`parent_id`,`sequence`,`name`,`description`,`icon`) VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(72,70,2,'Advancement','Advancement','A_AdvancementSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements` (`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`) VALUES
+(500020500,'Job Offers (Blightfire 20+)','Just outside of Crescent Reach a number of job offers are posted on the Moors Sign Post:',683,4,1,0,0,1,1),
+(500020600,'Two Gnolls With One Stone (Blightfire 20+)','The Mucktail Gnolls are becoming a threat. Speak with Scout Zerak and Smithy Bronson about them:',1910,4,1,0,0,1,1),
+(500020700,'Stemming the Threat (Blightfire 20+)','The plantlife of Blightfire is of particular interest to Farmer D`Resh, Fletcher Orshawn, Roanoak and Smithy Bronson:',2212,6,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components` (`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`) VALUES
+(500020500,1,1,50060,'Moors Sign Post - Lost Memento',''),
+(500020500,1,2,50061,'Moors Sign Post - Experienced Hunters Needed',''),
+(500020500,1,3,50062,'Moors Sign Post - Wanted: Intrepid Explorer',''),
+(500020500,1,4,50063,'Moors Sign Post - Wanted: Supply Runner',''),
+(500020500,3,0,2028,'Reach Level 20',''),
+(500020500,3,0,7011,'Serpent',''),
+(500020600,1,1,50064,'Smithy Bronson - Ore for Smelting',''),
+(500020600,1,2,50065,'Smithy Bronson - Gnollish Tools',''),
+(500020600,1,3,50066,'Scout Zerak - The Mucktail Quarry',''),
+(500020600,1,4,50067,'Scout Zerak - The Mucktail Mines',''),
+(500020600,3,0,2028,'Reach Level 20',''),
+(500020600,3,0,7011,'Serpent',''),
+(500020700,1,1,50068,'Roanoak - Rotwood, The Infected Treants',''),
+(500020700,1,2,50069,'Roanoak - Rotwood, The Spore Farms',''),
+(500020700,1,3,50070,'Roanoak - Rotwood: Molderahn',''),
+(500020700,1,4,50071,'Farmer D`Resh - Hardy Seeds',''),
+(500020700,1,5,50072,'Smithy Bronson - Kindling for the Fires',''),
+(500020700,1,6,50073,'Fletcher Orshawn - Green Ooze Buds',''),
+(500020700,3,0,2028,'Reach Level 20',''),
+(500020700,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations` (`category_id`,`sequence`,`achievement_id`,`display_text`) VALUES
+(72,0,500020500,''),
+(72,0,500020600,''),
+(72,0,500020700,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Blightfire14 reconstruction. Read provenance/historical-sources.json before installing.
+-- Best-supported researched minimum/repeat settings approved by user. XP defaults
+-- are configurable PEQ-style reconstruction values, not original XP amounts.
+-- Source-based faction quantities have later numerical corroboration; exact
+-- May2013 amounts and original explore volumes remain unproven.
+-- No character, guild, housing, inventory, or saved task-state tables are changed.
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _blightfire_guard;
+CREATE TEMPORARY TABLE _blightfire_guard(check_name VARCHAR(80) PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1)) ENGINE=InnoDB;
+INSERT INTO _blightfire_guard VALUES('task_identity',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3039801,3039802,3039803,3039804,3039805,3039806,3039807,3039808,3039809,3039810,3039811,3039812,3039813,3039814) AND NOT((id=3039801 AND type=2 AND title='Lost Memento') OR (id=3039802 AND type=2 AND title='Experienced Hunters Needed') OR (id=3039803 AND type=2 AND title='Wanted: Intrepid Explorer') OR (id=3039804 AND type=2 AND title='Wanted: Supply Runner') OR (id=3039805 AND type=2 AND title='Ore for Smelting') OR (id=3039806 AND type=2 AND title='Gnollish Tools') OR (id=3039807 AND type=2 AND title='The Mucktail Quarry') OR (id=3039808 AND type=2 AND title='The Mucktail Mines') OR (id=3039809 AND type=2 AND title='Rotwood, The Infected Treants') OR (id=3039810 AND type=2 AND title='Rotwood, The Spore Farms') OR (id=3039811 AND type=2 AND title='Rotwood: Molderahn') OR (id=3039812 AND type=2 AND title='Hardy Seeds') OR (id=3039813 AND type=2 AND title='Kindling for the Fires') OR (id=3039814 AND type=2 AND title='Green Ooze Buds')))));
+INSERT INTO _blightfire_guard VALUES('orphan_activities',(NOT EXISTS(SELECT 1 FROM task_activities a LEFT JOIN tasks t ON t.id=a.taskid WHERE a.taskid IN(3039801,3039802,3039803,3039804,3039805,3039806,3039807,3039808,3039809,3039810,3039811,3039812,3039813,3039814) AND t.id IS NULL)));
+INSERT INTO _blightfire_guard VALUES('component_identity',((SELECT COUNT(*) FROM achievement_components WHERE component_type=1 AND ((achievement_id=500020500 AND component_id=50060 AND sequence=1 AND name='Moors Sign Post - Lost Memento') OR (achievement_id=500020500 AND component_id=50061 AND sequence=2 AND name='Moors Sign Post - Experienced Hunters Needed') OR (achievement_id=500020500 AND component_id=50062 AND sequence=3 AND name='Moors Sign Post - Wanted: Intrepid Explorer') OR (achievement_id=500020500 AND component_id=50063 AND sequence=4 AND name='Moors Sign Post - Wanted: Supply Runner') OR (achievement_id=500020600 AND component_id=50064 AND sequence=1 AND name='Smithy Bronson - Ore for Smelting') OR (achievement_id=500020600 AND component_id=50065 AND sequence=2 AND name='Smithy Bronson - Gnollish Tools') OR (achievement_id=500020600 AND component_id=50066 AND sequence=3 AND name='Scout Zerak - The Mucktail Quarry') OR (achievement_id=500020600 AND component_id=50067 AND sequence=4 AND name='Scout Zerak - The Mucktail Mines') OR (achievement_id=500020700 AND component_id=50068 AND sequence=1 AND name='Roanoak - Rotwood, The Infected Treants') OR (achievement_id=500020700 AND component_id=50069 AND sequence=2 AND name='Roanoak - Rotwood, The Spore Farms') OR (achievement_id=500020700 AND component_id=50070 AND sequence=3 AND name='Roanoak - Rotwood: Molderahn') OR (achievement_id=500020700 AND component_id=50071 AND sequence=4 AND name='Farmer D`Resh - Hardy Seeds') OR (achievement_id=500020700 AND component_id=50072 AND sequence=5 AND name='Smithy Bronson - Kindling for the Fires') OR (achievement_id=500020700 AND component_id=50073 AND sequence=6 AND name='Fletcher Orshawn - Green Ooze Buds')))=14 AND (SELECT COUNT(*) FROM achievement_components WHERE component_type=1 AND component_id IN(50060,50061,50062,50063,50064,50065,50066,50067,50068,50069,50070,50071,50072,50073))=14));
+INSERT INTO _blightfire_guard VALUES('criteria_ownership',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE component_type=1 AND component_id IN(50060,50061,50062,50063,50064,50065,50066,50067,50068,50069,50070,50071,50072,50073) AND (NOT((achievement_id=500020500 AND component_id=50060 AND component_sequence=1 AND target_id=3039801) OR (achievement_id=500020500 AND component_id=50061 AND component_sequence=2 AND target_id=3039802) OR (achievement_id=500020500 AND component_id=50062 AND component_sequence=3 AND target_id=3039803) OR (achievement_id=500020500 AND component_id=50063 AND component_sequence=4 AND target_id=3039804) OR (achievement_id=500020600 AND component_id=50064 AND component_sequence=1 AND target_id=3039805) OR (achievement_id=500020600 AND component_id=50065 AND component_sequence=2 AND target_id=3039806) OR (achievement_id=500020600 AND component_id=50066 AND component_sequence=3 AND target_id=3039807) OR (achievement_id=500020600 AND component_id=50067 AND component_sequence=4 AND target_id=3039808) OR (achievement_id=500020700 AND component_id=50068 AND component_sequence=1 AND target_id=3039809) OR (achievement_id=500020700 AND component_id=50069 AND component_sequence=2 AND target_id=3039810) OR (achievement_id=500020700 AND component_id=50070 AND component_sequence=3 AND target_id=3039811) OR (achievement_id=500020700 AND component_id=50071 AND component_sequence=4 AND target_id=3039812) OR (achievement_id=500020700 AND component_id=50072 AND component_sequence=5 AND target_id=3039813) OR (achievement_id=500020700 AND component_id=50073 AND component_sequence=6 AND target_id=3039814)) OR event_type<>4 OR progress_mode<>3 OR behavior<>0 OR target_id2<>0 OR target_value<>0 OR required_count<>1 OR enabled<>1))));
+INSERT INTO _blightfire_guard VALUES('native_item_identities',((SELECT COUNT(*) FROM items WHERE (id=85756 AND Name='Anarynn''s Lost Gold Locket') OR (id=53506 AND Name='Blacksmith''s Bubbling Elixir') OR (id=85797 AND Name='Blightfire Bivouac Supplies') OR (id=85746 AND Name='Blightfire Snake Skin') OR (id=85745 AND Name='Bog Rat Pelt') OR (id=53523 AND Name='Elixir of Stalwart Regeneration') OR (id=53507 AND Name='Gnoll Hunter''s Cloak') OR (id=85758 AND Name='Green Ooze Bud') OR (id=53508 AND Name='Hammer of the Gnoll Slayer') OR (id=36197 AND Name='Hedge Devil Branch') OR (id=36193 AND Name='Hunk of Blightfire Ore') OR (id=36162 AND Name='Mucktail Mining Pick') OR (id=53509 AND Name='Ore Hauler''s Haversack') OR (id=53518 AND Name='Potion of Recovery') OR (id=85743 AND Name='Rock Breaker Hammer') OR (id=85752 AND Name='Rotwood Spore') OR (id=85744 AND Name='Scar''s Shattered Shield') OR (id=54656 AND Name='Seed Pod') OR (id=53533 AND Name='Treantwood Staff'))=19));
+)ROF302A" R"ROF302B(INSERT INTO _blightfire_guard VALUES('native_npc_identities',((SELECT COUNT(*) FROM npc_types WHERE (id=394004 AND name='#Anarynn') OR (id=394091 AND name='#Smithy_Bronson') OR (id=394154 AND name='Farmer_D`Resh') OR (id=395002 AND name='Moors_Sign_Post') OR (id=395008 AND name='a_Mucktail_rock_breaker') OR (id=395013 AND name='a_Mucktail_rock_breaker') OR (id=395017 AND name='a_Mucktail_rock_breaker') OR (id=395018 AND name='a_Mucktail_rock_breaker') OR (id=395021 AND name='a_Mucktail_rock_breaker') OR (id=395022 AND name='a_Mucktail_rock_breaker') OR (id=395023 AND name='a_Mucktail_miner') OR (id=395024 AND name='a_Mucktail_rock_breaker') OR (id=395025 AND name='a_Mucktail_miner') OR (id=395027 AND name='a_Mucktail_miner') OR (id=395032 AND name='a_Mucktail_rock_breaker') OR (id=395036 AND name='a_Mucktail_miner') OR (id=395037 AND name='a_Mucktail_miner') OR (id=395038 AND name='a_Mucktail_miner') OR (id=395042 AND name='a_Mucktail_miner') OR (id=395046 AND name='#Pit_Boss_Scar') OR (id=395049 AND name='a_Mucktail_rock_breaker') OR (id=395052 AND name='Scout_Zerak') OR (id=395057 AND name='a_rotwood_sapling') OR (id=395061 AND name='a_rotwood_sapling') OR (id=395070 AND name='#Ambassador_Orren') OR (id=395077 AND name='a_rotwood_sapling') OR (id=395079 AND name='#Roanoak') OR (id=395088 AND name='a_rotwood_treant') OR (id=395089 AND name='a_sporali_farmer') OR (id=395096 AND name='a_sporali_elder') OR (id=395097 AND name='a_sporali_farmer') OR (id=395098 AND name='a_sporali_warrior') OR (id=395111 AND name='a_sporali_warrior') OR (id=395113 AND name='a_sporali_warrior') OR (id=395115 AND name='a_sporali_farmer') OR (id=395118 AND name='#Ozzana_the_Trapper') OR (id=395120 AND name='Moors_Sign_Post') OR (id=395121 AND name='a_sporali_elder') OR (id=395126 AND name='a_sporali_elder') OR (id=395128 AND name='Scout_Captain_Slynn') OR (id=395137 AND name='#Molderahn') OR (id=395144 AND name='#Fletcher_Orshawn') OR (id=395146 AND name='a_rotwood_treant') OR (id=395147 AND name='a_rotwood_treant') OR (id=395149 AND name='a_hedge_devil') OR (id=395150 AND name='a_hedge_devil') OR (id=395151 AND name='a_hedge_devil') OR (id=395152 AND name='a_hedge_devil') OR (id=395155 AND name='a_hedge_devil') OR (id=395215 AND name='Cook_Idriak') OR (id=395277 AND name='a_hedge_devil') OR (id=395278 AND name='a_hedge_devil') OR (id=395280 AND name='a_hedge_devil'))=53));
+INSERT INTO _blightfire_guard VALUES('shield_drop_identity',((SELECT COUNT(*) FROM lootdrop_entries WHERE lootdrop_id=120970)=1 AND (SELECT COUNT(*) FROM lootdrop_entries WHERE lootdrop_id=120970 AND item_id=85744 AND item_charges=1 AND chance=100 AND multiplier IN(1,3))=1));
+INSERT INTO _blightfire_guard VALUES('shield_drop_owner',((SELECT COUNT(*) FROM loottable_entries WHERE lootdrop_id=120970)=1 AND (SELECT COUNT(*) FROM loottable_entries WHERE lootdrop_id=120970 AND loottable_id=96777 AND multiplier=1 AND probability=100)=1 AND (SELECT COUNT(*) FROM npc_types WHERE loottable_id=96777)=1 AND (SELECT COUNT(*) FROM npc_types WHERE id=395046 AND loottable_id=96777)=1));
+INSERT INTO _blightfire_guard VALUES('faction_list_30398001',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=30398001 AND (name<>'Blightfire quest: Rotwood initial factions' OR primaryfaction<>0 OR ignore_primary_assist<>0)) AND NOT EXISTS(SELECT 1 FROM npc_types WHERE npc_faction_id=30398001)));
+INSERT INTO _blightfire_guard VALUES('faction_task_owner_30398001',(NOT EXISTS(SELECT 1 FROM tasks WHERE faction_reward=30398001 AND id NOT IN(3039801,3039802,3039803,3039804,3039805,3039806,3039807,3039808,3039809,3039810,3039811,3039812,3039813,3039814))));
+INSERT INTO _blightfire_guard VALUES('faction_entries_30398001',(NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=30398001 AND NOT((faction_id=1110 AND value=10 AND npc_value=0 AND temp=0) OR (faction_id=1109 AND value=10 AND npc_value=0 AND temp=0) OR (faction_id=1111 AND value=-10 AND npc_value=0 AND temp=0)))));
+INSERT INTO _blightfire_guard VALUES('faction_list_30398002',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=30398002 AND (name<>'Blightfire quest: Rotwood final factions' OR primaryfaction<>0 OR ignore_primary_assist<>0)) AND NOT EXISTS(SELECT 1 FROM npc_types WHERE npc_faction_id=30398002)));
+INSERT INTO _blightfire_guard VALUES('faction_task_owner_30398002',(NOT EXISTS(SELECT 1 FROM tasks WHERE faction_reward=30398002 AND id NOT IN(3039801,3039802,3039803,3039804,3039805,3039806,3039807,3039808,3039809,3039810,3039811,3039812,3039813,3039814))));
+INSERT INTO _blightfire_guard VALUES('faction_entries_30398002',(NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=30398002 AND NOT((faction_id=1110 AND value=20 AND npc_value=0 AND temp=0) OR (faction_id=1109 AND value=20 AND npc_value=0 AND temp=0) OR (faction_id=1111 AND value=-20 AND npc_value=0 AND temp=0)))));
+START TRANSACTION;
+INSERT INTO tasks (id,type,title,description,reward_text,reward_id_list,cash_reward,exp_reward,reward_method,min_level,repeatable,faction_reward,faction_amount,enabled) VALUES
+(3039801,2,'Lost Memento','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',0,1000,0,15,1,0,0,1),
+(3039802,2,'Experienced Hunters Needed','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',0,1000,0,15,1,0,0,1),
+(3039803,2,'Wanted: Intrepid Explorer','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',5000,1000,0,20,0,1129,10,1),
+(3039804,2,'Wanted: Supply Runner','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',9000,1000,0,30,0,1129,10,1),
+(3039805,2,'Ore for Smelting','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53506,10',0,0,0,20,0,0,0,1),
+(3039806,2,'Gnollish Tools','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53509,1',0,1000,0,15,1,0,0,1),
+(3039807,2,'The Mucktail Quarry','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53507,1',0,1000,0,18,1,1129,10,1),
+(3039808,2,'The Mucktail Mines','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53508,1',0,1000,0,18,0,1129,20,1),
+(3039809,2,'Rotwood, The Infected Treants','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',0,1000,0,20,1,30398001,0,1),
+(3039810,2,'Rotwood, The Spore Farms','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',0,1000,0,20,1,30398001,0,1),
+(3039811,2,'Rotwood: Molderahn','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53533,1',0,1000,0,20,1,30398002,0,1),
+(3039812,2,'Hardy Seeds','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53518,10',0,1000,0,15,1,0,0,1),
+(3039813,2,'Kindling for the Fires','Complete the objectives listed below. See the release provenance for reconstructed settings.','','',0,1000,0,25,0,0,0,1),
+(3039814,2,'Green Ooze Buds','Complete the objectives listed below. See the release provenance for reconstructed settings.','','53523,10',0,1000,0,30,1,0,0,1)
+ON DUPLICATE KEY UPDATE type=VALUES(type),title=VALUES(title),description=VALUES(description),reward_text=VALUES(reward_text),reward_id_list=VALUES(reward_id_list),cash_reward=VALUES(cash_reward),exp_reward=VALUES(exp_reward),reward_method=VALUES(reward_method),min_level=VALUES(min_level),repeatable=VALUES(repeatable),faction_reward=VALUES(faction_reward),faction_amount=VALUES(faction_amount),enabled=VALUES(enabled);
+DELETE FROM task_activities WHERE taskid IN(3039801,3039802,3039803,3039804,3039805,3039806,3039807,3039808,3039809,3039810,3039811,3039812,3039813,3039814);
+INSERT INTO task_activities (taskid,activityid,req_activity_id,step,activitytype,target_name,goalmethod,goalcount,description_override,npc_match_list,item_id_list,zones,spell_list,min_x,max_x,min_y,max_y,min_z,max_z) VALUES
+(3039801,0,-1,1,1,'',0,1,'Deliver Anarynn''s Lost Gold Locket','394004','85756','394','',0,0,0,0,0,0),
+(3039802,0,-1,1,1,'',0,4,'Deliver Bog Rat Pelt','395118','85745','395','',0,0,0,0,0,0),
+(3039802,1,-1,1,1,'',0,4,'Deliver Blightfire Snake Skin','395118','85746','395','',0,0,0,0,0,0),
+(3039803,0,-1,1,5,'',0,1,'Explore Ogre Stomp','','','395','',-2150,-1850,1700,2000,-5000,5000),
+(3039803,1,-1,1,5,'',0,1,'Explore Roanoak''s Grove','','','395','',1050,1350,250,550,-5000,5000),
+(3039803,2,-1,1,5,'',0,1,'Explore Sporali Farms','','','395','',1590,1890,1665,1965,-5000,5000),
+(3039803,3,-1,1,5,'',0,1,'Explore Ghostpack Woods','','','395','',-3010,-2710,1425,1725,-5000,5000),
+(3039803,4,-1,2,4,'',0,1,'Speak Scout Captain Slynn','395128','','395','',0,0,0,0,0,0),
+(3039804,0,-1,1,4,'',0,1,'Speak Scout Captain Slynn','395128','','395','',0,0,0,0,0,0),
+(3039804,1,-1,2,1,'',0,1,'Deliver Blightfire Bivouac Supplies','395215','85797','395','',0,0,0,0,0,0),
+(3039805,0,-1,1,5,'',0,1,'Enter zone moors','','','395','',0,0,0,0,0,0),
+(3039805,1,-1,2,2,'',0,10,'Kill Mucktail rock breakers/miners','395008|395013|395017|395018|395021|395022|395023|395024|395025|395027|395032|395036|395037|395038|395042|395049','','395','',0,0,0,0,0,0),
+(3039805,2,-1,2,3,'',0,4,'Loot Hunk of Blightfire Ore','','36193','395','',0,0,0,0,0,0),
+(3039805,3,-1,3,1,'',0,4,'Deliver Hunk of Blightfire Ore','394091','36193','394','',0,0,0,0,0,0),
+(3039806,0,-1,1,5,'',0,1,'Enter zone moors','','','395','',0,0,0,0,0,0),
+(3039806,1,-1,2,3,'',0,4,'Loot Rock Breaker Hammer','','85743','395','',0,0,0,0,0,0),
+(3039806,2,-1,2,3,'',0,4,'Loot Mucktail Mining Pick','','36162','395','',0,0,0,0,0,0),
+(3039806,3,-1,3,1,'',0,4,'Deliver Rock Breaker Hammer','394091','85743','394','',0,0,0,0,0,0),
+(3039806,4,-1,3,1,'',0,4,'Deliver Mucktail Mining Pick','394091','36162','394','',0,0,0,0,0,0),
+(3039807,0,-1,1,2,'',0,10,'Kill a Mucktail rock breaker','395008|395013|395017|395018|395021|395022|395024|395032|395049','','395','',0,0,0,0,0,0),
+(3039807,1,-1,1,3,'',0,4,'Loot Rock Breaker Hammer','','85743','395','',0,0,0,0,0,0),
+(3039807,2,-1,2,1,'',0,4,'Deliver Rock Breaker Hammer','395052','85743','395','',0,0,0,0,0,0),
+(3039808,0,-1,1,2,'',0,10,'Kill a Mucktail miner','395023|395025|395027|395036|395037|395038|395042','','395','',0,0,0,0,0,0),
+(3039808,1,-1,2,4,'',0,1,'Speak Ambassador Orren','395070','','395','',0,0,0,0,0,0),
+(3039808,2,-1,3,2,'',0,1,'Kill Pit Boss Scar','395046','','395','',0,0,0,0,0,0),
+(3039808,3,-1,3,3,'',0,1,'Loot Scar''s Shattered Shield','','85744','395','',0,0,0,0,0,0),
+(3039808,4,-1,4,1,'',0,1,'Deliver Scar''s Shattered Shield','395052','85744','395','',0,0,0,0,0,0),
+(3039809,0,-1,1,2,'',0,12,'Kill Rotwood Saplings','395057|395061|395077','','395','',0,0,0,0,0,0),
+(3039809,1,-1,1,2,'',0,4,'Kill Rotwood Treants','395088|395146|395147','','395','',0,0,0,0,0,0),
+(3039809,2,-1,2,4,'',0,1,'Speak Roanoak','395079','','395','',0,0,0,0,0,0),
+(3039810,0,-1,1,2,'',0,15,'Kill Sporali Farmers','395089|395097|395115','','395','',0,0,0,0,0,0),
+(3039810,1,-1,1,3,'',0,4,'Loot Rotwood Spore','','85752','395','',0,0,0,0,0,0),
+(3039810,2,-1,2,1,'',0,4,'Deliver Rotwood Spore','395079','85752','395','',0,0,0,0,0,0),
+(3039811,0,-1,1,2,'',0,3,'Kill Sporali Warriors','395098|395111|395113','','395','',0,0,0,0,0,0),
+(3039811,1,-1,1,2,'',0,3,'Kill Sporali Elders','395096|395121|395126','','395','',0,0,0,0,0,0),
+(3039811,2,-1,2,2,'',0,1,'Kill Molderahn','395137','','395','',0,0,0,0,0,0),
+(3039811,3,-1,3,4,'',0,1,'Speak Roanoak','395079','','395','',0,0,0,0,0,0),
+(3039812,0,-1,1,3,'',0,4,'Loot Seed Pod','','54656','395','',0,0,0,0,0,0),
+(3039812,1,-1,2,1,'',0,4,'Deliver Seed Pod','394154','54656','394','',0,0,0,0,0,0),
+(3039813,0,-1,1,5,'',0,1,'Enter zone moors','','','395','',0,0,0,0,0,0),
+)ROF302B" R"ROF302C((3039813,1,-1,2,2,'',0,10,'Kill hedge devils','395149|395150|395151|395152|395155|395277|395278|395280','','395','',0,0,0,0,0,0),
+(3039813,2,-1,2,3,'',0,4,'Loot Hedge Devil Branch','','36197','395','',0,0,0,0,0,0),
+(3039813,3,-1,3,1,'',0,4,'Deliver Hedge Devil Branch','394091','36197','394','',0,0,0,0,0,0),
+(3039814,0,-1,1,1,'',0,4,'Deliver Green Ooze Bud','395144','85758','395','',0,0,0,0,0,0);
+DELETE FROM achievement_criteria WHERE component_type=1 AND component_id IN(50060,50061,50062,50063,50064,50065,50066,50067,50068,50069,50070,50071,50072,50073);
+INSERT INTO achievement_criteria (achievement_id,component_type,component_sequence,component_id,event_type,progress_mode,behavior,target_id,target_id2,target_value,required_count,enabled) VALUES
+(500020500,1,1,50060,4,3,0,3039801,0,0,1,1),
+(500020500,1,2,50061,4,3,0,3039802,0,0,1,1),
+(500020500,1,3,50062,4,3,0,3039803,0,0,1,1),
+(500020500,1,4,50063,4,3,0,3039804,0,0,1,1),
+(500020600,1,1,50064,4,3,0,3039805,0,0,1,1),
+(500020600,1,2,50065,4,3,0,3039806,0,0,1,1),
+(500020600,1,3,50066,4,3,0,3039807,0,0,1,1),
+(500020600,1,4,50067,4,3,0,3039808,0,0,1,1),
+(500020700,1,1,50068,4,3,0,3039809,0,0,1,1),
+(500020700,1,2,50069,4,3,0,3039810,0,0,1,1),
+(500020700,1,3,50070,4,3,0,3039811,0,0,1,1),
+(500020700,1,4,50071,4,3,0,3039812,0,0,1,1),
+(500020700,1,5,50072,4,3,0,3039813,0,0,1,1),
+(500020700,1,6,50073,4,3,0,3039814,0,0,1,1);
+INSERT INTO npc_faction (id,name,primaryfaction,ignore_primary_assist) VALUES
+(30398001,'Blightfire quest: Rotwood initial factions',0,0)
+ON DUPLICATE KEY UPDATE name=VALUES(name),primaryfaction=VALUES(primaryfaction),ignore_primary_assist=VALUES(ignore_primary_assist);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398001,1110,10,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398001,1109,10,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398001,1111,-10,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+INSERT INTO npc_faction (id,name,primaryfaction,ignore_primary_assist) VALUES
+(30398002,'Blightfire quest: Rotwood final factions',0,0)
+ON DUPLICATE KEY UPDATE name=VALUES(name),primaryfaction=VALUES(primaryfaction),ignore_primary_assist=VALUES(ignore_primary_assist);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398002,1110,20,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398002,1109,20,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
+(30398002,1111,-20,0,0)
+ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
+--2011-revised archived Mines guide: Scar drops three separate shield copies.
+UPDATE lootdrop_entries SET multiplier=3 WHERE lootdrop_id=120970 AND item_id=85744;
+COMMIT;
+)ROF302C",
+		.content_schema_update = false,
+	},
+
+	// 303: Welcome to the Moors (8 tasks 3040101-08, NPCs 395920-21, task reward set 3040103 with class-masked options).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear  zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_welcome.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 303,
+		.description = "20261101_rof2_blightfire_welcome",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3040101 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF303A(-- RoF2 zone content: blightfire-welcome (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories` (`id`,`parent_id`,`sequence`,`name`,`description`,`icon`) VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(71,70,1,'Progression','Progression','A_ProgressionSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements` (`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`) VALUES
+(500020200,'Welcome to the Moors (21-25)','Alchemist Ella, Hammerstock, Ordunn the Miner and Ozzana the Trapper are in need of assistance:',575,8,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components` (`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`) VALUES
+(500020200,1,1,50037,'Ordunn the Miner - The Golden Pick I',''),
+(500020200,1,2,50038,'Ordunn the Miner - The Golden Pick II',''),
+(500020200,1,3,50039,'Ordunn the Miner - The Golden Pick III',''),
+(500020200,1,4,50040,'Ozzana the Trapper - The Darkwater Pools',''),
+(500020200,1,5,50041,'Ozzana the Trapper - The Slashclaw Cliffs',''),
+(500020200,1,6,50042,'Ozzana the Trapper - The Ghostpack Fens',''),
+(500020200,1,7,50043,'Hammerstock - The Ticking Crocodile',''),
+(500020200,1,8,50044,'Alchemist Ella - Witchlamps',''),
+(500020200,3,0,2028,'Reach Level 20',''),
+(500020200,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations` (`category_id`,`sequence`,`achievement_id`,`display_text`) VALUES
+(71,0,500020200,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Welcome to the Moors quest content; consult provenance/native-status.json.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _welcome_guard;
+CREATE TEMPORARY TABLE _welcome_guard(label VARCHAR(80) PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1)) ENGINE=InnoDB;
+INSERT INTO _welcome_guard VALUES('tasks',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3040101,3040102,3040103,3040104,3040105,3040106,3040107,3040108) AND NOT((id=3040101 AND type=2 AND title='The Golden Pick I') OR (id=3040102 AND type=2 AND title='The Golden Pick II') OR (id=3040103 AND type=2 AND title='The Golden Pick III') OR (id=3040104 AND type=2 AND title='The Darkwater Pools') OR (id=3040105 AND type=2 AND title='The Slashclaw Cliffs') OR (id=3040106 AND type=2 AND title='The Ghostpack Fens') OR (id=3040107 AND type=2 AND title='The Ticking Crocodile') OR (id=3040108 AND type=2 AND title='Witchlamps')))));
+INSERT INTO _welcome_guard VALUES('orphan_activities',(NOT EXISTS(SELECT 1 FROM task_activities a LEFT JOIN tasks t ON t.id=a.taskid WHERE a.taskid IN(3040101,3040102,3040103,3040104,3040105,3040106,3040107,3040108) AND t.id IS NULL)));
+INSERT INTO _welcome_guard VALUES('components',((SELECT COUNT(*) FROM achievement_components WHERE achievement_id=500020200 AND component_type=1 AND ((component_id=50037 AND sequence=1 AND name='Ordunn the Miner - The Golden Pick I') OR (component_id=50038 AND sequence=2 AND name='Ordunn the Miner - The Golden Pick II') OR (component_id=50039 AND sequence=3 AND name='Ordunn the Miner - The Golden Pick III') OR (component_id=50040 AND sequence=4 AND name='Ozzana the Trapper - The Darkwater Pools') OR (component_id=50041 AND sequence=5 AND name='Ozzana the Trapper - The Slashclaw Cliffs') OR (component_id=50042 AND sequence=6 AND name='Ozzana the Trapper - The Ghostpack Fens') OR (component_id=50043 AND sequence=7 AND name='Hammerstock - The Ticking Crocodile') OR (component_id=50044 AND sequence=8 AND name='Alchemist Ella - Witchlamps')))=8));
+INSERT INTO _welcome_guard VALUES('criteria',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500020200 AND component_type=1 AND component_id BETWEEN 50037 AND 50044 AND (NOT((component_id=50037 AND component_sequence=1 AND target_id=3040101) OR (component_id=50038 AND component_sequence=2 AND target_id=3040102) OR (component_id=50039 AND component_sequence=3 AND target_id=3040103) OR (component_id=50040 AND component_sequence=4 AND target_id=3040104) OR (component_id=50041 AND component_sequence=5 AND target_id=3040105) OR (component_id=50042 AND component_sequence=6 AND target_id=3040106) OR (component_id=50043 AND component_sequence=7 AND target_id=3040107) OR (component_id=50044 AND component_sequence=8 AND target_id=3040108)) OR event_type<>4 OR progress_mode<>3 OR behavior<>0 OR target_id2<>0 OR target_value<>0 OR required_count<>1 OR enabled<>1))));
+INSERT INTO _welcome_guard VALUES('items',((SELECT COUNT(*) FROM items WHERE (id=36171 AND Name='Tarnished Golden Pickhead' AND classes=65535) OR (id=36172 AND Name='Part of a Broken Pick Haft' AND classes=65535) OR (id=36173 AND Name='The Broken Golden Pick' AND classes=65535) OR (id=36174 AND Name='Rotwood Treant Branch' AND classes=65535) OR (id=36175 AND Name='The Golden Pick' AND classes=65535) OR (id=36176 AND Name='Piece of Ore from Mucktail Mine One' AND classes=65535) OR (id=36177 AND Name='Piece of Ore from Mucktail Mine Two' AND classes=65535) OR (id=36178 AND Name='Piece of Ore from Mucktail Mine Three' AND classes=65535) OR (id=36194 AND Name='The Golden Pick' AND classes=65535) OR (id=53524 AND Name='Elixir of Clear Mind' AND classes=65535) OR (id=53525 AND Name='Slashclaw Pelt Cloak' AND classes=65535) OR (id=53528 AND Name='Goldshod Plate Bracer' AND classes=151) OR (id=53529 AND Name='Steelteeth Link Bracer' AND classes=33544) OR (id=53530 AND Name='Moorhide Wrist Wraps' AND classes=16480) OR (id=53531 AND Name='Dewdrop Silk Band' AND classes=15360) OR (id=53532 AND Name='Twice Stitched Miner''s Belt' AND classes=65535) OR (id=85747 AND Name='Darkwater Crocodile Skin' AND classes=65535) OR (id=85748 AND Name='Moors Turtle Shell' AND classes=65535) OR (id=85749 AND Name='Pristine Slashclaw Pelt' AND classes=65535) OR (id=85750 AND Name='Etheral Ghostwolf Pelt' AND classes=65535) OR (id=85751 AND Name='Denlord Darkmoon''s Tooth' AND classes=65535) OR (id=85753 AND Name='Slashclaw Cub Trap' AND classes=65535) OR (id=85754 AND Name='Witchlamp Lightstone' AND classes=65535) OR (id=85755 AND Name='Ratwork Power Core' AND classes=65535))=24));
+INSERT INTO _welcome_guard VALUES('npcs',((SELECT COUNT(*) FROM npc_types WHERE (id=394091 AND name='#Smithy_Bronson') OR (id=395008 AND name='a_Mucktail_rock_breaker') OR (id=395013 AND name='a_Mucktail_rock_breaker') OR (id=395017 AND name='a_Mucktail_rock_breaker') OR (id=395018 AND name='a_Mucktail_rock_breaker') OR (id=395021 AND name='a_Mucktail_rock_breaker') OR (id=395022 AND name='a_Mucktail_rock_breaker') OR (id=395024 AND name='a_Mucktail_rock_breaker') OR (id=395026 AND name='a_pile_of_rocks') OR (id=395032 AND name='a_Mucktail_rock_breaker') OR (id=395039 AND name='a_pile_of_rocks') OR (id=395040 AND name='a_pile_of_rocks') OR (id=395041 AND name='a_pile_of_rocks') OR (id=395049 AND name='a_Mucktail_rock_breaker') OR (id=395050 AND name='a_darkwater_lockjaw') OR (id=395056 AND name='a_darkwater_lockjaw') OR (id=395057 AND name='a_rotwood_sapling') OR (id=395061 AND name='a_rotwood_sapling') OR (id=395067 AND name='a_pile_of_rocks') OR (id=395077 AND name='a_rotwood_sapling') OR (id=395078 AND name='a_slashclaw_cub') OR (id=395086 AND name='a_slashclaw_cub') OR (id=395093 AND name='a_snapjaw') OR (id=395101 AND name='a_lockjaw') OR (id=395102 AND name='a_snapjaw') OR (id=395104 AND name='a_slashclaw_cub') OR (id=395106 AND name='a_slashclaw_cub') OR (id=395114 AND name='a_lockjaw') OR (id=395116 AND name='a_slashclaw_cub') OR (id=395117 AND name='Ordunn_the_Miner') OR (id=395118 AND name='#Ozzana_the_Trapper') OR (id=395119 AND name='a_lockjaw') OR (id=395127 AND name='a_slashclaw_cub') OR (id=395130 AND name='a_slashclaw_cub') OR (id=395133 AND name='Ratwork_Model_VII') OR (id=395134 AND name='#Hammerstock') OR (id=395136 AND name='a_darkwater_lockjaw') OR (id=395143 AND name='#Alchemist_Ella') OR (id=395192 AND name='a_darkwater_lockjaw') OR (id=395197 AND name='a_darkwater_lockjaw'))=40));
+INSERT INTO _welcome_guard VALUES('new_npc_395920',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395920 AND NOT(`name` <=> 'The_Ticking_Crocodile' AND `level` <=> 23 AND `maxlevel` <=> 23 AND `maxdmg` <=> 46 AND `npc_faction_id` <=> 395920 AND `loottable_id` <=> 0))));
+INSERT INTO _welcome_guard VALUES('new_npc_395921',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395921 AND NOT(`name` <=> 'Ratwork_Model_VIII' AND `npc_faction_id` <=> 0 AND `loottable_id` <=> 0))));
+INSERT INTO _welcome_guard VALUES('faction',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=395920 AND (name<>'May2013 ticking crocodile scene' OR primaryfaction<>-10 OR ignore_primary_assist<>0)) AND NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=395920)));
+INSERT INTO _welcome_guard VALUES('spell_9410',((SELECT COUNT(*) FROM spells_new WHERE id=9410 AND name='Aura of the Golden Pick')=1 AND (SELECT COUNT(*) FROM items WHERE id=36175 AND proceffect=9410)=1));
+INSERT INTO _welcome_guard VALUES('spell_9255',((SELECT COUNT(*) FROM spells_new WHERE id=9255 AND name='Slashclaw Cub Trap')=1 AND (SELECT COUNT(*) FROM items WHERE id=85753 AND clickeffect=9255)=1));
+INSERT INTO _welcome_guard VALUES('rock_98152',((SELECT COUNT(*) FROM spawn2 WHERE id=98152 AND zone='moors' AND ABS(x-3291.625)<0.01 AND ABS(y--2032.375)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98156',((SELECT COUNT(*) FROM spawn2 WHERE id=98156 AND zone='moors' AND ABS(x-3268.125)<0.01 AND ABS(y--2071.75)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98174',((SELECT COUNT(*) FROM spawn2 WHERE id=98174 AND zone='moors' AND ABS(x-2550.125)<0.01 AND ABS(y--1789.25)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98176',((SELECT COUNT(*) FROM spawn2 WHERE id=98176 AND zone='moors' AND ABS(x-3114.25)<0.01 AND ABS(y--2243.625)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98177',((SELECT COUNT(*) FROM spawn2 WHERE id=98177 AND zone='moors' AND ABS(x-3187.625)<0.01 AND ABS(y--2281.875)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98179',((SELECT COUNT(*) FROM spawn2 WHERE id=98179 AND zone='moors' AND ABS(x-2564.25)<0.01 AND ABS(y--1836.0)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98197',((SELECT COUNT(*) FROM spawn2 WHERE id=98197 AND zone='moors' AND ABS(x-2538.875)<0.01 AND ABS(y--1958.625)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98222',((SELECT COUNT(*) FROM spawn2 WHERE id=98222 AND zone='moors' AND ABS(x-2425.0)<0.01 AND ABS(y--2094.0)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98282',((SELECT COUNT(*) FROM spawn2 WHERE id=98282 AND zone='moors' AND ABS(x-1643.5)<0.01 AND ABS(y--2269.125)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98294',((SELECT COUNT(*) FROM spawn2 WHERE id=98294 AND zone='moors' AND ABS(x-1450.125)<0.01 AND ABS(y--2228.0)<0.01)=1));
+)ROF303A" R"ROF303B(INSERT INTO _welcome_guard VALUES('rock_98295',((SELECT COUNT(*) FROM spawn2 WHERE id=98295 AND zone='moors' AND ABS(x-1562.75)<0.01 AND ABS(y--2413.75)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('rock_98303',((SELECT COUNT(*) FROM spawn2 WHERE id=98303 AND zone='moors' AND ABS(x-1479.375)<0.01 AND ABS(y--2460.375)<0.01)=1));
+INSERT INTO _welcome_guard VALUES('reward_set',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040103 AND title<>'The Golden Pick III') AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040103 AND NOT(source_type=2 AND source_id=3040103)) AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040103 AND reward_set_id<>3040103)));
+INSERT INTO _welcome_guard VALUES('reward_30401031',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401031 AND description<>'May2013 Golden Pick III option 1') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401031 AND NOT(reward_set_id=3040103 AND option_id=1)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401031)));
+INSERT INTO _welcome_guard VALUES('reward_30401032',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401032 AND description<>'May2013 Golden Pick III option 2') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401032 AND NOT(reward_set_id=3040103 AND option_id=2)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401032)));
+INSERT INTO _welcome_guard VALUES('reward_30401033',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401033 AND description<>'May2013 Golden Pick III option 3') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401033 AND NOT(reward_set_id=3040103 AND option_id=3)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401033)));
+INSERT INTO _welcome_guard VALUES('reward_30401034',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401034 AND description<>'May2013 Golden Pick III option 4') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401034 AND NOT(reward_set_id=3040103 AND option_id=4)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401034)));
+INSERT INTO _welcome_guard VALUES('reward_30401035',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401035 AND description<>'May2013 Golden Pick III option 5') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401035 AND NOT(reward_set_id=3040103 AND option_id=5)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401035)));
+INSERT INTO _welcome_guard VALUES('reward_30401036',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30401036 AND description<>'May2013 Golden Pick III option 6') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30401036 AND NOT(reward_set_id=3040103 AND option_id=6)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30401036)));
+START TRANSACTION;
+INSERT INTO tasks (`id`,`type`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`min_level`,`repeatable`,`faction_reward`,`faction_amount`,`enabled`) VALUES
+(3040101,2,'The Golden Pick I','Ordunn believes the gnolls have a legendary golden pick. Explore the mines and recover its broken parts.','','',0,1000,0,19,0,0,0,1),
+(3040102,2,'The Golden Pick II','Take the broken pick to Smithy Bronson. Gather materials for its repair, then return the repaired pick to Ordunn.','','',0,1000,0,20,0,0,0,1),
+(3040103,2,'The Golden Pick III','Equip the Golden Pick and strike rock piles in each Mucktail mine. Bring two ore samples from each mine to Ordunn.','','',0,0,3,20,0,0,0,1),
+(3040104,2,'The Darkwater Pools','Hunt the darkwater crocodiles and bog turtles. Bring four skins and a turtle shell to Ozzana.','','',0,1000,0,24,1,0,0,1),
+(3040105,2,'The Slashclaw Cliffs','Collect pristine slashclaw pelts and use Ozzana’s trap to capture a live slashclaw cub.','','',0,1000,0,26,1,0,0,1),
+(3040106,2,'The Ghostpack Fens','Bring Ozzana proof of the ghostpack: four ethereal pelts and the tooth of Denlord Darkmoon.','','53525,1',0,1000,0,30,0,0,0,1),
+(3040107,2,'The Ticking Crocodile','Clear giant crocodiles from the southern pond to find the one that swallowed Hammerstock’s ratwork. Restore its power and see it safely home.','','',0,1000,0,21,1,0,0,1),
+(3040108,2,'Witchlamps','Collect four Witchlamp Lightstones from the western hills and bring them to Alchemist Ella for a supply of potions.','','53524,10',0,1000,0,20,1,0,0,1)
+ON DUPLICATE KEY UPDATE `type`=VALUES(`type`),`title`=VALUES(`title`),`description`=VALUES(`description`),`reward_text`=VALUES(`reward_text`),`reward_id_list`=VALUES(`reward_id_list`),`cash_reward`=VALUES(`cash_reward`),`exp_reward`=VALUES(`exp_reward`),`reward_method`=VALUES(`reward_method`),`min_level`=VALUES(`min_level`),`repeatable`=VALUES(`repeatable`),`faction_reward`=VALUES(`faction_reward`),`faction_amount`=VALUES(`faction_amount`),`enabled`=VALUES(`enabled`);
+DELETE FROM task_activities WHERE taskid IN(3040101,3040102,3040103,3040104,3040105,3040106,3040107,3040108);
+INSERT INTO task_activities (`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`zones`,`spell_list`,`min_x`,`max_x`,`min_y`,`max_y`,`min_z`,`max_z`) VALUES
+(3040101,0,-1,0,5,'',0,1,'Explore the first Mucktail mine entrance','','','395','',2861,2961,-1905,-1805,-1000,1000),
+(3040101,1,-1,0,5,'',0,1,'Explore the second Mucktail mine entrance','','','395','',2003,2103,-2005,-1905,-1000,1000),
+(3040101,2,-1,0,5,'',0,1,'Explore the third Mucktail mine entrance','','','395','',1604,1704,-1970,-1870,-1000,1000),
+(3040101,3,-1,1,2,'',0,10,'Defeat 10 Mucktail rock breakers','395008|395013|395017|395018|395021|395022|395024|395032|395049','','395','',0,0,0,0,0,0),
+(3040101,4,-1,1,3,'',0,1,'Loot a Tarnished Golden Pickhead','','36171','395','',0,0,0,0,0,0),
+(3040101,5,-1,1,3,'',0,3,'Loot 3 parts of the broken pick haft','','36172','395','',0,0,0,0,0,0),
+(3040101,6,-1,2,1,'',0,1,'Deliver the pickhead to Ordunn','395117','36171','395','',0,0,0,0,0,0),
+(3040101,7,-1,2,1,'',0,3,'Deliver 3 haft pieces to Ordunn','395117','36172','395','',0,0,0,0,0,0),
+(3040102,0,-1,0,1,'',0,1,'Show Smithy Bronson the broken pick','394091','36173','394','',0,0,0,0,0,0),
+(3040102,1,-1,1,2,'',0,6,'Defeat 6 Rotwood saplings','395057|395061|395077','','395','',0,0,0,0,0,0),
+(3040102,2,-1,1,3,'',0,2,'Loot 2 Rotwood Treant Branches','','36174','395','',0,0,0,0,0,0),
+(3040102,3,-1,1,2,'',0,2,'Defeat 2 darkwater lockjaws','395050|395056|395136|395192|395197','','395','',0,0,0,0,0,0),
+(3040102,4,-1,1,3,'',0,2,'Loot 2 Darkwater Crocodile Skins','','85747','395','',0,0,0,0,0,0),
+(3040102,5,-1,2,1,'',0,2,'Deliver 2 branches to Smithy Bronson','394091','36174','394','',0,0,0,0,0,0),
+(3040102,6,-1,2,1,'',0,2,'Deliver 2 skins to Smithy Bronson','394091','85747','394','',0,0,0,0,0,0),
+(3040102,7,-1,3,1,'',0,1,'Return the repaired golden pick to Ordunn','395117','36194','395','',0,0,0,0,0,0),
+(3040103,0,-1,0,5,'',0,1,'Enter Mucktail mine 1','','','395','',3130,3230,-2161,-2061,-1000,1000),
+(3040103,1,-1,1,255,'',0,2,'Use the Golden Pick to mine 2 pieces of ore in mine 1','','','395','',0,0,0,0,0,0),
+(3040103,2,-1,2,5,'',0,1,'Enter Mucktail mine 2','','','395','',2315,2415,-1910,-1810,-1000,1000),
+(3040103,3,-1,3,255,'',0,2,'Use the Golden Pick to mine 2 pieces of ore in mine 2','','','395','',0,0,0,0,0,0),
+(3040103,4,-1,4,5,'',0,1,'Enter Mucktail mine 3','','','395','',1516,1616,-2187,-2087,-1000,1000),
+(3040103,5,-1,5,255,'',0,2,'Use the Golden Pick to mine 2 pieces of ore in mine 3','','','395','',0,0,0,0,0,0),
+(3040103,6,-1,6,1,'',0,2,'Deliver 2 ore samples from mine 1 to Ordunn','395117','36176','395','',0,0,0,0,0,0),
+(3040103,7,-1,6,1,'',0,2,'Deliver 2 ore samples from mine 2 to Ordunn','395117','36177','395','',0,0,0,0,0,0),
+(3040103,8,-1,6,1,'',0,2,'Deliver 2 ore samples from mine 3 to Ordunn','395117','36178','395','',0,0,0,0,0,0),
+(3040104,0,-1,0,1,'',0,4,'Deliver 4 Darkwater Crocodile Skins to Ozzana','395118','85747','395','',0,0,0,0,0,0),
+(3040104,1,-1,0,1,'',0,1,'Deliver a Moors Turtle Shell to Ozzana','395118','85748','395','',0,0,0,0,0,0),
+(3040105,0,-1,0,3,'',0,4,'Loot 4 Pristine Slashclaw Pelts','','85749','395','',0,0,0,0,0,0),
+(3040105,1,-1,0,255,'',0,1,'Use the Slashclaw Cub Trap on a slashclaw cub','','','395','',0,0,0,0,0,0),
+(3040105,2,-1,1,1,'',0,1,'Deliver the cub trap to Ozzana','395118','85753','395','',0,0,0,0,0,0),
+(3040105,3,-1,1,1,'',0,4,'Deliver 4 Pristine Slashclaw Pelts to Ozzana','395118','85749','395','',0,0,0,0,0,0),
+(3040106,0,-1,0,3,'',0,4,'Loot 4 Etheral Ghostwolf Pelts','','85750','395','',0,0,0,0,0,0),
+(3040106,1,-1,0,3,'',0,1,'Loot Denlord Darkmoon’s Tooth','','85751','395','',0,0,0,0,0,0),
+(3040106,2,-1,1,1,'',0,4,'Deliver 4 ghostwolf pelts to Ozzana','395118','85750','395','',0,0,0,0,0,0),
+(3040106,3,-1,1,1,'',0,1,'Deliver Denlord Darkmoon’s Tooth to Ozzana','395118','85751','395','',0,0,0,0,0,0),
+(3040107,0,-1,0,255,'',0,1,'Defeat the Ticking Crocodile to free Ratwork Model VIII','395920','','395','',0,0,0,0,0,0),
+(3040107,1,-1,1,255,'',0,1,'Give the Ratwork Power Core to Ratwork Model VIII','395921','85755','395','',0,0,0,0,0,0),
+(3040107,2,-1,2,255,'',0,1,'Return to Hammerstock after Ratwork Model VIII arrives','','','395','',0,0,0,0,0,0),
+(3040108,0,-1,0,1,'',0,4,'Deliver 4 Witchlamp Lightstones to Alchemist Ella','395143','85754','395','',0,0,0,0,0,0)
+ON DUPLICATE KEY UPDATE `activityid`=VALUES(`activityid`),`req_activity_id`=VALUES(`req_activity_id`),`step`=VALUES(`step`),`activitytype`=VALUES(`activitytype`),`target_name`=VALUES(`target_name`),`goalmethod`=VALUES(`goalmethod`),`goalcount`=VALUES(`goalcount`),`description_override`=VALUES(`description_override`),`npc_match_list`=VALUES(`npc_match_list`),`item_id_list`=VALUES(`item_id_list`),`zones`=VALUES(`zones`),`spell_list`=VALUES(`spell_list`),`min_x`=VALUES(`min_x`),`max_x`=VALUES(`max_x`),`min_y`=VALUES(`min_y`),`max_y`=VALUES(`max_y`),`min_z`=VALUES(`min_z`),`max_z`=VALUES(`max_z`);
+DELETE FROM achievement_criteria WHERE achievement_id=500020200 AND component_type=1 AND component_id BETWEEN 50037 AND 50044;
+INSERT INTO achievement_criteria (`achievement_id`,`component_type`,`component_sequence`,`component_id`,`event_type`,`progress_mode`,`behavior`,`target_id`,`target_id2`,`target_value`,`required_count`,`enabled`) VALUES
+(500020200,1,1,50037,4,3,0,3040101,0,0,1,1),
+(500020200,1,2,50038,4,3,0,3040102,0,0,1,1),
+(500020200,1,3,50039,4,3,0,3040103,0,0,1,1),
+(500020200,1,4,50040,4,3,0,3040104,0,0,1,1),
+(500020200,1,5,50041,4,3,0,3040105,0,0,1,1),
+(500020200,1,6,50042,4,3,0,3040106,0,0,1,1),
+(500020200,1,7,50043,4,3,0,3040107,0,0,1,1),
+(500020200,1,8,50044,4,3,0,3040108,0,0,1,1)
+ON DUPLICATE KEY UPDATE `component_type`=VALUES(`component_type`),`component_sequence`=VALUES(`component_sequence`),`component_id`=VALUES(`component_id`),`event_type`=VALUES(`event_type`),`progress_mode`=VALUES(`progress_mode`),`behavior`=VALUES(`behavior`),`target_id`=VALUES(`target_id`),`target_id2`=VALUES(`target_id2`),`target_value`=VALUES(`target_value`),`required_count`=VALUES(`required_count`),`enabled`=VALUES(`enabled`);
+INSERT INTO npc_faction (`id`,`name`,`primaryfaction`,`ignore_primary_assist`) VALUES
+(395920,'May2013 ticking crocodile scene',-10,0)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`primaryfaction`=VALUES(`primaryfaction`),`ignore_primary_assist`=VALUES(`ignore_primary_assist`);
+)ROF303B" R"ROF303C(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395920,'The_Ticking_Crocodile',`lastname`,23,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,395920,`adventure_template_id`,`trap_template`,`mindmg`,46,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,23,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395093 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='The_Ticking_Crocodile',`level`=23,`maxlevel`=23,`maxdmg`=46,`npc_faction_id`=395920,`loottable_id`=0 WHERE id=395920;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395921,'Ratwork_Model_VIII',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395133 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='Ratwork_Model_VIII',`npc_faction_id`=0,`loottable_id`=0 WHERE id=395921;
+INSERT INTO reward_sets (`reward_set_id`,`title`,`enabled`) VALUES
+(3040103,'The Golden Pick III',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources (`source_type`,`source_id`,`reward_set_id`,`enabled`) VALUES
+(2,3040103,3040103,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options (`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`) VALUES
+(3040103,1,0,'Experience',1,0,1,65535),
+(3040103,2,2,'Goldshod Plate Bracer',0,0,1,151),
+(3040103,3,3,'Steelteeth Link Bracer',0,0,1,33544),
+(3040103,4,4,'Moorhide Wrist Wraps',0,0,1,16480),
+(3040103,5,5,'Dewdrop Silk Band',0,0,1,15360),
+(3040103,6,6,'Twice Stitched Miner''s Belt',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards (`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`) VALUES
+(30401031,1,1,1000,'May2013 Golden Pick III option 1',1),
+(30401032,0,53528,1,'May2013 Golden Pick III option 2',1),
+(30401033,0,53529,1,'May2013 Golden Pick III option 3',1),
+(30401034,0,53530,1,'May2013 Golden Pick III option 4',1),
+(30401035,0,53531,1,'May2013 Golden Pick III option 5',1),
+(30401036,0,53532,1,'May2013 Golden Pick III option 6',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries (`reward_set_id`,`option_id`,`sequence`,`reward_id`) VALUES
+(3040103,1,0,30401031),
+(3040103,2,0,30401032),
+(3040103,3,0,30401033),
+(3040103,4,0,30401034),
+(3040103,5,0,30401035),
+(3040103,6,0,30401036)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+)ROF303C",
+		.content_schema_update = false,
+	},
+
+	// 304: Blightfire spirits line (7 tasks 3040001-07 + the Things Go Bump crescent precursors 3039605-06, NPCs 395910-13, task reward set 3040004).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear  zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_spirits.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 304,
+		.description = "20261101_rof2_blightfire_spirits",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3040001 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF304A(-- RoF2 zone content: blightfire-spirits (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+-- Historical achievement identity and component metadata.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories` (`id`,`parent_id`,`sequence`,`name`,`description`,`icon`) VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(71,70,1,'Progression','Progression','A_ProgressionSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements` (`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`) VALUES
+(500020300,'Battling Blightfire (26-30)','Akins in Crescent Reach, Gubjak the Lost, and Outpost Guard Gorath in the Moors are all seeking the help of adventurers:',575,7,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components` (`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`) VALUES
+(500020300,1,1,50045,'Akins - Dead Wood, The Shambling Mounds',''),
+(500020300,1,2,50046,'Akins - Dead Wood, Treants',''),
+(500020300,1,3,50047,'Akins - Spooky!',''),
+(500020300,1,4,50048,'Akins - The Everburning',''),
+(500020300,1,5,50049,'Gubjak the Lost - Summon the Spirits',''),
+(500020300,1,6,50050,'Gubjak the Lost - Lay Them to Rest',''),
+(500020300,1,7,50051,'Outpost Guard Gorath - The Fallen Dragon',''),
+(500020300,3,0,2033,'Reach Level 25',''),
+(500020300,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations` (`category_id`,`sequence`,`achievement_id`,`display_text`) VALUES
+(71,0,500020300,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Battling Blightfire quests; read provenance/native-status.json before installing.
+-- Run preflight.py, stop game services and back up content before import.
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _spirits_guard;
+CREATE TEMPORARY TABLE _spirits_guard(label VARCHAR(80) PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1)) ENGINE=InnoDB;
+INSERT INTO _spirits_guard VALUES('tasks',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3040001,3040002,3040003,3040004,3040005,3040006,3040007) AND NOT((id=3040001 AND type=2 AND title='Dead Wood, The Shambling Mounds') OR (id=3040002 AND type=2 AND title='Dead Wood, Treants') OR (id=3040003 AND type=2 AND title='Spooky!') OR (id=3040004 AND type=2 AND title='The Everburning') OR (id=3040005 AND type=2 AND title='Summon the Spirits') OR (id=3040006 AND type=2 AND title='Lay Them to Rest') OR (id=3040007 AND type=2 AND title='The Fallen Dragon')))));
+INSERT INTO _spirits_guard VALUES('orphan_activities',(NOT EXISTS(SELECT 1 FROM task_activities a LEFT JOIN tasks t ON t.id=a.taskid WHERE a.taskid IN(3040001,3040002,3040003,3040004,3040005,3040006,3040007) AND t.id IS NULL)));
+INSERT INTO _spirits_guard VALUES('components',((SELECT COUNT(*) FROM achievement_components WHERE achievement_id=500020300 AND component_type=1 AND ((component_id=50045 AND sequence=1 AND name='Akins - Dead Wood, The Shambling Mounds') OR (component_id=50046 AND sequence=2 AND name='Akins - Dead Wood, Treants') OR (component_id=50047 AND sequence=3 AND name='Akins - Spooky!') OR (component_id=50048 AND sequence=4 AND name='Akins - The Everburning') OR (component_id=50049 AND sequence=5 AND name='Gubjak the Lost - Summon the Spirits') OR (component_id=50050 AND sequence=6 AND name='Gubjak the Lost - Lay Them to Rest') OR (component_id=50051 AND sequence=7 AND name='Outpost Guard Gorath - The Fallen Dragon')))=7));
+INSERT INTO _spirits_guard VALUES('criteria',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500020300 AND component_type=1 AND component_id BETWEEN 50045 AND 50051 AND (NOT((component_id=50045 AND component_sequence=1 AND target_id=3040001) OR (component_id=50046 AND component_sequence=2 AND target_id=3040002) OR (component_id=50047 AND component_sequence=3 AND target_id=3040003) OR (component_id=50048 AND component_sequence=4 AND target_id=3040004) OR (component_id=50049 AND component_sequence=5 AND target_id=3040005) OR (component_id=50050 AND component_sequence=6 AND target_id=3040006) OR (component_id=50051 AND component_sequence=7 AND target_id=3040007)) OR event_type<>4 OR progress_mode<>3 OR behavior<>0 OR target_id2<>0 OR target_value<>0 OR required_count<>1 OR enabled<>1))));
+INSERT INTO _spirits_guard VALUES('items',((SELECT COUNT(*) FROM items WHERE (id=36179 AND Name='Bog Bark' AND classes=65535) OR (id=53516 AND Name='Selay''s Shed Tooth' AND classes=65535) OR (id=53543 AND Name='Deadwood Earring' AND classes=49629) OR (id=53544 AND Name='Ironoak Ring' AND classes=15906) OR (id=53545 AND Name='Cloak of Gray Leaves' AND classes=49629) OR (id=53546 AND Name='Belt of Autumn''s Frost' AND classes=15906) OR (id=53547 AND Name='Treat Frost' AND classes=65535) OR (id=53550 AND Name='Mark of Searing Dawn' AND classes=65535) OR (id=84233 AND Name='Shambling Mound Branch' AND classes=0) OR (id=84234 AND Name='Treant Wood Heart' AND classes=0) OR (id=84235 AND Name='Spirit Wand' AND classes=0) OR (id=84236 AND Name='Attuned Spirit Wand' AND classes=0) OR (id=84237 AND Name='Glowing Glass Shard' AND classes=0) OR (id=85768 AND Name='Decomposed Dragon Scale' AND classes=65535))=14));
+INSERT INTO _spirits_guard VALUES('npcs',((SELECT COUNT(*) FROM npc_types WHERE (id=394108 AND name='#Akins') OR (id=395057 AND name='a_rotwood_sapling') OR (id=395058 AND name='an_accursed_lookout') OR (id=395061 AND name='a_rotwood_sapling') OR (id=395069 AND name='a_watchtower_guardian') OR (id=395074 AND name='a_watchtower_guardian') OR (id=395077 AND name='a_rotwood_sapling') OR (id=395088 AND name='a_rotwood_treant') OR (id=395132 AND name='#Outpost_Guard_Gorath') OR (id=395146 AND name='a_rotwood_treant') OR (id=395147 AND name='a_rotwood_treant') OR (id=395148 AND name='a_baleful_briar') OR (id=395149 AND name='a_hedge_devil') OR (id=395150 AND name='a_hedge_devil') OR (id=395151 AND name='a_hedge_devil') OR (id=395152 AND name='a_hedge_devil') OR (id=395154 AND name='a_sporali_decomposer') OR (id=395155 AND name='a_hedge_devil') OR (id=395156 AND name='a_sporali_decomposer') OR (id=395158 AND name='a_sporali_decomposer') OR (id=395160 AND name='a_sporali_decomposer') OR (id=395162 AND name='a_sporali_decomposer') OR (id=395163 AND name='a_briar_thorn') OR (id=395164 AND name='a_briar_thorn') OR (id=395165 AND name='a_briar_thorn') OR (id=395167 AND name='a_briar_thorn') OR (id=395168 AND name='a_howling_briar') OR (id=395171 AND name='a_bogwalking_gnarlroot') OR (id=395172 AND name='a_rambling_gnarlroot') OR (id=395173 AND name='a_gnarl_thorn') OR (id=395175 AND name='a_gnarl_thorn') OR (id=395176 AND name='a_rambling_gnarlroot') OR (id=395177 AND name='a_gnarl_thorn') OR (id=395179 AND name='a_gnarl_thorn') OR (id=395182 AND name='an_ancient_gnarlroot') OR (id=395186 AND name='a_blightfire_wanderer') OR (id=395188 AND name='a_gnarl_thorn') OR (id=395189 AND name='a_gnarl_branch') OR (id=395190 AND name='a_blightfire_never_rest') OR (id=395191 AND name='a_blightfire_wanderer') OR (id=395202 AND name='a_gnarl_branch') OR (id=395203 AND name='a_gnarl_thorn') OR (id=395205 AND name='a_howling_briar') OR (id=395206 AND name='a_gnarl_thorn') OR (id=395208 AND name='a_briar_thorn') OR (id=395216 AND name='a_blightfire_wanderer') OR (id=395219 AND name='a_briar_thorn') OR (id=395232 AND name='#Gubjak_the_Lost') OR (id=395276 AND name='#Selay_the_Cascade') OR (id=395277 AND name='a_hedge_devil') OR (id=395278 AND name='a_hedge_devil') OR (id=395280 AND name='a_hedge_devil'))=52));
+INSERT INTO _spirits_guard VALUES('new_npc_395910',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395910 AND name<>'a_shade_of_Nokk')));
+INSERT INTO _spirits_guard VALUES('new_npc_395911',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395911 AND name<>'a_shade_of_Nokk')));
+INSERT INTO _spirits_guard VALUES('new_npc_395912',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395912 AND name<>'an_ancestral_guardian')));
+INSERT INTO _spirits_guard VALUES('new_npc_395913',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395913 AND name<>'a_Nokk_ritual_controller')));
+INSERT INTO _spirits_guard VALUES('hostile_faction',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=395910 AND (name<>'May2013 Nokk ritual hostiles' OR primaryfaction<>-10 OR ignore_primary_assist<>0)) AND NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=395910)));
+INSERT INTO _spirits_guard VALUES('reward_faction_395915',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=395915 AND (name<>'May2013 Summon Spirits reward' OR primaryfaction<>0 OR ignore_primary_assist<>0))));
+INSERT INTO _spirits_guard VALUES('reward_faction_entries_395915',(NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=395915 AND NOT((faction_id=1125 AND value=10 AND npc_value=0 AND temp=0) OR (faction_id=1126 AND value=10 AND npc_value=0 AND temp=0) OR (faction_id=1129 AND value=-10 AND npc_value=0 AND temp=0)))));
+INSERT INTO _spirits_guard VALUES('reward_faction_395916',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=395916 AND (name<>'May2013 Lay Them Rest reward' OR primaryfaction<>0 OR ignore_primary_assist<>0))));
+INSERT INTO _spirits_guard VALUES('reward_faction_entries_395916',(NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=395916 AND NOT((faction_id=1125 AND value=1 AND npc_value=0 AND temp=0) OR (faction_id=1126 AND value=1 AND npc_value=0 AND temp=0) OR (faction_id=1129 AND value=-10 AND npc_value=0 AND temp=0)))));
+INSERT INTO _spirits_guard VALUES('prior_akins',((SELECT COUNT(*) FROM tasks WHERE (id=3039605 AND title='Things Go Bump in the Night: The Catacombs') OR (id=3039606 AND title='Things Go Bump in the Night: The Ogre''s Spirit'))=2));
+INSERT INTO _spirits_guard VALUES('native_class_spells',((SELECT COUNT(*) FROM npc_spells WHERE (id=3 AND name='Default Necromancer List') OR (id=9 AND name='Default Shadowknight List'))=2));
+INSERT INTO _spirits_guard VALUES('wand_spell',((SELECT COUNT(*) FROM items WHERE id=84236 AND clickeffect=8698 AND clicktype=1)=1 AND (SELECT COUNT(*) FROM spells_new WHERE id=8698 AND name='Lore Siphon')=1));
+INSERT INTO _spirits_guard VALUES('skull_4',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=4 AND name='OBJ_SKULL' AND ABS(pos_x--1784.86)<0.01 AND ABS(pos_y-1940.04)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_6',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=6 AND name='OBJ_SKULL' AND ABS(pos_x--1852.97)<0.01 AND ABS(pos_y-2005.24)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_7',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=7 AND name='OBJ_SKULL' AND ABS(pos_x--2005.06)<0.01 AND ABS(pos_y-2049.29)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_12',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=12 AND name='OBJ_SKULL' AND ABS(pos_x--2162.6)<0.01 AND ABS(pos_y-1991.39)<0.01)=1));
+)ROF304A" R"ROF304B(INSERT INTO _spirits_guard VALUES('skull_14',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=14 AND name='OBJ_SKULL' AND ABS(pos_x--2252.71)<0.01 AND ABS(pos_y-1760.57)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_16',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=16 AND name='OBJ_SKULL' AND ABS(pos_x--2130.47)<0.01 AND ABS(pos_y-1645.74)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_18',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=18 AND name='OBJ_SKULL' AND ABS(pos_x--2036.33)<0.01 AND ABS(pos_y-1587.21)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_25',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=25 AND name='OBJ_SKULL' AND ABS(pos_x--1879.48)<0.01 AND ABS(pos_y-1679.35)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_45',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=45 AND name='OBJ_SKULL' AND ABS(pos_x--1807.21)<0.01 AND ABS(pos_y-1735.55)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('skull_46',((SELECT COUNT(*) FROM doors WHERE zone='moors' AND version=0 AND doorid=46 AND name='OBJ_SKULL' AND ABS(pos_x--1790.56)<0.01 AND ABS(pos_y-1828.88)<0.01)=1));
+INSERT INTO _spirits_guard VALUES('reward_set',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040004 AND title<>'The Everburning') AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040004 AND NOT(source_type=2 AND source_id=3040004)) AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040004 AND reward_set_id<>3040004)));
+INSERT INTO _spirits_guard VALUES('reward_30400041',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400041 AND description<>'May2013 Everburning option 1') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400041 AND NOT(reward_set_id=3040004 AND option_id=1)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400041)));
+INSERT INTO _spirits_guard VALUES('reward_30400042',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400042 AND description<>'May2013 Everburning option 2') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400042 AND NOT(reward_set_id=3040004 AND option_id=2)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400042)));
+INSERT INTO _spirits_guard VALUES('reward_30400043',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400043 AND description<>'May2013 Everburning option 3') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400043 AND NOT(reward_set_id=3040004 AND option_id=3)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400043)));
+INSERT INTO _spirits_guard VALUES('reward_30400044',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400044 AND description<>'May2013 Everburning option 4') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400044 AND NOT(reward_set_id=3040004 AND option_id=4)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400044)));
+INSERT INTO _spirits_guard VALUES('reward_30400045',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400045 AND description<>'May2013 Everburning option 5') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400045 AND NOT(reward_set_id=3040004 AND option_id=5)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400045)));
+INSERT INTO _spirits_guard VALUES('reward_30400046',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30400046 AND description<>'May2013 Everburning option 6') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30400046 AND NOT(reward_set_id=3040004 AND option_id=6)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30400046)));
+START TRANSACTION;
+INSERT INTO tasks (`id`,`type`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`min_level`,`repeatable`,`faction_reward`,`faction_amount`,`enabled`) VALUES
+(3040001,2,'Dead Wood, The Shambling Mounds','Akins needs samples from the shambling plants of Blightfire Moors. Defeat the briars and hedge devils, collect their branches, and bring the samples to him.','','',7000,1000,0,25,0,0,0,1),
+(3040002,2,'Dead Wood, Treants','Akins wants to compare the animated plants with the trees of Blightfire Moors. Defeat treants, collect their wooden hearts, and return to him.','','',12000,1000,0,25,0,0,0,1),
+(3040003,2,'Spooky!','Investigate the magic in the Blightfire crater. Defeat the restless giants, gather glowing glass shards, and take them to Akins.','','',12000,1000,0,25,0,0,0,1),
+(3040004,2,'The Everburning','Take Akins’ spirit wand to the crater and attune it. Use the attuned wand on a restless giant, learn its story, and report what you discover.','','',0,0,3,25,0,0,0,1),
+(3040005,2,'Summon the Spirits','Gather Bog Bark for Gubjak the Lost. Follow him to the Nokk circle, defeat the spirits called by his fire, and report back.','','',0,1000,0,30,0,395915,0,1),
+(3040006,2,'Lay Them to Rest','Use the skulls around the Nokk circle to call forth ancestral guardians. Lay the guardians to rest and return to Gubjak.','','53550,1',0,1000,0,30,0,395916,0,1),
+(3040007,2,'The Fallen Dragon','Investigate the fallen dragon in Blightfire Moors. Recover a scale, defeat the sporali decomposers, and take your findings to Selay the Cascade.','','53516,1',0,1000,0,25,1,1129,10,1)
+ON DUPLICATE KEY UPDATE `type`=VALUES(`type`),`title`=VALUES(`title`),`description`=VALUES(`description`),`reward_text`=VALUES(`reward_text`),`reward_id_list`=VALUES(`reward_id_list`),`cash_reward`=VALUES(`cash_reward`),`exp_reward`=VALUES(`exp_reward`),`reward_method`=VALUES(`reward_method`),`min_level`=VALUES(`min_level`),`repeatable`=VALUES(`repeatable`),`faction_reward`=VALUES(`faction_reward`),`faction_amount`=VALUES(`faction_amount`),`enabled`=VALUES(`enabled`);
+DELETE FROM task_activities WHERE taskid IN(3040001,3040002,3040003,3040004,3040005,3040006,3040007);
+INSERT INTO task_activities (`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`zones`,`spell_list`,`min_x`,`max_x`,`min_y`,`max_y`,`min_z`,`max_z`) VALUES
+(3040001,0,-1,0,2,'',0,6,'Defeat 6 briars or hedge devils','395148|395149|395150|395151|395152|395155|395163|395164|395165|395167|395168|395205|395208|395219|395277|395278|395280','','395','',0,0,0,0,0,0),
+(3040001,1,-1,0,3,'',0,4,'Loot 4 Shambling Mound Branch','','84233','395','',0,0,0,0,0,0),
+(3040001,2,-1,1,1,'',0,4,'Deliver 4 Shambling Mound Branch','394108','84233','394','',0,0,0,0,0,0),
+(3040002,0,-1,0,2,'',0,6,'Defeat 6 treants or gnarlroots','395057|395061|395077|395088|395146|395147|395171|395172|395176|395182|395189|395202','','395','',0,0,0,0,0,0),
+(3040002,1,-1,0,3,'',0,4,'Loot 4 Treant Wood Heart','','84234','395','',0,0,0,0,0,0),
+(3040002,2,-1,1,1,'',0,4,'Deliver 4 Treant Wood Heart','394108','84234','394','',0,0,0,0,0,0),
+(3040003,0,-1,0,5,'',0,1,'Find the source of the magic in the crater','','','395','',-1113,-983,886,1016,-1000,1000),
+(3040003,1,-1,1,2,'',0,5,'Defeat 5 blightfire giants','395186|395190|395191|395216','','395','',0,0,0,0,0,0),
+(3040003,2,-1,1,3,'',0,4,'Loot 4 Glowing Glass Shard','','84237','395','',0,0,0,0,0,0),
+(3040003,3,-1,2,1,'',0,4,'Deliver 4 Glowing Glass Shard','394108','84237','394','',0,0,0,0,0,0),
+(3040004,0,-1,0,5,'',0,1,'Return to the crater to attune the wand','','','395','',-1113,-983,886,1016,-1000,1000),
+(3040004,1,-1,1,255,'',0,1,'Use the attuned wand and learn the giant spirit''s story','','','395','',0,0,0,0,0,0),
+(3040004,2,-1,2,4,'',0,1,'Speak 1 Akins','394108','','394','',0,0,0,0,0,0),
+(3040005,0,-1,0,2,'',0,8,'Defeat 8 gnarl thorns','395173|395175|395177|395179|395188|395203|395206','','395','',0,0,0,0,0,0),
+(3040005,1,-1,0,3,'',0,4,'Loot 4 Bog Bark','','36179','395','',0,0,0,0,0,0),
+(3040005,2,-1,1,1,'',0,4,'Deliver 4 Bog Bark','395232','36179','395','',0,0,0,0,0,0),
+(3040005,3,-1,2,2,'',0,5,'Defeat 5 summoned Nokk shades','395910|395911','','395','',0,0,0,0,0,0),
+(3040005,4,-1,3,4,'',0,1,'Speak 1 Gubjak the Lost','395232','','395','',0,0,0,0,0,0),
+(3040006,0,-1,0,255,'',0,5,'Remove skulls from the ancient totems','','','395','',0,0,0,0,0,0),
+(3040006,1,-1,0,2,'',0,10,'Defeat 10 ancestral guardians','395912','','395','',0,0,0,0,0,0),
+(3040006,2,-1,1,4,'',0,1,'Speak 1 Gubjak the Lost','395232','','395','',0,0,0,0,0,0),
+(3040007,0,-1,0,5,'',0,1,'Pluck a scale from the dead dragon','','','395','',41,111,905,975,-50,100),
+(3040007,1,-1,1,2,'',0,5,'Defeat 5 sporali decomposers','395154|395156|395158|395160|395162','','395','',0,0,0,0,0,0),
+(3040007,2,-1,2,1,'',0,1,'Deliver 1 Decomposed Dragon Scale','395276','85768','395','',0,0,0,0,0,0)
+ON DUPLICATE KEY UPDATE `activityid`=VALUES(`activityid`),`req_activity_id`=VALUES(`req_activity_id`),`step`=VALUES(`step`),`activitytype`=VALUES(`activitytype`),`target_name`=VALUES(`target_name`),`goalmethod`=VALUES(`goalmethod`),`goalcount`=VALUES(`goalcount`),`description_override`=VALUES(`description_override`),`npc_match_list`=VALUES(`npc_match_list`),`item_id_list`=VALUES(`item_id_list`),`zones`=VALUES(`zones`),`spell_list`=VALUES(`spell_list`),`min_x`=VALUES(`min_x`),`max_x`=VALUES(`max_x`),`min_y`=VALUES(`min_y`),`max_y`=VALUES(`max_y`),`min_z`=VALUES(`min_z`),`max_z`=VALUES(`max_z`);
+DELETE FROM achievement_criteria WHERE achievement_id=500020300 AND component_type=1 AND component_id BETWEEN 50045 AND 50051;
+INSERT INTO achievement_criteria (`achievement_id`,`component_type`,`component_sequence`,`component_id`,`event_type`,`progress_mode`,`behavior`,`target_id`,`target_id2`,`target_value`,`required_count`,`enabled`) VALUES
+(500020300,1,1,50045,4,3,0,3040001,0,0,1,1),
+(500020300,1,2,50046,4,3,0,3040002,0,0,1,1),
+(500020300,1,3,50047,4,3,0,3040003,0,0,1,1),
+(500020300,1,4,50048,4,3,0,3040004,0,0,1,1),
+(500020300,1,5,50049,4,3,0,3040005,0,0,1,1),
+(500020300,1,6,50050,4,3,0,3040006,0,0,1,1),
+(500020300,1,7,50051,4,3,0,3040007,0,0,1,1)
+ON DUPLICATE KEY UPDATE `component_type`=VALUES(`component_type`),`component_sequence`=VALUES(`component_sequence`),`component_id`=VALUES(`component_id`),`event_type`=VALUES(`event_type`),`progress_mode`=VALUES(`progress_mode`),`behavior`=VALUES(`behavior`),`target_id`=VALUES(`target_id`),`target_id2`=VALUES(`target_id2`),`target_value`=VALUES(`target_value`),`required_count`=VALUES(`required_count`),`enabled`=VALUES(`enabled`);
+INSERT INTO npc_faction (`id`,`name`,`primaryfaction`,`ignore_primary_assist`) VALUES
+(395910,'May2013 Nokk ritual hostiles',-10,0),
+(395915,'May2013 Summon Spirits reward',0,0),
+(395916,'May2013 Lay Them Rest reward',0,0)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`primaryfaction`=VALUES(`primaryfaction`),`ignore_primary_assist`=VALUES(`ignore_primary_assist`);
+INSERT INTO npc_faction_entries (`npc_faction_id`,`faction_id`,`value`,`npc_value`,`temp`) VALUES
+(395915,1125,10,0,0),
+(395915,1126,10,0,0),
+(395915,1129,-10,0,0),
+(395916,1125,1,0,0),
+(395916,1126,1,0,0),
+(395916,1129,-10,0,0)
+ON DUPLICATE KEY UPDATE `faction_id`=VALUES(`faction_id`),`value`=VALUES(`value`),`npc_value`=VALUES(`npc_value`),`temp`=VALUES(`temp`);
+)ROF304B" R"ROF304C(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395910,'a_shade_of_Nokk',`lastname`,33,`race`,`class`,`bodytype`,2300,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,9,`npc_spells_effects_id`,395910,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,37,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395069 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_shade_of_Nokk',`loottable_id`=0,`npc_faction_id`=395910,`level`=33,`maxlevel`=37,`hp`=2300,`npc_spells_id`=9 WHERE id=395910;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395911,'a_shade_of_Nokk',`lastname`,33,`race`,`class`,`bodytype`,2300,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,3,`npc_spells_effects_id`,395910,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,37,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395074 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_shade_of_Nokk',`loottable_id`=0,`npc_faction_id`=395910,`level`=33,`maxlevel`=37,`hp`=2300,`npc_spells_id`=3 WHERE id=395911;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395912,'an_ancestral_guardian',`lastname`,31,`race`,1,`bodytype`,1419,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,0,`npc_spells_effects_id`,395910,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,32,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395058 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='an_ancestral_guardian',`loottable_id`=0,`npc_faction_id`=395910,`level`=31,`maxlevel`=32,`hp`=1419,`class`=1,`npc_spells_id`=0 WHERE id=395912;
+)ROF304C" R"ROF304D(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395913,'a_Nokk_ritual_controller',`lastname`,1,127,1,11,1,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,0,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,1,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395058 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_Nokk_ritual_controller',`loottable_id`=0,`npc_faction_id`=0,`level`=1,`maxlevel`=1,`hp`=1,`race`=127,`bodytype`=11,`class`=1,`npc_spells_id`=0 WHERE id=395913;
+INSERT INTO reward_sets (`reward_set_id`,`title`,`enabled`) VALUES
+(3040004,'The Everburning',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources (`source_type`,`source_id`,`reward_set_id`,`enabled`) VALUES
+(2,3040004,3040004,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options (`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`) VALUES
+(3040004,1,0,'Experience',1,0,1,65535),
+(3040004,2,2,'Deadwood Earring',0,0,1,49629),
+(3040004,3,3,'Ironoak Ring',0,0,1,15906),
+(3040004,4,4,'Cloak of Gray Leaves',0,0,1,49629),
+(3040004,5,5,'Belt of Autumn''s Frost',0,0,1,15906),
+(3040004,6,6,'Treat Frost',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards (`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`) VALUES
+(30400041,1,1,1000,'May2013 Everburning option 1',1),
+(30400042,0,53543,1,'May2013 Everburning option 2',1),
+(30400043,0,53544,1,'May2013 Everburning option 3',1),
+(30400044,0,53545,1,'May2013 Everburning option 4',1),
+(30400045,0,53546,1,'May2013 Everburning option 5',1),
+(30400046,0,53547,1,'May2013 Everburning option 6',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries (`reward_set_id`,`option_id`,`sequence`,`reward_id`) VALUES
+(3040004,1,0,30400041),
+(3040004,2,0,30400042),
+(3040004,3,0,30400043),
+(3040004,4,0,30400044),
+(3040004,5,0,30400045),
+(3040004,6,0,30400046)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+)ROF304D",
+		.content_schema_update = false,
+	},
+
+	// 305: Champion of the Moors (8 tasks 3040201-08, scene-prop NPCs 395931-33, task reward set 3040203).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear  zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_champion.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 305,
+		.description = "20261101_rof2_blightfire_champion",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3040201 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF305A(-- RoF2 zone content: blightfire-champion (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories`(`id`,`parent_id`,`sequence`,`name`,`description`,`icon`)VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(71,70,1,'Progression','Progression','A_ProgressionSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements`(`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`)VALUES
+(500020400,'Champion of the Moors (31-35)','Arch Druid Springthorn, Historian Pewdri, Shaytherrin the Exorcist, Tailor Ulen and Zan the Witch Hunter have a number of jobs for you:',575,8,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components`(`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`)VALUES
+(500020400,1,1,50052,'Historian Pewdri - Pieces of the Past',''),
+(500020400,1,2,50053,'Historian Pewdri - Historian Pewdri''s Task',''),
+(500020400,1,3,50054,'Tailor Ulen - Feather for Your Cap',''),
+(500020400,1,4,50055,'Shaytherrin the Exorcist - The Dark Tower, Flickering Torches',''),
+(500020400,1,5,50056,'Shaytherrin the Exorcist - The Dark Tower, Fallen Guard',''),
+(500020400,1,6,50057,'Shaytherrin the Exorcist - The Dark Tower: Lord of the Tower',''),
+(500020400,1,7,50058,'Zan the Witch Hunter - The Blightfire Witches',''),
+(500020400,1,8,50059,'Arch Druid Springthorn - Return of the Moorwalkers',''),
+(500020400,3,0,2038,'Reach Level 30',''),
+(500020400,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations`(`category_id`,`sequence`,`achievement_id`,`display_text`)VALUES
+(71,0,500020400,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Champion of the Moors task content; see provenance/native-status.json.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _champion_guard;
+CREATE TEMPORARY TABLE _champion_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _champion_guard VALUES('task_names',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3040201,3040202,3040203,3040204,3040205,3040206,3040207,3040208)AND NOT((id=3040201 AND type=2 AND title='Pieces of the Past') OR (id=3040202 AND type=2 AND title='Historian Pewdri''s Task') OR (id=3040203 AND type=2 AND title='Feather for Your Cap') OR (id=3040204 AND type=2 AND title='The Dark Tower: Flickering Torches') OR (id=3040205 AND type=2 AND title='The Dark Tower: Fallen Guard') OR (id=3040206 AND type=2 AND title='The Dark Tower: Lord of the Tower') OR (id=3040207 AND type=2 AND title='The Blightfire Witches') OR (id=3040208 AND type=2 AND title='Return of the Moorwalkers')))));
+INSERT INTO _champion_guard VALUES('components',((SELECT COUNT(*)FROM achievement_components WHERE achievement_id=500020400 AND component_type=1 AND((component_id=50052 AND sequence=1 AND name='Historian Pewdri - Pieces of the Past') OR (component_id=50053 AND sequence=2 AND name='Historian Pewdri - Historian Pewdri''s Task') OR (component_id=50054 AND sequence=3 AND name='Tailor Ulen - Feather for Your Cap') OR (component_id=50055 AND sequence=4 AND name='Shaytherrin the Exorcist - The Dark Tower, Flickering Torches') OR (component_id=50056 AND sequence=5 AND name='Shaytherrin the Exorcist - The Dark Tower, Fallen Guard') OR (component_id=50057 AND sequence=6 AND name='Shaytherrin the Exorcist - The Dark Tower: Lord of the Tower') OR (component_id=50058 AND sequence=7 AND name='Zan the Witch Hunter - The Blightfire Witches') OR (component_id=50059 AND sequence=8 AND name='Arch Druid Springthorn - Return of the Moorwalkers')))=8));
+INSERT INTO _champion_guard VALUES('criteria',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500020400 AND component_type=1 AND component_id BETWEEN 50052 AND 50059 AND(NOT((component_id=50052 AND target_id=3040201 AND component_sequence=1) OR (component_id=50053 AND target_id=3040202 AND component_sequence=2) OR (component_id=50054 AND target_id=3040203 AND component_sequence=3) OR (component_id=50055 AND target_id=3040204 AND component_sequence=4) OR (component_id=50056 AND target_id=3040205 AND component_sequence=5) OR (component_id=50057 AND target_id=3040206 AND component_sequence=6) OR (component_id=50058 AND target_id=3040207 AND component_sequence=7) OR (component_id=50059 AND target_id=3040208 AND component_sequence=8))OR event_type<>4 OR progress_mode<>3 OR behavior<>0 OR required_count<>1 OR enabled<>1 OR target_id2<>0 OR target_value<>0))));
+INSERT INTO _champion_guard VALUES('items',((SELECT COUNT(*)FROM items WHERE (id=28693 AND Name='Watchtower Remains' AND classes=0) OR (id=36163 AND Name='Flickering Watchtower Torch' AND classes=65535) OR (id=52643 AND Name='Pristine Ridge Griffon Feather' AND classes=65535) OR (id=53514 AND Name='Sphere of the Ancients' AND classes=65535) OR (id=53515 AND Name='Feathered Cap' AND classes=65535) OR (id=53527 AND Name='Signet of the Witch Hunter' AND classes=65535) OR (id=53534 AND Name='Plate Greaves of the Exorcist' AND classes=151) OR (id=53535 AND Name='Chain Vest of the Exorcist' AND classes=33544) OR (id=53536 AND Name='Leather Greaves of the Exorcist' AND classes=16480) OR (id=53537 AND Name='Robes of the Exorcist' AND classes=15360) OR (id=53538 AND Name='Mantle of the Exorcist' AND classes=65535) OR (id=53551 AND Name='Belt of Briarthorn' AND classes=65535) OR (id=54638 AND Name='Ogre Relic' AND classes=0) OR (id=85760 AND Name='The Moorwalker Runestaff' AND classes=65535) OR (id=85761 AND Name='Shattered Staff of the Green Witch' AND classes=0) OR (id=85762 AND Name='Shattered Staff of the Scarlet Witch' AND classes=0) OR (id=85763 AND Name='Shattered Staff of the Gray Witch' AND classes=0) OR (id=85764 AND Name='Shattered Staff of the Shadow Witch' AND classes=0) OR (id=85765 AND Name='Sergeant Strall''s Battle Crest' AND classes=65535) OR (id=85766 AND Name='Sergeant Janx''s Battle Crest' AND classes=65535) OR (id=85767 AND Name='Chaplain Bloodmoon''s Battle Crest' AND classes=65535) OR (id=85773 AND Name='Watchtower Battle Crests' AND classes=65535))=22));
+INSERT INTO _champion_guard VALUES('npcs',((SELECT COUNT(*)FROM npc_types WHERE (id=394059 AND name='Moonreader_Ewera') OR (id=394092 AND name='Historian_Pewdri') OR (id=394126 AND name='Tailor_Ulen') OR (id=395069 AND name='a_watchtower_guardian') OR (id=395073 AND name='a_torch') OR (id=395074 AND name='a_watchtower_guardian') OR (id=395076 AND name='a_watchtower_guardian') OR (id=395080 AND name='Defan_the_Watch_Captain') OR (id=395083 AND name='a_watchtower_guardian') OR (id=395085 AND name='a_signal_fire') OR (id=395090 AND name='a_watchtower_guardian') OR (id=395123 AND name='Shaytherrin_the_Exorcist') OR (id=395153 AND name='Western_Moorwalker') OR (id=395174 AND name='Southern_Moorwalker') OR (id=395184 AND name='#Arch_Druid_Springthorn') OR (id=395185 AND name='#Agatha_the_Gray_Witch') OR (id=395221 AND name='Northern_Moorwalker') OR (id=395245 AND name='#Zan_the_Witch_Hunter') OR (id=395249 AND name='Eastern_Moorwalker'))=19));
+INSERT INTO _champion_guard VALUES('reward_set',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040206 AND title<>'The Dark Tower: Lord of the Tower')AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040206 AND NOT(source_type=2 AND source_id=3040206))AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040206 AND reward_set_id<>3040206)));
+INSERT INTO _champion_guard VALUES('reward_30402061',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402061 AND description<>'May2013 Dark Tower option 1')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402061 AND NOT(reward_set_id=3040206 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402061)));
+INSERT INTO _champion_guard VALUES('reward_30402062',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402062 AND description<>'May2013 Dark Tower option 2')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402062 AND NOT(reward_set_id=3040206 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402062)));
+INSERT INTO _champion_guard VALUES('reward_30402063',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402063 AND description<>'May2013 Dark Tower option 3')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402063 AND NOT(reward_set_id=3040206 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402063)));
+INSERT INTO _champion_guard VALUES('reward_30402064',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402064 AND description<>'May2013 Dark Tower option 4')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402064 AND NOT(reward_set_id=3040206 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402064)));
+INSERT INTO _champion_guard VALUES('reward_30402065',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402065 AND description<>'May2013 Dark Tower option 5')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402065 AND NOT(reward_set_id=3040206 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402065)));
+INSERT INTO _champion_guard VALUES('reward_30402066',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30402066 AND description<>'May2013 Dark Tower option 6')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30402066 AND NOT(reward_set_id=3040206 AND option_id=6))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30402066)));
+START TRANSACTION;
+INSERT INTO tasks (`id`,`type`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`min_level`,`repeatable`,`faction_reward`,`faction_amount`,`enabled`,`duration`)VALUES
+(3040201,2,'Pieces of the Past','Loot 10 Ogre Relics; Deliver 10 relics to Historian Pewdri.','','53514,1',0,1000,0,15,1,0,0,1,0),
+(3040202,2,'Historian Pewdri''s Task','Deliver Watchtower Remains from the tower bone pile to Historian Pewdri.','','',0,1000,0,15,0,0,0,1,28800),
+(3040203,2,'Feather for Your Cap','Loot 12 Pristine Ridge Griffon Feathers; Deliver 12 feathers to Tailor Ulen.','','53515,1',0,1000,0,30,0,0,0,1,0),
+(3040204,2,'The Dark Tower: Flickering Torches','Loot 10 Flickering Watchtower Torches; Speak with Shaytherrin; retain the torches.','','',0,1000,0,30,1,0,0,1,0),
+(3040205,2,'The Dark Tower: Fallen Guard','Defeat 5 watchtower guardians; Deliver Sergeant Strall''s Battle Crest; Deliver Sergeant Janx''s Battle Crest; Deliver Chaplain Bloodmoon''s Battle Crest; Speak with Shaytherrin.','','85773,1',0,1000,0,30,1,0,0,1,0),
+(3040206,2,'The Dark Tower: Lord of the Tower','Hail Defan and give him the Watchtower Battle Crests; Defeat Defan after his retreat to the roof.','','',0,0,3,30,1,0,0,1,0),
+)ROF305A" R"ROF305B((3040207,2,'The Blightfire Witches','Deliver the Green Witch staff to Zan; Deliver the Gray Witch staff to Shaytherrin; Deliver the Scarlet Witch staff to Shaytherrin; Deliver the Shadow Witch staff to Shaytherrin.','','53527,1',0,1000,0,35,0,0,0,1,0),
+(3040208,2,'Return of the Moorwalkers','Use the Runestaff to put the Northern Moorwalker to sleep; Use the Runestaff to put the Southern Moorwalker to sleep; Use the Runestaff to put the Eastern Moorwalker to sleep; Use the Runestaff to put the Western Moorwalker to sleep; Return the Runestaff to Moonreader Ewera.','','53551,1',0,1000,0,30,0,0,0,1,0)
+ON DUPLICATE KEY UPDATE `type`=VALUES(`type`),`title`=VALUES(`title`),`description`=VALUES(`description`),`reward_text`=VALUES(`reward_text`),`reward_id_list`=VALUES(`reward_id_list`),`cash_reward`=VALUES(`cash_reward`),`exp_reward`=VALUES(`exp_reward`),`reward_method`=VALUES(`reward_method`),`min_level`=VALUES(`min_level`),`repeatable`=VALUES(`repeatable`),`faction_reward`=VALUES(`faction_reward`),`faction_amount`=VALUES(`faction_amount`),`enabled`=VALUES(`enabled`),`duration`=VALUES(`duration`);
+DELETE FROM task_activities WHERE taskid IN(3040201,3040202,3040203,3040204,3040205,3040206,3040207,3040208);
+INSERT INTO task_activities (`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`zones`,`spell_list`)VALUES
+(3040201,0,-1,0,3,'',0,10,'Loot 10 Ogre Relics','','54638','395',''),
+(3040201,1,-1,1,1,'',0,10,'Deliver 10 relics to Historian Pewdri','394092','54638','394',''),
+(3040202,0,-1,0,1,'',0,1,'Deliver Watchtower Remains from the tower bone pile to Historian Pewdri','394092','28693','394',''),
+(3040203,0,-1,0,3,'',0,12,'Loot 12 Pristine Ridge Griffon Feathers','','52643','395',''),
+(3040203,1,-1,1,1,'',0,12,'Deliver 12 feathers to Tailor Ulen','394126','52643','394',''),
+(3040204,0,-1,0,3,'',0,10,'Loot 10 Flickering Watchtower Torches','','36163','395',''),
+(3040204,1,-1,1,4,'',0,1,'Speak with Shaytherrin; retain the torches','395123','','395',''),
+(3040205,0,-1,0,2,'',0,5,'Defeat 5 watchtower guardians','395069|395074|395076|395083|395090','','395',''),
+(3040205,1,-1,0,1,'',0,1,'Deliver Sergeant Strall''s Battle Crest','395123','85765','395',''),
+(3040205,2,-1,0,1,'',0,1,'Deliver Sergeant Janx''s Battle Crest','395123','85766','395',''),
+(3040205,3,-1,0,1,'',0,1,'Deliver Chaplain Bloodmoon''s Battle Crest','395123','85767','395',''),
+(3040205,4,-1,1,4,'',0,1,'Speak with Shaytherrin','395123','','395',''),
+(3040206,0,-1,0,255,'',0,1,'Hail Defan and give him the Watchtower Battle Crests','','','395',''),
+(3040206,1,-1,1,255,'',0,1,'Defeat Defan after his retreat to the roof','','','395',''),
+(3040207,0,-1,0,1,'',0,1,'Deliver the Green Witch staff to Zan','395245','85761','395',''),
+(3040207,1,-1,1,1,'',0,1,'Deliver the Gray Witch staff to Shaytherrin','395123','85763','395',''),
+(3040207,2,-1,1,1,'',0,1,'Deliver the Scarlet Witch staff to Shaytherrin','395123','85762','395',''),
+(3040207,3,-1,1,1,'',0,1,'Deliver the Shadow Witch staff to Shaytherrin','395123','85764','395',''),
+(3040208,0,-1,0,255,'',0,1,'Use the Runestaff to put the Northern Moorwalker to sleep','','','395',''),
+(3040208,1,-1,0,255,'',0,1,'Use the Runestaff to put the Southern Moorwalker to sleep','','','395',''),
+(3040208,2,-1,0,255,'',0,1,'Use the Runestaff to put the Eastern Moorwalker to sleep','','','395',''),
+(3040208,3,-1,0,255,'',0,1,'Use the Runestaff to put the Western Moorwalker to sleep','','','395',''),
+(3040208,4,-1,1,1,'',0,1,'Return the Runestaff to Moonreader Ewera','394059','85760','394','')
+ON DUPLICATE KEY UPDATE `activityid`=VALUES(`activityid`),`req_activity_id`=VALUES(`req_activity_id`),`step`=VALUES(`step`),`activitytype`=VALUES(`activitytype`),`target_name`=VALUES(`target_name`),`goalmethod`=VALUES(`goalmethod`),`goalcount`=VALUES(`goalcount`),`description_override`=VALUES(`description_override`),`npc_match_list`=VALUES(`npc_match_list`),`item_id_list`=VALUES(`item_id_list`),`zones`=VALUES(`zones`),`spell_list`=VALUES(`spell_list`);
+DELETE FROM achievement_criteria WHERE achievement_id=500020400 AND component_type=1 AND component_id BETWEEN 50052 AND 50059;
+INSERT INTO achievement_criteria (`achievement_id`,`component_type`,`component_sequence`,`component_id`,`event_type`,`progress_mode`,`behavior`,`target_id`,`target_id2`,`target_value`,`required_count`,`enabled`)VALUES
+(500020400,1,1,50052,4,3,0,3040201,0,0,1,1),
+(500020400,1,2,50053,4,3,0,3040202,0,0,1,1),
+(500020400,1,3,50054,4,3,0,3040203,0,0,1,1),
+(500020400,1,4,50055,4,3,0,3040204,0,0,1,1),
+(500020400,1,5,50056,4,3,0,3040205,0,0,1,1),
+(500020400,1,6,50057,4,3,0,3040206,0,0,1,1),
+(500020400,1,7,50058,4,3,0,3040207,0,0,1,1),
+(500020400,1,8,50059,4,3,0,3040208,0,0,1,1)
+ON DUPLICATE KEY UPDATE `component_type`=VALUES(`component_type`),`component_sequence`=VALUES(`component_sequence`),`component_id`=VALUES(`component_id`),`event_type`=VALUES(`event_type`),`progress_mode`=VALUES(`progress_mode`),`behavior`=VALUES(`behavior`),`target_id`=VALUES(`target_id`),`target_id2`=VALUES(`target_id2`),`target_value`=VALUES(`target_value`),`required_count`=VALUES(`required_count`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sets (`reward_set_id`,`title`,`enabled`)VALUES
+(3040206,'The Dark Tower: Lord of the Tower',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources (`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(2,3040206,3040206,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options (`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3040206,1,0,'Experience',1,0,1,65535),
+(3040206,2,2,'Plate Greaves of the Exorcist',0,0,1,151),
+(3040206,3,3,'Chain Vest of the Exorcist',0,0,1,33544),
+(3040206,4,4,'Leather Greaves of the Exorcist',0,0,1,16480),
+(3040206,5,5,'Robes of the Exorcist',0,0,1,15360),
+(3040206,6,6,'Mantle of the Exorcist',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards (`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(30402061,1,1,1000,'May2013 Dark Tower option 1',1),
+(30402062,0,53534,1,'May2013 Dark Tower option 2',1),
+(30402063,0,53535,1,'May2013 Dark Tower option 3',1),
+(30402064,0,53536,1,'May2013 Dark Tower option 4',1),
+(30402065,0,53537,1,'May2013 Dark Tower option 5',1),
+(30402066,0,53538,1,'May2013 Dark Tower option 6',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries (`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3040206,1,0,30402061),
+(3040206,2,0,30402062),
+(3040206,3,0,30402063),
+(3040206,4,0,30402064),
+(3040206,5,0,30402065),
+(3040206,6,0,30402066)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+-- Champion of the Moors scene dependencies; see reconstruction provenance.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _champion_scene_guard;
+CREATE TEMPORARY TABLE _champion_scene_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _champion_scene_guard VALUES('npc_395931',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395931 AND NOT(`name` <=> 'an_undead_bat' AND `race` <=> 34 AND `bodytype` <=> 21 AND `npc_spells_id` <=> 0 AND `loottable_id` <=> 0 AND `npc_faction_id` <=> 0 AND `class` <=> 1))));
+INSERT INTO _champion_scene_guard VALUES('parent_395069',((SELECT COUNT(*)FROM npc_types WHERE id=395069 AND name='a_watchtower_guardian')=1));
+INSERT INTO _champion_scene_guard VALUES('npc_395932',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395932 AND NOT(`name` <=> 'a_tower_rat' AND `npc_spells_id` <=> 0 AND `loottable_id` <=> 0 AND `npc_faction_id` <=> 0))));
+INSERT INTO _champion_scene_guard VALUES('parent_395062',((SELECT COUNT(*)FROM npc_types WHERE id=395062 AND name='a_dire_rat')=1));
+INSERT INTO _champion_scene_guard VALUES('npc_395933',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395933 AND NOT(`name` <=> 'Agathas_Right_Eye' AND `race` <=> 108 AND `npc_spells_id` <=> 0 AND `loottable_id` <=> 0 AND `npc_faction_id` <=> 0 AND `hp` <=> 500 AND `class` <=> 1))));
+INSERT INTO _champion_scene_guard VALUES('parent_395185',((SELECT COUNT(*)FROM npc_types WHERE id=395185 AND name='#Agatha_the_Gray_Witch')=1));
+INSERT INTO _champion_scene_guard VALUES('original_bone',((SELECT COUNT(*)FROM npc_types WHERE id=395087 AND name='_'AND race=383 AND class=62 AND loottable_id=0)=1 AND(SELECT COUNT(*)FROM spawn2 WHERE id=98330 AND zone='moors'AND ABS(x-2921)<0.01 AND ABS(y-1869)<0.01)=1));
+START TRANSACTION;
+)ROF305B" R"ROF305C(INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)SELECT 395931,'an_undead_bat',`lastname`,`level`,34,1,21,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,0,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395069 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='an_undead_bat',`race`=34,`bodytype`=21,`npc_spells_id`=0,`loottable_id`=0,`npc_faction_id`=0,`class`=1 WHERE id=395931;
+INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)SELECT 395932,'a_tower_rat',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,0,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395062 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_tower_rat',`npc_spells_id`=0,`loottable_id`=0,`npc_faction_id`=0 WHERE id=395932;
+INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)SELECT 395933,'Agathas_Right_Eye',`lastname`,`level`,108,1,`bodytype`,500,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,0,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395185 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='Agathas_Right_Eye',`race`=108,`npc_spells_id`=0,`loottable_id`=0,`npc_faction_id`=0,`hp`=500,`class`=1 WHERE id=395933;
+COMMIT;
+)ROF305C",
+		.content_schema_update = false,
+	},
+
+	// 306: Bixie menace line (12 tasks 3039901-12, NPCs 395900-07, two reward sets; also normalizes the five thrall spawn points to chance=100).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear  zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_bixies.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 306,
+		.description = "20261101_rof2_blightfire_bixies",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3039901 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF306A(-- RoF2 zone content: blightfire-bixies (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+-- Two historical catalogue identities; no invented achievement rewards.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories` (`id`,`parent_id`,`sequence`,`name`,`description`,`icon`) VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(72,70,2,'Advancement','Advancement','A_AdvancementSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements` (`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`) VALUES
+(500020800,'Battling the Bixies (Blightfire 30+)','The Stone Hive Bixies are becoming a sizable threat. Speak with Fletcher Orshawn, Scout Bowen and Scout Ethaniel about them:',1908,9,1,0,0,1,1),
+(500020900,'Makesn''s Plight (Blightfire 30+)','The misfortune befalling Merchant Makesn is quite grave. See if you can help her out:',3677,3,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components` (`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`) VALUES
+(500020800,1,1,50074,'Scout Bowen - Bixie Menace, Drone Hatchery',''),
+(500020800,1,2,50075,'Scout Bowen - Bixie Menace, Jum Jum Fields',''),
+(500020800,1,3,50076,'Scout Bowen - Bixie Menace, The Silo',''),
+(500020800,1,4,50077,'Scout Ethaniel - The Bixie Threat?',''),
+(500020800,1,5,50078,'Scout Ethaniel - Bixie Jumjum',''),
+(500020800,1,6,50079,'Scout Ethaniel - Bixie Plans',''),
+(500020800,1,7,50080,'Scout Ethaniel - Bixie Thralls',''),
+(500020800,1,8,50081,'Fletcher Orshawn - Stonehive Venom Stingers',''),
+(500020800,1,9,50082,'Fletcher Orshawn - Buzzazar',''),
+(500020800,3,0,2038,'Reach Level 30',''),
+(500020800,3,0,7011,'Serpent',''),
+(500020900,1,1,50083,'Merchant Makesn - A Widow''s Last Memory',''),
+(500020900,1,2,50084,'Merchant Makesn - A Taste for Honey',''),
+(500020900,1,3,50085,'Merchant Makesn - She Haunts My Dreams',''),
+(500020900,3,0,2038,'Reach Level 30',''),
+(500020900,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations` (`category_id`,`sequence`,`achievement_id`,`display_text`) VALUES
+(72,0,500020800,''),
+(72,0,500020900,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Blightfire Bixie and Makesn quest content; see provenance/native-status.json.
+-- Run preflight.py and back up content before importing.
+-- No character, inventory, guild or housing table is modified.
+SET SESSION check_constraint_checks=1;
+-- NMS adaptation: our PEQ import has the five thrall spawn points at
+-- chance=50 (spawn sometimes empty); the reconstruction expects them always
+-- populated, which is what the scenes assume. Normalize before the guards.
+UPDATE spawnentry SET chance=100 WHERE spawngroupID IN (60429,60546,60552,60555,60558);
+DROP TEMPORARY TABLE IF EXISTS _bixie_guard;
+CREATE TEMPORARY TABLE _bixie_guard(label VARCHAR(80) PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1)) ENGINE=InnoDB;
+INSERT INTO _bixie_guard VALUES('task_identity',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3039901,3039902,3039903,3039904,3039905,3039906,3039907,3039908,3039909,3039910,3039911,3039912) AND NOT((id=3039901 AND type=2 AND title='Bixie Menace: Drone Hatchery') OR (id=3039902 AND type=2 AND title='Bixie Menace: Jum Jum Fields') OR (id=3039903 AND type=2 AND title='Bixie Menace: The Silo') OR (id=3039904 AND type=2 AND title='The Bixie Threat?') OR (id=3039905 AND type=2 AND title='Bixie Jumjum') OR (id=3039906 AND type=2 AND title='Bixie Plans') OR (id=3039907 AND type=2 AND title='Bixie Thralls') OR (id=3039908 AND type=2 AND title='Stonehive Venom Stingers') OR (id=3039909 AND type=2 AND title='Buzzazar') OR (id=3039910 AND type=2 AND title='A Widow''s Last Memory') OR (id=3039911 AND type=2 AND title='A Taste for Honey') OR (id=3039912 AND type=2 AND title='She Haunts My Dreams')))));
+INSERT INTO _bixie_guard VALUES('orphan_activities',(NOT EXISTS(SELECT 1 FROM task_activities a LEFT JOIN tasks t ON t.id=a.taskid WHERE a.taskid IN(3039901,3039902,3039903,3039904,3039905,3039906,3039907,3039908,3039909,3039910,3039911,3039912) AND t.id IS NULL)));
+INSERT INTO _bixie_guard VALUES('component_identity',((SELECT COUNT(*) FROM achievement_components WHERE component_type=1 AND ((achievement_id=500020800 AND component_id=50074 AND sequence=1 AND name='Scout Bowen - Bixie Menace, Drone Hatchery') OR (achievement_id=500020800 AND component_id=50075 AND sequence=2 AND name='Scout Bowen - Bixie Menace, Jum Jum Fields') OR (achievement_id=500020800 AND component_id=50076 AND sequence=3 AND name='Scout Bowen - Bixie Menace, The Silo') OR (achievement_id=500020800 AND component_id=50077 AND sequence=4 AND name='Scout Ethaniel - The Bixie Threat?') OR (achievement_id=500020800 AND component_id=50078 AND sequence=5 AND name='Scout Ethaniel - Bixie Jumjum') OR (achievement_id=500020800 AND component_id=50079 AND sequence=6 AND name='Scout Ethaniel - Bixie Plans') OR (achievement_id=500020800 AND component_id=50080 AND sequence=7 AND name='Scout Ethaniel - Bixie Thralls') OR (achievement_id=500020800 AND component_id=50081 AND sequence=8 AND name='Fletcher Orshawn - Stonehive Venom Stingers') OR (achievement_id=500020800 AND component_id=50082 AND sequence=9 AND name='Fletcher Orshawn - Buzzazar') OR (achievement_id=500020900 AND component_id=50083 AND sequence=1 AND name='Merchant Makesn - A Widow''s Last Memory') OR (achievement_id=500020900 AND component_id=50084 AND sequence=2 AND name='Merchant Makesn - A Taste for Honey') OR (achievement_id=500020900 AND component_id=50085 AND sequence=3 AND name='Merchant Makesn - She Haunts My Dreams')))=12));
+INSERT INTO _bixie_guard VALUES('criteria_ownership',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE component_type=1 AND component_id BETWEEN 50074 AND 50085 AND (NOT((achievement_id=500020800 AND component_id=50074 AND target_id=3039901 AND component_sequence=1) OR (achievement_id=500020800 AND component_id=50075 AND target_id=3039902 AND component_sequence=2) OR (achievement_id=500020800 AND component_id=50076 AND target_id=3039903 AND component_sequence=3) OR (achievement_id=500020800 AND component_id=50077 AND target_id=3039904 AND component_sequence=4) OR (achievement_id=500020800 AND component_id=50078 AND target_id=3039905 AND component_sequence=5) OR (achievement_id=500020800 AND component_id=50079 AND target_id=3039906 AND component_sequence=6) OR (achievement_id=500020800 AND component_id=50080 AND target_id=3039907 AND component_sequence=7) OR (achievement_id=500020800 AND component_id=50081 AND target_id=3039908 AND component_sequence=8) OR (achievement_id=500020800 AND component_id=50082 AND target_id=3039909 AND component_sequence=9) OR (achievement_id=500020900 AND component_id=50083 AND target_id=3039910 AND component_sequence=1) OR (achievement_id=500020900 AND component_id=50084 AND target_id=3039911 AND component_sequence=2) OR (achievement_id=500020900 AND component_id=50085 AND target_id=3039912 AND component_sequence=3)) OR event_type<>4 OR progress_mode<>3 OR required_count<>1 OR behavior<>0 OR target_id2<>0 OR target_value<>0 OR enabled<>1))));
+INSERT INTO _bixie_guard VALUES('items',((SELECT COUNT(*) FROM items WHERE (id=36164 AND Name='Golden Jumjum' AND classes=65535) OR (id=36165 AND Name='The First Piece of the Bixie Plan' AND classes=65535) OR (id=36166 AND Name='The Second Piece of the Bixie Plan' AND classes=65535) OR (id=36167 AND Name='The Third Piece of the Bixie Plan' AND classes=65535) OR (id=36168 AND Name='The Fourth Piece of the Bixie Plan' AND classes=65535) OR (id=36169 AND Name='Bixie Haze Powder' AND classes=65535) OR (id=36170 AND Name='Bixie Haze Antidote' AND classes=65535) OR (id=36192 AND Name='Striped Jumjum' AND classes=65535) OR (id=52639 AND Name='Glob of Raw Honey' AND classes=65535) OR (id=52644 AND Name='Mud-Caked Locket' AND classes=65535) OR (id=52645 AND Name='Lucinda''s Dolly' AND classes=65535) OR (id=53511 AND Name='Box of Honeycomb Biscuits' AND classes=65535) OR (id=53512 AND Name='Pollen Dusted Ring' AND classes=65535) OR (id=53519 AND Name='Petrified Bixie Pollen' AND classes=65535) OR (id=53539 AND Name='Staff of the Hiveslayer' AND classes=15906) OR (id=53540 AND Name='Hornet''s Bane' AND classes=16777) OR (id=53541 AND Name='Wingcrusher' AND classes=16841) OR (id=53542 AND Name='Blade of the Stonehive Front' AND classes=32797) OR (id=53573 AND Name='Bixie Doomdagger' AND classes=49601) OR (id=53574 AND Name='Bixie Stemchopper' AND classes=49601) OR (id=53575 AND Name='Bixie Jumjum Javelin' AND classes=49601) OR (id=53576 AND Name='Bixie Anguish Arrow' AND classes=413) OR (id=85757 AND Name='Venomous Stonehive Stinger' AND classes=0) OR (id=85758 AND Name='Green Ooze Bud' AND classes=65535) OR (id=85759 AND Name='Buzzazar''s Mandible' AND classes=65535))=25));
+INSERT INTO _bixie_guard VALUES('stock_npcs',((SELECT COUNT(*) FROM npc_types WHERE (id=394031 AND name='#Alchemist_Mavin') OR (id=395122 AND name='Merchant_Makesn') OR (id=395144 AND name='#Fletcher_Orshawn') OR (id=395166 AND name='a_green_ooze') OR (id=395181 AND name='a_dark_shadeling') OR (id=395210 AND name='Scout_Ethaniel') OR (id=395212 AND name='#Scout_Bowen') OR (id=395224 AND name='a_Stone_Hive_warrior') OR (id=395225 AND name='a_Stone_Hive_warrior') OR (id=395226 AND name='a_Stone_Hive_laborer') OR (id=395227 AND name='Jumjum_Reserves') OR (id=395228 AND name='a_thrall') OR (id=395229 AND name='a_Stone_Hive_laborer') OR (id=395230 AND name='an_eggtender_drone') OR (id=395231 AND name='a_waspling_cocoon') OR (id=395233 AND name='a_worker_drone') OR (id=395234 AND name='a_worker_drone') OR (id=395235 AND name='a_Stone_Hive_warrior') OR (id=395236 AND name='a_Stone_Hive_gardener') OR (id=395239 AND name='an_eggtender_drone') OR (id=395240 AND name='#Buzzazar') OR (id=395241 AND name='Scout_Verrin') OR (id=395244 AND name='a_worker_drone') OR (id=395252 AND name='an_eggtender_drone') OR (id=395255 AND name='a_Stone_Hive_waspherd') OR (id=395256 AND name='a_Stone_Hive_slaver') OR (id=395257 AND name='Stone_Hive_Trickster') OR (id=395259 AND name='The_Farm_Alchemist') OR (id=395261 AND name='a_thrall') OR (id=395264 AND name='a_thrall') OR (id=395266 AND name='a_thrall') OR (id=395267 AND name='#an_advanced_scout'))=32));
+INSERT INTO _bixie_guard VALUES('new_npc_395900',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395900 AND name<>'a_larval_wasp')));
+INSERT INTO _bixie_guard VALUES('new_npc_395901',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395901 AND name<>'a_bixie_guard')));
+INSERT INTO _bixie_guard VALUES('new_npc_395902',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395902 AND name<>'a_bixie_guard')));
+INSERT INTO _bixie_guard VALUES('new_npc_395903',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395903 AND name<>'a_hungry_ooze_bud')));
+INSERT INTO _bixie_guard VALUES('new_npc_395904',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395904 AND name<>'a_thrall')));
+)ROF306A" R"ROF306B(INSERT INTO _bixie_guard VALUES('new_npc_395905',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395905 AND name<>'a_thrall')));
+INSERT INTO _bixie_guard VALUES('new_npc_395906',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395906 AND name<>'a_thrall')));
+INSERT INTO _bixie_guard VALUES('new_npc_395907',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=395907 AND name<>'a_thrall')));
+INSERT INTO _bixie_guard VALUES('reward_source_3039907',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_id=3039907 AND (source_type<>2 OR reward_set_id<>3039907))));
+INSERT INTO _bixie_guard VALUES('reward_set_3039907',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3039907 AND title<>'Bixie Thralls') AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3039907 AND NOT(source_type=2 AND source_id=3039907))));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399071',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399071 AND description<>'May2013 Bixie task 3039907 option 1') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399071 AND NOT(reward_set_id=3039907 AND option_id=1)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399071)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399072',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399072 AND description<>'May2013 Bixie task 3039907 option 2') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399072 AND NOT(reward_set_id=3039907 AND option_id=2)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399072)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399073',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399073 AND description<>'May2013 Bixie task 3039907 option 3') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399073 AND NOT(reward_set_id=3039907 AND option_id=3)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399073)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399074',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399074 AND description<>'May2013 Bixie task 3039907 option 4') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399074 AND NOT(reward_set_id=3039907 AND option_id=4)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399074)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399075',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399075 AND description<>'May2013 Bixie task 3039907 option 5') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399075 AND NOT(reward_set_id=3039907 AND option_id=5)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399075)));
+INSERT INTO _bixie_guard VALUES('reward_source_3039908',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_id=3039908 AND (source_type<>2 OR reward_set_id<>3039908))));
+INSERT INTO _bixie_guard VALUES('reward_set_3039908',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3039908 AND title<>'Stonehive Venom Stingers') AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3039908 AND NOT(source_type=2 AND source_id=3039908))));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399081',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399081 AND description<>'May2013 Bixie task 3039908 option 1') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399081 AND NOT(reward_set_id=3039908 AND option_id=1)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399081)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399082',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399082 AND description<>'May2013 Bixie task 3039908 option 2') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399082 AND NOT(reward_set_id=3039908 AND option_id=2)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399082)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399083',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399083 AND description<>'May2013 Bixie task 3039908 option 3') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399083 AND NOT(reward_set_id=3039908 AND option_id=3)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399083)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399084',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399084 AND description<>'May2013 Bixie task 3039908 option 4') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399084 AND NOT(reward_set_id=3039908 AND option_id=4)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399084)));
+INSERT INTO _bixie_guard VALUES('reward_entry_30399085',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30399085 AND description<>'May2013 Bixie task 3039908 option 5') AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30399085 AND NOT(reward_set_id=3039908 AND option_id=5)) AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30399085)));
+INSERT INTO _bixie_guard VALUES('mandible_drop',((SELECT COUNT(*) FROM lootdrop_entries WHERE lootdrop_id=120916)=1 AND (SELECT COUNT(*) FROM lootdrop_entries WHERE lootdrop_id=120916 AND item_id=85759 AND item_charges=1 AND multiplier IN(1,3) AND (ABS(chance-94.765)<0.0001 OR chance=100))=1));
+INSERT INTO _bixie_guard VALUES('mandible_source',((SELECT COUNT(*) FROM loottable_entries WHERE lootdrop_id=120916)=1 AND (SELECT COUNT(*) FROM loottable_entries WHERE lootdrop_id=120916 AND loottable_id=96759 AND multiplier=1 AND probability=100)=1 AND (SELECT COUNT(*) FROM npc_types WHERE loottable_id=96759)=1 AND (SELECT COUNT(*) FROM npc_types WHERE id=395240 AND loottable_id=96759)=1));
+INSERT INTO _bixie_guard VALUES('cocoon_identity',((SELECT COUNT(*) FROM npc_types WHERE id=395231 AND name='a_waspling_cocoon' AND race=449 AND level IN(1,25))=1));
+INSERT INTO _bixie_guard VALUES('reserves_identity',((SELECT COUNT(*) FROM npc_types WHERE id=395227 AND name='Jumjum_Reserves' AND race=536 AND class IN(1,62))=1));
+INSERT INTO _bixie_guard VALUES('native_class_lists',((SELECT COUNT(*) FROM npc_spells WHERE (id=1 AND name='Default Cleric List') OR (id=7 AND name='Default Druid List') OR (id=9 AND name='Default Shadowknight List'))=3));
+INSERT INTO _bixie_guard VALUES('thrall_spawn_98593',((SELECT COUNT(*) FROM spawn2 WHERE id=98593 AND spawngroupID=60429 AND zone='moors' AND version=0 AND respawntime IN(90,640))=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60429)=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60429 AND npcID=395228 AND chance=100)=1));
+INSERT INTO _bixie_guard VALUES('thrall_spawn_98710',((SELECT COUNT(*) FROM spawn2 WHERE id=98710 AND spawngroupID=60546 AND zone='moors' AND version=0 AND respawntime IN(90,640))=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60546)=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60546 AND npcID=395261 AND chance=100)=1));
+INSERT INTO _bixie_guard VALUES('thrall_spawn_98716',((SELECT COUNT(*) FROM spawn2 WHERE id=98716 AND spawngroupID=60552 AND zone='moors' AND version=0 AND respawntime IN(90,640))=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60552)=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60552 AND npcID=395228 AND chance=100)=1));
+INSERT INTO _bixie_guard VALUES('thrall_spawn_98719',((SELECT COUNT(*) FROM spawn2 WHERE id=98719 AND spawngroupID=60555 AND zone='moors' AND version=0 AND respawntime IN(90,640))=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60555)=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60555 AND npcID=395264 AND chance=100)=1));
+INSERT INTO _bixie_guard VALUES('thrall_spawn_98722',((SELECT COUNT(*) FROM spawn2 WHERE id=98722 AND spawngroupID=60558 AND zone='moors' AND version=0 AND respawntime IN(90,640))=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60558)=1 AND (SELECT COUNT(*) FROM spawnentry WHERE spawngroupID=60558 AND npcID=395266 AND chance=100)=1));
+START TRANSACTION;
+INSERT INTO tasks (id,type,title,description,reward_text,reward_id_list,cash_reward,exp_reward,reward_method,min_level,repeatable,faction_reward,faction_amount,enabled) VALUES
+(3039901,2,'Bixie Menace: Drone Hatchery','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,28,1,1129,10,1),
+(3039902,2,'Bixie Menace: Jum Jum Fields','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,28,1,1129,10,1),
+(3039903,2,'Bixie Menace: The Silo','Follow the objectives. Historical reconstruction; see package provenance.','','53512,1',0,1000,0,28,1,1129,20,1),
+(3039904,2,'The Bixie Threat?','Follow the objectives. Historical reconstruction; see package provenance.','','',17234,1000,0,28,0,1129,10,1),
+(3039905,2,'Bixie Jumjum','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,28,0,1129,10,1),
+(3039906,2,'Bixie Plans','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,28,0,1129,10,1),
+(3039907,2,'Bixie Thralls','Follow the objectives. Historical reconstruction; see package provenance.','','',0,0,3,28,1,1129,10,1),
+(3039908,2,'Stonehive Venom Stingers','Follow the objectives. Historical reconstruction; see package provenance.','','',0,0,3,30,1,0,0,1),
+(3039909,2,'Buzzazar','Follow the objectives. Historical reconstruction; see package provenance.','','53519,1',0,1000,0,30,1,0,0,1),
+(3039910,2,'A Widow''s Last Memory','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,25,1,0,0,1),
+(3039911,2,'A Taste for Honey','Follow the objectives. Historical reconstruction; see package provenance.','','53511,5',0,1000,0,30,1,0,0,1),
+(3039912,2,'She Haunts My Dreams','Follow the objectives. Historical reconstruction; see package provenance.','','',0,1000,0,30,0,0,0,1)
+ON DUPLICATE KEY UPDATE type=VALUES(type),title=VALUES(title),description=VALUES(description),reward_text=VALUES(reward_text),reward_id_list=VALUES(reward_id_list),cash_reward=VALUES(cash_reward),exp_reward=VALUES(exp_reward),reward_method=VALUES(reward_method),min_level=VALUES(min_level),repeatable=VALUES(repeatable),faction_reward=VALUES(faction_reward),faction_amount=VALUES(faction_amount),enabled=VALUES(enabled);
+DELETE FROM task_activities WHERE taskid IN(3039901,3039902,3039903,3039904,3039905,3039906,3039907,3039908,3039909,3039910,3039911,3039912);
+INSERT INTO task_activities (taskid,activityid,req_activity_id,step,activitytype,target_name,goalmethod,goalcount,description_override,npc_match_list,item_id_list,zones,spell_list,min_x,max_x,min_y,max_y,min_z,max_z) VALUES
+(3039901,0,-1,0,2,'',0,25,'Kill 25 a larval wasp','395900','','395','',0,0,0,0,0,0),
+(3039901,1,-1,0,2,'',0,7,'Kill 7 an eggtender drone / an eggtender drone / an eggtender drone','395230|395239|395252','','395','',0,0,0,0,0,0),
+(3039901,2,-1,0,2,'',0,2,'Kill 2 a Stone Hive waspherd','395255','','395','',0,0,0,0,0,0),
+(3039901,3,-1,1,4,'',0,1,'Speak 1 Scout Bowen','395212','','395','',0,0,0,0,0,0),
+(3039902,0,-1,0,2,'',0,5,'Kill 5 a worker drone / a worker drone / a worker drone','395233|395234|395244','','395','',0,0,0,0,0,0),
+(3039902,1,-1,0,2,'',0,5,'Kill 5 a Stone Hive gardener','395236','','395','',0,0,0,0,0,0),
+(3039902,2,-1,0,2,'',0,5,'Kill 5 a Stone Hive laborer / a Stone Hive laborer','395226|395229','','395','',0,0,0,0,0,0),
+(3039902,3,-1,1,4,'',0,1,'Speak 1 Scout Bowen','395212','','395','',0,0,0,0,0,0),
+(3039903,0,-1,0,3,'',0,1,'Loot 1 Green Ooze Bud','','85758','395','',0,0,0,0,0,0),
+(3039903,1,-1,0,2,'',0,8,'Kill 8 a Stone Hive warrior / a Stone Hive warrior / a Stone Hive warrior','395224|395225|395235','','395','',0,0,0,0,0,0),
+(3039903,2,-1,0,2,'',0,2,'Kill 2 a Stone Hive slaver','395256','','395','',0,0,0,0,0,0),
+(3039903,3,-1,1,1,'',0,1,'Deliver 1 Green Ooze Bud','395227','85758','395','',0,0,0,0,0,0),
+(3039903,4,-1,2,4,'',0,1,'Speak 1 Scout Bowen','395212','','395','',0,0,0,0,0,0),
+)ROF306B" R"ROF306C((3039904,0,-1,0,5,'',0,1,'Find the entrance to the bixie farm','','','395','',-2090,-1950,-810,-670,-1000,1000),
+(3039904,1,-1,1,5,'',0,1,'Find Scout Verrin','','','395','',-2450,-2310,-1200,-1060,-1000,1000),
+(3039904,2,-1,2,4,'',0,1,'Speak 1 Scout Verrin','395241','','395','',0,0,0,0,0,0),
+(3039904,3,-1,3,2,'',0,10,'Kill 10 a Stone Hive warrior / a Stone Hive warrior / a Stone Hive laborer / a Stone Hive laborer / a Stone Hive warrior / a Sto','395224|395225|395226|395229|395235|395236|395255|395256|395257|395259|395267|395901|395902','','395','',0,0,0,0,0,0),
+(3039904,4,-1,4,255,'',0,1,'Escort Verrin safely to camp','','','395','',0,0,0,0,0,0),
+(3039904,5,-1,5,4,'',0,1,'Speak 1 Scout Ethaniel','395210','','395','',0,0,0,0,0,0),
+(3039905,0,-1,0,5,'',0,1,'Find the entrance to the bixie farm','','','395','',-2085,-1945,-835,-695,-1000,1000),
+(3039905,1,-1,1,5,'',0,1,'Reach the jumjum field','','','395','',-2290,-2150,-1090,-950,-1000,1000),
+(3039905,2,-1,2,5,'',0,1,'Look into the first buckets','','','395','',-2325,-2265,-1025,-965,-1000,1000),
+(3039905,3,-1,2,5,'',0,1,'Look into the second buckets','','','395','',-2510,-2450,-1000,-940,-1000,1000),
+(3039905,4,-1,2,5,'',0,1,'Look into the third buckets','','','395','',-2420,-2360,-1165,-1105,-1000,1000),
+(3039905,5,-1,2,5,'',0,1,'Look into the fourth buckets','','','395','',-2310,-2250,-1210,-1150,-1000,1000),
+(3039905,6,-1,3,13,'',0,3,'Collect 3 Golden Jumjum','','36164','395','',0,0,0,0,0,0),
+(3039905,7,-1,3,13,'',0,3,'Collect 3 Striped Jumjum','','36192','395','',0,0,0,0,0,0),
+(3039905,8,-1,4,5,'',0,1,'Visit the other field','','','395','',-2605,-2465,-1400,-1260,-1000,1000),
+(3039905,9,-1,5,5,'',0,1,'Inspect the cart','','','395','',-2685,-2545,-1580,-1440,-1000,1000),
+(3039905,10,-1,6,2,'',0,10,'Kill 10 a Stone Hive warrior / a Stone Hive warrior / a Stone Hive laborer / a Stone Hive laborer / a Stone Hive warrior / a Sto','395224|395225|395226|395229|395235|395236|395255|395256|395257|395259|395267|395901|395902','','395','',0,0,0,0,0,0),
+(3039905,11,-1,7,1,'',0,3,'Deliver 3 Golden Jumjum','395210','36164','395','',0,0,0,0,0,0),
+(3039905,12,-1,7,1,'',0,3,'Deliver 3 Striped Jumjum','395210','36192','395','',0,0,0,0,0,0),
+(3039906,0,-1,0,5,'',0,1,'Find the entrance to the bixie farm','','','395','',-2110,-1970,-805,-665,-1000,1000),
+(3039906,1,-1,1,2,'',0,5,'Kill 5 a Stone Hive warrior / a Stone Hive warrior / a Stone Hive warrior','395224|395225|395235','','395','',0,0,0,0,0,0),
+(3039906,2,-1,1,2,'',0,3,'Kill 3 a Stone Hive slaver','395256','','395','',0,0,0,0,0,0),
+(3039906,3,-1,1,3,'',0,1,'Loot 1 The First Piece of the Bixie Plan','','36165','395','',0,0,0,0,0,0),
+(3039906,4,-1,1,3,'',0,1,'Loot 1 The Second Piece of the Bixie Plan','','36166','395','',0,0,0,0,0,0),
+(3039906,5,-1,1,3,'',0,1,'Loot 1 The Third Piece of the Bixie Plan','','36167','395','',0,0,0,0,0,0),
+(3039906,6,-1,1,3,'',0,1,'Loot 1 The Fourth Piece of the Bixie Plan','','36168','395','',0,0,0,0,0,0),
+(3039906,7,-1,2,1,'',0,1,'Deliver 1 The First Piece of the Bixie Plan','395210','36165','395','',0,0,0,0,0,0),
+(3039906,8,-1,2,1,'',0,1,'Deliver 1 The Second Piece of the Bixie Plan','395210','36166','395','',0,0,0,0,0,0),
+(3039906,9,-1,2,1,'',0,1,'Deliver 1 The Third Piece of the Bixie Plan','395210','36167','395','',0,0,0,0,0,0),
+(3039906,10,-1,2,1,'',0,1,'Deliver 1 The Fourth Piece of the Bixie Plan','395210','36168','395','',0,0,0,0,0,0),
+(3039907,0,-1,0,5,'',0,1,'Find the entrance to the bixie farm','','','395','',-2095,-1955,-790,-650,-1000,1000),
+(3039907,1,-1,1,5,'',0,1,'Enter the farmhouse','','','395','',-3000,-2860,-1720,-1580,-1000,1000),
+(3039907,2,-1,2,3,'',0,1,'Loot 1 Bixie Haze Powder','','36169','395','',0,0,0,0,0,0),
+(3039907,3,-1,3,1,'',0,1,'Deliver 1 Bixie Haze Powder','394031','36169','394','',0,0,0,0,0,0),
+(3039907,4,-1,4,255,'',0,5,'Use antidotes and escort five thralls to safety','','','395','',0,0,0,0,0,0),
+(3039907,5,-1,5,4,'',0,1,'Speak 1 Scout Ethaniel','395210','','395','',0,0,0,0,0,0),
+(3039908,0,-1,0,1,'',0,4,'Deliver 4 Venomous Stonehive Stinger','395144','85757','395','',0,0,0,0,0,0),
+(3039909,0,-1,0,1,'',0,1,'Deliver 1 Buzzazar''s Mandible','395144','85759','395','',0,0,0,0,0,0),
+(3039910,0,-1,0,1,'',0,1,'Deliver 1 Mud-Caked Locket','395122','52644','395','',0,0,0,0,0,0),
+(3039911,0,-1,0,3,'',0,6,'Loot 6 Glob of Raw Honey','','52639','395','',0,0,0,0,0,0),
+(3039911,1,-1,1,1,'',0,6,'Deliver 6 Glob of Raw Honey','395122','52639','395','',0,0,0,0,0,0),
+(3039912,0,-1,0,5,'',0,1,'Discover Lucinda''s remains','','','395','',-978,-838,277,417,-1000,1000),
+(3039912,1,-1,1,2,'',0,1,'Kill 1 a dark shadeling','395181','','395','',0,0,0,0,0,0),
+(3039912,2,-1,1,3,'',0,1,'Loot 1 Lucinda''s Dolly','','52645','395','',0,0,0,0,0,0),
+(3039912,3,-1,2,1,'',0,1,'Deliver 1 Lucinda''s Dolly','395122','52645','395','',0,0,0,0,0,0)
+ON DUPLICATE KEY UPDATE activityid=VALUES(activityid),req_activity_id=VALUES(req_activity_id),step=VALUES(step),activitytype=VALUES(activitytype),target_name=VALUES(target_name),goalmethod=VALUES(goalmethod),goalcount=VALUES(goalcount),description_override=VALUES(description_override),npc_match_list=VALUES(npc_match_list),item_id_list=VALUES(item_id_list),zones=VALUES(zones),spell_list=VALUES(spell_list),min_x=VALUES(min_x),max_x=VALUES(max_x),min_y=VALUES(min_y),max_y=VALUES(max_y),min_z=VALUES(min_z),max_z=VALUES(max_z);
+DELETE FROM achievement_criteria WHERE component_type=1 AND component_id BETWEEN 50074 AND 50085;
+INSERT INTO achievement_criteria (achievement_id,component_type,component_sequence,component_id,event_type,progress_mode,behavior,target_id,target_id2,target_value,required_count,enabled) VALUES
+(500020800,1,1,50074,4,3,0,3039901,0,0,1,1),
+(500020800,1,2,50075,4,3,0,3039902,0,0,1,1),
+(500020800,1,3,50076,4,3,0,3039903,0,0,1,1),
+(500020800,1,4,50077,4,3,0,3039904,0,0,1,1),
+(500020800,1,5,50078,4,3,0,3039905,0,0,1,1),
+(500020800,1,6,50079,4,3,0,3039906,0,0,1,1),
+(500020800,1,7,50080,4,3,0,3039907,0,0,1,1),
+(500020800,1,8,50081,4,3,0,3039908,0,0,1,1),
+(500020800,1,9,50082,4,3,0,3039909,0,0,1,1),
+(500020900,1,1,50083,4,3,0,3039910,0,0,1,1),
+(500020900,1,2,50084,4,3,0,3039911,0,0,1,1),
+(500020900,1,3,50085,4,3,0,3039912,0,0,1,1)
+ON DUPLICATE KEY UPDATE component_type=VALUES(component_type),component_sequence=VALUES(component_sequence),component_id=VALUES(component_id),event_type=VALUES(event_type),progress_mode=VALUES(progress_mode),behavior=VALUES(behavior),target_id=VALUES(target_id),target_id2=VALUES(target_id2),target_value=VALUES(target_value),required_count=VALUES(required_count),enabled=VALUES(enabled);
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395900,'a_larval_wasp',`lastname`,30,`race`,`class`,`bodytype`,75,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,3,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395239 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_larval_wasp',`level`=30,`hp`=75,`size`=3,`loottable_id`=0 WHERE id=395900;
+)ROF306C" R"ROF306D(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395901,'a_bixie_guard',`lastname`,30,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395224 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_bixie_guard',`level`=30,`loottable_id`=0 WHERE id=395901;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395902,'a_bixie_guard',`lastname`,30,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,7,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395236 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_bixie_guard',`level`=30,`loottable_id`=0,`npc_spells_id`=7 WHERE id=395902;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395903,'a_hungry_ooze_bud',`lastname`,1,`race`,`class`,`bodytype`,1,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,0,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,0,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395166 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_hungry_ooze_bud',`level`=1,`hp`=1,`npc_faction_id`=0,`loottable_id`=0 WHERE id=395903;
+)ROF306D" R"ROF306E(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395904,'a_thrall',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395228 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_thrall' WHERE id=395904;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395905,'a_thrall',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395261 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_thrall' WHERE id=395905;
+INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395906,'a_thrall',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395264 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_thrall' WHERE id=395906;
+)ROF306E" R"ROF306F(INSERT INTO npc_types (`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`) SELECT 395907,'a_thrall',`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id` FROM npc_types WHERE id=395266 ON DUPLICATE KEY UPDATE id=VALUES(id);
+UPDATE npc_types SET `name`='a_thrall' WHERE id=395907;
+INSERT INTO reward_sets (reward_set_id,title,enabled) VALUES
+(3039907,'Bixie Thralls',1)
+ON DUPLICATE KEY UPDATE title=VALUES(title),enabled=VALUES(enabled);
+INSERT INTO reward_sources (source_type,source_id,reward_set_id,enabled) VALUES
+(2,3039907,3039907,1)
+ON DUPLICATE KEY UPDATE source_id=VALUES(source_id),reward_set_id=VALUES(reward_set_id),enabled=VALUES(enabled);
+INSERT INTO reward_options (reward_set_id,option_id,sequence,label,common_to_all,flags,enabled,class_mask) VALUES
+(3039907,1,0,'Experience',1,0,1,65535),
+(3039907,2,2,'Blade of the Stonehive Front',0,0,1,32797),
+(3039907,3,3,'Hornet''s Bane',0,0,1,16777),
+(3039907,4,4,'Staff of the Hiveslayer',0,0,1,15906),
+(3039907,5,5,'Wingcrusher',0,0,1,16841)
+ON DUPLICATE KEY UPDATE option_id=VALUES(option_id),sequence=VALUES(sequence),label=VALUES(label),common_to_all=VALUES(common_to_all),flags=VALUES(flags),enabled=VALUES(enabled),class_mask=VALUES(class_mask);
+INSERT INTO rewards (reward_id,reward_type,reward_data_id,amount,description,enabled) VALUES
+(30399071,1,1,1000,'May2013 Bixie task 3039907 option 1',1),
+(30399072,0,53542,1,'May2013 Bixie task 3039907 option 2',1),
+(30399073,0,53540,1,'May2013 Bixie task 3039907 option 3',1),
+(30399074,0,53539,1,'May2013 Bixie task 3039907 option 4',1),
+(30399075,0,53541,1,'May2013 Bixie task 3039907 option 5',1)
+ON DUPLICATE KEY UPDATE reward_type=VALUES(reward_type),reward_data_id=VALUES(reward_data_id),amount=VALUES(amount),description=VALUES(description),enabled=VALUES(enabled);
+INSERT INTO reward_option_entries (reward_set_id,option_id,sequence,reward_id) VALUES
+(3039907,1,0,30399071),
+(3039907,2,0,30399072),
+(3039907,3,0,30399073),
+(3039907,4,0,30399074),
+(3039907,5,0,30399075)
+ON DUPLICATE KEY UPDATE option_id=VALUES(option_id),sequence=VALUES(sequence),reward_id=VALUES(reward_id);
+INSERT INTO reward_sets (reward_set_id,title,enabled) VALUES
+(3039908,'Stonehive Venom Stingers',1)
+ON DUPLICATE KEY UPDATE title=VALUES(title),enabled=VALUES(enabled);
+INSERT INTO reward_sources (source_type,source_id,reward_set_id,enabled) VALUES
+(2,3039908,3039908,1)
+ON DUPLICATE KEY UPDATE source_id=VALUES(source_id),reward_set_id=VALUES(reward_set_id),enabled=VALUES(enabled);
+INSERT INTO reward_options (reward_set_id,option_id,sequence,label,common_to_all,flags,enabled,class_mask) VALUES
+(3039908,1,0,'Experience',1,0,1,65535),
+(3039908,2,2,'Bixie Doomdagger',0,0,1,49601),
+(3039908,3,3,'Bixie Stemchopper',0,0,1,49601),
+(3039908,4,4,'Bixie Jumjum Javelin',0,0,1,49601),
+(3039908,5,5,'Bixie Anguish Arrow',0,0,1,413)
+ON DUPLICATE KEY UPDATE option_id=VALUES(option_id),sequence=VALUES(sequence),label=VALUES(label),common_to_all=VALUES(common_to_all),flags=VALUES(flags),enabled=VALUES(enabled),class_mask=VALUES(class_mask);
+INSERT INTO rewards (reward_id,reward_type,reward_data_id,amount,description,enabled) VALUES
+(30399081,1,1,1000,'May2013 Bixie task 3039908 option 1',1),
+(30399082,0,53573,50,'May2013 Bixie task 3039908 option 2',1),
+(30399083,0,53574,50,'May2013 Bixie task 3039908 option 3',1),
+(30399084,0,53575,50,'May2013 Bixie task 3039908 option 4',1),
+(30399085,0,53576,50,'May2013 Bixie task 3039908 option 5',1)
+ON DUPLICATE KEY UPDATE reward_type=VALUES(reward_type),reward_data_id=VALUES(reward_data_id),amount=VALUES(amount),description=VALUES(description),enabled=VALUES(enabled);
+INSERT INTO reward_option_entries (reward_set_id,option_id,sequence,reward_id) VALUES
+(3039908,1,0,30399081),
+(3039908,2,0,30399082),
+(3039908,3,0,30399083),
+(3039908,4,0,30399084),
+(3039908,5,0,30399085)
+ON DUPLICATE KEY UPDATE option_id=VALUES(option_id),sequence=VALUES(sequence),reward_id=VALUES(reward_id);
+-- Source-researched stock repairs; numerical spell selection/refill timer labelled reconstruction.
+UPDATE lootdrop_entries SET multiplier=3,chance=100 WHERE lootdrop_id=120916 AND item_id=85759;
+UPDATE npc_types SET level=1 WHERE id=395231;
+UPDATE npc_types SET class=1 WHERE id=395227;
+UPDATE npc_types SET npc_spells_id=7 WHERE id=395236;
+UPDATE npc_types SET npc_spells_id=9 WHERE id=395181;
+UPDATE npc_types SET npc_spells_id=1,maxdmg=94 WHERE id=395259;
+UPDATE npc_types SET maxdmg=169 WHERE id=395240;
+UPDATE spawn2 SET respawntime=90 WHERE id IN(98593,98710,98716,98719,98722);
+COMMIT;
+)ROF306F",
+		.content_schema_update = false,
+	},
+
+	// 307: Blightfire parent achievement reward sets 3050202-09 (eight class-masked gear-upgrade sets: plate/chain/leather/cloth/melee/caster/bow/etc).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the
+	// retail Rain of Fear parent zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_blightfire_parent_rewards.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 307,
+		.description = "20261101_rof2_blightfire_parent_rewards",
+		.check = "SELECT `reward_set_id` FROM `reward_sets` WHERE `reward_set_id` = 3050202 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF307A(-- RoF2 zone content: blightfire-parent-rewards (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue (achievements/categories/criteria) then quests
+-- (tasks/objectives/rewards/npcs/factions/loot). Fail-closed guard tables abort
+-- on any expectation mismatch.
+-- Blightfire parent achievement gear; install complete upgrade with game services stopped.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _blight_parent_guard;
+CREATE TEMPORARY TABLE _blight_parent_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _blight_parent_guard VALUES('items',((SELECT COUNT(*)FROM items WHERE (id=108064 AND Name='Rough Consigned Plate Helm' AND classes=151) OR (id=108071 AND Name='Rough Consigned Chain Coif' AND classes=33544) OR (id=108078 AND Name='Rough Consigned Leather Cap' AND classes=16480) OR (id=108085 AND Name='Rough Consigned Cloth Cap' AND classes=15360) OR (id=108551 AND Name='Rough Consigned Chitin Shield' AND classes=16861) OR (id=108552 AND Name='Rough Consigned Round Shield' AND classes=15906) OR (id=108541 AND Name='Rough Consigned Scepter' AND classes=15906) OR (id=108550 AND Name='Rough Consigned Bow' AND classes=285) OR (id=108540 AND Name='Rough Consigned Hammer' AND classes=16861) OR (id=108543 AND Name='Rough Consigned Longsword' AND classes=413) OR (id=108542 AND Name='Rough Consigned Shortsword' AND classes=413) OR (id=108544 AND Name='Rough Consigned Stone Dagger' AND classes=16793) OR (id=108549 AND Name='Rough Consigned Halberd' AND classes=32797) OR (id=108063 AND Name='Rough Consigned Plate Boots' AND classes=151) OR (id=108070 AND Name='Rough Consigned Chain Boots' AND classes=33544) OR (id=108077 AND Name='Rough Consigned Leather Boots' AND classes=16480) OR (id=108084 AND Name='Rough Consigned Cloth Sandals' AND classes=15360) OR (id=108342 AND Name='Rough Soldier''s Facemask' AND classes=49629) OR (id=108352 AND Name='Rough Scryer''s Facemask' AND classes=15906) OR (id=108343 AND Name='Rough Soldier''s Gorget' AND classes=49629) OR (id=108353 AND Name='Rough Scryer''s Necklace' AND classes=15906) OR (id=108345 AND Name='Rough Soldier''s Cloak' AND classes=49629) OR (id=108355 AND Name='Rough Scryer''s Cloak' AND classes=15906) OR (id=108344 AND Name='Rough Soldier''s Mantle' AND classes=49629) OR (id=108354 AND Name='Rough Scryer''s Scarf' AND classes=15906) OR (id=108346 AND Name='Rough Soldier''s Stake' AND classes=49629) OR (id=108356 AND Name='Rough Scryer''s Wand' AND classes=15906))=27));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020200',((SELECT COUNT(*)FROM achievements WHERE id=500020200 AND name='Welcome to the Moors (21-25)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020200',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020200 AND reward_set_id<>3050202)OR(reward_set_id=3050202 AND NOT(source_type=1 AND source_id=500020200)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050202',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050202 AND title<>'Welcome to the Moors (21-25)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020201',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020201 AND NOT(reward_type=0 AND reward_data_id=108064 AND amount=1 AND description='May2013 Blightfire parent 500020200 item 108064'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020201 AND NOT(reward_set_id=3050202 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020201)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020202',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020202 AND NOT(reward_type=0 AND reward_data_id=108071 AND amount=1 AND description='May2013 Blightfire parent 500020200 item 108071'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020202 AND NOT(reward_set_id=3050202 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020202)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020203',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020203 AND NOT(reward_type=0 AND reward_data_id=108078 AND amount=1 AND description='May2013 Blightfire parent 500020200 item 108078'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020203 AND NOT(reward_set_id=3050202 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020203)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020204',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020204 AND NOT(reward_type=0 AND reward_data_id=108085 AND amount=1 AND description='May2013 Blightfire parent 500020200 item 108085'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020204 AND NOT(reward_set_id=3050202 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020204)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020300',((SELECT COUNT(*)FROM achievements WHERE id=500020300 AND name='Battling Blightfire (26-30)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020300',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020300 AND reward_set_id<>3050203)OR(reward_set_id=3050203 AND NOT(source_type=1 AND source_id=500020300)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050203',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050203 AND title<>'Battling Blightfire (26-30)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020301',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020301 AND NOT(reward_type=0 AND reward_data_id=108551 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108551'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020301 AND NOT(reward_set_id=3050203 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020301)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020302',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020302 AND NOT(reward_type=0 AND reward_data_id=108552 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108552'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020302 AND NOT(reward_set_id=3050203 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020302)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020303',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020303 AND NOT(reward_type=0 AND reward_data_id=108541 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108541'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020303 AND NOT(reward_set_id=3050203 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020303)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020304',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020304 AND NOT(reward_type=0 AND reward_data_id=108550 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108550'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020304 AND NOT(reward_set_id=3050203 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020304)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020305',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020305 AND NOT(reward_type=0 AND reward_data_id=108540 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108540'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020305 AND NOT(reward_set_id=3050203 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020305)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020306',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020306 AND NOT(reward_type=0 AND reward_data_id=108543 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108543'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020306 AND NOT(reward_set_id=3050203 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020306)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020307',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020307 AND NOT(reward_type=0 AND reward_data_id=108542 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108542'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020307 AND NOT(reward_set_id=3050203 AND option_id=6))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020307)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020308',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020308 AND NOT(reward_type=0 AND reward_data_id=108544 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108544'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020308 AND NOT(reward_set_id=3050203 AND option_id=7))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020308)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020309',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020309 AND NOT(reward_type=0 AND reward_data_id=108549 AND amount=1 AND description='May2013 Blightfire parent 500020300 item 108549'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020309 AND NOT(reward_set_id=3050203 AND option_id=8))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020309)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020400',((SELECT COUNT(*)FROM achievements WHERE id=500020400 AND name='Champion of the Moors (31-35)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020400',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020400 AND reward_set_id<>3050204)OR(reward_set_id=3050204 AND NOT(source_type=1 AND source_id=500020400)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050204',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050204 AND title<>'Champion of the Moors (31-35)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020401',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020401 AND NOT(reward_type=0 AND reward_data_id=108063 AND amount=1 AND description='May2013 Blightfire parent 500020400 item 108063'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020401 AND NOT(reward_set_id=3050204 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020401)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020402',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020402 AND NOT(reward_type=0 AND reward_data_id=108070 AND amount=1 AND description='May2013 Blightfire parent 500020400 item 108070'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020402 AND NOT(reward_set_id=3050204 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020402)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020403',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020403 AND NOT(reward_type=0 AND reward_data_id=108077 AND amount=1 AND description='May2013 Blightfire parent 500020400 item 108077'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020403 AND NOT(reward_set_id=3050204 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020403)));
+)ROF307A" R"ROF307B(INSERT INTO _blight_parent_guard VALUES('reward_305020404',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020404 AND NOT(reward_type=0 AND reward_data_id=108084 AND amount=1 AND description='May2013 Blightfire parent 500020400 item 108084'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020404 AND NOT(reward_set_id=3050204 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020404)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020500',((SELECT COUNT(*)FROM achievements WHERE id=500020500 AND name='Job Offers (Blightfire 20+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020500',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020500 AND reward_set_id<>3050205)OR(reward_set_id=3050205 AND NOT(source_type=1 AND source_id=500020500)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050205',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050205 AND title<>'Job Offers (Blightfire 20+)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020501',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020501 AND NOT(reward_type=0 AND reward_data_id=108342 AND amount=1 AND description='May2013 Blightfire parent 500020500 item 108342'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020501 AND NOT(reward_set_id=3050205 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020501)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020502',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020502 AND NOT(reward_type=0 AND reward_data_id=108352 AND amount=1 AND description='May2013 Blightfire parent 500020500 item 108352'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020502 AND NOT(reward_set_id=3050205 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020502)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020600',((SELECT COUNT(*)FROM achievements WHERE id=500020600 AND name='Two Gnolls With One Stone (Blightfire 20+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020600',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020600 AND reward_set_id<>3050206)OR(reward_set_id=3050206 AND NOT(source_type=1 AND source_id=500020600)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050206',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050206 AND title<>'Two Gnolls With One Stone (Blightfire 20+)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020601',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020601 AND NOT(reward_type=0 AND reward_data_id=108343 AND amount=1 AND description='May2013 Blightfire parent 500020600 item 108343'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020601 AND NOT(reward_set_id=3050206 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020601)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020602',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020602 AND NOT(reward_type=0 AND reward_data_id=108353 AND amount=1 AND description='May2013 Blightfire parent 500020600 item 108353'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020602 AND NOT(reward_set_id=3050206 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020602)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020700',((SELECT COUNT(*)FROM achievements WHERE id=500020700 AND name='Stemming the Threat (Blightfire 20+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020700',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020700 AND reward_set_id<>3050207)OR(reward_set_id=3050207 AND NOT(source_type=1 AND source_id=500020700)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050207',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050207 AND title<>'Stemming the Threat (Blightfire 20+)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020701',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020701 AND NOT(reward_type=0 AND reward_data_id=108345 AND amount=1 AND description='May2013 Blightfire parent 500020700 item 108345'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020701 AND NOT(reward_set_id=3050207 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020701)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020702',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020702 AND NOT(reward_type=0 AND reward_data_id=108355 AND amount=1 AND description='May2013 Blightfire parent 500020700 item 108355'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020702 AND NOT(reward_set_id=3050207 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020702)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020800',((SELECT COUNT(*)FROM achievements WHERE id=500020800 AND name='Battling the Bixies (Blightfire 30+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020800',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020800 AND reward_set_id<>3050208)OR(reward_set_id=3050208 AND NOT(source_type=1 AND source_id=500020800)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050208',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050208 AND title<>'Battling the Bixies (Blightfire 30+)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020801',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020801 AND NOT(reward_type=0 AND reward_data_id=108344 AND amount=1 AND description='May2013 Blightfire parent 500020800 item 108344'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020801 AND NOT(reward_set_id=3050208 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020801)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020802',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020802 AND NOT(reward_type=0 AND reward_data_id=108354 AND amount=1 AND description='May2013 Blightfire parent 500020800 item 108354'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020802 AND NOT(reward_set_id=3050208 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020802)));
+INSERT INTO _blight_parent_guard VALUES('achievement_500020900',((SELECT COUNT(*)FROM achievements WHERE id=500020900 AND name='Makesn''s Plight (Blightfire 30+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _blight_parent_guard VALUES('source_500020900',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500020900 AND reward_set_id<>3050209)OR(reward_set_id=3050209 AND NOT(source_type=1 AND source_id=500020900)))));
+INSERT INTO _blight_parent_guard VALUES('set_3050209',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050209 AND title<>'Makesn''s Plight (Blightfire 30+)')));
+INSERT INTO _blight_parent_guard VALUES('reward_305020901',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020901 AND NOT(reward_type=0 AND reward_data_id=108346 AND amount=1 AND description='May2013 Blightfire parent 500020900 item 108346'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020901 AND NOT(reward_set_id=3050209 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020901)));
+INSERT INTO _blight_parent_guard VALUES('reward_305020902',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305020902 AND NOT(reward_type=0 AND reward_data_id=108356 AND amount=1 AND description='May2013 Blightfire parent 500020900 item 108356'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305020902 AND NOT(reward_set_id=3050209 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305020902)));
+INSERT INTO _blight_parent_guard VALUES('options_3050202',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050202 AND NOT((`reward_set_id` <=> 3050202 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Consigned Plate Helm' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 151) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Consigned Chain Coif' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 33544) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Rough Consigned Leather Cap' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16480) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Rough Consigned Cloth Cap' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15360)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050202',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050202 AND NOT((`reward_set_id` <=> 3050202 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020201) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020202) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305020203) OR (`reward_set_id` <=> 3050202 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305020204)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050203',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050203 AND NOT((`reward_set_id` <=> 3050203 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Melee shield' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Caster shield and scepter' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Rough Consigned Bow' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 285) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Rough Consigned Hammer' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 5 AND `sequence` <=> 5 AND `label` <=> 'Rough Consigned Longsword' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 6 AND `sequence` <=> 6 AND `label` <=> 'Rough Consigned Shortsword' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 7 AND `sequence` <=> 7 AND `label` <=> 'Rough Consigned Stone Dagger' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16793) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 8 AND `sequence` <=> 8 AND `label` <=> 'Rough Consigned Halberd' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 32797)))));
+)ROF307B" R"ROF307C(INSERT INTO _blight_parent_guard VALUES('entries_3050203',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050203 AND NOT((`reward_set_id` <=> 3050203 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020301) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020302) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 2 AND `sequence` <=> 1 AND `reward_id` <=> 305020303) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305020304) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305020305) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 5 AND `sequence` <=> 0 AND `reward_id` <=> 305020306) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 6 AND `sequence` <=> 0 AND `reward_id` <=> 305020307) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 7 AND `sequence` <=> 0 AND `reward_id` <=> 305020308) OR (`reward_set_id` <=> 3050203 AND `option_id` <=> 8 AND `sequence` <=> 0 AND `reward_id` <=> 305020309)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050204',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050204 AND NOT((`reward_set_id` <=> 3050204 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Consigned Plate Boots' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 151) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Consigned Chain Boots' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 33544) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Rough Consigned Leather Boots' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16480) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Rough Consigned Cloth Sandals' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15360)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050204',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050204 AND NOT((`reward_set_id` <=> 3050204 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020401) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020402) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305020403) OR (`reward_set_id` <=> 3050204 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305020404)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050205',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050205 AND NOT((`reward_set_id` <=> 3050205 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Soldier''s Facemask' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050205 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Scryer''s Facemask' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050205',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050205 AND NOT((`reward_set_id` <=> 3050205 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020501) OR (`reward_set_id` <=> 3050205 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020502)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050206',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050206 AND NOT((`reward_set_id` <=> 3050206 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Soldier''s Gorget' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050206 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Scryer''s Necklace' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050206',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050206 AND NOT((`reward_set_id` <=> 3050206 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020601) OR (`reward_set_id` <=> 3050206 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020602)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050207',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050207 AND NOT((`reward_set_id` <=> 3050207 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Soldier''s Cloak' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050207 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Scryer''s Cloak' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050207',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050207 AND NOT((`reward_set_id` <=> 3050207 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020701) OR (`reward_set_id` <=> 3050207 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020702)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050208',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050208 AND NOT((`reward_set_id` <=> 3050208 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Soldier''s Mantle' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050208 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Scryer''s Scarf' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050208',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050208 AND NOT((`reward_set_id` <=> 3050208 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020801) OR (`reward_set_id` <=> 3050208 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020802)))));
+INSERT INTO _blight_parent_guard VALUES('options_3050209',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050209 AND NOT((`reward_set_id` <=> 3050209 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Rough Soldier''s Stake' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050209 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Rough Scryer''s Wand' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _blight_parent_guard VALUES('entries_3050209',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050209 AND NOT((`reward_set_id` <=> 3050209 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305020901) OR (`reward_set_id` <=> 3050209 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305020902)))));
+START TRANSACTION;
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3050202,'Welcome to the Moors (21-25)',1),
+(3050203,'Battling Blightfire (26-30)',1),
+(3050204,'Champion of the Moors (31-35)',1),
+(3050205,'Job Offers (Blightfire 20+)',1),
+(3050206,'Two Gnolls With One Stone (Blightfire 20+)',1),
+(3050207,'Stemming the Threat (Blightfire 20+)',1),
+(3050208,'Battling the Bixies (Blightfire 30+)',1),
+(3050209,'Makesn''s Plight (Blightfire 30+)',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(1,500020200,3050202,1),
+(1,500020300,3050203,1),
+(1,500020400,3050204,1),
+(1,500020500,3050205,1),
+(1,500020600,3050206,1),
+(1,500020700,3050207,1),
+(1,500020800,3050208,1),
+(1,500020900,3050209,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3050202,1,1,'Rough Consigned Plate Helm',0,0,1,151),
+(3050202,2,2,'Rough Consigned Chain Coif',0,0,1,33544),
+(3050202,3,3,'Rough Consigned Leather Cap',0,0,1,16480),
+(3050202,4,4,'Rough Consigned Cloth Cap',0,0,1,15360),
+(3050203,1,1,'Melee shield',1,0,1,16861),
+(3050203,2,2,'Caster shield and scepter',1,0,1,15906),
+(3050203,3,3,'Rough Consigned Bow',0,0,1,285),
+(3050203,4,4,'Rough Consigned Hammer',0,0,1,16861),
+(3050203,5,5,'Rough Consigned Longsword',0,0,1,413),
+(3050203,6,6,'Rough Consigned Shortsword',0,0,1,413),
+(3050203,7,7,'Rough Consigned Stone Dagger',0,0,1,16793),
+(3050203,8,8,'Rough Consigned Halberd',0,0,1,32797),
+(3050204,1,1,'Rough Consigned Plate Boots',0,0,1,151),
+(3050204,2,2,'Rough Consigned Chain Boots',0,0,1,33544),
+(3050204,3,3,'Rough Consigned Leather Boots',0,0,1,16480),
+(3050204,4,4,'Rough Consigned Cloth Sandals',0,0,1,15360),
+(3050205,1,1,'Rough Soldier''s Facemask',1,0,1,49629),
+(3050205,2,2,'Rough Scryer''s Facemask',1,0,1,15906),
+(3050206,1,1,'Rough Soldier''s Gorget',1,0,1,49629),
+(3050206,2,2,'Rough Scryer''s Necklace',1,0,1,15906),
+(3050207,1,1,'Rough Soldier''s Cloak',1,0,1,49629),
+(3050207,2,2,'Rough Scryer''s Cloak',1,0,1,15906),
+(3050208,1,1,'Rough Soldier''s Mantle',1,0,1,49629),
+(3050208,2,2,'Rough Scryer''s Scarf',1,0,1,15906),
+(3050209,1,1,'Rough Soldier''s Stake',1,0,1,49629),
+(3050209,2,2,'Rough Scryer''s Wand',1,0,1,15906)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(305020201,0,108064,1,'May2013 Blightfire parent 500020200 item 108064',1),
+(305020202,0,108071,1,'May2013 Blightfire parent 500020200 item 108071',1),
+(305020203,0,108078,1,'May2013 Blightfire parent 500020200 item 108078',1),
+(305020204,0,108085,1,'May2013 Blightfire parent 500020200 item 108085',1),
+(305020301,0,108551,1,'May2013 Blightfire parent 500020300 item 108551',1),
+(305020302,0,108552,1,'May2013 Blightfire parent 500020300 item 108552',1),
+(305020303,0,108541,1,'May2013 Blightfire parent 500020300 item 108541',1),
+(305020304,0,108550,1,'May2013 Blightfire parent 500020300 item 108550',1),
+(305020305,0,108540,1,'May2013 Blightfire parent 500020300 item 108540',1),
+(305020306,0,108543,1,'May2013 Blightfire parent 500020300 item 108543',1),
+(305020307,0,108542,1,'May2013 Blightfire parent 500020300 item 108542',1),
+(305020308,0,108544,1,'May2013 Blightfire parent 500020300 item 108544',1),
+(305020309,0,108549,1,'May2013 Blightfire parent 500020300 item 108549',1),
+(305020401,0,108063,1,'May2013 Blightfire parent 500020400 item 108063',1),
+(305020402,0,108070,1,'May2013 Blightfire parent 500020400 item 108070',1),
+(305020403,0,108077,1,'May2013 Blightfire parent 500020400 item 108077',1),
+(305020404,0,108084,1,'May2013 Blightfire parent 500020400 item 108084',1),
+(305020501,0,108342,1,'May2013 Blightfire parent 500020500 item 108342',1),
+(305020502,0,108352,1,'May2013 Blightfire parent 500020500 item 108352',1),
+(305020601,0,108343,1,'May2013 Blightfire parent 500020600 item 108343',1),
+(305020602,0,108353,1,'May2013 Blightfire parent 500020600 item 108353',1),
+(305020701,0,108345,1,'May2013 Blightfire parent 500020700 item 108345',1),
+(305020702,0,108355,1,'May2013 Blightfire parent 500020700 item 108355',1),
+(305020801,0,108344,1,'May2013 Blightfire parent 500020800 item 108344',1),
+(305020802,0,108354,1,'May2013 Blightfire parent 500020800 item 108354',1),
+(305020901,0,108346,1,'May2013 Blightfire parent 500020900 item 108346',1),
+)ROF307C" R"ROF307D((305020902,0,108356,1,'May2013 Blightfire parent 500020900 item 108356',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3050202,1,0,305020201),
+(3050202,2,0,305020202),
+(3050202,3,0,305020203),
+(3050202,4,0,305020204),
+(3050203,1,0,305020301),
+(3050203,2,0,305020302),
+(3050203,2,1,305020303),
+(3050203,3,0,305020304),
+(3050203,4,0,305020305),
+(3050203,5,0,305020306),
+(3050203,6,0,305020307),
+(3050203,7,0,305020308),
+(3050203,8,0,305020309),
+(3050204,1,0,305020401),
+(3050204,2,0,305020402),
+(3050204,3,0,305020403),
+(3050204,4,0,305020404),
+(3050205,1,0,305020501),
+(3050205,2,0,305020502),
+(3050206,1,0,305020601),
+(3050206,2,0,305020602),
+(3050207,1,0,305020701),
+(3050207,2,0,305020702),
+(3050208,1,0,305020801),
+(3050208,2,0,305020802),
+(3050209,1,0,305020901),
+(3050209,2,0,305020902)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+)ROF307D",
+		.content_schema_update = false,
+	},
+
 };
