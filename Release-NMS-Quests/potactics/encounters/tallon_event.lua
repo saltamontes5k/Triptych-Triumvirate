@@ -39,7 +39,10 @@ function Tallon_Timer(e)
 end
 
 function Tallon_Death(e)
-	eq.spawn2(pp_id,0,0,e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());
+	-- PP for the static-instance dz is spawned by Tallon_Zek.lua (Custom:StaticInstanceVersion gate)
+	if tostring(eq.get_zone_instance_version()) ~= eq.get_rule("Custom:StaticInstanceVersion") then
+		eq.spawn2(pp_id,0,0,e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());
+	end
 end
 
 function AggroBounce(e)
