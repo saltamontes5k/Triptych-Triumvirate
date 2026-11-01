@@ -42720,4 +42720,793 @@ COMMIT;
 		.content_schema_update = false,
 	},
 
+
+	// 308: Stone Hive zone content (16 tasks 3040301-16, achievement parents 500030200/400/500/600, scene NPCs 396930-32, task reward sets 3040305/3040316, parent sets 3050302-06; guard accepts ground spawn 366 named Bixie_War_Plans).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the retail
+	// Rain of Fear stonehive zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_stonehive.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 308,
+		.description = "20261101_rof2_stonehive",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3040301 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF308A(-- RoF2 zone content: Stone Hive (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue, quests, scenes, parent rewards. Fail-closed guard
+-- tables abort on any expectation mismatch.
+SET NAMES utf8mb4;
+START TRANSACTION;
+INSERT INTO `achievement_categories`(`id`,`parent_id`,`sequence`,`name`,`description`,`icon`)VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(71,70,1,'Progression','Progression','A_ProgressionSub'),
+(72,70,2,'Advancement','Advancement','A_AdvancementSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements`(`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`)VALUES
+(500030200,'Welcome to Stone Hive (36-45)','Scout Vreshnar has a plan to hinder the expansion of Stone Hive. Speak with him about it:',605,5,1,0,0,1,1),
+(500030400,'Botanical Busywork (Stone Hive 35+)','Botanist Brezuu needs someone to collect samples of plant-life from Stone Hive:',2445,3,1,0,0,1,1),
+(500030500,'Cooking with Honey (Stone Hive 35+)','Cook Idriak needs someone to collect some "ingredients" from Stone Hive:',1069,4,1,0,0,1,1),
+(500030600,'Working for Warwing (Stone Hive 35+)','Warwing Wendlez aims to put an end to Queen Pelzia. You may want to enlist the help of friends for these tasks:',997,4,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components`(`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`)VALUES
+(500030200,1,1,50086,'Scout Vreshnar - Sticky Situation',''),
+(500030200,1,2,50087,'Scout Neauza - The Saving Salve',''),
+(500030200,1,3,50088,'Scout Neauza - Plans or No Plans',''),
+(500030200,1,4,50089,'Scout Vreshnar - Bee Prepared for War',''),
+(500030200,1,5,50090,'Scout Vreshnar - The Golden One',''),
+(500030200,3,0,2043,'Reach Level 35',''),
+(500030200,3,0,7011,'Serpent',''),
+(500030400,1,1,50095,'Botanist Brezuu - A''mazin'' Plants',''),
+(500030400,1,2,50096,'Botanist Brezuu - Curious Seeds',''),
+(500030400,1,3,50097,'Botanist Brezuu - Sappy Request',''),
+(500030400,3,0,2043,'Reach Level 35',''),
+(500030400,3,0,7011,'Serpent',''),
+(500030500,1,1,50098,'Cook Idriak - Nothing to Stew About',''),
+(500030500,1,2,50099,'Cook Idriak - Touchy Feely Flan',''),
+(500030500,1,3,50100,'Cook Idriak - Heads Above the Rest',''),
+(500030500,1,4,50101,'Cook Idriak - Jumjum Research',''),
+(500030500,3,0,2043,'Reach Level 35',''),
+(500030500,3,0,7011,'Serpent',''),
+(500030600,1,1,50102,'Warwing Wendlez - Who''s Who?',''),
+(500030600,1,2,50103,'Warwing Wendlez - Infiltrate the Hive',''),
+(500030600,1,3,50104,'Warwing Wendlez - Honey, I''m Home!',''),
+(500030600,1,4,50105,'Warwing Wendlez - The Queen Bixie',''),
+(500030600,3,0,2043,'Reach Level 35',''),
+(500030600,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations`(`category_id`,`sequence`,`achievement_id`,`display_text`)VALUES
+(71,0,500030200,''),
+(72,0,500030400,''),
+(72,0,500030500,''),
+(72,0,500030600,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Stone Hive complete quest/scene package. See provenance/native-status.json.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _stone_guard;
+CREATE TEMPORARY TABLE _stone_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _stone_guard VALUES('task_identities',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3040301,3040302,3040303,3040304,3040305,3040306,3040307,3040308,3040309,3040310,3040311,3040312,3040313,3040314,3040315,3040316)AND NOT((id=3040301 AND type=2 AND title='Sticky Situation') OR (id=3040302 AND type=2 AND title='The Saving Salve') OR (id=3040303 AND type=2 AND title='Plans or No Plans') OR (id=3040304 AND type=2 AND title='Bee Prepared for War') OR (id=3040305 AND type=2 AND title='The Golden One') OR (id=3040306 AND type=2 AND title='A''mazin Plants') OR (id=3040307 AND type=2 AND title='Curious Seed') OR (id=3040308 AND type=2 AND title='Sappy Request') OR (id=3040309 AND type=2 AND title='Nothing to Stew About') OR (id=3040310 AND type=2 AND title='Touchy Feely Flan') OR (id=3040311 AND type=2 AND title='Heads Above the Rest') OR (id=3040312 AND type=2 AND title='Jumjum Research') OR (id=3040313 AND type=2 AND title='Who''s Who?') OR (id=3040314 AND type=2 AND title='Infiltrate the Hive') OR (id=3040315 AND type=2 AND title='Honey, I''m Home!') OR (id=3040316 AND type=2 AND title='The Queen Bixie')))));
+INSERT INTO _stone_guard VALUES('components',((SELECT COUNT(*)FROM achievement_components WHERE component_type=1 AND((achievement_id=500030200 AND component_id=50086 AND sequence=1 AND name='Scout Vreshnar - Sticky Situation') OR (achievement_id=500030200 AND component_id=50087 AND sequence=2 AND name='Scout Neauza - The Saving Salve') OR (achievement_id=500030200 AND component_id=50088 AND sequence=3 AND name='Scout Neauza - Plans or No Plans') OR (achievement_id=500030200 AND component_id=50089 AND sequence=4 AND name='Scout Vreshnar - Bee Prepared for War') OR (achievement_id=500030200 AND component_id=50090 AND sequence=5 AND name='Scout Vreshnar - The Golden One') OR (achievement_id=500030400 AND component_id=50095 AND sequence=1 AND name='Botanist Brezuu - A''mazin'' Plants') OR (achievement_id=500030400 AND component_id=50096 AND sequence=2 AND name='Botanist Brezuu - Curious Seeds') OR (achievement_id=500030400 AND component_id=50097 AND sequence=3 AND name='Botanist Brezuu - Sappy Request') OR (achievement_id=500030500 AND component_id=50098 AND sequence=1 AND name='Cook Idriak - Nothing to Stew About') OR (achievement_id=500030500 AND component_id=50099 AND sequence=2 AND name='Cook Idriak - Touchy Feely Flan') OR (achievement_id=500030500 AND component_id=50100 AND sequence=3 AND name='Cook Idriak - Heads Above the Rest') OR (achievement_id=500030500 AND component_id=50101 AND sequence=4 AND name='Cook Idriak - Jumjum Research') OR (achievement_id=500030600 AND component_id=50102 AND sequence=1 AND name='Warwing Wendlez - Who''s Who?') OR (achievement_id=500030600 AND component_id=50103 AND sequence=2 AND name='Warwing Wendlez - Infiltrate the Hive') OR (achievement_id=500030600 AND component_id=50104 AND sequence=3 AND name='Warwing Wendlez - Honey, I''m Home!') OR (achievement_id=500030600 AND component_id=50105 AND sequence=4 AND name='Warwing Wendlez - The Queen Bixie')))=16));
+INSERT INTO _stone_guard VALUES('item_identities',((SELECT COUNT(*)FROM items WHERE (id=21793 AND Name='Bixie War Plans' AND classes=0) OR (id=53578 AND Name='Jumjum Honey Mead' AND classes=65535) OR (id=53579 AND Name='Violasuthia Healing Potion' AND classes=65535) OR (id=53580 AND Name='Acantuss Mana Potion' AND classes=65535) OR (id=53581 AND Name='Honey-Touched Band' AND classes=65535) OR (id=53582 AND Name='Obsidian Bixie Bauble' AND classes=65535) OR (id=53583 AND Name='Buzzing Bixie Wand' AND classes=65535) OR (id=53584 AND Name='Honeycomb Blaster' AND classes=65535) OR (id=53586 AND Name='Bungled Bixie Zapper' AND classes=15360) OR (id=53587 AND Name='Bixie Zapper Enhancer' AND classes=65535) OR (id=53591 AND Name='Honeystone of Buzzitude' AND classes=65535) OR (id=53592 AND Name='Honeystone of Dream Delights' AND classes=15360) OR (id=53593 AND Name='Honeystone of Magicjum' AND classes=65535) OR (id=54616 AND Name='Intact Bixie Wing' AND classes=0) OR (id=54617 AND Name='Intact Bixie Flesh' AND classes=0) OR (id=54618 AND Name='Intact Bixie Scent Gland' AND classes=0) OR (id=54619 AND Name='Intact Bixie Antennae' AND classes=0) OR (id=54620 AND Name='Intact Stone Hive Insignia' AND classes=0) OR (id=54622 AND Name='Note to Neauza' AND classes=0) OR (id=54623 AND Name='Saving Salve' AND classes=0) OR (id=54624 AND Name='Muddied Bixie Plans' AND classes=0) OR (id=54626 AND Name='Fresh Jumjum' AND classes=0) OR (id=54627 AND Name='Jumjum Wine' AND classes=0) OR (id=54628 AND Name='Processed Jumjum' AND classes=0) OR (id=54629 AND Name='Jumjum Jam' AND classes=0) OR (id=54632 AND Name='Delectable Bixie Wing' AND classes=0) OR (id=54633 AND Name='Scrumptious Bixie Antennae' AND classes=0) OR (id=54634 AND Name='Ripe Bixie Head' AND classes=0) OR (id=54635 AND Name='Violasuthia Petal' AND classes=0) OR (id=54636 AND Name='Acantuss Seed' AND classes=0) OR (id=54637 AND Name='Symplokiss Sap' AND classes=0) OR (id=54640 AND Name='Bixie Spellbook' AND classes=0) OR (id=54641 AND Name='Bixie Potion Bottle' AND classes=0) OR (id=54642 AND Name='Bixie Alchemy Notes' AND classes=0))=34));
+INSERT INTO _stone_guard VALUES('npc_identities',((SELECT COUNT(*)FROM npc_types WHERE (id=395211 AND name='Scout_Vreshnar') OR (id=395213 AND name='Botanist_Brezuu') OR (id=395215 AND name='Cook_Idriak') OR (id=396123 AND name='Warwing_Wendlez') OR (id=396173 AND name='a_bixie_enthraller') OR (id=396180 AND name='Neezzee') OR (id=396209 AND name='#Queen_Pelzia') OR (id=396229 AND name='Scout_Neauza') OR (id=396230 AND name='#Alchemist_Krizzia'))=9));
+INSERT INTO _stone_guard VALUES('criterion_50086',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50086 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040301 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50087',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50087 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040302 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50088',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50088 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040303 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50089',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50089 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040304 AND target_id2=0 AND target_value=0 AND component_sequence=4 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50090',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50090 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040305 AND target_id2=0 AND target_value=0 AND component_sequence=5 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('reward_set_3040305',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040305 AND title<>'The Golden One')AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040305 AND NOT(source_type=2 AND source_id=3040305))AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040305 AND reward_set_id<>3040305)));
+)ROF308A" R"ROF308B(INSERT INTO _stone_guard VALUES('reward_30403051',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403051 AND description<>'May2013 Stone Hive option 30403051')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403051 AND NOT(reward_set_id=3040305 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403051)));
+INSERT INTO _stone_guard VALUES('reward_30403052',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403052 AND description<>'May2013 Stone Hive option 30403052')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403052 AND NOT(reward_set_id=3040305 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403052)));
+INSERT INTO _stone_guard VALUES('reward_30403053',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403053 AND description<>'May2013 Stone Hive option 30403053')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403053 AND NOT(reward_set_id=3040305 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403053)));
+INSERT INTO _stone_guard VALUES('criterion_50095',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50095 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040306 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50096',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50096 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040307 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50097',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50097 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040308 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50098',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50098 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040309 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50099',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50099 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040310 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50100',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50100 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040311 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50101',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50101 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040312 AND target_id2=0 AND target_value=0 AND component_sequence=4 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50102',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50102 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040313 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50103',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50103 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040314 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50104',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50104 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040315 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('criterion_50105',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50105 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040316 AND target_id2=0 AND target_value=0 AND component_sequence=4 AND required_count=1 AND enabled=1))));
+INSERT INTO _stone_guard VALUES('reward_set_3040316',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040316 AND title<>'The Queen Bixie')AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040316 AND NOT(source_type=2 AND source_id=3040316))AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040316 AND reward_set_id<>3040316)));
+INSERT INTO _stone_guard VALUES('reward_30403161',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403161 AND description<>'May2013 Stone Hive option 30403161')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403161 AND NOT(reward_set_id=3040316 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403161)));
+INSERT INTO _stone_guard VALUES('reward_30403162',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403162 AND description<>'May2013 Stone Hive option 30403162')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403162 AND NOT(reward_set_id=3040316 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403162)));
+INSERT INTO _stone_guard VALUES('reward_30403163',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403163 AND description<>'May2013 Stone Hive option 30403163')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403163 AND NOT(reward_set_id=3040316 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403163)));
+INSERT INTO _stone_guard VALUES('reward_30403164',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30403164 AND description<>'May2013 Stone Hive option 30403164')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30403164 AND NOT(reward_set_id=3040316 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30403164)));
+START TRANSACTION;
+INSERT INTO tasks(`id`,`type`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`min_level`,`repeatable`,`faction_reward`,`faction_amount`,`enabled`,`duration`)VALUES
+(3040301,2,'Sticky Situation','Deliver the note to Scout Neauza.','','',0,1000,0,30,1,0,0,1,0),
+(3040302,2,'The Saving Salve','Defeat a bixie enthraller; Give Saving Salve to Scout Neauza.','','',0,1000,0,30,1,0,0,1,0),
+(3040303,2,'Plans or No Plans','Deliver Muddied Bixie Plans to Scout Vreshnar.','','',0,1000,0,30,1,0,0,1,0),
+(3040304,2,'Bee Prepared for War','Explore the botanical research area; Obtain Bixie Alchemy Notes; Find the Bixie Potion Bottle; Find the Bixie Spellbook; Deliver Bixie Alchemy Notes to Scout Vreshnar; Deliver Bixie Potion Bottle to Scout Vreshnar; Deliver Bixie Spellbook to Scout Vreshnar.','','',0,1000,0,30,1,0,0,1,0),
+(3040305,2,'The Golden One','Explore the magical research area; Defeat Juzzulli.','','',0,0,3,35,1,0,0,1,0),
+(3040306,2,'A''mazin Plants','Gather ten Violasuthia Petal.','','53579,1',0,1000,0,34,0,0,0,1,0),
+(3040307,2,'Curious Seed','Gather ten Acantuss Seed.','','53580,1',0,1000,0,34,0,0,0,1,0),
+(3040308,2,'Sappy Request','Gather ten Symplokiss Sap.','','53578,1',0,1000,0,28,0,0,0,1,0),
+(3040309,2,'Nothing to Stew About','Deliver ten Delectable Bixie Wing to Cook Idriak.','','53581,1',0,1000,0,32,1,0,0,1,0),
+(3040310,2,'Touchy Feely Flan','Deliver ten Scrumptious Bixie Antennae to Cook Idriak.','','53582,1',0,1000,0,34,1,0,0,1,0),
+(3040311,2,'Heads Above the Rest','Deliver ten Ripe Bixie Head to Cook Idriak.','','53583,1',0,1000,0,38,0,0,0,1,0),
+(3040312,2,'Jumjum Research','Deliver two Fresh Jumjum to Cook Idriak; Deliver two Jumjum Wine to Cook Idriak; Deliver two Processed Jumjum to Cook Idriak; Deliver two Jumjum Jam to Cook Idriak.','','53584,1',0,1000,0,32,1,0,0,1,0),
+(3040313,2,'Who''s Who?','Find and hail Neezzee; Defeat Neezzee; Return to Warwing Wendlez.','','',0,1000,0,35,1,0,0,1,0),
+(3040314,2,'Infiltrate the Hive','Deliver Bixie War Plans to Warwing.','','',0,1000,0,35,1,0,0,1,0),
+(3040315,2,'Honey, I''m Home!','Deliver 2 Intact Bixie Wing to Warwing; Deliver 2 Intact Bixie Flesh to Warwing; Deliver 1 Intact Bixie Scent Gland to Warwing; Deliver 2 Intact Bixie Antennae to Warwing; Deliver 1 Intact Stone Hive Insignia to Warwing.','','',0,1000,0,35,1,0,0,1,0),
+(3040316,2,'The Queen Bixie','Defeat Queen Pelzia.','','',0,0,3,35,1,0,0,1,0)
+ON DUPLICATE KEY UPDATE `type`=VALUES(`type`),`title`=VALUES(`title`),`description`=VALUES(`description`),`reward_text`=VALUES(`reward_text`),`reward_id_list`=VALUES(`reward_id_list`),`cash_reward`=VALUES(`cash_reward`),`exp_reward`=VALUES(`exp_reward`),`reward_method`=VALUES(`reward_method`),`min_level`=VALUES(`min_level`),`repeatable`=VALUES(`repeatable`),`faction_reward`=VALUES(`faction_reward`),`faction_amount`=VALUES(`faction_amount`),`enabled`=VALUES(`enabled`),`duration`=VALUES(`duration`);
+DELETE FROM task_activities WHERE taskid IN(3040301,3040302,3040303,3040304,3040305,3040306,3040307,3040308,3040309,3040310,3040311,3040312,3040313,3040314,3040315,3040316);
+INSERT INTO task_activities(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`zones`,`spell_list`)VALUES
+(3040301,0,-1,0,1,'',0,1,'Deliver the note to Scout Neauza','396229','54622','396',''),
+(3040302,0,-1,0,2,'',0,1,'Defeat a bixie enthraller','396173','','396',''),
+(3040302,1,-1,1,1,'',0,1,'Give Saving Salve to Scout Neauza','396229','54623','396',''),
+(3040303,0,-1,0,1,'',0,1,'Deliver Muddied Bixie Plans to Scout Vreshnar','395211','54624','395',''),
+(3040304,0,-1,0,255,'',0,1,'Explore the botanical research area','','','396',''),
+(3040304,1,-1,1,3,'',0,1,'Obtain Bixie Alchemy Notes','','54642','396',''),
+(3040304,2,-1,1,255,'',0,1,'Find the Bixie Potion Bottle','','54641','396',''),
+(3040304,3,-1,1,255,'',0,1,'Find the Bixie Spellbook','','54640','396',''),
+(3040304,4,-1,2,1,'',0,1,'Deliver Bixie Alchemy Notes to Scout Vreshnar','395211','54642','395',''),
+(3040304,5,-1,2,1,'',0,1,'Deliver Bixie Potion Bottle to Scout Vreshnar','395211','54641','395',''),
+(3040304,6,-1,2,1,'',0,1,'Deliver Bixie Spellbook to Scout Vreshnar','395211','54640','395',''),
+(3040305,0,-1,0,255,'',0,1,'Explore the magical research area','','','396',''),
+(3040305,1,-1,1,2,'',0,1,'Defeat Juzzulli','396930','','396',''),
+(3040306,0,-1,0,3,'',0,10,'Gather ten Violasuthia Petal','','54635','396',''),
+(3040307,0,-1,0,3,'',0,10,'Gather ten Acantuss Seed','','54636','396',''),
+(3040308,0,-1,0,3,'',0,10,'Gather ten Symplokiss Sap','','54637','396',''),
+(3040309,0,-1,0,1,'',0,10,'Deliver ten Delectable Bixie Wing to Cook Idriak','395215','54632','395',''),
+(3040310,0,-1,0,1,'',0,10,'Deliver ten Scrumptious Bixie Antennae to Cook Idriak','395215','54633','395',''),
+(3040311,0,-1,0,1,'',0,10,'Deliver ten Ripe Bixie Head to Cook Idriak','395215','54634','395',''),
+(3040312,0,-1,1,1,'',0,2,'Deliver two Fresh Jumjum to Cook Idriak','395215','54626','395',''),
+)ROF308B" R"ROF308C((3040312,1,-1,1,1,'',0,2,'Deliver two Jumjum Wine to Cook Idriak','395215','54627','395',''),
+(3040312,2,-1,1,1,'',0,2,'Deliver two Processed Jumjum to Cook Idriak','395215','54628','395',''),
+(3040312,3,-1,1,1,'',0,2,'Deliver two Jumjum Jam to Cook Idriak','395215','54629','395',''),
+(3040313,0,-1,0,4,'',0,1,'Find and hail Neezzee','396180','','396',''),
+(3040313,1,-1,1,2,'',0,1,'Defeat Neezzee','396180','','396',''),
+(3040313,2,-1,2,4,'',0,1,'Return to Warwing Wendlez','396123','','396',''),
+(3040314,0,-1,0,1,'',0,1,'Deliver Bixie War Plans to Warwing','396123','21793','396',''),
+(3040315,0,-1,1,1,'',0,2,'Deliver 2 Intact Bixie Wing to Warwing','396123','54616','396',''),
+(3040315,1,-1,1,1,'',0,2,'Deliver 2 Intact Bixie Flesh to Warwing','396123','54617','396',''),
+(3040315,2,-1,1,1,'',0,1,'Deliver 1 Intact Bixie Scent Gland to Warwing','396123','54618','396',''),
+(3040315,3,-1,1,1,'',0,2,'Deliver 2 Intact Bixie Antennae to Warwing','396123','54619','396',''),
+(3040315,4,-1,1,1,'',0,1,'Deliver 1 Intact Stone Hive Insignia to Warwing','396123','54620','396',''),
+(3040316,0,-1,0,2,'',0,1,'Defeat Queen Pelzia','396209','','396','')
+ON DUPLICATE KEY UPDATE `activityid`=VALUES(`activityid`),`req_activity_id`=VALUES(`req_activity_id`),`step`=VALUES(`step`),`activitytype`=VALUES(`activitytype`),`target_name`=VALUES(`target_name`),`goalmethod`=VALUES(`goalmethod`),`goalcount`=VALUES(`goalcount`),`description_override`=VALUES(`description_override`),`npc_match_list`=VALUES(`npc_match_list`),`item_id_list`=VALUES(`item_id_list`),`zones`=VALUES(`zones`),`spell_list`=VALUES(`spell_list`);
+DELETE FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50086;
+DELETE FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50087;
+DELETE FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50088;
+DELETE FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50089;
+DELETE FROM achievement_criteria WHERE achievement_id=500030200 AND component_type=1 AND component_id=50090;
+DELETE FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50095;
+DELETE FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50096;
+DELETE FROM achievement_criteria WHERE achievement_id=500030400 AND component_type=1 AND component_id=50097;
+DELETE FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50098;
+DELETE FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50099;
+DELETE FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50100;
+DELETE FROM achievement_criteria WHERE achievement_id=500030500 AND component_type=1 AND component_id=50101;
+DELETE FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50102;
+DELETE FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50103;
+DELETE FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50104;
+DELETE FROM achievement_criteria WHERE achievement_id=500030600 AND component_type=1 AND component_id=50105;
+INSERT INTO achievement_criteria(`achievement_id`,`component_type`,`component_sequence`,`component_id`,`event_type`,`progress_mode`,`behavior`,`target_id`,`target_id2`,`target_value`,`required_count`,`enabled`)VALUES
+(500030200,1,1,50086,4,3,0,3040301,0,0,1,1),
+(500030200,1,2,50087,4,3,0,3040302,0,0,1,1),
+(500030200,1,3,50088,4,3,0,3040303,0,0,1,1),
+(500030200,1,4,50089,4,3,0,3040304,0,0,1,1),
+(500030200,1,5,50090,4,3,0,3040305,0,0,1,1),
+(500030400,1,1,50095,4,3,0,3040306,0,0,1,1),
+(500030400,1,2,50096,4,3,0,3040307,0,0,1,1),
+(500030400,1,3,50097,4,3,0,3040308,0,0,1,1),
+(500030500,1,1,50098,4,3,0,3040309,0,0,1,1),
+(500030500,1,2,50099,4,3,0,3040310,0,0,1,1),
+(500030500,1,3,50100,4,3,0,3040311,0,0,1,1),
+(500030500,1,4,50101,4,3,0,3040312,0,0,1,1),
+(500030600,1,1,50102,4,3,0,3040313,0,0,1,1),
+(500030600,1,2,50103,4,3,0,3040314,0,0,1,1),
+(500030600,1,3,50104,4,3,0,3040315,0,0,1,1),
+(500030600,1,4,50105,4,3,0,3040316,0,0,1,1)
+ON DUPLICATE KEY UPDATE `component_type`=VALUES(`component_type`),`component_sequence`=VALUES(`component_sequence`),`component_id`=VALUES(`component_id`),`event_type`=VALUES(`event_type`),`progress_mode`=VALUES(`progress_mode`),`behavior`=VALUES(`behavior`),`target_id`=VALUES(`target_id`),`target_id2`=VALUES(`target_id2`),`target_value`=VALUES(`target_value`),`required_count`=VALUES(`required_count`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3040305,'The Golden One',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(2,3040305,3040305,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3040305,1,0,'Experience',1,0,1,65535),
+(3040305,2,2,'Bungled Bixie Zapper',0,0,1,15360),
+(3040305,3,3,'Bixie Zapper Enhancer',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(30403051,1,1,1000,'May2013 Stone Hive option 30403051',1),
+(30403052,0,53586,1,'May2013 Stone Hive option 30403052',1),
+(30403053,0,53587,1,'May2013 Stone Hive option 30403053',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3040305,1,0,30403051),
+(3040305,2,0,30403052),
+(3040305,3,0,30403053)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3040316,'The Queen Bixie',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(2,3040316,3040316,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3040316,1,0,'Experience',1,0,1,65535),
+(3040316,2,2,'Honeystone of Buzzitude',0,0,1,65535),
+(3040316,3,3,'Honeystone of Dream Delights',0,0,1,15360),
+(3040316,4,4,'Honeystone of Magicjum',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(30403161,1,1,1000,'May2013 Stone Hive option 30403161',1),
+(30403162,0,53591,1,'May2013 Stone Hive option 30403162',1),
+(30403163,0,53592,1,'May2013 Stone Hive option 30403163',1),
+(30403164,0,53593,1,'May2013 Stone Hive option 30403164',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3040316,1,0,30403161),
+(3040316,2,0,30403162),
+(3040316,3,0,30403163),
+(3040316,4,0,30403164)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+-- Stone Hive scene content; import with complete task/script package.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _stone_scene_guard;
+CREATE TEMPORARY TABLE _stone_scene_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _stone_scene_guard VALUES('parent_225098',((SELECT COUNT(*)FROM npc_types WHERE id=225098 AND name='a_wharf_rat' AND race=415)=1));
+INSERT INTO _stone_scene_guard VALUES('parent_396173',((SELECT COUNT(*)FROM npc_types WHERE id=396173 AND name='a_bixie_enthraller' AND race=520)=1));
+INSERT INTO _stone_scene_guard VALUES('parent_396230',((SELECT COUNT(*)FROM npc_types WHERE id=396230 AND name='#Alchemist_Krizzia' AND race=520)=1));
+INSERT INTO _stone_scene_guard VALUES('new_npc_396930',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=396930 AND NOT(`name` <=> '#Juzzulli' AND `level` <=> 37 AND `race` <=> 520 AND `class` <=> 1 AND `hp` <=> 3000 AND `mindmg` <=> 15 AND `maxdmg` <=> 77 AND `texture` <=> 1 AND `size` <=> 6 AND `loottable_id` <=> 0 AND `npc_spells_id` <=> 0 AND `npc_faction_id` <=> 0 AND `rare_spawn` <=> 0 AND `skip_global_loot` <=> 0))));
+INSERT INTO _stone_scene_guard VALUES('new_npc_396931',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=396931 AND NOT(`name` <=> 'a_bixie_swarmer' AND `level` <=> 30 AND `race` <=> 520 AND `class` <=> 1 AND `hp` <=> 500 AND `mindmg` <=> 10 AND `maxdmg` <=> 75 AND `texture` <=> 1 AND `size` <=> 2 AND `loottable_id` <=> 0 AND `npc_spells_id` <=> 0 AND `npc_faction_id` <=> 0 AND `rare_spawn` <=> 0 AND `skip_global_loot` <=> 0))));
+INSERT INTO _stone_scene_guard VALUES('new_npc_396932',(NOT EXISTS(SELECT 1 FROM npc_types WHERE id=396932 AND NOT(`name` <=> 'a_young_grub' AND `level` <=> 45 AND `race` <=> 415 AND `class` <=> 1 AND `hp` <=> 2500 AND `mindmg` <=> 20 AND `maxdmg` <=> 75 AND `texture` <=> 0 AND `size` <=> 2 AND `loottable_id` <=> 0 AND `npc_spells_id` <=> 0 AND `npc_faction_id` <=> 0 AND `rare_spawn` <=> 0 AND `skip_global_loot` <=> 0))));
+INSERT INTO _stone_scene_guard VALUES('object_227878',((SELECT COUNT(*)FROM object WHERE id=227878 AND `zoneid` <=> 396 AND `version` <=> 1 AND `xpos` <=> 78 AND `ypos` <=> 99 AND `zpos` <=> 290 AND `itemid` <=> 0 AND `type` <=> 8 AND `objectname` <=> 'IT63_ACTORDEF')=1));
+INSERT INTO _stone_scene_guard VALUES('object_227879',((SELECT COUNT(*)FROM object WHERE id=227879 AND `zoneid` <=> 396 AND `version` <=> 1 AND `xpos` <=> -52 AND `ypos` <=> -129 AND `zpos` <=> 269 AND `itemid` <=> 0 AND `type` <=> 8 AND `objectname` <=> 'IT63_ACTORDEF')=1));
+INSERT INTO _stone_scene_guard VALUES('plans_ground',((SELECT COUNT(*)FROM ground_spawns WHERE id=366 AND zoneid=396 AND((version=1 AND item=1001)OR(version=0 AND item=21793))AND max_x=-11 AND max_y=-183 AND max_z=409 AND name IN('IT63_ACTORDEF','Bixie_War_Plans'))=1));
+INSERT INTO _stone_scene_guard VALUES('ground_3040301',(NOT EXISTS(SELECT 1 FROM ground_spawns WHERE id=3040301 AND NOT(`zoneid` <=> 396 AND `version` <=> 0 AND `item` <=> 54640 AND `min_x` <=> 78 AND `max_x` <=> 78 AND `min_y` <=> 99 AND `max_y` <=> 99 AND `max_z` <=> 290 AND `name` <=> 'IT63_ACTORDEF'))));
+INSERT INTO _stone_scene_guard VALUES('ground_3040302',(NOT EXISTS(SELECT 1 FROM ground_spawns WHERE id=3040302 AND NOT(`zoneid` <=> 396 AND `version` <=> 0 AND `item` <=> 54641 AND `min_x` <=> -52 AND `max_x` <=> -52 AND `min_y` <=> -129 AND `max_y` <=> -129 AND `max_z` <=> 269 AND `name` <=> 'IT63_ACTORDEF'))));
+START TRANSACTION;
+)ROF308C" R"ROF308D(INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)VALUES(396930,'#Juzzulli','',37,520,1,1,3000,0,2,1,1,0,6,0,0,0,0,0,0,0,0,0,0,0,0,15,77,-1,'','',0,0,0,0,0,0,0,0,255,0,0,0,0,0,0,0,10911,10995,'IT10',28,28,7,1.25,0,0,0,0,0,0,10,0,0,0,192,0,0,0,30,0,157,157,157,157,157,157,157,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0)ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`lastname`=VALUES(`lastname`),`level`=VALUES(`level`),`race`=VALUES(`race`),`class`=VALUES(`class`),`bodytype`=VALUES(`bodytype`),`hp`=VALUES(`hp`),`mana`=VALUES(`mana`),`gender`=VALUES(`gender`),`texture`=VALUES(`texture`),`helmtexture`=VALUES(`helmtexture`),`herosforgemodel`=VALUES(`herosforgemodel`),`size`=VALUES(`size`),`hp_regen_rate`=VALUES(`hp_regen_rate`),`hp_regen_per_second`=VALUES(`hp_regen_per_second`),`mana_regen_rate`=VALUES(`mana_regen_rate`),`loottable_id`=VALUES(`loottable_id`),`merchant_id`=VALUES(`merchant_id`),`greed`=VALUES(`greed`),`alt_currency_id`=VALUES(`alt_currency_id`),`npc_spells_id`=VALUES(`npc_spells_id`),`npc_spells_effects_id`=VALUES(`npc_spells_effects_id`),`npc_faction_id`=VALUES(`npc_faction_id`),`adventure_template_id`=VALUES(`adventure_template_id`),`trap_template`=VALUES(`trap_template`),`mindmg`=VALUES(`mindmg`),`maxdmg`=VALUES(`maxdmg`),`attack_count`=VALUES(`attack_count`),`npcspecialattks`=VALUES(`npcspecialattks`),`special_abilities`=VALUES(`special_abilities`),`aggroradius`=VALUES(`aggroradius`),`assistradius`=VALUES(`assistradius`),`face`=VALUES(`face`),`luclin_hairstyle`=VALUES(`luclin_hairstyle`),`luclin_haircolor`=VALUES(`luclin_haircolor`),`luclin_eyecolor`=VALUES(`luclin_eyecolor`),`luclin_eyecolor2`=VALUES(`luclin_eyecolor2`),`luclin_beardcolor`=VALUES(`luclin_beardcolor`),`luclin_beard`=VALUES(`luclin_beard`),`drakkin_heritage`=VALUES(`drakkin_heritage`),`drakkin_tattoo`=VALUES(`drakkin_tattoo`),`drakkin_details`=VALUES(`drakkin_details`),`armortint_id`=VALUES(`armortint_id`),`armortint_red`=VALUES(`armortint_red`),`armortint_green`=VALUES(`armortint_green`),`armortint_blue`=VALUES(`armortint_blue`),`d_melee_texture1`=VALUES(`d_melee_texture1`),`d_melee_texture2`=VALUES(`d_melee_texture2`),`ammo_idfile`=VALUES(`ammo_idfile`),`prim_melee_type`=VALUES(`prim_melee_type`),`sec_melee_type`=VALUES(`sec_melee_type`),`ranged_type`=VALUES(`ranged_type`),`runspeed`=VALUES(`runspeed`),`MR`=VALUES(`MR`),`CR`=VALUES(`CR`),`DR`=VALUES(`DR`),`FR`=VALUES(`FR`),`PR`=VALUES(`PR`),`Corrup`=VALUES(`Corrup`),`PhR`=VALUES(`PhR`),`see_invis`=VALUES(`see_invis`),`see_invis_undead`=VALUES(`see_invis_undead`),`qglobal`=VALUES(`qglobal`),`AC`=VALUES(`AC`),`npc_aggro`=VALUES(`npc_aggro`),`spawn_limit`=VALUES(`spawn_limit`),`attack_speed`=VALUES(`attack_speed`),`attack_delay`=VALUES(`attack_delay`),`findable`=VALUES(`findable`),`STR`=VALUES(`STR`),`STA`=VALUES(`STA`),`DEX`=VALUES(`DEX`),`AGI`=VALUES(`AGI`),`_INT`=VALUES(`_INT`),`WIS`=VALUES(`WIS`),`CHA`=VALUES(`CHA`),`see_hide`=VALUES(`see_hide`),`see_improved_hide`=VALUES(`see_improved_hide`),`trackable`=VALUES(`trackable`),`isbot`=VALUES(`isbot`),`exclude`=VALUES(`exclude`),`ATK`=VALUES(`ATK`),`Accuracy`=VALUES(`Accuracy`),`Avoidance`=VALUES(`Avoidance`),`slow_mitigation`=VALUES(`slow_mitigation`),`version`=VALUES(`version`),`maxlevel`=VALUES(`maxlevel`),`scalerate`=VALUES(`scalerate`),`private_corpse`=VALUES(`private_corpse`),`unique_spawn_by_name`=VALUES(`unique_spawn_by_name`),`underwater`=VALUES(`underwater`),`isquest`=VALUES(`isquest`),`emoteid`=VALUES(`emoteid`),`spellscale`=VALUES(`spellscale`),`healscale`=VALUES(`healscale`),`no_target_hotkey`=VALUES(`no_target_hotkey`),`raid_target`=VALUES(`raid_target`),`armtexture`=VALUES(`armtexture`),`bracertexture`=VALUES(`bracertexture`),`handtexture`=VALUES(`handtexture`),`legtexture`=VALUES(`legtexture`),`feettexture`=VALUES(`feettexture`),`light`=VALUES(`light`),`walkspeed`=VALUES(`walkspeed`),`peqid`=VALUES(`peqid`),`unique_`=VALUES(`unique_`),`fixed`=VALUES(`fixed`),`ignore_despawn`=VALUES(`ignore_despawn`),`show_name`=VALUES(`show_name`),`untargetable`=VALUES(`untargetable`),`charm_ac`=VALUES(`charm_ac`),`charm_min_dmg`=VALUES(`charm_min_dmg`),`charm_max_dmg`=VALUES(`charm_max_dmg`),`charm_attack_delay`=VALUES(`charm_attack_delay`),`charm_accuracy_rating`=VALUES(`charm_accuracy_rating`),`charm_avoidance_rating`=VALUES(`charm_avoidance_rating`),`charm_atk`=VALUES(`charm_atk`),`skip_global_loot`=VALUES(`skip_global_loot`),`rare_spawn`=VALUES(`rare_spawn`),`stuck_behavior`=VALUES(`stuck_behavior`),`model`=VALUES(`model`),`flymode`=VALUES(`flymode`),`always_aggro`=VALUES(`always_aggro`),`exp_mod`=VALUES(`exp_mod`),`heroic_strikethrough`=VALUES(`heroic_strikethrough`),`faction_amount`=VALUES(`faction_amount`),`keeps_sold_items`=VALUES(`keeps_sold_items`),`is_parcel_merchant`=VALUES(`is_parcel_merchant`),`multiquest_enabled`=VALUES(`multiquest_enabled`),`npc_tint_id`=VALUES(`npc_tint_id`);
+)ROF308D" R"ROF308E(INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)VALUES(396931,'a_bixie_swarmer','',30,520,1,1,500,0,2,1,1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,10,75,-1,'','',0,0,0,0,0,0,0,0,255,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,1.25,0,0,0,0,0,0,10,0,0,0,192,0,0,0,30,0,157,157,157,157,157,157,157,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,0,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0)ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`lastname`=VALUES(`lastname`),`level`=VALUES(`level`),`race`=VALUES(`race`),`class`=VALUES(`class`),`bodytype`=VALUES(`bodytype`),`hp`=VALUES(`hp`),`mana`=VALUES(`mana`),`gender`=VALUES(`gender`),`texture`=VALUES(`texture`),`helmtexture`=VALUES(`helmtexture`),`herosforgemodel`=VALUES(`herosforgemodel`),`size`=VALUES(`size`),`hp_regen_rate`=VALUES(`hp_regen_rate`),`hp_regen_per_second`=VALUES(`hp_regen_per_second`),`mana_regen_rate`=VALUES(`mana_regen_rate`),`loottable_id`=VALUES(`loottable_id`),`merchant_id`=VALUES(`merchant_id`),`greed`=VALUES(`greed`),`alt_currency_id`=VALUES(`alt_currency_id`),`npc_spells_id`=VALUES(`npc_spells_id`),`npc_spells_effects_id`=VALUES(`npc_spells_effects_id`),`npc_faction_id`=VALUES(`npc_faction_id`),`adventure_template_id`=VALUES(`adventure_template_id`),`trap_template`=VALUES(`trap_template`),`mindmg`=VALUES(`mindmg`),`maxdmg`=VALUES(`maxdmg`),`attack_count`=VALUES(`attack_count`),`npcspecialattks`=VALUES(`npcspecialattks`),`special_abilities`=VALUES(`special_abilities`),`aggroradius`=VALUES(`aggroradius`),`assistradius`=VALUES(`assistradius`),`face`=VALUES(`face`),`luclin_hairstyle`=VALUES(`luclin_hairstyle`),`luclin_haircolor`=VALUES(`luclin_haircolor`),`luclin_eyecolor`=VALUES(`luclin_eyecolor`),`luclin_eyecolor2`=VALUES(`luclin_eyecolor2`),`luclin_beardcolor`=VALUES(`luclin_beardcolor`),`luclin_beard`=VALUES(`luclin_beard`),`drakkin_heritage`=VALUES(`drakkin_heritage`),`drakkin_tattoo`=VALUES(`drakkin_tattoo`),`drakkin_details`=VALUES(`drakkin_details`),`armortint_id`=VALUES(`armortint_id`),`armortint_red`=VALUES(`armortint_red`),`armortint_green`=VALUES(`armortint_green`),`armortint_blue`=VALUES(`armortint_blue`),`d_melee_texture1`=VALUES(`d_melee_texture1`),`d_melee_texture2`=VALUES(`d_melee_texture2`),`ammo_idfile`=VALUES(`ammo_idfile`),`prim_melee_type`=VALUES(`prim_melee_type`),`sec_melee_type`=VALUES(`sec_melee_type`),`ranged_type`=VALUES(`ranged_type`),`runspeed`=VALUES(`runspeed`),`MR`=VALUES(`MR`),`CR`=VALUES(`CR`),`DR`=VALUES(`DR`),`FR`=VALUES(`FR`),`PR`=VALUES(`PR`),`Corrup`=VALUES(`Corrup`),`PhR`=VALUES(`PhR`),`see_invis`=VALUES(`see_invis`),`see_invis_undead`=VALUES(`see_invis_undead`),`qglobal`=VALUES(`qglobal`),`AC`=VALUES(`AC`),`npc_aggro`=VALUES(`npc_aggro`),`spawn_limit`=VALUES(`spawn_limit`),`attack_speed`=VALUES(`attack_speed`),`attack_delay`=VALUES(`attack_delay`),`findable`=VALUES(`findable`),`STR`=VALUES(`STR`),`STA`=VALUES(`STA`),`DEX`=VALUES(`DEX`),`AGI`=VALUES(`AGI`),`_INT`=VALUES(`_INT`),`WIS`=VALUES(`WIS`),`CHA`=VALUES(`CHA`),`see_hide`=VALUES(`see_hide`),`see_improved_hide`=VALUES(`see_improved_hide`),`trackable`=VALUES(`trackable`),`isbot`=VALUES(`isbot`),`exclude`=VALUES(`exclude`),`ATK`=VALUES(`ATK`),`Accuracy`=VALUES(`Accuracy`),`Avoidance`=VALUES(`Avoidance`),`slow_mitigation`=VALUES(`slow_mitigation`),`version`=VALUES(`version`),`maxlevel`=VALUES(`maxlevel`),`scalerate`=VALUES(`scalerate`),`private_corpse`=VALUES(`private_corpse`),`unique_spawn_by_name`=VALUES(`unique_spawn_by_name`),`underwater`=VALUES(`underwater`),`isquest`=VALUES(`isquest`),`emoteid`=VALUES(`emoteid`),`spellscale`=VALUES(`spellscale`),`healscale`=VALUES(`healscale`),`no_target_hotkey`=VALUES(`no_target_hotkey`),`raid_target`=VALUES(`raid_target`),`armtexture`=VALUES(`armtexture`),`bracertexture`=VALUES(`bracertexture`),`handtexture`=VALUES(`handtexture`),`legtexture`=VALUES(`legtexture`),`feettexture`=VALUES(`feettexture`),`light`=VALUES(`light`),`walkspeed`=VALUES(`walkspeed`),`peqid`=VALUES(`peqid`),`unique_`=VALUES(`unique_`),`fixed`=VALUES(`fixed`),`ignore_despawn`=VALUES(`ignore_despawn`),`show_name`=VALUES(`show_name`),`untargetable`=VALUES(`untargetable`),`charm_ac`=VALUES(`charm_ac`),`charm_min_dmg`=VALUES(`charm_min_dmg`),`charm_max_dmg`=VALUES(`charm_max_dmg`),`charm_attack_delay`=VALUES(`charm_attack_delay`),`charm_accuracy_rating`=VALUES(`charm_accuracy_rating`),`charm_avoidance_rating`=VALUES(`charm_avoidance_rating`),`charm_atk`=VALUES(`charm_atk`),`skip_global_loot`=VALUES(`skip_global_loot`),`rare_spawn`=VALUES(`rare_spawn`),`stuck_behavior`=VALUES(`stuck_behavior`),`model`=VALUES(`model`),`flymode`=VALUES(`flymode`),`always_aggro`=VALUES(`always_aggro`),`exp_mod`=VALUES(`exp_mod`),`heroic_strikethrough`=VALUES(`heroic_strikethrough`),`faction_amount`=VALUES(`faction_amount`),`keeps_sold_items`=VALUES(`keeps_sold_items`),`is_parcel_merchant`=VALUES(`is_parcel_merchant`),`multiquest_enabled`=VALUES(`multiquest_enabled`),`npc_tint_id`=VALUES(`npc_tint_id`);
+)ROF308E" R"ROF308F(INSERT INTO npc_types(`id`,`name`,`lastname`,`level`,`race`,`class`,`bodytype`,`hp`,`mana`,`gender`,`texture`,`helmtexture`,`herosforgemodel`,`size`,`hp_regen_rate`,`hp_regen_per_second`,`mana_regen_rate`,`loottable_id`,`merchant_id`,`greed`,`alt_currency_id`,`npc_spells_id`,`npc_spells_effects_id`,`npc_faction_id`,`adventure_template_id`,`trap_template`,`mindmg`,`maxdmg`,`attack_count`,`npcspecialattks`,`special_abilities`,`aggroradius`,`assistradius`,`face`,`luclin_hairstyle`,`luclin_haircolor`,`luclin_eyecolor`,`luclin_eyecolor2`,`luclin_beardcolor`,`luclin_beard`,`drakkin_heritage`,`drakkin_tattoo`,`drakkin_details`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`,`d_melee_texture1`,`d_melee_texture2`,`ammo_idfile`,`prim_melee_type`,`sec_melee_type`,`ranged_type`,`runspeed`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`PhR`,`see_invis`,`see_invis_undead`,`qglobal`,`AC`,`npc_aggro`,`spawn_limit`,`attack_speed`,`attack_delay`,`findable`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`see_hide`,`see_improved_hide`,`trackable`,`isbot`,`exclude`,`ATK`,`Accuracy`,`Avoidance`,`slow_mitigation`,`version`,`maxlevel`,`scalerate`,`private_corpse`,`unique_spawn_by_name`,`underwater`,`isquest`,`emoteid`,`spellscale`,`healscale`,`no_target_hotkey`,`raid_target`,`armtexture`,`bracertexture`,`handtexture`,`legtexture`,`feettexture`,`light`,`walkspeed`,`peqid`,`unique_`,`fixed`,`ignore_despawn`,`show_name`,`untargetable`,`charm_ac`,`charm_min_dmg`,`charm_max_dmg`,`charm_attack_delay`,`charm_accuracy_rating`,`charm_avoidance_rating`,`charm_atk`,`skip_global_loot`,`rare_spawn`,`stuck_behavior`,`model`,`flymode`,`always_aggro`,`exp_mod`,`heroic_strikethrough`,`faction_amount`,`keeps_sold_items`,`is_parcel_merchant`,`multiquest_enabled`,`npc_tint_id`)VALUES(396932,'a_young_grub','',45,415,1,21,2500,0,2,0,15,0,2,1,0,0,0,0,0,0,0,0,0,0,0,20,75,-1,'','',35,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,'IT10',28,28,7,1.75,21,21,21,21,21,33,10,0,1,0,188,0,0,-8,25,0,147,147,147,147,147,147,147,0,0,1,0,1,0,0,0,0,0,0,100,0,0,0,1,0,100,100,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,-1,0,100,0,0,1,0,0,0)ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`lastname`=VALUES(`lastname`),`level`=VALUES(`level`),`race`=VALUES(`race`),`class`=VALUES(`class`),`bodytype`=VALUES(`bodytype`),`hp`=VALUES(`hp`),`mana`=VALUES(`mana`),`gender`=VALUES(`gender`),`texture`=VALUES(`texture`),`helmtexture`=VALUES(`helmtexture`),`herosforgemodel`=VALUES(`herosforgemodel`),`size`=VALUES(`size`),`hp_regen_rate`=VALUES(`hp_regen_rate`),`hp_regen_per_second`=VALUES(`hp_regen_per_second`),`mana_regen_rate`=VALUES(`mana_regen_rate`),`loottable_id`=VALUES(`loottable_id`),`merchant_id`=VALUES(`merchant_id`),`greed`=VALUES(`greed`),`alt_currency_id`=VALUES(`alt_currency_id`),`npc_spells_id`=VALUES(`npc_spells_id`),`npc_spells_effects_id`=VALUES(`npc_spells_effects_id`),`npc_faction_id`=VALUES(`npc_faction_id`),`adventure_template_id`=VALUES(`adventure_template_id`),`trap_template`=VALUES(`trap_template`),`mindmg`=VALUES(`mindmg`),`maxdmg`=VALUES(`maxdmg`),`attack_count`=VALUES(`attack_count`),`npcspecialattks`=VALUES(`npcspecialattks`),`special_abilities`=VALUES(`special_abilities`),`aggroradius`=VALUES(`aggroradius`),`assistradius`=VALUES(`assistradius`),`face`=VALUES(`face`),`luclin_hairstyle`=VALUES(`luclin_hairstyle`),`luclin_haircolor`=VALUES(`luclin_haircolor`),`luclin_eyecolor`=VALUES(`luclin_eyecolor`),`luclin_eyecolor2`=VALUES(`luclin_eyecolor2`),`luclin_beardcolor`=VALUES(`luclin_beardcolor`),`luclin_beard`=VALUES(`luclin_beard`),`drakkin_heritage`=VALUES(`drakkin_heritage`),`drakkin_tattoo`=VALUES(`drakkin_tattoo`),`drakkin_details`=VALUES(`drakkin_details`),`armortint_id`=VALUES(`armortint_id`),`armortint_red`=VALUES(`armortint_red`),`armortint_green`=VALUES(`armortint_green`),`armortint_blue`=VALUES(`armortint_blue`),`d_melee_texture1`=VALUES(`d_melee_texture1`),`d_melee_texture2`=VALUES(`d_melee_texture2`),`ammo_idfile`=VALUES(`ammo_idfile`),`prim_melee_type`=VALUES(`prim_melee_type`),`sec_melee_type`=VALUES(`sec_melee_type`),`ranged_type`=VALUES(`ranged_type`),`runspeed`=VALUES(`runspeed`),`MR`=VALUES(`MR`),`CR`=VALUES(`CR`),`DR`=VALUES(`DR`),`FR`=VALUES(`FR`),`PR`=VALUES(`PR`),`Corrup`=VALUES(`Corrup`),`PhR`=VALUES(`PhR`),`see_invis`=VALUES(`see_invis`),`see_invis_undead`=VALUES(`see_invis_undead`),`qglobal`=VALUES(`qglobal`),`AC`=VALUES(`AC`),`npc_aggro`=VALUES(`npc_aggro`),`spawn_limit`=VALUES(`spawn_limit`),`attack_speed`=VALUES(`attack_speed`),`attack_delay`=VALUES(`attack_delay`),`findable`=VALUES(`findable`),`STR`=VALUES(`STR`),`STA`=VALUES(`STA`),`DEX`=VALUES(`DEX`),`AGI`=VALUES(`AGI`),`_INT`=VALUES(`_INT`),`WIS`=VALUES(`WIS`),`CHA`=VALUES(`CHA`),`see_hide`=VALUES(`see_hide`),`see_improved_hide`=VALUES(`see_improved_hide`),`trackable`=VALUES(`trackable`),`isbot`=VALUES(`isbot`),`exclude`=VALUES(`exclude`),`ATK`=VALUES(`ATK`),`Accuracy`=VALUES(`Accuracy`),`Avoidance`=VALUES(`Avoidance`),`slow_mitigation`=VALUES(`slow_mitigation`),`version`=VALUES(`version`),`maxlevel`=VALUES(`maxlevel`),`scalerate`=VALUES(`scalerate`),`private_corpse`=VALUES(`private_corpse`),`unique_spawn_by_name`=VALUES(`unique_spawn_by_name`),`underwater`=VALUES(`underwater`),`isquest`=VALUES(`isquest`),`emoteid`=VALUES(`emoteid`),`spellscale`=VALUES(`spellscale`),`healscale`=VALUES(`healscale`),`no_target_hotkey`=VALUES(`no_target_hotkey`),`raid_target`=VALUES(`raid_target`),`armtexture`=VALUES(`armtexture`),`bracertexture`=VALUES(`bracertexture`),`handtexture`=VALUES(`handtexture`),`legtexture`=VALUES(`legtexture`),`feettexture`=VALUES(`feettexture`),`light`=VALUES(`light`),`walkspeed`=VALUES(`walkspeed`),`peqid`=VALUES(`peqid`),`unique_`=VALUES(`unique_`),`fixed`=VALUES(`fixed`),`ignore_despawn`=VALUES(`ignore_despawn`),`show_name`=VALUES(`show_name`),`untargetable`=VALUES(`untargetable`),`charm_ac`=VALUES(`charm_ac`),`charm_min_dmg`=VALUES(`charm_min_dmg`),`charm_max_dmg`=VALUES(`charm_max_dmg`),`charm_attack_delay`=VALUES(`charm_attack_delay`),`charm_accuracy_rating`=VALUES(`charm_accuracy_rating`),`charm_avoidance_rating`=VALUES(`charm_avoidance_rating`),`charm_atk`=VALUES(`charm_atk`),`skip_global_loot`=VALUES(`skip_global_loot`),`rare_spawn`=VALUES(`rare_spawn`),`stuck_behavior`=VALUES(`stuck_behavior`),`model`=VALUES(`model`),`flymode`=VALUES(`flymode`),`always_aggro`=VALUES(`always_aggro`),`exp_mod`=VALUES(`exp_mod`),`heroic_strikethrough`=VALUES(`heroic_strikethrough`),`faction_amount`=VALUES(`faction_amount`),`keeps_sold_items`=VALUES(`keeps_sold_items`),`is_parcel_merchant`=VALUES(`is_parcel_merchant`),`multiquest_enabled`=VALUES(`multiquest_enabled`),`npc_tint_id`=VALUES(`npc_tint_id`);
+INSERT INTO ground_spawns(`id`,`zoneid`,`version`,`max_x`,`max_y`,`max_z`,`min_x`,`min_y`,`heading`,`name`,`item`,`max_allowed`,`comment`,`respawn_timer`,`fix_z`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)VALUES(3040301,396,0,78,99,290,78,99,489,'IT63_ACTORDEF',54640,1,'May2013 Stone Hive quest pickup; original collected object position/model;300s reconstructed respawn',300,1,-1,-1,NULL,NULL)ON DUPLICATE KEY UPDATE `zoneid`=VALUES(`zoneid`),`version`=VALUES(`version`),`max_x`=VALUES(`max_x`),`max_y`=VALUES(`max_y`),`max_z`=VALUES(`max_z`),`min_x`=VALUES(`min_x`),`min_y`=VALUES(`min_y`),`heading`=VALUES(`heading`),`name`=VALUES(`name`),`item`=VALUES(`item`),`max_allowed`=VALUES(`max_allowed`),`comment`=VALUES(`comment`),`respawn_timer`=VALUES(`respawn_timer`),`fix_z`=VALUES(`fix_z`),`min_expansion`=VALUES(`min_expansion`),`max_expansion`=VALUES(`max_expansion`),`content_flags`=VALUES(`content_flags`),`content_flags_disabled`=VALUES(`content_flags_disabled`);
+INSERT INTO ground_spawns(`id`,`zoneid`,`version`,`max_x`,`max_y`,`max_z`,`min_x`,`min_y`,`heading`,`name`,`item`,`max_allowed`,`comment`,`respawn_timer`,`fix_z`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)VALUES(3040302,396,0,-52,-129,269,-52,-129,79,'IT63_ACTORDEF',54641,1,'May2013 Stone Hive quest pickup; original collected object position/model;300s reconstructed respawn',300,1,-1,-1,NULL,NULL)ON DUPLICATE KEY UPDATE `zoneid`=VALUES(`zoneid`),`version`=VALUES(`version`),`max_x`=VALUES(`max_x`),`max_y`=VALUES(`max_y`),`max_z`=VALUES(`max_z`),`min_x`=VALUES(`min_x`),`min_y`=VALUES(`min_y`),`heading`=VALUES(`heading`),`name`=VALUES(`name`),`item`=VALUES(`item`),`max_allowed`=VALUES(`max_allowed`),`comment`=VALUES(`comment`),`respawn_timer`=VALUES(`respawn_timer`),`fix_z`=VALUES(`fix_z`),`min_expansion`=VALUES(`min_expansion`),`max_expansion`=VALUES(`max_expansion`),`content_flags`=VALUES(`content_flags`),`content_flags_disabled`=VALUES(`content_flags_disabled`);
+UPDATE ground_spawns SET version=0,item=21793,comment='Original Stone Hive War Plans pickup corrected from collected placeholder item1001/version1' WHERE id=366;
+COMMIT;
+-- Production StoneHive parent item rewards; review provenance and class matrix before installation.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _stone_parent_guard;
+CREATE TEMPORARY TABLE _stone_parent_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _stone_parent_guard VALUES('items',((SELECT COUNT(*)FROM items WHERE (id=108089 AND Name='Ornate Consigned Plate Bracer' AND classes=151) OR (id=108096 AND Name='Ornate Consigned Chain Bracer' AND classes=33544) OR (id=108103 AND Name='Ornate Consigned Leather Bracer' AND classes=16480) OR (id=108110 AND Name='Ornate Consigned Cloth Wristwrap' AND classes=15360) OR (id=108361 AND Name='Ornate Soldier''s Earring' AND classes=49629) OR (id=108360 AND Name='Ornate Soldier''s Ear Stud' AND classes=49629) OR (id=108370 AND Name='Ornate Scryer''s Earring' AND classes=15906) OR (id=108371 AND Name='Ornate Scryer''s Ear Loop' AND classes=15906) OR (id=108367 AND Name='Ornate Soldier''s Ring' AND classes=49629) OR (id=108368 AND Name='Ornate Soldier''s Band' AND classes=49629) OR (id=108377 AND Name='Ornate Scryer''s Ring' AND classes=15906) OR (id=108378 AND Name='Ornate Scryer''s Band' AND classes=15906) OR (id=108567 AND Name='Ornate Consigned Skullshield' AND classes=16861) OR (id=108568 AND Name='Ornate Consigned Glowing Shield' AND classes=15906) OR (id=108557 AND Name='Ornate Consigned Scepter' AND classes=15906) OR (id=108556 AND Name='Ornate Consigned Bone Sledgehammer' AND classes=16861) OR (id=108566 AND Name='Ornate Consigned Bow' AND classes=285) OR (id=108559 AND Name='Ornate Consigned Gladius' AND classes=413) OR (id=108558 AND Name='Ornate Consigned Longsword' AND classes=413) OR (id=108560 AND Name='Ornate Consigned Rapier' AND classes=16793) OR (id=108565 AND Name='Ornate Consigned Scythe' AND classes=32797) OR (id=108564 AND Name='Ornate Consigned Harpoon' AND classes=32797) OR (id=108563 AND Name='Ornate Consigned Skullstaff' AND classes=49245))=23));
+INSERT INTO _stone_parent_guard VALUES('achievement_500030200',((SELECT COUNT(*)FROM achievements WHERE id=500030200 AND name='Welcome to Stone Hive (36-45)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _stone_parent_guard VALUES('source_500030200',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500030200 AND reward_set_id<>3050302)OR(reward_set_id=3050302 AND NOT(source_type=1 AND source_id=500030200)))));
+INSERT INTO _stone_parent_guard VALUES('set_3050302',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050302 AND title<>'Welcome to Stone Hive (36-45)')));
+INSERT INTO _stone_parent_guard VALUES('reward_305030201',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030201 AND NOT(reward_type=0 AND reward_data_id=108089 AND amount=1 AND description='May2013 StoneHive parent 500030200 item 108089'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030201 AND NOT(reward_set_id=3050302 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030201)));
+)ROF308F" R"ROF308G(INSERT INTO _stone_parent_guard VALUES('reward_305030202',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030202 AND NOT(reward_type=0 AND reward_data_id=108096 AND amount=1 AND description='May2013 StoneHive parent 500030200 item 108096'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030202 AND NOT(reward_set_id=3050302 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030202)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030203',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030203 AND NOT(reward_type=0 AND reward_data_id=108103 AND amount=1 AND description='May2013 StoneHive parent 500030200 item 108103'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030203 AND NOT(reward_set_id=3050302 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030203)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030204',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030204 AND NOT(reward_type=0 AND reward_data_id=108110 AND amount=1 AND description='May2013 StoneHive parent 500030200 item 108110'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030204 AND NOT(reward_set_id=3050302 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030204)));
+INSERT INTO _stone_parent_guard VALUES('achievement_500030400',((SELECT COUNT(*)FROM achievements WHERE id=500030400 AND name='Botanical Busywork (Stone Hive 35+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _stone_parent_guard VALUES('source_500030400',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500030400 AND reward_set_id<>3050304)OR(reward_set_id=3050304 AND NOT(source_type=1 AND source_id=500030400)))));
+INSERT INTO _stone_parent_guard VALUES('set_3050304',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050304 AND title<>'Botanical Busywork (Stone Hive 35+)')));
+INSERT INTO _stone_parent_guard VALUES('reward_305030401',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030401 AND NOT(reward_type=0 AND reward_data_id=108361 AND amount=1 AND description='May2013 StoneHive parent 500030400 item 108361'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030401 AND NOT(reward_set_id=3050304 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030401)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030402',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030402 AND NOT(reward_type=0 AND reward_data_id=108360 AND amount=1 AND description='May2013 StoneHive parent 500030400 item 108360'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030402 AND NOT(reward_set_id=3050304 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030402)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030403',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030403 AND NOT(reward_type=0 AND reward_data_id=108370 AND amount=1 AND description='May2013 StoneHive parent 500030400 item 108370'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030403 AND NOT(reward_set_id=3050304 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030403)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030404',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030404 AND NOT(reward_type=0 AND reward_data_id=108371 AND amount=1 AND description='May2013 StoneHive parent 500030400 item 108371'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030404 AND NOT(reward_set_id=3050304 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030404)));
+INSERT INTO _stone_parent_guard VALUES('achievement_500030500',((SELECT COUNT(*)FROM achievements WHERE id=500030500 AND name='Cooking with Honey (Stone Hive 35+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _stone_parent_guard VALUES('source_500030500',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500030500 AND reward_set_id<>3050305)OR(reward_set_id=3050305 AND NOT(source_type=1 AND source_id=500030500)))));
+INSERT INTO _stone_parent_guard VALUES('set_3050305',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050305 AND title<>'Cooking with Honey (Stone Hive 35+)')));
+INSERT INTO _stone_parent_guard VALUES('reward_305030501',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030501 AND NOT(reward_type=0 AND reward_data_id=108367 AND amount=1 AND description='May2013 StoneHive parent 500030500 item 108367'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030501 AND NOT(reward_set_id=3050305 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030501)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030502',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030502 AND NOT(reward_type=0 AND reward_data_id=108368 AND amount=1 AND description='May2013 StoneHive parent 500030500 item 108368'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030502 AND NOT(reward_set_id=3050305 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030502)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030503',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030503 AND NOT(reward_type=0 AND reward_data_id=108377 AND amount=1 AND description='May2013 StoneHive parent 500030500 item 108377'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030503 AND NOT(reward_set_id=3050305 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030503)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030504',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030504 AND NOT(reward_type=0 AND reward_data_id=108378 AND amount=1 AND description='May2013 StoneHive parent 500030500 item 108378'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030504 AND NOT(reward_set_id=3050305 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030504)));
+INSERT INTO _stone_parent_guard VALUES('achievement_500030600',((SELECT COUNT(*)FROM achievements WHERE id=500030600 AND name='Working for Warwing (Stone Hive 35+)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _stone_parent_guard VALUES('source_500030600',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500030600 AND reward_set_id<>3050306)OR(reward_set_id=3050306 AND NOT(source_type=1 AND source_id=500030600)))));
+INSERT INTO _stone_parent_guard VALUES('set_3050306',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050306 AND title<>'Working for Warwing (Stone Hive 35+)')));
+INSERT INTO _stone_parent_guard VALUES('reward_305030601',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030601 AND NOT(reward_type=0 AND reward_data_id=108567 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108567'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030601 AND NOT(reward_set_id=3050306 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030601)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030602',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030602 AND NOT(reward_type=0 AND reward_data_id=108568 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108568'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030602 AND NOT(reward_set_id=3050306 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030602)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030603',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030603 AND NOT(reward_type=0 AND reward_data_id=108557 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108557'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030603 AND NOT(reward_set_id=3050306 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030603)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030604',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030604 AND NOT(reward_type=0 AND reward_data_id=108556 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108556'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030604 AND NOT(reward_set_id=3050306 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030604)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030605',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030605 AND NOT(reward_type=0 AND reward_data_id=108566 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108566'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030605 AND NOT(reward_set_id=3050306 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030605)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030606',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030606 AND NOT(reward_type=0 AND reward_data_id=108559 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108559'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030606 AND NOT(reward_set_id=3050306 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030606)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030607',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030607 AND NOT(reward_type=0 AND reward_data_id=108558 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108558'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030607 AND NOT(reward_set_id=3050306 AND option_id=6))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030607)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030608',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030608 AND NOT(reward_type=0 AND reward_data_id=108560 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108560'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030608 AND NOT(reward_set_id=3050306 AND option_id=7))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030608)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030609',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030609 AND NOT(reward_type=0 AND reward_data_id=108565 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108565'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030609 AND NOT(reward_set_id=3050306 AND option_id=8))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030609)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030610',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030610 AND NOT(reward_type=0 AND reward_data_id=108564 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108564'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030610 AND NOT(reward_set_id=3050306 AND option_id=9))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030610)));
+INSERT INTO _stone_parent_guard VALUES('reward_305030611',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305030611 AND NOT(reward_type=0 AND reward_data_id=108563 AND amount=1 AND description='May2013 StoneHive parent 500030600 item 108563'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305030611 AND NOT(reward_set_id=3050306 AND option_id=10))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305030611)));
+)ROF308G" R"ROF308H(INSERT INTO _stone_parent_guard VALUES('options_3050302',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050302 AND NOT((`reward_set_id` <=> 3050302 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Ornate Consigned Plate Bracer' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 151) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Ornate Consigned Chain Bracer' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 33544) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Ornate Consigned Leather Bracer' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16480) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Ornate Consigned Cloth Wristwrap' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15360)))));
+INSERT INTO _stone_parent_guard VALUES('entries_3050302',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050302 AND NOT((`reward_set_id` <=> 3050302 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305030201) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305030202) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305030203) OR (`reward_set_id` <=> 3050302 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305030204)))));
+INSERT INTO _stone_parent_guard VALUES('options_3050304',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050304 AND NOT((`reward_set_id` <=> 3050304 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Ornate Soldier ear pair' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050304 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Ornate Scryer ear pair' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _stone_parent_guard VALUES('entries_3050304',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050304 AND NOT((`reward_set_id` <=> 3050304 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305030401) OR (`reward_set_id` <=> 3050304 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `reward_id` <=> 305030402) OR (`reward_set_id` <=> 3050304 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305030403) OR (`reward_set_id` <=> 3050304 AND `option_id` <=> 2 AND `sequence` <=> 1 AND `reward_id` <=> 305030404)))));
+INSERT INTO _stone_parent_guard VALUES('options_3050305',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050305 AND NOT((`reward_set_id` <=> 3050305 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Ornate Soldier ring pair' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49629) OR (`reward_set_id` <=> 3050305 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Ornate Scryer ring pair' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906)))));
+INSERT INTO _stone_parent_guard VALUES('entries_3050305',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050305 AND NOT((`reward_set_id` <=> 3050305 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305030501) OR (`reward_set_id` <=> 3050305 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `reward_id` <=> 305030502) OR (`reward_set_id` <=> 3050305 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305030503) OR (`reward_set_id` <=> 3050305 AND `option_id` <=> 2 AND `sequence` <=> 1 AND `reward_id` <=> 305030504)))));
+INSERT INTO _stone_parent_guard VALUES('options_3050306',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050306 AND NOT((`reward_set_id` <=> 3050306 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Ornate melee shield' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Ornate caster shield and scepter' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Ornate Consigned Bone Sledgehammer' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Ornate Consigned Bow' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 285) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 5 AND `sequence` <=> 5 AND `label` <=> 'Ornate Consigned Gladius' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 6 AND `sequence` <=> 6 AND `label` <=> 'Ornate Consigned Longsword' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 7 AND `sequence` <=> 7 AND `label` <=> 'Ornate Consigned Rapier' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16793) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 8 AND `sequence` <=> 8 AND `label` <=> 'Ornate Consigned Scythe' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 32797) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 9 AND `sequence` <=> 9 AND `label` <=> 'Ornate Consigned Harpoon' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 32797) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 10 AND `sequence` <=> 10 AND `label` <=> 'Ornate Consigned Skullstaff' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 49245)))));
+INSERT INTO _stone_parent_guard VALUES('entries_3050306',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050306 AND NOT((`reward_set_id` <=> 3050306 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305030601) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305030602) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 2 AND `sequence` <=> 1 AND `reward_id` <=> 305030603) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305030604) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305030605) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 5 AND `sequence` <=> 0 AND `reward_id` <=> 305030606) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 6 AND `sequence` <=> 0 AND `reward_id` <=> 305030607) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 7 AND `sequence` <=> 0 AND `reward_id` <=> 305030608) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 8 AND `sequence` <=> 0 AND `reward_id` <=> 305030609) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 9 AND `sequence` <=> 0 AND `reward_id` <=> 305030610) OR (`reward_set_id` <=> 3050306 AND `option_id` <=> 10 AND `sequence` <=> 0 AND `reward_id` <=> 305030611)))));
+START TRANSACTION;
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3050302,'Welcome to Stone Hive (36-45)',1),
+(3050304,'Botanical Busywork (Stone Hive 35+)',1),
+(3050305,'Cooking with Honey (Stone Hive 35+)',1),
+(3050306,'Working for Warwing (Stone Hive 35+)',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(1,500030200,3050302,1),
+(1,500030400,3050304,1),
+(1,500030500,3050305,1),
+(1,500030600,3050306,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3050302,1,1,'Ornate Consigned Plate Bracer',0,0,1,151),
+(3050302,2,2,'Ornate Consigned Chain Bracer',0,0,1,33544),
+(3050302,3,3,'Ornate Consigned Leather Bracer',0,0,1,16480),
+(3050302,4,4,'Ornate Consigned Cloth Wristwrap',0,0,1,15360),
+(3050304,1,1,'Ornate Soldier ear pair',1,0,1,49629),
+(3050304,2,2,'Ornate Scryer ear pair',1,0,1,15906),
+(3050305,1,1,'Ornate Soldier ring pair',1,0,1,49629),
+(3050305,2,2,'Ornate Scryer ring pair',1,0,1,15906),
+(3050306,1,1,'Ornate melee shield',1,0,1,16861),
+(3050306,2,2,'Ornate caster shield and scepter',1,0,1,15906),
+(3050306,3,3,'Ornate Consigned Bone Sledgehammer',0,0,1,16861),
+(3050306,4,4,'Ornate Consigned Bow',0,0,1,285),
+(3050306,5,5,'Ornate Consigned Gladius',0,0,1,413),
+(3050306,6,6,'Ornate Consigned Longsword',0,0,1,413),
+(3050306,7,7,'Ornate Consigned Rapier',0,0,1,16793),
+(3050306,8,8,'Ornate Consigned Scythe',0,0,1,32797),
+(3050306,9,9,'Ornate Consigned Harpoon',0,0,1,32797),
+(3050306,10,10,'Ornate Consigned Skullstaff',0,0,1,49245)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(305030201,0,108089,1,'May2013 StoneHive parent 500030200 item 108089',1),
+(305030202,0,108096,1,'May2013 StoneHive parent 500030200 item 108096',1),
+(305030203,0,108103,1,'May2013 StoneHive parent 500030200 item 108103',1),
+(305030204,0,108110,1,'May2013 StoneHive parent 500030200 item 108110',1),
+(305030401,0,108361,1,'May2013 StoneHive parent 500030400 item 108361',1),
+(305030402,0,108360,1,'May2013 StoneHive parent 500030400 item 108360',1),
+(305030403,0,108370,1,'May2013 StoneHive parent 500030400 item 108370',1),
+(305030404,0,108371,1,'May2013 StoneHive parent 500030400 item 108371',1),
+(305030501,0,108367,1,'May2013 StoneHive parent 500030500 item 108367',1),
+(305030502,0,108368,1,'May2013 StoneHive parent 500030500 item 108368',1),
+(305030503,0,108377,1,'May2013 StoneHive parent 500030500 item 108377',1),
+(305030504,0,108378,1,'May2013 StoneHive parent 500030500 item 108378',1),
+(305030601,0,108567,1,'May2013 StoneHive parent 500030600 item 108567',1),
+(305030602,0,108568,1,'May2013 StoneHive parent 500030600 item 108568',1),
+(305030603,0,108557,1,'May2013 StoneHive parent 500030600 item 108557',1),
+(305030604,0,108556,1,'May2013 StoneHive parent 500030600 item 108556',1),
+(305030605,0,108566,1,'May2013 StoneHive parent 500030600 item 108566',1),
+(305030606,0,108559,1,'May2013 StoneHive parent 500030600 item 108559',1),
+(305030607,0,108558,1,'May2013 StoneHive parent 500030600 item 108558',1),
+(305030608,0,108560,1,'May2013 StoneHive parent 500030600 item 108560',1),
+(305030609,0,108565,1,'May2013 StoneHive parent 500030600 item 108565',1),
+(305030610,0,108564,1,'May2013 StoneHive parent 500030600 item 108564',1),
+(305030611,0,108563,1,'May2013 StoneHive parent 500030600 item 108563',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3050302,1,0,305030201),
+(3050302,2,0,305030202),
+(3050302,3,0,305030203),
+(3050302,4,0,305030204),
+(3050304,1,0,305030401),
+(3050304,1,1,305030402),
+(3050304,2,0,305030403),
+(3050304,2,1,305030404),
+(3050305,1,0,305030501),
+(3050305,1,1,305030502),
+(3050305,2,0,305030503),
+(3050305,2,1,305030504),
+(3050306,1,0,305030601),
+(3050306,2,0,305030602),
+(3050306,2,1,305030603),
+(3050306,3,0,305030604),
+(3050306,4,0,305030605),
+(3050306,5,0,305030606),
+(3050306,6,0,305030607),
+)ROF308H" R"ROF308I((3050306,7,0,305030608),
+(3050306,8,0,305030609),
+(3050306,9,0,305030610),
+(3050306,10,0,305030611)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+)ROF308I",
+		.content_schema_update = false,
+	},
+
+	// 309: Goru'kar Mesa zone content (20 tasks 3040401-20, parents 500040200-1000, npc_faction 397940, task reward sets 3040411 disabled / 3040420, parent sets; catalogue guard accepts our progression-lock component 7014 rows and adds the missing .300 Serpent tuple).
+	// Source: nightstalker6669/eqemu-rof2-achievements reconstruction of the retail
+	// Rain of Fear mesa zone content, applied verbatim (fail-closed guard tables).
+	// Live peq: applied 2026-11-01 via the twin.
+	// Twin: utils/sql/20261101_rof2_mesa.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 309,
+		.description = "20261101_rof2_mesa",
+		.check = "SELECT `id` FROM `tasks` WHERE `id` = 3040401 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"ROF309A(-- RoF2 zone content: Goru'kar Mesa (nightstalker6669/eqemu-rof2-achievements reconstruction).
+-- Applied verbatim: catalogue, quests, scenes, parent rewards. Fail-closed guard
+-- tables abort on any expectation mismatch.
+-- NMS adaptations for first-time import: the catalogue's enabled pre-guard accepts
+-- enabled=0 (the upserts set 1); the components guard allows our two retail
+-- progression-lock rows (component 7014) and adds their missing .300 Serpent tuple.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _mesa_catalogue_guard;
+CREATE TEMPORARY TABLE _mesa_catalogue_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _mesa_catalogue_guard VALUES('achievements',(NOT EXISTS(SELECT 1 FROM `achievements` WHERE `id` IN(500040200,500040300) AND NOT((`id` <=> 500040200 AND `name` <=> 'Welcome to the Mesa (41-45)' AND `description` <=> 'Near the path to Blightfire Moors are the warring camps of the Minohten to the west and the Tuffein to the east. Learn of the feud from Costica, Devan and Sorin:' AND `icon_id` <=> 603 AND `points` <=> 11 AND `has_reward` <=> 1 AND `client_flag` <=> 0 AND `version` <=> 0 AND `reset_on_version_change` <=> 1 AND (`enabled` <=> 0 OR `enabled` <=> 1)) OR (`id` <=> 500040300 AND `name` <=> 'Pranks and Research (46-50)' AND `description` <=> 'Speak with Iulia and Nedelcu near the eastern lake to learn of the Oread and Napaea rivalry. Scout Madu to the west of the path to Blightfire Moors is also looking for assistance:' AND `icon_id` <=> 603 AND `points` <=> 9 AND `has_reward` <=> 1 AND `client_flag` <=> 0 AND `version` <=> 0 AND `reset_on_version_change` <=> 1 AND (`enabled` <=> 0 OR `enabled` <=> 1))))));
+INSERT INTO _mesa_catalogue_guard VALUES('achievement_components',(NOT EXISTS(SELECT 1 FROM `achievement_components` WHERE `achievement_id` IN(500040200,500040300) AND NOT((`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 1 AND `component_id` <=> 50106 AND `name` <=> 'Costica - Minohten Mushrooms' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 2 AND `component_id` <=> 50107 AND `name` <=> 'Costica - No Place Like Home' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 3 AND `component_id` <=> 50108 AND `name` <=> 'Costica - Reduce the Scouts' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 4 AND `component_id` <=> 50109 AND `name` <=> 'Sorin - Tuffein Mushrooms' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 5 AND `component_id` <=> 50110 AND `name` <=> 'Sorin - To Dull the Edge' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 6 AND `component_id` <=> 50111 AND `name` <=> 'Sorin - These Biscuits are Awfully Hard' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 7 AND `component_id` <=> 50112 AND `name` <=> 'Devan - We Need Supplies' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 8 AND `component_id` <=> 50113 AND `name` <=> 'Devan - Protect the Tuffein' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 9 AND `component_id` <=> 50114 AND `name` <=> 'Devan - More Supplies for Devan' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 10 AND `component_id` <=> 50115 AND `name` <=> 'Devan - Nymphs are a menace!' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 11 AND `component_id` <=> 50116 AND `name` <=> 'Devan - Minohten are a menace!' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 3 AND `sequence` <=> 0 AND `component_id` <=> 2048 AND `name` <=> 'Reach Level 40' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 3 AND `sequence` <=> 0 AND `component_id` <=> 7011 AND `name` <=> 'Serpent' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 3 AND `sequence` <=> 0 AND `component_id` <=> 7011 AND `name` <=> 'Serpent' AND `description` <=> '') OR (`achievement_id` <=> 500040200 AND `component_type` <=> 1 AND `sequence` <=> 12 AND `component_id` <=> 7014 AND `name` <=> '(Locked on Progression Servers until Seeds of Destruction is live.)' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 10 AND `component_id` <=> 7014 AND `name` <=> '(Locked on Progression Servers until Seeds of Destruction is live.)' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 1 AND `component_id` <=> 50117 AND `name` <=> 'Iulia - Smoke Them Out' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 2 AND `component_id` <=> 50118 AND `name` <=> 'Iulia - Pluck Their Wings' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 3 AND `component_id` <=> 50119 AND `name` <=> 'Nedelcu - Make Gravel' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 4 AND `component_id` <=> 50120 AND `name` <=> 'Nedelcu - Pull Their Hair' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 5 AND `component_id` <=> 50121 AND `name` <=> 'Scout Madu - Research the Dromrek' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 6 AND `component_id` <=> 50122 AND `name` <=> 'Scout Madu - Parlay with the Dromrek' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 7 AND `component_id` <=> 50123 AND `name` <=> 'Scout Madu - Soothe the Savage Beast?' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 8 AND `component_id` <=> 50124 AND `name` <=> 'Scout Madu - Parlay with the Dromrek, Again' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 1 AND `sequence` <=> 9 AND `component_id` <=> 50125 AND `name` <=> 'Scout Madu - Reduce the Dromrek Threat' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 3 AND `sequence` <=> 0 AND `component_id` <=> 2053 AND `name` <=> 'Reach Level 45' AND `description` <=> '') OR (`achievement_id` <=> 500040300 AND `component_type` <=> 3 AND `sequence` <=> 0 AND `component_id` <=> 7011 AND `name` <=> 'Serpent' AND `description` <=> '')))));
+INSERT INTO _mesa_catalogue_guard VALUES('achievement_category_associations',(NOT EXISTS(SELECT 1 FROM `achievement_category_associations` WHERE `achievement_id` IN(500040200,500040300) AND NOT((`category_id` <=> 71 AND `sequence` <=> 0 AND `achievement_id` <=> 500040200 AND `display_text` <=> '') OR (`category_id` <=> 71 AND `sequence` <=> 0 AND `achievement_id` <=> 500040300 AND `display_text` <=> '')))));
+INSERT INTO _mesa_catalogue_guard VALUES('achievement_categories',(NOT EXISTS(SELECT 1 FROM `achievement_categories` WHERE `id` IN(70,71) AND NOT((`id` <=> 70 AND `parent_id` <=> 0 AND `sequence` <=> 3 AND `name` <=> 'The Hero''s Journey' AND `description` <=> 'The Hero''s Journey' AND `icon` <=> 'A_HJNY') OR (`id` <=> 71 AND `parent_id` <=> 70 AND `sequence` <=> 1 AND `name` <=> 'Progression' AND `description` <=> 'Progression' AND `icon` <=> 'A_ProgressionSub')))));
+START TRANSACTION;
+INSERT INTO `achievement_categories`(`id`,`parent_id`,`sequence`,`name`,`description`,`icon`)VALUES
+(70,0,3,'The Hero''s Journey','The Hero''s Journey','A_HJNY'),
+(71,70,1,'Progression','Progression','A_ProgressionSub')
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`parent_id`=VALUES(`parent_id`),`sequence`=VALUES(`sequence`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon`=VALUES(`icon`);
+INSERT INTO `achievements`(`id`,`name`,`description`,`icon_id`,`points`,`has_reward`,`client_flag`,`version`,`reset_on_version_change`,`enabled`)VALUES
+(500040200,'Welcome to the Mesa (41-45)','Near the path to Blightfire Moors are the warring camps of the Minohten to the west and the Tuffein to the east. Learn of the feud from Costica, Devan and Sorin:',603,11,1,0,0,1,1),
+(500040300,'Pranks and Research (46-50)','Speak with Iulia and Nedelcu near the eastern lake to learn of the Oread and Napaea rivalry. Scout Madu to the west of the path to Blightfire Moors is also looking for assistance:',603,9,1,0,0,1,1)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`),`name`=VALUES(`name`),`description`=VALUES(`description`),`icon_id`=VALUES(`icon_id`),`points`=VALUES(`points`),`has_reward`=VALUES(`has_reward`),`client_flag`=VALUES(`client_flag`),`version`=VALUES(`version`),`reset_on_version_change`=VALUES(`reset_on_version_change`),`enabled`=VALUES(`enabled`);
+INSERT INTO `achievement_components`(`achievement_id`,`component_type`,`sequence`,`component_id`,`name`,`description`)VALUES
+(500040200,1,1,50106,'Costica - Minohten Mushrooms',''),
+(500040200,1,2,50107,'Costica - No Place Like Home',''),
+(500040200,1,3,50108,'Costica - Reduce the Scouts',''),
+(500040200,1,4,50109,'Sorin - Tuffein Mushrooms',''),
+(500040200,1,5,50110,'Sorin - To Dull the Edge',''),
+(500040200,1,6,50111,'Sorin - These Biscuits are Awfully Hard',''),
+(500040200,1,7,50112,'Devan - We Need Supplies',''),
+(500040200,1,8,50113,'Devan - Protect the Tuffein',''),
+(500040200,1,9,50114,'Devan - More Supplies for Devan',''),
+(500040200,1,10,50115,'Devan - Nymphs are a menace!',''),
+(500040200,1,11,50116,'Devan - Minohten are a menace!',''),
+(500040200,3,0,2048,'Reach Level 40',''),
+(500040200,3,0,7011,'Serpent',''),
+(500040300,1,1,50117,'Iulia - Smoke Them Out',''),
+(500040300,1,2,50118,'Iulia - Pluck Their Wings',''),
+(500040300,1,3,50119,'Nedelcu - Make Gravel',''),
+(500040300,1,4,50120,'Nedelcu - Pull Their Hair',''),
+(500040300,1,5,50121,'Scout Madu - Research the Dromrek',''),
+(500040300,1,6,50122,'Scout Madu - Parlay with the Dromrek',''),
+(500040300,1,7,50123,'Scout Madu - Soothe the Savage Beast?',''),
+(500040300,1,8,50124,'Scout Madu - Parlay with the Dromrek, Again',''),
+(500040300,1,9,50125,'Scout Madu - Reduce the Dromrek Threat',''),
+(500040300,3,0,2053,'Reach Level 45',''),
+(500040300,3,0,7011,'Serpent','')
+ON DUPLICATE KEY UPDATE `achievement_id`=VALUES(`achievement_id`),`component_type`=VALUES(`component_type`),`sequence`=VALUES(`sequence`),`component_id`=VALUES(`component_id`),`name`=VALUES(`name`),`description`=VALUES(`description`);
+INSERT INTO `achievement_category_associations`(`category_id`,`sequence`,`achievement_id`,`display_text`)VALUES
+(71,0,500040200,''),
+(71,0,500040300,'')
+ON DUPLICATE KEY UPDATE `category_id`=VALUES(`category_id`),`sequence`=VALUES(`sequence`),`achievement_id`=VALUES(`achievement_id`),`display_text`=VALUES(`display_text`);
+COMMIT;
+-- Mesa complete package dependency; import all four SQL files and scripts in order. Capture3040411 remains disabled.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _mesa_guard;
+CREATE TEMPORARY TABLE _mesa_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+)ROF309A" R"ROF309B(INSERT INTO _mesa_guard VALUES('tasks',(NOT EXISTS(SELECT 1 FROM tasks WHERE id IN(3040401,3040402,3040403,3040404,3040405,3040406,3040407,3040408,3040409,3040410,3040411,3040412,3040413,3040414,3040415,3040416,3040417,3040418,3040419,3040420)AND NOT((id=3040401 AND type=2 AND title='Minohten Mushrooms') OR (id=3040402 AND type=2 AND title='No Place Like Home') OR (id=3040403 AND type=2 AND title='Reduce the Scouts') OR (id=3040404 AND type=2 AND title='Tuffein Mushrooms') OR (id=3040405 AND type=2 AND title='To Dull the Edge') OR (id=3040406 AND type=2 AND title='These Biscuits are Awfully Hard') OR (id=3040407 AND type=2 AND title='We Need Supplies') OR (id=3040408 AND type=2 AND title='Protect the Tuffein') OR (id=3040409 AND type=2 AND title='More Supplies for Devan') OR (id=3040410 AND type=2 AND title='Nymphs are a menace!') OR (id=3040411 AND type=2 AND title='Minohten are a menace!') OR (id=3040412 AND type=2 AND title='Smoke Them Out') OR (id=3040413 AND type=2 AND title='Pluck Their Wings') OR (id=3040414 AND type=2 AND title='Make Gravel') OR (id=3040415 AND type=2 AND title='Pull Their Hair') OR (id=3040416 AND type=2 AND title='Research the Dromrek') OR (id=3040417 AND type=2 AND title='Parlay with the Dromrek') OR (id=3040418 AND type=2 AND title='Soothe the Savage Beast?') OR (id=3040419 AND type=2 AND title='Parlay with the Dromrek, Again') OR (id=3040420 AND type=2 AND title='Reduce the Dromrek Threat')))));
+INSERT INTO _mesa_guard VALUES('components',((SELECT COUNT(*)FROM achievement_components WHERE component_type=1 AND((achievement_id=500040200 AND component_id=50106 AND sequence=1 AND name='Costica - Minohten Mushrooms') OR (achievement_id=500040200 AND component_id=50107 AND sequence=2 AND name='Costica - No Place Like Home') OR (achievement_id=500040200 AND component_id=50108 AND sequence=3 AND name='Costica - Reduce the Scouts') OR (achievement_id=500040200 AND component_id=50109 AND sequence=4 AND name='Sorin - Tuffein Mushrooms') OR (achievement_id=500040200 AND component_id=50110 AND sequence=5 AND name='Sorin - To Dull the Edge') OR (achievement_id=500040200 AND component_id=50111 AND sequence=6 AND name='Sorin - These Biscuits are Awfully Hard') OR (achievement_id=500040200 AND component_id=50112 AND sequence=7 AND name='Devan - We Need Supplies') OR (achievement_id=500040200 AND component_id=50113 AND sequence=8 AND name='Devan - Protect the Tuffein') OR (achievement_id=500040200 AND component_id=50114 AND sequence=9 AND name='Devan - More Supplies for Devan') OR (achievement_id=500040200 AND component_id=50115 AND sequence=10 AND name='Devan - Nymphs are a menace!') OR (achievement_id=500040200 AND component_id=50116 AND sequence=11 AND name='Devan - Minohten are a menace!') OR (achievement_id=500040300 AND component_id=50117 AND sequence=1 AND name='Iulia - Smoke Them Out') OR (achievement_id=500040300 AND component_id=50118 AND sequence=2 AND name='Iulia - Pluck Their Wings') OR (achievement_id=500040300 AND component_id=50119 AND sequence=3 AND name='Nedelcu - Make Gravel') OR (achievement_id=500040300 AND component_id=50120 AND sequence=4 AND name='Nedelcu - Pull Their Hair') OR (achievement_id=500040300 AND component_id=50121 AND sequence=5 AND name='Scout Madu - Research the Dromrek') OR (achievement_id=500040300 AND component_id=50122 AND sequence=6 AND name='Scout Madu - Parlay with the Dromrek') OR (achievement_id=500040300 AND component_id=50123 AND sequence=7 AND name='Scout Madu - Soothe the Savage Beast?') OR (achievement_id=500040300 AND component_id=50124 AND sequence=8 AND name='Scout Madu - Parlay with the Dromrek, Again') OR (achievement_id=500040300 AND component_id=50125 AND sequence=9 AND name='Scout Madu - Reduce the Dromrek Threat')))=20));
+INSERT INTO _mesa_guard VALUES('items',((SELECT COUNT(*)FROM items WHERE (id=13041 AND Name='Spider Silk' AND classes=65535) OR (id=13751 AND Name='Medium Quality Bear Skin' AND classes=65535) OR (id=13754 AND Name='Medium Quality Wolf Skin' AND classes=65535) OR (id=21790 AND Name='Minohten Fruit' AND classes=65535) OR (id=21791 AND Name='Minohten Vegetables' AND classes=65535) OR (id=21792 AND Name='Minohten Short Beer' AND classes=65535) OR (id=53554 AND Name='Crystalwing Plate Vambraces' AND classes=151) OR (id=53555 AND Name='Crystalwing Chain Bracelet' AND classes=33544) OR (id=53556 AND Name='Crystalwing Leather Vambraces' AND classes=16480) OR (id=53557 AND Name='Crystalwing Silk Bracelet' AND classes=15360) OR (id=53568 AND Name='Crystalwing Goru`kar Scout Health Stone' AND classes=65535) OR (id=53569 AND Name='Crystalwing Goru`kar Scout Power Stone' AND classes=65535) OR (id=53570 AND Name='Crystalwing Goru`kar Scout Shielding Stone' AND classes=65535) OR (id=53571 AND Name='Crystalwing Goru`kar Scout Striker Stone' AND classes=65535) OR (id=87210 AND Name='Crate of Tuffein Fruit' AND classes=65535) OR (id=87211 AND Name='Barrel of Tuffein Oats' AND classes=65535) OR (id=87212 AND Name='Pile of Rocks' AND classes=65535) OR (id=88121 AND Name='Snake Skin' AND classes=65535) OR (id=88130 AND Name='Bixie Dust Wand' AND classes=65535) OR (id=88131 AND Name='Refined Jumjum Pollen' AND classes=65535) OR (id=88132 AND Name='Burning Stick' AND classes=65535) OR (id=88133 AND Name='Napaea Wing' AND classes=65535) OR (id=88134 AND Name='Oread Hair' AND classes=65535) OR (id=88135 AND Name='Polished Lake Stone' AND classes=65535))=24));
+INSERT INTO _mesa_guard VALUES('npcs',((SELECT COUNT(*)FROM npc_types WHERE (id=394164 AND name='Master_Vanguard_Regan') OR (id=394227 AND name='#Librarian_Hemfar') OR (id=394228 AND name='Alchemist_Naeema') OR (id=395210 AND name='Scout_Ethaniel') OR (id=397003 AND name='a_mesa_snake') OR (id=397007 AND name='Scout_Madu') OR (id=397008 AND name='a_mesa_snake') OR (id=397010 AND name='a_mesa_snake') OR (id=397013 AND name='Devan') OR (id=397014 AND name='Costica') OR (id=397019 AND name='a_protector_of_the_windwillow') OR (id=397021 AND name='a_Minohten_scout') OR (id=397024 AND name='a_Minohten_scout') OR (id=397028 AND name='a_rack_of_weapons') OR (id=397032 AND name='a_protector_of_the_windwillow') OR (id=397033 AND name='a_Minohten_scout') OR (id=397038 AND name='a_Minohten_scout') OR (id=397046 AND name='a_potameid_matron') OR (id=397050 AND name='a_Minohten_scout') OR (id=397054 AND name='a_napaea_striker') OR (id=397055 AND name='a_napaea_windstriker') OR (id=397057 AND name='a_napaea_striker') OR (id=397062 AND name='a_protector_of_the_windwillow') OR (id=397068 AND name='a_napaea_protector') OR (id=397077 AND name='a_napaea_striker') OR (id=397079 AND name='a_napaea_windstriker') OR (id=397080 AND name='a_protector_of_the_windwillow') OR (id=397082 AND name='a_napaea_maiden') OR (id=397083 AND name='Nedelcu') OR (id=397085 AND name='a_napaea_maiden') OR (id=397087 AND name='a_Minohten_tent') OR (id=397088 AND name='a_napaea_striker') OR (id=397089 AND name='a_mesa_recluse') OR (id=397094 AND name='a_napaea_maiden') OR (id=397095 AND name='Sorin') OR (id=397104 AND name='a_napaea_protector') OR (id=397107 AND name='a_potameid_maiden') OR (id=397113 AND name='a_potameid_maiden') OR (id=397114 AND name='a_potameid_maiden') OR (id=397115 AND name='a_protector_of_the_windwillow') OR (id=397116 AND name='an_oread_stonemistress') OR (id=397117 AND name='an_oread_maiden') OR (id=397119 AND name='Iulia') OR (id=397121 AND name='an_oread_stonehide') OR (id=397122 AND name='an_oread_protector') OR (id=397124 AND name='an_oread_protector') OR (id=397126 AND name='an_oread_stonehide') OR (id=397128 AND name='an_oread_stonemistress') OR (id=397129 AND name='a_potameid_matron') OR (id=397130 AND name='an_oread_stonehide') OR (id=397132 AND name='an_oread_maiden') OR (id=397133 AND name='a_large_mesa_recluse') OR (id=397134 AND name='an_oread_protector') OR (id=397135 AND name='a_mesa_recluse') OR (id=397137 AND name='an_oread_stonehide') OR (id=397141 AND name='a_mesa_recluse') OR (id=397142 AND name='a_potameid_maiden') OR (id=397143 AND name='a_potameid_matron') OR (id=397231 AND name='Bigone') OR (id=397233 AND name='a_potameid_noble') OR (id=397236 AND name='a_potameid_protector') OR (id=397237 AND name='a_potameid_noble') OR (id=397238 AND name='a_potameid_protector') OR (id=397240 AND name='a_potameid_retainer') OR (id=397242 AND name='a_potameid_retainer') OR (id=397243 AND name='Dromrek_Provisioner') OR (id=397244 AND name='a_potameid_retainer') OR (id=397251 AND name='Dromrek_Cook') OR (id=397255 AND name='Bashermaker') OR (id=397258 AND name='a_potameid_retainer') OR (id=397259 AND name='Foodpicker') OR (id=397262 AND name='a_potameid_protector'))=72));
+INSERT INTO _mesa_guard VALUES('criterion_50106',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50106 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040401 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50107',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50107 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040402 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50108',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50108 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040403 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50109',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50109 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040404 AND target_id2=0 AND target_value=0 AND component_sequence=4 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50110',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50110 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040405 AND target_id2=0 AND target_value=0 AND component_sequence=5 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50111',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50111 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040406 AND target_id2=0 AND target_value=0 AND component_sequence=6 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50112',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50112 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040407 AND target_id2=0 AND target_value=0 AND component_sequence=7 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50113',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50113 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040408 AND target_id2=0 AND target_value=0 AND component_sequence=8 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50114',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50114 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040409 AND target_id2=0 AND target_value=0 AND component_sequence=9 AND required_count=1 AND enabled=1))));
+)ROF309B" R"ROF309C(INSERT INTO _mesa_guard VALUES('criterion_50115',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50115 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040410 AND target_id2=0 AND target_value=0 AND component_sequence=10 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50116',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50116 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040411 AND target_id2=0 AND target_value=0 AND component_sequence=11 AND required_count=1 AND enabled=0))));
+INSERT INTO _mesa_guard VALUES('reward_set_3040411',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040411 AND title<>'Minohten are a menace!')AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040411 AND NOT(source_type=2 AND source_id=3040411))AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040411 AND reward_set_id<>3040411)));
+INSERT INTO _mesa_guard VALUES('reward_30404111',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404111 AND description<>'May2013 Mesa option 30404111')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404111 AND NOT(reward_set_id=3040411 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404111)));
+INSERT INTO _mesa_guard VALUES('reward_30404112',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404112 AND description<>'May2013 Mesa option 30404112')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404112 AND NOT(reward_set_id=3040411 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404112)));
+INSERT INTO _mesa_guard VALUES('reward_30404113',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404113 AND description<>'May2013 Mesa option 30404113')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404113 AND NOT(reward_set_id=3040411 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404113)));
+INSERT INTO _mesa_guard VALUES('reward_30404114',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404114 AND description<>'May2013 Mesa option 30404114')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404114 AND NOT(reward_set_id=3040411 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404114)));
+INSERT INTO _mesa_guard VALUES('reward_30404115',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404115 AND description<>'May2013 Mesa option 30404115')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404115 AND NOT(reward_set_id=3040411 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404115)));
+INSERT INTO _mesa_guard VALUES('criterion_50117',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50117 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040412 AND target_id2=0 AND target_value=0 AND component_sequence=1 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50118',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50118 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040413 AND target_id2=0 AND target_value=0 AND component_sequence=2 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50119',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50119 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040414 AND target_id2=0 AND target_value=0 AND component_sequence=3 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50120',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50120 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040415 AND target_id2=0 AND target_value=0 AND component_sequence=4 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50121',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50121 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040416 AND target_id2=0 AND target_value=0 AND component_sequence=5 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50122',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50122 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040417 AND target_id2=0 AND target_value=0 AND component_sequence=6 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50123',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50123 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040418 AND target_id2=0 AND target_value=0 AND component_sequence=7 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50124',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50124 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040419 AND target_id2=0 AND target_value=0 AND component_sequence=8 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('criterion_50125',(NOT EXISTS(SELECT 1 FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50125 AND NOT(event_type=4 AND progress_mode=3 AND behavior=0 AND target_id=3040420 AND target_id2=0 AND target_value=0 AND component_sequence=9 AND required_count=1 AND enabled=1))));
+INSERT INTO _mesa_guard VALUES('reward_set_3040420',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3040420 AND title<>'Reduce the Dromrek Threat')AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE reward_set_id=3040420 AND NOT(source_type=2 AND source_id=3040420))AND NOT EXISTS(SELECT 1 FROM reward_sources WHERE source_type=2 AND source_id=3040420 AND reward_set_id<>3040420)));
+INSERT INTO _mesa_guard VALUES('reward_30404201',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404201 AND description<>'May2013 Mesa option 30404201')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404201 AND NOT(reward_set_id=3040420 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404201)));
+INSERT INTO _mesa_guard VALUES('reward_30404202',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404202 AND description<>'May2013 Mesa option 30404202')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404202 AND NOT(reward_set_id=3040420 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404202)));
+INSERT INTO _mesa_guard VALUES('reward_30404203',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404203 AND description<>'May2013 Mesa option 30404203')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404203 AND NOT(reward_set_id=3040420 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404203)));
+INSERT INTO _mesa_guard VALUES('reward_30404204',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404204 AND description<>'May2013 Mesa option 30404204')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404204 AND NOT(reward_set_id=3040420 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404204)));
+INSERT INTO _mesa_guard VALUES('reward_30404205',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=30404205 AND description<>'May2013 Mesa option 30404205')AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=30404205 AND NOT(reward_set_id=3040420 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=30404205)));
+INSERT INTO _mesa_guard VALUES('costica_faction_list',(NOT EXISTS(SELECT 1 FROM npc_faction WHERE id=397940 AND (name<>'May2013 Costica task rewards' OR primaryfaction<>0 OR ignore_primary_assist<>0))));
+INSERT INTO _mesa_guard VALUES('costica_faction_entries',(NOT EXISTS(SELECT 1 FROM npc_faction_entries WHERE npc_faction_id=397940 AND NOT((faction_id=1107 AND value=5 AND npc_value=0 AND temp=0) OR (faction_id=1108 AND value=5 AND npc_value=0 AND temp=0) OR (faction_id=1109 AND value=-5 AND npc_value=0 AND temp=0) OR (faction_id=1110 AND value=-5 AND npc_value=0 AND temp=0)))));
+INSERT INTO _mesa_guard VALUES('native_faction_names',((SELECT COUNT(*)FROM faction_list WHERE (id=1107 AND name='Tuffein')OR(id=1108 AND name='Tuffein Leadership')OR(id=1109 AND name='Minohten')OR(id=1110 AND name='Nymphs of the Windwillow'))=4));
+START TRANSACTION;
+INSERT INTO npc_faction(`id`,`name`,`primaryfaction`,`ignore_primary_assist`)VALUES
+(397940,'May2013 Costica task rewards',0,0)
+ON DUPLICATE KEY UPDATE `name`=VALUES(`name`),`primaryfaction`=VALUES(`primaryfaction`),`ignore_primary_assist`=VALUES(`ignore_primary_assist`);
+INSERT INTO npc_faction_entries(`npc_faction_id`,`faction_id`,`value`,`npc_value`,`temp`)VALUES
+(397940,1107,5,0,0),
+(397940,1108,5,0,0),
+(397940,1109,-5,0,0),
+(397940,1110,-5,0,0)
+ON DUPLICATE KEY UPDATE `faction_id`=VALUES(`faction_id`),`value`=VALUES(`value`),`npc_value`=VALUES(`npc_value`),`temp`=VALUES(`temp`);
+INSERT INTO tasks(`id`,`type`,`title`,`description`,`reward_text`,`reward_id_list`,`cash_reward`,`exp_reward`,`reward_method`,`min_level`,`repeatable`,`faction_reward`,`faction_amount`,`enabled`,`duration`)VALUES
+(3040401,2,'Minohten Mushrooms','Find the Minohten camp; Steal mushrooms from the Minohten food sacks; Speak with Costica.','','',0,1000,0,40,1,397940,0,1,0),
+(3040402,2,'No Place Like Home','Find the Minohten camp; Destroy the Minohten tents; Speak with Costica.','','',0,1000,0,40,1,397940,0,1,0),
+(3040403,2,'Reduce the Scouts','Kill Minohten scouts; Speak with Costica.','','',0,1000,0,40,1,397940,0,1,0),
+(3040404,2,'Tuffein Mushrooms','Explore the Tuffein camp; Steal food from the Tuffein camp; Return the stolen goods to Sorin.','','',0,1000,0,40,0,0,0,1,0),
+(3040405,2,'To Dull the Edge','Make your way to the Tuffein camp; Destroy Tuffein weapons; Speak with Sorin.','','',0,1000,0,40,1,0,0,1,0),
+(3040406,2,'These Biscuits are Awfully Hard','Explore the gnoll mining camp in the Moors; Collect piles of rocks; Sneak into the Tuffein camp; Replace food stores with rocks from the Gnoll camp; Speak with Sorin.','','',0,1000,0,40,1,0,0,1,0),
+(3040407,2,'We Need Supplies','Steal fruit from the Minohten camp; Steal vegetables from the Minohten camp; Steal beer from the Minohten camp; Deliver Minohten Fruit to Devan; Deliver Minohten Vegetables to Devan; Deliver Minohten Short Beer to Devan; Speak with Devan.','','',0,1000,0,35,1,0,0,1,0),
+(3040408,2,'Protect the Tuffein','Kill mesa snakes; Kill protectors of the windwillow; Kill mesa recluse spiders; Speak with Devan.','','',0,1000,0,40,1,0,0,1,0),
+(3040409,2,'More Supplies for Devan','Loot Snake Skin in Goru`kar Mesa; Loot Spider Silk in Goru`kar Mesa; Loot Medium Quality Wolf Skin in Goru`kar Mesa; Loot Medium Quality Bear Skin in Goru`kar Mesa; Deliver Snake Skin to Devan; Deliver Spider Silk to Devan; Deliver Medium Quality Wolf Skin to Devan; Deliver Medium Quality Bear Skin to Devan; Speak with Devan.','','',0,1000,0,40,1,0,0,1,0),
+(3040410,2,'Nymphs are a menace!','Kill napaea; Kill potameid; Kill oread; Speak with Devan.','','',0,1000,0,40,1,0,0,1,0),
+)ROF309C" R"ROF309D((3040411,2,'Minohten are a menace!','Kill Minohten scouts; Speak with Devan; Find a way to free yourself from the cage; Flee west from the Tuffein camp; Flee to Scout Madu to be certain you have escaped; Speak with Scout Madu.','','',0,0,3,40,1,0,0,0,0),
+(3040412,2,'Smoke Them Out','Get a burning stick from the centaur campfire; Burn the bushes that the Napaea hold precious; Speak with Iulia.','','',0,1000,0,45,0,0,0,1,0),
+(3040413,2,'Pluck Their Wings','Loot Napaea Wings from Napaea; Deliver Napaea Wings to Iulia.','','',0,1000,0,45,1,0,0,1,0),
+(3040414,2,'Make Gravel','Break the stones that the Oread hold precious; Speak with Nedelcu.','','',0,1000,0,45,1,0,0,1,0),
+(3040415,2,'Pull Their Hair','Loot Oread Hair from Oread; Deliver Oread Hair to Nedelcu.','','',0,1000,0,45,1,0,0,1,0),
+(3040416,2,'Research the Dromrek','Find the fork near the Dromrek area; Look at the cave entrance to the west; Explore further into the cave; Discover the northern extent of Dromrek territory; Speak with Scout Madu.','','',0,1000,0,45,1,0,0,1,0),
+(3040417,2,'Parlay with the Dromrek','Try speaking with Dromrek Cook; Try speaking with Dromrek Provisioner; Try speaking with Foodpicker; Try speaking with Bashermaker; Speak with Scout Madu.','','',0,1000,0,45,1,0,0,1,0),
+(3040418,2,'Soothe the Savage Beast?','Speak with Master Vanguard Regan; Speak with Librarian Hemfar; Speak with Alchemist Naeema; Speak with Scout Ethaniel; Loot Refined Jumjum Pollen from bixies; Deliver Refined Jumjum Pollen to Naeema; Speak with Scout Madu.','','',0,1000,0,45,1,0,0,1,0),
+(3040419,2,'Parlay with the Dromrek, Again','Speak with Dromrek Cook; Speak with Dromrek Provisioner; Speak with Foodpicker; Speak with Bashermaker; Speak with Bigone; Speak with Scout Madu.','','',0,1000,0,45,1,0,0,1,0),
+(3040420,2,'Reduce the Dromrek Threat','Kill Bigone; Speak with Scout Madu.','','',0,0,3,45,1,0,0,1,0)
+ON DUPLICATE KEY UPDATE `type`=VALUES(`type`),`title`=VALUES(`title`),`description`=VALUES(`description`),`reward_text`=VALUES(`reward_text`),`reward_id_list`=VALUES(`reward_id_list`),`cash_reward`=VALUES(`cash_reward`),`exp_reward`=VALUES(`exp_reward`),`reward_method`=VALUES(`reward_method`),`min_level`=VALUES(`min_level`),`repeatable`=VALUES(`repeatable`),`faction_reward`=VALUES(`faction_reward`),`faction_amount`=VALUES(`faction_amount`),`enabled`=VALUES(`enabled`),`duration`=VALUES(`duration`);
+DELETE FROM task_activities WHERE taskid IN(3040401,3040402,3040403,3040404,3040405,3040406,3040407,3040408,3040409,3040410,3040411,3040412,3040413,3040414,3040415,3040416,3040417,3040418,3040419,3040420);
+INSERT INTO task_activities(`taskid`,`activityid`,`req_activity_id`,`step`,`activitytype`,`target_name`,`goalmethod`,`goalcount`,`description_override`,`npc_match_list`,`item_id_list`,`zones`,`spell_list`,`min_x`,`max_x`,`min_y`,`max_y`,`min_z`,`max_z`)VALUES
+(3040401,0,-1,1,5,'',0,1,'Find the Minohten camp','','','397','',1121.54,1191.54,-1062.9,-992.9000000000001,16.299999999999997,166.3),
+(3040401,1,-1,2,255,'',0,4,'Steal mushrooms from the Minohten food sacks','','','397','',0,0,0,0,0,0),
+(3040401,2,-1,3,4,'',0,1,'Speak with Costica','397014','','397','',0,0,0,0,0,0),
+(3040402,0,-1,1,5,'',0,1,'Find the Minohten camp','','','397','',1121.54,1191.54,-1062.9,-992.9000000000001,16.299999999999997,166.3),
+(3040402,1,-1,2,2,'',0,2,'Destroy the Minohten tents','397087','','397','',0,0,0,0,0,0),
+(3040402,2,-1,3,4,'',0,1,'Speak with Costica','397014','','397','',0,0,0,0,0,0),
+(3040403,0,-1,1,2,'',0,4,'Kill Minohten scouts','397021|397024|397033|397038|397050','','397','',0,0,0,0,0,0),
+(3040403,1,-1,2,4,'',0,1,'Speak with Costica','397014','','397','',0,0,0,0,0,0),
+(3040404,0,-1,1,5,'',0,1,'Explore the Tuffein camp','','','397','',-901,-831,-1626,-1556,-52,98),
+(3040404,1,-1,2,255,'',0,3,'Steal food from the Tuffein camp','','','397','',0,0,0,0,0,0),
+(3040404,2,-1,3,1,'',0,3,'Return the stolen goods to Sorin','397095','87210|87211','397','',0,0,0,0,0,0),
+(3040405,0,-1,1,5,'',0,1,'Make your way to the Tuffein camp','','','397','',-901,-831,-1626,-1556,-52,98),
+(3040405,1,-1,2,255,'',0,5,'Destroy Tuffein weapons','397028','','397','',0,0,0,0,0,0),
+(3040405,2,-1,3,4,'',0,1,'Speak with Sorin','397095','','397','',0,0,0,0,0,0),
+(3040406,0,-1,1,5,'',0,1,'Explore the gnoll mining camp in the Moors','','','395','',3161.625,3421.625,-2162.375,-1902.375,-98.875,101.125),
+(3040406,1,-1,2,255,'',0,3,'Collect piles of rocks','','87212','395','',0,0,0,0,0,0),
+(3040406,2,-1,3,5,'',0,1,'Sneak into the Tuffein camp','','','397','',-901,-831,-1626,-1556,-52,98),
+(3040406,3,-1,4,255,'',0,3,'Replace food stores with rocks from the Gnoll camp','','87212','397','',0,0,0,0,0,0),
+(3040406,4,-1,5,4,'',0,1,'Speak with Sorin','397095','','397','',0,0,0,0,0,0),
+(3040407,0,-1,1,255,'',0,1,'Steal fruit from the Minohten camp','','21790','397','',0,0,0,0,0,0),
+(3040407,1,-1,2,255,'',0,1,'Steal vegetables from the Minohten camp','','21791','397','',0,0,0,0,0,0),
+(3040407,2,-1,3,255,'',0,1,'Steal beer from the Minohten camp','','21792','397','',0,0,0,0,0,0),
+(3040407,3,-1,4,1,'',0,1,'Deliver Minohten Fruit to Devan','397013','21790','397','',0,0,0,0,0,0),
+(3040407,4,-1,4,1,'',0,1,'Deliver Minohten Vegetables to Devan','397013','21791','397','',0,0,0,0,0,0),
+(3040407,5,-1,4,1,'',0,1,'Deliver Minohten Short Beer to Devan','397013','21792','397','',0,0,0,0,0,0),
+(3040407,6,-1,5,4,'',0,1,'Speak with Devan','397013','','397','',0,0,0,0,0,0),
+(3040408,0,-1,1,2,'',0,4,'Kill mesa snakes','397003|397008|397010','','397','',0,0,0,0,0,0),
+(3040408,1,-1,1,2,'',0,2,'Kill protectors of the windwillow','397019|397032|397062|397080|397115','','397','',0,0,0,0,0,0),
+(3040408,2,-1,1,2,'',0,4,'Kill mesa recluse spiders','397089|397133|397135|397141','','397','',0,0,0,0,0,0),
+(3040408,3,-1,2,4,'',0,1,'Speak with Devan','397013','','397','',0,0,0,0,0,0),
+(3040409,0,-1,1,3,'',0,4,'Loot Snake Skin in Goru`kar Mesa','','88121','397','',0,0,0,0,0,0),
+(3040409,1,-1,1,3,'',0,4,'Loot Spider Silk in Goru`kar Mesa','','13041','397','',0,0,0,0,0,0),
+(3040409,2,-1,1,3,'',0,2,'Loot Medium Quality Wolf Skin in Goru`kar Mesa','','13754','397','',0,0,0,0,0,0),
+(3040409,3,-1,1,3,'',0,2,'Loot Medium Quality Bear Skin in Goru`kar Mesa','','13751','397','',0,0,0,0,0,0),
+(3040409,4,-1,2,1,'',0,4,'Deliver Snake Skin to Devan','397013','88121','397','',0,0,0,0,0,0),
+(3040409,5,-1,2,1,'',0,4,'Deliver Spider Silk to Devan','397013','13041','397','',0,0,0,0,0,0),
+(3040409,6,-1,2,1,'',0,2,'Deliver Medium Quality Wolf Skin to Devan','397013','13754','397','',0,0,0,0,0,0),
+(3040409,7,-1,2,1,'',0,2,'Deliver Medium Quality Bear Skin to Devan','397013','13751','397','',0,0,0,0,0,0),
+(3040409,8,-1,3,4,'',0,1,'Speak with Devan','397013','','397','',0,0,0,0,0,0),
+(3040410,0,-1,1,2,'',0,3,'Kill napaea','397054|397055|397057|397068|397077|397079|397082|397085|397088|397094|397104','','397','',0,0,0,0,0,0),
+(3040410,1,-1,1,2,'',0,4,'Kill potameid','397046|397107|397113|397114|397129|397142|397143|397233|397236|397237|397238|397240|397242|397244|397258|397262','','397','',0,0,0,0,0,0),
+(3040410,2,-1,1,2,'',0,3,'Kill oread','397116|397117|397121|397122|397124|397126|397128|397130|397132|397134|397137','','397','',0,0,0,0,0,0),
+(3040410,3,-1,2,4,'',0,1,'Speak with Devan','397013','','397','',0,0,0,0,0,0),
+(3040411,0,-1,1,2,'',0,4,'Kill Minohten scouts','397021|397024|397033|397038|397050','','397','',0,0,0,0,0,0),
+(3040411,1,-1,2,4,'',0,1,'Speak with Devan','397013','','397','',0,0,0,0,0,0),
+(3040411,2,-1,3,255,'',0,1,'Find a way to free yourself from the cage','','','397','',0,0,0,0,0,0),
+(3040411,3,-1,4,5,'',0,1,'Flee west from the Tuffein camp','','','397','',-610,-470,-1420,-1280,-50,100),
+(3040411,4,-1,5,5,'',0,1,'Flee to Scout Madu to be certain you have escaped','','','397','',492,582,-1995,-1905,-45,105),
+(3040411,5,-1,6,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0),
+(3040412,0,-1,1,255,'',0,1,'Get a burning stick from the centaur campfire','','88132','397','',0,0,0,0,0,0),
+(3040412,1,-1,2,255,'',0,4,'Burn the bushes that the Napaea hold precious','','','397','',0,0,0,0,0,0),
+(3040412,2,-1,3,4,'',0,1,'Speak with Iulia','397119','','397','',0,0,0,0,0,0),
+(3040413,0,-1,1,3,'',0,4,'Loot Napaea Wings from Napaea','','88133','397','',0,0,0,0,0,0),
+(3040413,1,-1,2,1,'',0,4,'Deliver Napaea Wings to Iulia','397119','88133','397','',0,0,0,0,0,0),
+(3040414,0,-1,1,255,'',0,4,'Break the stones that the Oread hold precious','','','397','',0,0,0,0,0,0),
+(3040414,1,-1,2,4,'',0,1,'Speak with Nedelcu','397083','','397','',0,0,0,0,0,0),
+(3040415,0,-1,1,3,'',0,4,'Loot Oread Hair from Oread','','88134','397','',0,0,0,0,0,0),
+(3040415,1,-1,2,1,'',0,4,'Deliver Oread Hair to Nedelcu','397083','88134','397','',0,0,0,0,0,0),
+(3040416,0,-1,1,5,'',0,1,'Find the fork near the Dromrek area','','','397','',690,830,220,360,-42,108),
+(3040416,1,-1,2,5,'',0,1,'Look at the cave entrance to the west','','','397','',1308,1488,-96,84,-30,120),
+(3040416,2,-1,3,5,'',0,1,'Explore further into the cave','','','397','',1601,1731,57,187,-57,93),
+(3040416,3,-1,4,5,'',0,1,'Discover the northern extent of Dromrek territory','','','397','',1081,1211,1201,1331,72,222),
+(3040416,4,-1,5,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0),
+(3040417,0,-1,1,2,'',0,1,'Try speaking with Dromrek Cook','397251','','397','',0,0,0,0,0,0),
+(3040417,1,-1,2,2,'',0,1,'Try speaking with Dromrek Provisioner','397243','','397','',0,0,0,0,0,0),
+(3040417,2,-1,3,2,'',0,1,'Try speaking with Foodpicker','397259','','397','',0,0,0,0,0,0),
+(3040417,3,-1,4,2,'',0,1,'Try speaking with Bashermaker','397255','','397','',0,0,0,0,0,0),
+(3040417,4,-1,5,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0),
+(3040418,0,-1,1,4,'',0,1,'Speak with Master Vanguard Regan','394164','','394','',0,0,0,0,0,0),
+(3040418,1,-1,2,4,'',0,1,'Speak with Librarian Hemfar','394227','','394','',0,0,0,0,0,0),
+(3040418,2,-1,3,4,'',0,1,'Speak with Alchemist Naeema','394228','','394','',0,0,0,0,0,0),
+(3040418,3,-1,4,4,'',0,1,'Speak with Scout Ethaniel','395210','','395','',0,0,0,0,0,0),
+(3040418,4,-1,5,3,'',0,1,'Loot Refined Jumjum Pollen from bixies','','88131','396','',0,0,0,0,0,0),
+(3040418,5,-1,6,1,'',0,1,'Deliver Refined Jumjum Pollen to Naeema','394228','88131','394','',0,0,0,0,0,0),
+(3040418,6,-1,7,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0),
+(3040419,0,-1,1,4,'',0,1,'Speak with Dromrek Cook','397251','','397','',0,0,0,0,0,0),
+(3040419,1,-1,1,4,'',0,1,'Speak with Dromrek Provisioner','397243','','397','',0,0,0,0,0,0),
+(3040419,2,-1,1,4,'',0,1,'Speak with Foodpicker','397259','','397','',0,0,0,0,0,0),
+(3040419,3,-1,1,4,'',0,1,'Speak with Bashermaker','397255','','397','',0,0,0,0,0,0),
+(3040419,4,-1,1,4,'',0,1,'Speak with Bigone','397231','','397','',0,0,0,0,0,0),
+(3040419,5,-1,2,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0),
+(3040420,0,-1,1,2,'',0,1,'Kill Bigone','397231','','397','',0,0,0,0,0,0),
+(3040420,1,-1,2,4,'',0,1,'Speak with Scout Madu','397007','','397','',0,0,0,0,0,0)
+ON DUPLICATE KEY UPDATE `activityid`=VALUES(`activityid`),`req_activity_id`=VALUES(`req_activity_id`),`step`=VALUES(`step`),`activitytype`=VALUES(`activitytype`),`target_name`=VALUES(`target_name`),`goalmethod`=VALUES(`goalmethod`),`goalcount`=VALUES(`goalcount`),`description_override`=VALUES(`description_override`),`npc_match_list`=VALUES(`npc_match_list`),`item_id_list`=VALUES(`item_id_list`),`zones`=VALUES(`zones`),`spell_list`=VALUES(`spell_list`),`min_x`=VALUES(`min_x`),`max_x`=VALUES(`max_x`),`min_y`=VALUES(`min_y`),`max_y`=VALUES(`max_y`),`min_z`=VALUES(`min_z`),`max_z`=VALUES(`max_z`);
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50106;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50107;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50108;
+)ROF309D" R"ROF309E(DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50109;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50110;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50111;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50112;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50113;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50114;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50115;
+DELETE FROM achievement_criteria WHERE achievement_id=500040200 AND component_type=1 AND component_id=50116;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50117;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50118;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50119;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50120;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50121;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50122;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50123;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50124;
+DELETE FROM achievement_criteria WHERE achievement_id=500040300 AND component_type=1 AND component_id=50125;
+INSERT INTO achievement_criteria(`achievement_id`,`component_type`,`component_sequence`,`component_id`,`event_type`,`progress_mode`,`behavior`,`target_id`,`target_id2`,`target_value`,`required_count`,`enabled`)VALUES
+(500040200,1,1,50106,4,3,0,3040401,0,0,1,1),
+(500040200,1,2,50107,4,3,0,3040402,0,0,1,1),
+(500040200,1,3,50108,4,3,0,3040403,0,0,1,1),
+(500040200,1,4,50109,4,3,0,3040404,0,0,1,1),
+(500040200,1,5,50110,4,3,0,3040405,0,0,1,1),
+(500040200,1,6,50111,4,3,0,3040406,0,0,1,1),
+(500040200,1,7,50112,4,3,0,3040407,0,0,1,1),
+(500040200,1,8,50113,4,3,0,3040408,0,0,1,1),
+(500040200,1,9,50114,4,3,0,3040409,0,0,1,1),
+(500040200,1,10,50115,4,3,0,3040410,0,0,1,1),
+(500040200,1,11,50116,4,3,0,3040411,0,0,1,0),
+(500040300,1,1,50117,4,3,0,3040412,0,0,1,1),
+(500040300,1,2,50118,4,3,0,3040413,0,0,1,1),
+(500040300,1,3,50119,4,3,0,3040414,0,0,1,1),
+(500040300,1,4,50120,4,3,0,3040415,0,0,1,1),
+(500040300,1,5,50121,4,3,0,3040416,0,0,1,1),
+(500040300,1,6,50122,4,3,0,3040417,0,0,1,1),
+(500040300,1,7,50123,4,3,0,3040418,0,0,1,1),
+(500040300,1,8,50124,4,3,0,3040419,0,0,1,1),
+(500040300,1,9,50125,4,3,0,3040420,0,0,1,1)
+ON DUPLICATE KEY UPDATE `component_type`=VALUES(`component_type`),`component_sequence`=VALUES(`component_sequence`),`component_id`=VALUES(`component_id`),`event_type`=VALUES(`event_type`),`progress_mode`=VALUES(`progress_mode`),`behavior`=VALUES(`behavior`),`target_id`=VALUES(`target_id`),`target_id2`=VALUES(`target_id2`),`target_value`=VALUES(`target_value`),`required_count`=VALUES(`required_count`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3040411,'Minohten are a menace!',0)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(2,3040411,3040411,0)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3040411,1,0,'Experience',1,0,1,65535),
+(3040411,2,2,'Crystalwing Plate Vambraces',0,0,1,151),
+(3040411,3,3,'Crystalwing Chain Bracelet',0,0,1,33544),
+(3040411,4,4,'Crystalwing Leather Vambraces',0,0,1,16480),
+(3040411,5,5,'Crystalwing Silk Bracelet',0,0,1,15360)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(30404111,1,1,1000,'May2013 Mesa option 30404111',1),
+(30404112,0,53554,1,'May2013 Mesa option 30404112',1),
+(30404113,0,53555,1,'May2013 Mesa option 30404113',1),
+(30404114,0,53556,1,'May2013 Mesa option 30404114',1),
+(30404115,0,53557,1,'May2013 Mesa option 30404115',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3040411,1,0,30404111),
+(3040411,2,0,30404112),
+(3040411,3,0,30404113),
+(3040411,4,0,30404114),
+(3040411,5,0,30404115)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3040420,'Reduce the Dromrek Threat',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(2,3040420,3040420,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3040420,1,0,'Experience',1,0,1,65535),
+(3040420,2,2,'Crystalwing Goru`kar Scout Health Stone',0,0,1,65535),
+(3040420,3,3,'Crystalwing Goru`kar Scout Power Stone',0,0,1,65535),
+(3040420,4,4,'Crystalwing Goru`kar Scout Shielding Stone',0,0,1,65535),
+(3040420,5,5,'Crystalwing Goru`kar Scout Striker Stone',0,0,1,65535)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(30404201,1,1,1000,'May2013 Mesa option 30404201',1),
+(30404202,0,53568,1,'May2013 Mesa option 30404202',1),
+(30404203,0,53569,1,'May2013 Mesa option 30404203',1),
+(30404204,0,53570,1,'May2013 Mesa option 30404204',1),
+(30404205,0,53571,1,'May2013 Mesa option 30404205',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3040420,1,0,30404201),
+(3040420,2,0,30404202),
+(3040420,3,0,30404203),
+(3040420,4,0,30404204),
+(3040420,5,0,30404205)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+-- Mesa complete package dependency; import all four SQL files and scripts in order. Capture3040411 remains disabled.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _mesa_scene_guard;
+CREATE TEMPORARY TABLE _mesa_scene_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _mesa_scene_guard VALUES('tent_identity',((SELECT COUNT(*)FROM npc_types WHERE id=397087 AND name='a_Minohten_tent'AND race=2250 AND class=62 AND bodytype=0 AND((lastname=''AND special_abilities='')OR(lastname IN('OBJ_FG_TENTGOOD','DEST_TNT_G')AND special_abilities='34,1')))=1));
+INSERT INTO _mesa_scene_guard VALUES('tent_spawn_positions',((SELECT COUNT(*)FROM spawn2 s JOIN spawnentry e ON e.spawngroupID=s.spawngroupID WHERE e.npcID=397087 AND s.zone='mesa'AND s.version=0 AND((s.id=112050 AND ABS(s.x-1141.0)<0.001 AND ABS(s.y--967.625)<0.001 AND ABS(s.z-94.875)<0.001) OR (s.id=112058 AND ABS(s.x-1125.5)<0.001 AND ABS(s.y--923.75)<0.001 AND ABS(s.z-97.125)<0.001) OR (s.id=112060 AND ABS(s.x-1084.0)<0.001 AND ABS(s.y--880.5)<0.001 AND ABS(s.z-97.75)<0.001) OR (s.id=112094 AND ABS(s.x-1033.25)<0.001 AND ABS(s.y--629.375)<0.001 AND ABS(s.z-94.0)<0.001) OR (s.id=112102 AND ABS(s.x-1068.875)<0.001 AND ABS(s.y--574.125)<0.001 AND ABS(s.z-94.0)<0.001) OR (s.id=112115 AND ABS(s.x-1126.25)<0.001 AND ABS(s.y--551.25)<0.001 AND ABS(s.z-96.0)<0.001) OR (s.id=112119 AND ABS(s.x-1239.625)<0.001 AND ABS(s.y--609.0)<0.001 AND ABS(s.z-94.625)<0.001) OR (s.id=112121 AND ABS(s.x-1188.0)<0.001 AND ABS(s.y--561.5)<0.001 AND ABS(s.z-98.125)<0.001)))=8));
+INSERT INTO _mesa_scene_guard VALUES('lake_stone_identity',((SELECT COUNT(*)FROM items WHERE id=88135 AND Name='Polished Lake Stone'AND idfile='IT10724')=1));
+INSERT INTO _mesa_scene_guard VALUES('lake_stone_ground',(NOT EXISTS(SELECT 1 FROM ground_spawns WHERE id=3040414 AND NOT(`zoneid` <=> 397 AND `version` <=> 0 AND ABS(`min_x`-(-705.25))<0.001 AND ABS(`max_x`-(-705.25))<0.001 AND ABS(`min_y`-(-327.76))<0.001 AND ABS(`max_y`-(-327.76))<0.001 AND ABS(`max_z`-(-18.9))<0.001 AND `name` <=> 'IT10724_ACTORDEF' AND `item` <=> 88135 AND `fix_z` <=> 0 AND `max_allowed` <=> 1 AND `respawn_timer` <=> 300))));
+START TRANSACTION;
+UPDATE npc_types SET lastname='DEST_TNT_G',special_abilities='34,1'WHERE id=397087;
+INSERT INTO ground_spawns(`id`,`zoneid`,`version`,`max_x`,`max_y`,`max_z`,`min_x`,`min_y`,`heading`,`name`,`item`,`max_allowed`,`comment`,`respawn_timer`,`fix_z`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)VALUES(3040414,397,0,-705.25,-327.76,-18.9,-705.25,-327.76,0,'IT10724_ACTORDEF',88135,1,'May2013 Make Gravel:2012-06-13 reported pickup location;native item model;300s reconstructed respawn',300,0,-1,-1,NULL,NULL)ON DUPLICATE KEY UPDATE `zoneid`=VALUES(`zoneid`),`version`=VALUES(`version`),`max_x`=VALUES(`max_x`),`max_y`=VALUES(`max_y`),`max_z`=VALUES(`max_z`),`min_x`=VALUES(`min_x`),`min_y`=VALUES(`min_y`),`heading`=VALUES(`heading`),`name`=VALUES(`name`),`item`=VALUES(`item`),`max_allowed`=VALUES(`max_allowed`),`comment`=VALUES(`comment`),`respawn_timer`=VALUES(`respawn_timer`),`fix_z`=VALUES(`fix_z`),`min_expansion`=VALUES(`min_expansion`),`max_expansion`=VALUES(`max_expansion`),`content_flags`=VALUES(`content_flags`),`content_flags_disabled`=VALUES(`content_flags_disabled`);
+COMMIT;
+-- Mesa complete package dependency; import all four SQL files and scripts in order. Capture3040411 remains disabled.
+SET NAMES utf8mb4;
+SET SESSION check_constraint_checks=1;
+DROP TEMPORARY TABLE IF EXISTS _mesa_parent_guard;
+CREATE TEMPORARY TABLE _mesa_parent_guard(label VARCHAR(80)PRIMARY KEY,ok TINYINT NOT NULL,CHECK(ok=1))ENGINE=InnoDB;
+INSERT INTO _mesa_parent_guard VALUES('achievement',((SELECT COUNT(*)FROM achievements WHERE id=500040300 AND name='Pranks and Research (46-50)' AND enabled=1 AND has_reward=1)=1));
+INSERT INTO _mesa_parent_guard VALUES('source',(NOT EXISTS(SELECT 1 FROM reward_sources WHERE(source_type=1 AND source_id=500040300 AND reward_set_id<>3050403)OR(reward_set_id=3050403 AND NOT(source_type=1 AND source_id=500040300)))));
+INSERT INTO _mesa_parent_guard VALUES('set',(NOT EXISTS(SELECT 1 FROM reward_sets WHERE reward_set_id=3050403 AND title<>'Pranks and Research (46-50)')));
+)ROF309E" R"ROF309F(INSERT INTO _mesa_parent_guard VALUES('items',((SELECT COUNT(*)FROM items WHERE (id=108583 AND Name='Flawed Consigned Scale Shield' AND classes=16861) OR (id=108584 AND Name='Flawed Consigned Carapace' AND classes=15906) OR (id=108573 AND Name='Flawed Consigned Mace' AND classes=15906) OR (id=108572 AND Name='Flawed Consigned Brawl Stick' AND classes=16861) OR (id=108576 AND Name='Flawed Consigned Glass Shard' AND classes=16793) OR (id=108582 AND Name='Flawed Consigned Longbow' AND classes=285) OR (id=108574 AND Name='Flawed Consigned Longsword' AND classes=413) OR (id=108575 AND Name='Flawed Consigned Shortsword' AND classes=413))=8));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040301',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040301 AND NOT(reward_type=0 AND reward_data_id=108583 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108583'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040301 AND NOT(reward_set_id=3050403 AND option_id=1))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040301)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040302',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040302 AND NOT(reward_type=0 AND reward_data_id=108584 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108584'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040302 AND NOT(reward_set_id=3050403 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040302)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040303',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040303 AND NOT(reward_type=0 AND reward_data_id=108573 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108573'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040303 AND NOT(reward_set_id=3050403 AND option_id=2))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040303)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040304',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040304 AND NOT(reward_type=0 AND reward_data_id=108572 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108572'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040304 AND NOT(reward_set_id=3050403 AND option_id=3))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040304)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040305',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040305 AND NOT(reward_type=0 AND reward_data_id=108576 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108576'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040305 AND NOT(reward_set_id=3050403 AND option_id=4))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040305)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040306',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040306 AND NOT(reward_type=0 AND reward_data_id=108582 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108582'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040306 AND NOT(reward_set_id=3050403 AND option_id=5))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040306)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040307',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040307 AND NOT(reward_type=0 AND reward_data_id=108574 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108574'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040307 AND NOT(reward_set_id=3050403 AND option_id=6))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040307)));
+INSERT INTO _mesa_parent_guard VALUES('reward_305040308',(NOT EXISTS(SELECT 1 FROM rewards WHERE reward_id=305040308 AND NOT(reward_type=0 AND reward_data_id=108575 AND amount=1 AND description='May2013 Mesa parent 500040300 item 108575'))AND NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_id=305040308 AND NOT(reward_set_id=3050403 AND option_id=7))AND NOT EXISTS(SELECT 1 FROM reward_source_entries WHERE reward_id=305040308)));
+INSERT INTO _mesa_parent_guard VALUES('options',(NOT EXISTS(SELECT 1 FROM reward_options WHERE reward_set_id=3050403 AND NOT((`reward_set_id` <=> 3050403 AND `option_id` <=> 1 AND `sequence` <=> 1 AND `label` <=> 'Flawed Consigned Scale Shield' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 2 AND `sequence` <=> 2 AND `label` <=> 'Flawed Consigned caster carapace and mace' AND `common_to_all` <=> 1 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 15906) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 3 AND `sequence` <=> 3 AND `label` <=> 'Flawed Consigned Brawl Stick' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16861) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 4 AND `sequence` <=> 4 AND `label` <=> 'Flawed Consigned Glass Shard' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 16793) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 5 AND `sequence` <=> 5 AND `label` <=> 'Flawed Consigned Longbow' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 285) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 6 AND `sequence` <=> 6 AND `label` <=> 'Flawed Consigned Longsword' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 7 AND `sequence` <=> 7 AND `label` <=> 'Flawed Consigned Shortsword' AND `common_to_all` <=> 0 AND `flags` <=> 0 AND `enabled` <=> 1 AND `class_mask` <=> 413)))));
+INSERT INTO _mesa_parent_guard VALUES('links',(NOT EXISTS(SELECT 1 FROM reward_option_entries WHERE reward_set_id=3050403 AND NOT((`reward_set_id` <=> 3050403 AND `option_id` <=> 1 AND `sequence` <=> 0 AND `reward_id` <=> 305040301) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 2 AND `sequence` <=> 0 AND `reward_id` <=> 305040302) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 2 AND `sequence` <=> 1 AND `reward_id` <=> 305040303) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 3 AND `sequence` <=> 0 AND `reward_id` <=> 305040304) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 4 AND `sequence` <=> 0 AND `reward_id` <=> 305040305) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 5 AND `sequence` <=> 0 AND `reward_id` <=> 305040306) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 6 AND `sequence` <=> 0 AND `reward_id` <=> 305040307) OR (`reward_set_id` <=> 3050403 AND `option_id` <=> 7 AND `sequence` <=> 0 AND `reward_id` <=> 305040308)))));
+START TRANSACTION;
+INSERT INTO reward_sets(`reward_set_id`,`title`,`enabled`)VALUES
+(3050403,'Pranks and Research (46-50)',1)
+ON DUPLICATE KEY UPDATE `title`=VALUES(`title`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_sources(`source_type`,`source_id`,`reward_set_id`,`enabled`)VALUES
+(1,500040300,3050403,1)
+ON DUPLICATE KEY UPDATE `source_id`=VALUES(`source_id`),`reward_set_id`=VALUES(`reward_set_id`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_options(`reward_set_id`,`option_id`,`sequence`,`label`,`common_to_all`,`flags`,`enabled`,`class_mask`)VALUES
+(3050403,1,1,'Flawed Consigned Scale Shield',1,0,1,16861),
+(3050403,2,2,'Flawed Consigned caster carapace and mace',1,0,1,15906),
+(3050403,3,3,'Flawed Consigned Brawl Stick',0,0,1,16861),
+(3050403,4,4,'Flawed Consigned Glass Shard',0,0,1,16793),
+(3050403,5,5,'Flawed Consigned Longbow',0,0,1,285),
+(3050403,6,6,'Flawed Consigned Longsword',0,0,1,413),
+(3050403,7,7,'Flawed Consigned Shortsword',0,0,1,413)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`label`=VALUES(`label`),`common_to_all`=VALUES(`common_to_all`),`flags`=VALUES(`flags`),`enabled`=VALUES(`enabled`),`class_mask`=VALUES(`class_mask`);
+INSERT INTO rewards(`reward_id`,`reward_type`,`reward_data_id`,`amount`,`description`,`enabled`)VALUES
+(305040301,0,108583,1,'May2013 Mesa parent 500040300 item 108583',1),
+(305040302,0,108584,1,'May2013 Mesa parent 500040300 item 108584',1),
+(305040303,0,108573,1,'May2013 Mesa parent 500040300 item 108573',1),
+(305040304,0,108572,1,'May2013 Mesa parent 500040300 item 108572',1),
+(305040305,0,108576,1,'May2013 Mesa parent 500040300 item 108576',1),
+(305040306,0,108582,1,'May2013 Mesa parent 500040300 item 108582',1),
+(305040307,0,108574,1,'May2013 Mesa parent 500040300 item 108574',1),
+(305040308,0,108575,1,'May2013 Mesa parent 500040300 item 108575',1)
+ON DUPLICATE KEY UPDATE `reward_type`=VALUES(`reward_type`),`reward_data_id`=VALUES(`reward_data_id`),`amount`=VALUES(`amount`),`description`=VALUES(`description`),`enabled`=VALUES(`enabled`);
+INSERT INTO reward_option_entries(`reward_set_id`,`option_id`,`sequence`,`reward_id`)VALUES
+(3050403,1,0,305040301),
+(3050403,2,0,305040302),
+(3050403,2,1,305040303),
+(3050403,3,0,305040304),
+(3050403,4,0,305040305),
+(3050403,5,0,305040306),
+(3050403,6,0,305040307),
+(3050403,7,0,305040308)
+ON DUPLICATE KEY UPDATE `option_id`=VALUES(`option_id`),`sequence`=VALUES(`sequence`),`reward_id`=VALUES(`reward_id`);
+COMMIT;
+)ROF309F",
+		.content_schema_update = false,
+	},
 };

@@ -1,7 +1,9 @@
 local M=require("achievement_quest_blightfire")
+local S=require('achievement_quest_stonehive')
 
--- NMS preserved: TSS farm kitchen chain (tasks 600465-600467) from the retired
--- Cook_Idriak.pl; runs alongside the blightfire glue.
+-- Three-layer giver: blightfire job-board glue + stonehive glue + the NMS
+-- preserved TSS farm kitchen chain (tasks 600465-600467) from the retired
+-- Cook_Idriak.pl.
 local function kitchen_say(e)
 	local text = e.message:lower()
 	local done_msg = "The pot thanks you, and so does Idriak. Eat well, friend - you have earned it."
@@ -58,5 +60,5 @@ local function kitchen_trade(e)
 	e.self:ReturnHandinItems(e.other)
 end
 
-function event_say(e)M.say(e); kitchen_say(e) end
-function event_trade(e)M.trade(e); kitchen_trade(e) end
+function event_say(e)M.say(e); S.say(e); kitchen_say(e) end
+function event_trade(e)M.trade(e); S.trade(e); kitchen_trade(e) end

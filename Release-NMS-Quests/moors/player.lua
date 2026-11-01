@@ -8,6 +8,9 @@ local bixie_scenes = require("achievement_quest_bixie_scenes")
 local spirits = require("achievement_quest_blightfire_spirits")
 local welcome = require("achievement_quest_blightfire_welcome")
 local champion = require("achievement_quest_blightfire_champion")
+-- The Stone Hive chain starts from moors givers (Vreshnar/Brezuu/Idriak);
+-- run its task bookkeeping here too so accepts in this zone stay in sync.
+local stonehive = require("achievement_quest_stonehive")
 
 -- NMS: Old Man McKenzie's King of the Monsters (moors v40 monster mission).
 -- The task (800005) tracks the six devour-per-color activities;
@@ -33,6 +36,7 @@ end
 function event_task_accepted(e)
 	welcome.player_accepted(e)
 	champion.player(e)
+	stonehive.accepted(e)
 end
 
 function event_task_stage_complete(e)
