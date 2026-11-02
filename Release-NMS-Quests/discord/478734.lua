@@ -5,6 +5,7 @@
 -- Rasper: raidKorafax.html.
 
 local raid = require("sod_raids")
+local ach = require("achievement_flags")
 local EVENT = raid.EVENT.PALLORAX
 local CHEST = raid.CHEST.PALLORAX
 
@@ -23,5 +24,7 @@ function event_signal(e)
 		if exp.valid and not exp:HasLockout(EVENT) then
 			exp:AddLockout(EVENT, eq.seconds("72h"))
 		end
+		ach.set_zone(1647040, 1, 1647040)
+		ach.set_zone(1600040, 1, 1600279)
 	end
 end

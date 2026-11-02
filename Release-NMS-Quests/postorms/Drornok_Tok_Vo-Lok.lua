@@ -1,4 +1,5 @@
 function event_spawn(e)
+e.self:Shout("Who among you dares to butcher the children of the Lost Kingdom of Lok with impunity? You spill my subjects' blood as though it were rainwater. I am Drornok Tok Vo`Lok, and that debt will not go unanswered.");
 eq.set_timer('depop', 3600 * 1000);
 eq.spawn2(eq.ChooseRandom(210246,210260), 0, 0,-315,-163,-402,0); -- NPC(s): #a_tempest_toad (210246)
 eq.spawn2(eq.ChooseRandom(210246,210260), 0, 0,-284,50,-408,0); -- NPC(s): #a_tempest_toad (210246)

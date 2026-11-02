@@ -20,7 +20,6 @@ sub EVENT_SAY {
       my ($title, $phrase, $orux, $zone, $offer) = @{$MISSIONS{$tid}};
       if (quest::istaskcompleted($tid) && !quest::get_data($cid . "-tbsm-$tid")) {
         quest::say("Well done on $title! Your Orux, as promised.");
-        quest::summonitem(79911, $orux);
         quest::set_data($cid . "-tbsm-$tid", 1);
         return;
       }

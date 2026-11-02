@@ -542,6 +542,22 @@ void ClientList::SendOnlineGuildMembers(uint32 FromID, uint32 GuildID)
 	safe_delete(pack);
 }
 
+// NMS: /who class membership test, shared by the SendWhoAll count pass, the
+// SendWhoAll emit pass and ConsoleSendWhoAll so the three cannot diverge.
+// class_() is the multiclassing Bard sentinel for every character and is not a
+// usable filter key, so membership is tested against the transported owned-class
+// mask instead. The full-width request value is range checked before narrowing to
+// uint8 so a malformed value such as 257 cannot alias onto a real class ID.
+// GetPlayerClassBit is used rather than 1 << (wclass - 1): a class ID is never a
+// class bitmask.
+static inline bool WhoHasClass(const ClientListEntry &cle, uint16 wclass)
+{
+	if (wclass < Class::Warrior || wclass > Class::Berserker) {
+		return false;
+	}
+	return (GetPlayerClassBit(static_cast<uint8>(wclass)) & cle.classes_bits()) != 0;
+}
+
 void ClientList::SendWhoAll(uint32 fromid,const char* to, int16 admin, Who_All_Struct* whom, WorldTCPConnection* connection) {
 	try {
 		LinkedListIterator<ClientListEntry*> iterator(clientlist);
@@ -604,7 +620,7 @@ void ClientList::SendWhoAll(uint32 fromid,const char* to, int16 admin, Who_All_S
 					(whom->lvllow == 0xFFFF ||
 									(countcle->level() >= whom->lvllow && countcle->level() <= whom->lvlhigh &&
 									(countcle->Anon() == 0 || admin > countcle->Admin()))) &&
-									(whom->wclass == 0xFFFF || (countcle->class_() == whom->wclass &&
+									(whom->wclass == 0xFFFF || (WhoHasClass(*countcle, whom->wclass) &&
 																(countcle->Anon() == 0 || admin > countcle->Admin()))) &&
 									(whom->wrace == 0xFFFF ||
 									(countcle->race() == whom->wrace && (countcle->Anon() == 0 || admin > countcle->Admin()))) &&
@@ -702,7 +718,7 @@ void ClientList::SendWhoAll(uint32 fromid,const char* to, int16 admin, Who_All_S
 				(whom == 0 || (
 					((cle->Admin() >= AccountStatus::QuestTroupe && cle->GetGM()) || whom->gmlookup == 0xFFFF) &&
 					(whom->lvllow == 0xFFFF || (cle->level() >= whom->lvllow && cle->level() <= whom->lvlhigh && (cle->Anon()==0 || admin>cle->Admin()))) &&
-					(whom->wclass == 0xFFFF || (cle->class_() == whom->wclass && (cle->Anon()==0 || admin>cle->Admin()))) &&
+					(whom->wclass == 0xFFFF || (WhoHasClass(*cle, whom->wclass) && (cle->Anon()==0 || admin>cle->Admin()))) &&
 					(whom->wrace == 0xFFFF || (cle->race() == whom->wrace && (cle->Anon()==0 || admin>cle->Admin()))) &&
 					(whomlen == 0 || (
 						(tmpZone != 0 && strncasecmp(tmpZone, whom->whom, whomlen) == 0) ||
@@ -1141,7 +1157,7 @@ void ClientList::ConsoleSendWhoAll(const char* to, int16 admin, Who_All_Struct* 
 			&& (whom == 0 || (
 				((cle->Admin() >= AccountStatus::QuestTroupe && cle->GetGM()) || whom->gmlookup == 0xFFFF) &&
 				(whom->lvllow == 0xFFFF || (cle->level() >= whom->lvllow && cle->level() <= whom->lvlhigh)) &&
-				(whom->wclass == 0xFFFF || cle->class_() == whom->wclass) &&
+				(whom->wclass == 0xFFFF || WhoHasClass(*cle, whom->wclass)) &&
 				(whom->wrace == 0xFFFF || cle->race() == whom->wrace) &&
 				(whomlen == 0 || (
 					(tmpZone != 0 && strncasecmp(tmpZone, whom->whom, whomlen) == 0) ||

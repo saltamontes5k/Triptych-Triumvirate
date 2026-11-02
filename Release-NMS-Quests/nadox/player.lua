@@ -14,7 +14,7 @@ function event_click_door(e)
 end
 
 function event_enter_zone(e)
-	if e.self:GetClass() == Class.SHAMAN then
+	if e.self:HasClassID(Class.SHAMAN) then
 		local data_bucket = ("Epic-Shaman-"..e.self:CharacterID());
 		local shaman_epic15_nadox = tonumber(eq.get_data("shaman_epic15_nadox")) or 0
 		if eq.get_data(data_bucket) ~= "" then -- Has Started
@@ -39,7 +39,7 @@ function event_enter_zone(e)
 end
 
 function event_loot(e)
-	if e.self:GetClass() == Class.SHAMAN and e.item:GetID() == 57085 then -- Item: Ring of the Undead Spiritcharmer
+	if e.self:HasClassID(Class.SHAMAN) and e.item:GetID() == 57085 then -- Item: Ring of the Undead Spiritcharmer
 		local data_bucket = ("Epic-Shaman-"..e.self:CharacterID());
 		if eq.get_data(data_bucket) ~= "" then -- Has Started
 			local temp = eq.get_data(data_bucket);

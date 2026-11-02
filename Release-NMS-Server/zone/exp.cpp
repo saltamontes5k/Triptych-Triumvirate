@@ -1359,6 +1359,15 @@ void Client::SetEXP(ExpSource exp_source, uint64 set_exp, uint64 set_aaxp, bool 
 		return; // Must be invalid class/race
 	}
 
+	// Fellowship vitality intercepts a combat award before any XP is written, so
+	// the banked share and the member's own share commit in one transaction.
+	// The finalizer re-enters SetEXP with the transaction flag set, which falls
+	// through to the ordinary (multiclass-aware) path below.
+	if (!isrezzexp && exp_source == ExpSource::Kill && npc &&
+		ProcessFellowshipCombatExperience(exp_source, set_exp, set_aaxp, npc)) {
+		return;
+	}
+
 	uint32 i = 0;
 	uint32 membercount = 0;
 	if(GetGroup())

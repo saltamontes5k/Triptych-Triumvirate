@@ -139,7 +139,9 @@ int main() {
 	// Check every minute for unused channels we can delete
 	//
 	Timer ChannelListProcessTimer(60000);
-	Timer ClientConnectionPruneTimer(60000);
+	// Every chat client gets one OP_SessionReady per tick; the client gives up after ~40s of
+	// silence, so 15s leaves margin without being chatty (1 byte, ~4/minute per client).
+	Timer ClientConnectionPruneTimer(15000);
 
 	Timer keepalive(INTERSERVER_TIMER); // does auto-reconnect
 

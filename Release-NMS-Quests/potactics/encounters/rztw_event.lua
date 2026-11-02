@@ -210,7 +210,13 @@ end
 
 function Pit_Add_Spawn(e)
 	e.self:SetRunning(true);
-	e.self:MoveTo(rztw_entity:GetX(),rztw_entity:GetY(),rztw_entity:GetZ() - 25,rztw_entity:GetHeading(),true);
+	local rztw = rztw_entity;
+	if rztw == nil or not rztw.valid then
+		rztw = eq.get_entity_list():GetMobByNpcTypeID(warlord_id);
+	end
+	if rztw ~= nil and rztw.valid then
+		e.self:MoveTo(rztw:GetX(),rztw:GetY(),rztw:GetZ() - 25,rztw:GetHeading(),true);
+	end
 	eq.set_timer("depop", 15 * 60 * 1000);
 end
 

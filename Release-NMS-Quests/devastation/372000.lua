@@ -27,6 +27,18 @@ function event_say(e)
 		if por.enter(e.other, "ragea", "Razorthorn, Tower of Sullon Zek", 1, 6, "6h") then
 			e.self:Say("The tower opens before you. Find the proof of corruption within and bring it to me.");
 		end
+	elseif t:find("wall") then
+		-- PoR theme completion: "Into the Wall" (303192)
+		if not e.other:IsTaskActive(por.tasks.into_the_wall) and not e.other:IsTaskCompleted(por.tasks.into_the_wall) then
+			e.other:AssignTask(por.tasks.into_the_wall);
+			e.self:Say("The giants mass at the wall even now, and their builders shore it up faster than we can pull it down. Fifteen of them - cut them down and the Outriders may yet hold.");
+		elseif e.other:IsTaskCompleted(por.tasks.into_the_wall) then
+			if (tonumber(e.other:GetBucket("por.into_the_wall_reward")) or 0) == 0 then
+				e.other:SummonFixedItem(88103); -- Legendary Berserker Bone
+				e.other:SetBucket("por.into_the_wall_reward", "1");
+				e.self:Say("The wall holds, thanks to you. Take this bone from one of their champions - Grand Librarian Maelin will know what it means.");
+			end
+		end
 	elseif t:find("sullon") or t:find("raid") then
 		if not e.other:HasItem(por.items.enraged_flesh_charm) then
 			e.self:Say("You would need the Enraged Flesh Charm to walk the tower, and the rage of her greatest servants to draw her out.");

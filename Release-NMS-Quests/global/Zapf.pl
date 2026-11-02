@@ -54,7 +54,13 @@ sub Train {
 		#:: Set all available skills to maximum for race/class at current level
 		foreach my $skill ( 0 .. 74 ) {
 			next unless $client->CanHaveSkill($skill);
-			my $maxSkill = $client->MaxSkill( $skill, $client->GetClass(), $ulevel );
+			my $maxSkill = 0;
+			my $class_bits = $client->GetClassesBitmask() || $client->GetClassBitmask();
+			for my $class_id (1 .. 16) {
+				next unless ($class_bits & (1 << ($class_id - 1)));
+				my $class_max = $client->MaxSkill( $skill, $class_id, $ulevel );
+				$maxSkill = $class_max if $class_max > $maxSkill;
+			}
 			next unless $maxSkill > $client->GetRawSkill($skill);
 			$client->SetSkill( $skill, $maxSkill );
 		}

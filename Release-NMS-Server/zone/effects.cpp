@@ -317,7 +317,7 @@ int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 			if (RuleB(Spells, IgnoreSpellDmgLvlRestriction) && !spells[spell_id].no_heal_damage_item_mod && GetSharedSpellDamage()) {
 				value -= GetExtraSpellAmt(spell_id, GetSharedSpellDamage(), base_value) * ratio / 100;
 
-			} else if (!spells[spell_id].no_heal_damage_item_mod && GetSharedSpellDamage() && spells[spell_id].classes[(GetClass() % 17) - 1] >= GetLevel() - 5) {
+			} else if (!spells[spell_id].no_heal_damage_item_mod && GetSharedSpellDamage() && GetSpellLevelForCaster(spell_id) >= GetLevel() - 5) {
 				value -= GetExtraSpellAmt(spell_id, GetSharedSpellDamage(), base_value) * ratio / 100;
 			}
 
@@ -833,7 +833,7 @@ int32 Mob::GetActSpellCost(uint16 spell_id, int32 cost)
 		cost *= 2;
 
 	// Formula = Unknown exact, based off a random percent chance up to mana cost(after focuses) of the cast spell
-	if(itembonuses.Clairvoyance && spells[spell_id].classes[(GetClass()%17) - 1] >= GetLevel() - 5)
+	if(itembonuses.Clairvoyance && GetSpellLevelForCaster(spell_id) >= GetLevel() - 5)
 	{
 		int mana_back = itembonuses.Clairvoyance * zone->random.Int(1, 100) / 100;
 		// Doesnt generate mana, so best case is a free spell

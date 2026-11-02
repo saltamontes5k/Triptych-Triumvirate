@@ -55,7 +55,10 @@ function Vallon_Timer(e)
 end
 
 function Vallon_Death(e)
-	eq.spawn2(pp_id,0,0,e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());	-- NPC: A_Planar_Projection (202368)
+	-- PP for the static-instance dz is spawned by Vallon_Zek.lua (Custom:StaticInstanceVersion gate)
+	if tostring(eq.get_zone_instance_version()) ~= eq.get_rule("Custom:StaticInstanceVersion") then
+		eq.spawn2(pp_id,0,0,e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading());	-- NPC: A_Planar_Projection (202368)
+	end
 	eq.signal(vz_controller_id,99);															-- signal #vz_controller to reset
 end
 

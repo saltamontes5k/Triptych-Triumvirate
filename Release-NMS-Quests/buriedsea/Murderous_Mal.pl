@@ -43,7 +43,15 @@ sub EVENT_SAY {
   my $tid = $mytasks[$next];
   if (quest::istaskactive($tid)) {
     if ($text=~/hail/i) {
-      quest::say("Get a move on, $name! The work will not do itself.");
+      # Deliver the Goods (625014): hand out the package while the
+      # delivery leg is still pending. Silverlip Slim (barren) takes it
+      # and gives back the Bill of Sale.
+      if ($tid == 625014 && quest::istaskactivityactive(625014, 0)) {
+        quest::say("Here's the " . quest::itemlink(88232) . ". Get it to Silverlip Slim on the Barren Coast and bring me back his bill of sale. And don't peek inside.");
+        quest::summonitem(88232);
+      } else {
+        quest::say("Get a move on, $name! The work will not do itself.");
+      }
     }
     return;
   }

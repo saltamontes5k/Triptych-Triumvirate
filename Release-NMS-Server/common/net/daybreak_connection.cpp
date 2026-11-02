@@ -1162,6 +1162,17 @@ void EQ::Net::DaybreakConnection::ProcessResend(int stream)
 				now_ms,
 				first_sent_ms
 			);
+
+			// LogNetClient does not reach the file log, so a connection closed here used to
+			// vanish without a trace. A reliable packet that goes unacknowledged is a real
+			// disconnect reason and belongs in the log.
+			LogInfo(
+				"Closing connection [{}]:[{}] -- reliable packet unacknowledged for [{}] ms (resend_timeout [{}] ms)",
+				m_endpoint,
+				m_port,
+				time_since_first_sent,
+				m_owner->m_options.resend_timeout
+			);
 			Close();
 			return;
 		}

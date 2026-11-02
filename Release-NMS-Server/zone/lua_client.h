@@ -76,6 +76,7 @@ public:
 	int GetBaseWIS();
 	int GetWeight();
 	uint32 GetEXP();
+	int GetFellowshipID(); // NMS: natal RoF2 fellowship id (0 = none)
 	float GetEXPModifier();
 	float GetEXPModifier(uint32 zone_id);
 	float GetEXPModifier(uint32 zone_id, int16 instance_version);
@@ -411,6 +412,9 @@ public:
 		uint32 value
 	);
 	bool CompleteSharedTaskAchievement(uint32 achievement_id);
+	std::string GetSharedTaskIdentity();
+	uint32 GetZoneInstanceVersion();
+	int GetTaskActivityDoneCount(int task_id, int activity_id);
 	void LockSharedTask(bool lock);
 	void EndSharedTask();
 	void EndSharedTask(bool send_fail);
@@ -636,6 +640,7 @@ public:
 	void SetSecondaryWeaponOrnamentation(uint32 model_id);
 	void TaskSelector(luabind::adl::object table);
 	void TaskSelector(luabind::adl::object table, bool ignore_cooldown);
+	bool TaskSelectorFromNPC(Lua_NPC npc, luabind::adl::object table);
 
 	void SetClientMaxLevel(uint8 max_level);
 	uint8 GetClientMaxLevel();

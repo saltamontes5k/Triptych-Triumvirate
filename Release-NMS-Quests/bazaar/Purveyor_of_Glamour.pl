@@ -51,12 +51,11 @@ sub EVENT_ITEM {
         if ($item_id != 0) {
             my $item_name = quest::getitemname($item_id % 1000000);
 
-            my $sth = $dbh->prepare('SELECT id FROM items WHERE name LIKE ?');
-            $sth->execute("Glamour - '" . $item_name . "'");
-            if (my $row = $sth->fetchrow_hashref()) {
+            my $glamour_id = find_glamour_for_item($dbh, $item_id, $item_name);
+            if (defined $glamour_id) {
                 if (plugin::check_handin(\%itemcount, $item_id => 1, "platinum" => 5000)) {
                     plugin::Whisper("Perfect! Here, I had a Glamour almost ready. I'll just need to attune it to your $item_name! Enjoy!");
-                    $client->SummonFixedItem($row->{id});                          
+                    $client->SummonFixedItem($glamour_id);
                 } else {
                     plugin::Whisper("I must insist upon my fee $clientName for the $item_name. Please ensure you handed me exactly 5000 platinum coins alongside your item.");
                 }
@@ -144,6 +143,32 @@ sub SerializeList {
 sub DeserializeList {
     my $string = shift;
     return split(',', $string);
+}
+
+# Work out which Glamour to hand back for a given item.
+#
+# Step 1 is the original behaviour: look the item up by name, "Glamour - '<item name>'".
+# Step 2 covers de-duplication. Identical-looking Glamours were collapsed down to one
+# keeper per (slot mask, appearance) pair, so many base items no longer have a Glamour
+# carrying their own name. Every removed Glamour left its name behind in glamour_alias
+# pointing at the keeper that absorbed it, so handing in a culled item still returns the
+# same look. Nothing is lost - only the redundant duplicate rows are gone.
+sub find_glamour_for_item {
+    my ($dbh, $item_id, $item_name) = @_;
+
+    return undef if $item_name =~ /^Glamour - /;   # already a Glamour, the recycling paths own these
+
+    my $key = "Glamour - '" . $item_name . "'";
+
+    my $sth = $dbh->prepare('SELECT id FROM items WHERE name LIKE ? LIMIT 1');
+    $sth->execute($key);
+    my $exact = $sth->fetchrow();
+    return $exact if defined $exact;
+
+    my $alias = $dbh->prepare('SELECT glamour_id FROM glamour_alias WHERE name = ? LIMIT 1');
+    $alias->execute($key);
+    my $keeper = $alias->fetchrow();
+    return $keeper;
 }
 
 sub get_random_glamour {

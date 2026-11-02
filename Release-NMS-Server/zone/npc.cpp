@@ -313,7 +313,8 @@ NPC::NPC(const NPCType *npc_type_data, Spawn2 *in_respawn, const glm::vec4 &posi
 	innate_proc_spell_id = 0;
 	m_record_loot_stats  = false;
 
-	if (GetClass() == Class::MercenaryLiaison && RuleB(Mercs, AllowMercs)) {
+	if (GetClass() == Class::MercenaryLiaison && RuleB(Mercs, AllowMercs) &&
+		(!zone || zone->AllowMercs())) {
 		LoadMercenaryTypes();
 		LoadMercenaries();
 	}

@@ -281,6 +281,11 @@
 #define ServerOP_FabledSeason        0x4790 // world -> zone: ServerFabledSeason_Struct (authoritative state)
 #define ServerOP_FabledSeasonUpdate  0x4791 // zone -> world: ServerFabledSeasonUpdate_Struct (request or row-changed)
 
+// NMS: RoF2 fellowship (see Release-NMS-Server/docs/rof2-fellowship.md)
+#define ServerOP_FellowshipRefresh     0x5125 // zone -> world -> zone: zero payload invalidation
+#define ServerOP_FellowshipChat        0x5126 // zone -> world: FellowshipChatRequest
+#define ServerOP_FellowshipChatDeliver 0x5127 // world -> zone: FellowshipChatDelivery
+
 // player events
 #define ServerOP_QSSendQuery 0x5000
 #define ServerOP_PlayerEvent 0x5100
@@ -602,6 +607,9 @@ struct ServerClientList_Struct {
 	uint8	LFGToLevel;
 	bool	LFGMatchFilter;
 	char	LFGComments[64];
+	// NMS: owned-class bitmask (any owned class matches). Appended so existing
+	// packed field offsets are unchanged; the consumer validates the packet size.
+	uint32	classes_bits;
 };
 
 struct ServerClientListKeepAlive_Struct {
@@ -1862,7 +1870,21 @@ struct BazaarPurchaseMessaging_Struct {
 	uint32           transaction_status;
 	bool             offline_purchase;
 };
+// Fellowship world <-> zone messages. Client input supplies text only; the
+// originating zone supplies actor_id and world derives every recipient field
+// from freshly loaded membership, never from packet bytes.
+struct FellowshipChatRequest {
+	uint32 actor_id;
+	char   message[1024];
+};
 
+struct FellowshipChatDelivery {
+	uint32 actor_id;
+	uint32 recipient_id;
+	uint32 fellowship_id;
+	char   sender[64];
+	char   message[1024];
+};
 
 #pragma pack()
 

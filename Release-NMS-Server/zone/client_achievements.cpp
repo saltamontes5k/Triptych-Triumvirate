@@ -96,9 +96,14 @@ std::optional<RewardSelectionSession> BuildAchievementRewardSelectionSession(
 	const EQ::Achievements::Definition &definition,
 	const RewardSelectionSet &reward_set,
 	RewardSelectionChannel channel,
+	uint32_t character_classes,
 	uint32_t selected_option_id = 0
 )
 {
+	auto eligible_reward_set = reward_set;
+	std::erase_if(eligible_reward_set.options, [character_classes](const auto &option) {
+		return !EQ::RewardSelection::OptionEligibleForClass(option, character_classes);
+	});
 	RewardSelectionSession session;
 	session.source.source = RewardSelectionSource::Achievement;
 	session.source.source_id = definition.achievement_id;
@@ -106,10 +111,12 @@ std::optional<RewardSelectionSession> BuildAchievementRewardSelectionSession(
 	session.pending_reward_id = definition.achievement_id;
 	session.reward_set.reward_set_id = reward_set.reward_set_id;
 	session.reward_set.title = reward_set.title;
-	session.reward_set.options.reserve(reward_set.options.size());
+	session.reward_set.options.reserve(eligible_reward_set.options.size());
 
-	bool found_selected_option = selected_option_id == 0;
-	for (const auto &option : reward_set.options) {
+	bool found_selected_option = selected_option_id == 0 ||
+		(selected_option_id == EQ::RewardSelection::CommonOnlySelection &&
+		 EQ::RewardSelection::IsCommonOnly(eligible_reward_set));
+	for (const auto &option : eligible_reward_set.options) {
 		if (
 			selected_option_id &&
 			!option.common_to_all &&
@@ -124,6 +131,7 @@ std::optional<RewardSelectionSession> BuildAchievementRewardSelectionSession(
 		selection_option.label = option.label;
 		selection_option.common_to_all = option.common_to_all;
 		selection_option.flags = option.flags;
+		selection_option.class_mask = option.class_mask;
 		selection_option.rewards = option.rewards;
 		session.reward_set.options.emplace_back(std::move(selection_option));
 
@@ -1951,6 +1959,14 @@ bool ClientAchievementState::EvaluateDefinition(
 
 	size_t required_components = 0;
 	bool all_required_satisfied = true;
+	// A partially authored catalogue must not complete after satisfying only
+	// its mapped subset. Every unbound completion component remains a barrier.
+	for (const auto &component : definition.components[1]) {
+		if (!component_behaviors.contains(std::make_pair(uint8_t{1}, component.component_id))) {
+			++required_components;
+			all_required_satisfied = false;
+		}
+	}
 	bool hidden = false;
 	bool locked = false;
 	for (const auto &[component_key, behavior] : component_behaviors) {
@@ -2255,8 +2271,11 @@ void ClientAchievementState::ProcessPendingNotifications()
 
 void ClientAchievementState::QueueRewards(uint32_t achievement_id)
 {
+	// Zone-enter-only (exploration) achievements never deliver rewards; their
+	// achievements still track, complete, and award points.
 	if (
 		AchievementManager::Instance().Rewards(achievement_id).empty() ||
+		AchievementManager::Instance().IsExplorationOnly(achievement_id) ||
 		!m_pending_reward_ids.insert(achievement_id).second
 	) {
 		return;
@@ -2650,7 +2669,8 @@ void ClientAchievementState::SendRewardDisplay(uint32_t definition_index)
 		reward_set &&
 		m_states[definition_index].status ==
 			EQ::Achievements::Status::Completed &&
-		RuleB(Achievements, GrantRewards)
+		RuleB(Achievements, GrantRewards) &&
+		!manager.IsExplorationOnly(definition.achievement_id)
 	) {
 		std::vector<PersistedAchievementRewardSelection> persisted;
 		auto rows = database.QueryDatabase(fmt::format(
@@ -2697,6 +2717,7 @@ void ClientAchievementState::SendRewardDisplay(uint32_t definition_index)
 						definition,
 						*reward_set,
 						RewardSelectionChannel::Claimable,
+						m_client.GetClassesBits(),
 						selected_option_id
 					);
 					if (pending && selection.Open(*pending)) {
@@ -2724,7 +2745,8 @@ void ClientAchievementState::SendRewardDisplay(uint32_t definition_index)
 		auto preview = BuildAchievementRewardSelectionSession(
 			definition,
 			*reward_set,
-			RewardSelectionChannel::Preview
+			RewardSelectionChannel::Preview,
+			m_client.GetClassesBits()
 		);
 		if (!preview) {
 			m_client.GetRewardSelection().Clear(
@@ -2865,6 +2887,10 @@ bool ClientAchievementState::RestorePendingRewardSelection()
 			continue;
 		}
 
+		if (manager.IsExplorationOnly(definition.achievement_id)) {
+			continue;
+		}
+
 		uint32_t selected_option_id = 0;
 		if (const auto found = persisted.find(definition.achievement_id);
 			found != persisted.end()) {
@@ -2891,6 +2917,7 @@ bool ClientAchievementState::RestorePendingRewardSelection()
 			definition,
 			*reward_set,
 			RewardSelectionChannel::Claimable,
+			m_client.GetClassesBits(),
 			selected_option_id
 		);
 		if (session) {
@@ -2923,7 +2950,8 @@ RewardSelectionDeliveryResult ClientAchievementState::ClaimReward(
 {
 	if (
 		!m_loaded ||
-		!RuleB(Achievements, GrantRewards)
+		!RuleB(Achievements, GrantRewards) ||
+		AchievementManager::Instance().IsExplorationOnly(pending_reward_id)
 	) {
 		return RewardSelectionDeliveryResult::RetryableFailure;
 	}
@@ -2940,7 +2968,15 @@ RewardSelectionDeliveryResult ClientAchievementState::ClaimReward(
 
 	const RewardSelectionOption *selected_option = nullptr;
 	std::vector<RewardSelectionReward> rewards;
-	for (const auto &option : reward_set->options) {
+	auto eligible_reward_set = *reward_set;
+	const auto character_classes = m_client.GetClassesBits();
+	std::erase_if(eligible_reward_set.options, [character_classes](const auto &option) {
+		return !EQ::RewardSelection::OptionEligibleForClass(option, character_classes);
+	});
+	if (!EQ::RewardSelection::ValidCanonicalSelection(eligible_reward_set, selected_option_id)) {
+		return RewardSelectionDeliveryResult::RetryableFailure;
+	}
+	for (const auto &option : eligible_reward_set.options) {
 		if (option.common_to_all) {
 			rewards.insert(rewards.end(), option.rewards.begin(), option.rewards.end());
 		}
@@ -2948,14 +2984,13 @@ RewardSelectionDeliveryResult ClientAchievementState::ClaimReward(
 			selected_option = &option;
 		}
 	}
-	if (!selected_option) {
-		return RewardSelectionDeliveryResult::RetryableFailure;
+	if (selected_option) {
+		rewards.insert(
+			rewards.end(),
+			selected_option->rewards.begin(),
+			selected_option->rewards.end()
+		);
 	}
-	rewards.insert(
-		rewards.end(),
-		selected_option->rewards.begin(),
-		selected_option->rewards.end()
-	);
 
 	const auto now = static_cast<uint32_t>(std::time(nullptr));
 	auto selection = database.QueryDatabase(fmt::format(

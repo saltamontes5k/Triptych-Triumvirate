@@ -18,8 +18,11 @@
 
 #include "../common/global_define.h"
 #include "../common/rulesys.h"
+#include "fellowship/service.h"
+#include "fellowship/vitality.h"
 
 #include <ctype.h>
+#include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <map>
@@ -381,6 +384,22 @@ bool Database::DeleteCharacter(const std::string& name)
 
 	if (!e.id) {
 		return false;
+	}
+
+	// Fellowship membership must not retain a deleted leader or consume a slot.
+	// The service promotes a surviving member or removes an empty fellowship.
+	if (RuleB(Custom, Fellowships)) {
+		Fellowship::Service fellowships(*this);
+		if (!fellowships.CharacterDeleted(e.id, static_cast<uint64_t>(std::time(nullptr)))) {
+			LogError("Character [{}] deletion withheld: fellowship cleanup failed", e.id);
+			return false;
+		}
+
+		Fellowship::VitalityService vitality(*this);
+		if (!vitality.Clear(e.id)) {
+			LogError("Character [{}] deletion withheld: fellowship vitality cleanup failed", e.id);
+			return false;
+		}
 	}
 
 	std::string delete_type = "hard-deleted";

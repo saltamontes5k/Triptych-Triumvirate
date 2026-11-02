@@ -1,12 +1,12 @@
-# Khael the Spellforger - Item Tier Upgrade NPC (Guild Lobby)
+# Khael the Spellforger - Item Tier Upgrade NPC (Bazaar)
 # Adapted for Triptych/EQS from Ascendant-Server
-#   (server/quests/guildlobby/Khael_the_Spellforger.pl).
+#   (server/quests/bazaar/Khael_the_Spellforger.pl).
 #
 # Consumes one Ancient Shard of Ascendant Power (121856) + one item and attempts
 # to raise it to the next EQS tier:
 #     base (<1,000,000) -> Enchanted (+1,000,000)   70% success
 #     Enchanted         -> Legendary (+2,000,000)   50% success
-# On failure the shard is lost but the item is returned.
+# On failure the shard is lost and the exact item is returned unchanged.
 # Tier layout follows plugins/NMS_item_utils.pl (Tier0/Tier1/Tier2).
 
 use strict;
@@ -111,21 +111,31 @@ sub EVENT_ITEM {
         return;
     }
 
-    unless (plugin::check_handin(\%itemcount, $SHARD_ID => 1, $other_item_id => 1)) {
+    my $roll = int(rand(100)) + 1;
+    my $success = ($roll <= $chance);
+
+    # The shard is always eaten. On success the item is consumed too; on failure
+    # it stays in the hand-in bucket so the engine returns the exact instance
+    # (charges and augments included) instead of a fresh copy.
+    my %required = ($SHARD_ID => 1);
+    $required{$other_item_id} = 1 if $success;
+
+    unless (plugin::check_handin(\%itemcount, %required)) {
+        plugin::Whisper("Something went wrong and I could not take the shard.");
         plugin::return_items(\%itemcount);
         return;
     }
 
-    my $roll = int(rand(100)) + 1;
-
-    if ($roll <= $chance) {
+    # SummonFixedItem is the no-upgrade summon. SummonItem routes through
+    # SummonApocItem, which unconditionally adds a tier before rolling -- a
+    # successful upgrade could therefore skip a tier.
+    if ($success) {
         $npc->Emote("channels raw magical energy into the item... it glows with a blinding light!");
-        $client->SummonItem($target_id);
+        $client->SummonFixedItem($target_id, -1);
         plugin::Whisper("Success! The ascendant power has taken hold.");
     }
     else {
         $npc->Emote("channels raw magical energy... but the power destabilizes and dissipates!");
-        $client->SummonItem($other_item_id);
         plugin::Whisper("Failure. The shard has shattered, but your item remains intact.");
 
         my $charid  = $client->CharacterID();

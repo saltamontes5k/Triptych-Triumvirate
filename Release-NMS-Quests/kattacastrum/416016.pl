@@ -18,7 +18,6 @@ sub EVENT_SAY {
       my ($title, $phrase, $orux, $zone, $offer) = @{$MISSIONS{$tid}};
       if (quest::istaskcompleted($tid) && !quest::get_data($cid . "-tbsm-$tid")) {
         quest::say("Splendid work in Silyssar! The arcanum pays in Orux - here is yours.");
-        quest::summonitem(79911, $orux);
         quest::set_data($cid . "-tbsm-$tid", 1);
         return;
       }

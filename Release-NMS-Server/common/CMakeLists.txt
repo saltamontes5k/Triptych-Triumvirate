@@ -48,6 +48,11 @@ SET(common_sources
     extprofile.cpp
     discord/discord_manager.cpp
     faction.cpp
+    fellowship/campsite_catalogue.cpp
+    fellowship/campsite_materials.cpp
+    fellowship/journal.cpp
+    fellowship/service.cpp
+    fellowship/vitality.cpp
     file.cpp
     guild_base.cpp
     guilds.cpp

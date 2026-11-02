@@ -1,3 +1,4 @@
+#include "fellowship_campsite_bonuses.h"
 
 #include "../common/eqemu_logsys.h"
 #include "../common/extprofile.h"
@@ -1071,6 +1072,12 @@ bool ZoneDatabase::SaveCharacterData(
 
 	/* If this is ever zero - the client hasn't fully loaded and potentially crashed during zone */
 	if (c->AccountID() <= 0) {
+		return false;
+	}
+
+	// The fellowship XP transaction commits character progression itself; a
+	// concurrent or post-failure write here would fork the authoritative state.
+	if (c->m_fellowship_xp_persistence_failed || c->m_fellowship_xp_transaction_active) {
 		return false;
 	}
 
@@ -2925,7 +2932,7 @@ void ZoneDatabase::LoadAccountAltCurrencyValues(uint32 account_id, std::map<uint
 	}
 }
 
-void ZoneDatabase::UpdateAccountAltCurrencyValue(uint32 account_id, uint32 currency_id, uint32 value)
+bool ZoneDatabase::UpdateAccountAltCurrencyValue(uint32 account_id, uint32 currency_id, uint32 value)
 {
 	auto e = AccountAltCurrencyRepository::NewEntity();
 
@@ -2933,7 +2940,7 @@ void ZoneDatabase::UpdateAccountAltCurrencyValue(uint32 account_id, uint32 curre
 	e.currency_id = currency_id;
 	e.amount      = value;
 
-	AccountAltCurrencyRepository::ReplaceOne(*this, e);
+	return AccountAltCurrencyRepository::ReplaceOne(*this, e) != 0;
 }
 
 void ZoneDatabase::SaveBuffs(Client *client)
@@ -2956,6 +2963,10 @@ void ZoneDatabase::SaveBuffs(Client *client)
 	uint32 character_buff_count = 0;
 
 	for (int slot_id = 0; slot_id < max_buff_slots; slot_id++) {
+		// Campsite support buffs are renewable location leases, not saved buffs.
+		if (IsFellowshipCampsiteAuraBuff(buffs[slot_id].spellid, buffs[slot_id].caster_name, sizeof(buffs[slot_id].caster_name))) {
+			continue;
+		}
 		if (!IsValidOrSuppressedSpell(buffs[slot_id].spellid)) {
 			continue;
 		}
@@ -2966,6 +2977,9 @@ void ZoneDatabase::SaveBuffs(Client *client)
 	v.reserve(character_buff_count);
 
 	for (int slot_id = 0; slot_id < max_buff_slots; slot_id++) {
+		if (IsFellowshipCampsiteAuraBuff(buffs[slot_id].spellid, buffs[slot_id].caster_name, sizeof(buffs[slot_id].caster_name))) {
+			continue;
+		}
 		if (!IsValidOrSuppressedSpell(buffs[slot_id].spellid)) {
 			continue;
 		}
@@ -3041,6 +3055,10 @@ void ZoneDatabase::LoadBuffs(Client *client)
 	}
 
 	for (const auto& e : l) {
+		// Discard a legacy saved campsite lease before caster-name normalization.
+		if (IsFellowshipCampsiteAuraBuff(e.spell_id, e.caster_name.data(), e.caster_name.size())) {
+			continue;
+		}
 		if (e.slot_id == 100 && e.spell_id == 5243) {
 			client->SetInvisible(Invisibility::Invisible);
 			continue;

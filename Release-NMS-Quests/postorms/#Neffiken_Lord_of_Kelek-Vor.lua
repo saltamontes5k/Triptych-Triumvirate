@@ -6,6 +6,8 @@ local ADDS_TYPES = {
 local adds = 0;
 
 function event_spawn(e)
+	-- camp cleared: the Lord of Kelek`Vor wakes and lets the wood know
+	e.self:Shout("The trees have whispered of you since you first crossed into my wood. My kin lie fallen among the roots. Kelek`Vor remembers its own.");
 eq.set_timer('depop', 3600 * 1000);
 end
 

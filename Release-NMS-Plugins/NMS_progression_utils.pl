@@ -123,7 +123,8 @@ my %atlas = (
     'poeartha'       => 'PoP',
     'poearthb'       => 'PoP',
     'potimea'        => 'PoP',
-    'potimeb'        => 'PoP',    
+    'potimeb'        => 'PoP',
+    'powar'          => 'PoP', # Plane of War, PoP-ized (Bonzz pow.htm port)
 
     'barindu'        => 'GoD',
     'ferubi'         => 'GoD',
@@ -517,6 +518,11 @@ sub SetSubflag {
     # Deserialize the current account progress into a hash
     my %account_progress = plugin::DeserializeHash($progress_flag);
 
+    # Capture the pre-update value: the milestone side effects below (cap raise,
+    # waypoints, keyring, race/class locks) must fire exactly when the objective
+    # actually changes, which cannot be tested after the hash is updated.
+    my $objective_changed = (!exists $account_progress{$objective} || $account_progress{$objective} ne $value);
+
     # Update the progress for the specific objective
     $account_progress{$objective} = $value;
 
@@ -569,7 +575,7 @@ sub SetSubflag {
     }
 
     # Check if the objective value has changed
-    if ((!exists $account_progress{$objective} || $account_progress{$objective} != $value)) {
+    if ($objective_changed) {
 
         # Send messages only if there was a change
         plugin::YellowText("You have gained a progression flag!");

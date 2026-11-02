@@ -86,7 +86,8 @@ end
 
 function event_combat(e)
 	if e.joined then
-		eq.set_timer("Adds", 60 * 1000) -- 60 Seconds
+		-- Adds waves are owned by encounters/rztw_event.lua; this file keeps only the
+		-- out-of-arena punishment.
 		eq.set_timer("Out of Arena", 5 * 1000) -- 5 Seconds
 	else
 		e.self:SaveGuardSpot(e.self:GetX(), e.self:GetY(), e.self:GetZ(), e.self:GetHeading()) -- Doesn't move
@@ -135,21 +136,9 @@ function event_timer(e)
 --		eq.depop_all(214114)
 
 --		eq.depop()
-	if e.timer == "Adds" then
-		if e.self:IsEngaged() then
-			local npc_ids = { 214114, 214136 }
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 519, 216, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 647, 346, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 853, 220, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 779, -30, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 507, -164, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 847, -327, -293, 132)
-			eq.spawn2(npc_ids[math.random(#npc_ids)], 0, 0, 518, -357, -293, 132)
-			e.self:Emote("The corpses across the grounds of the arena begin to twitch and spasm as the will of the Warlord brings them to life.")
-		else
-			eq.stop_timer("Adds")
-		end
-	elseif e.timer == "Out of Arena" then
+	-- Adds waves are spawned by encounters/rztw_event.lua; the duplicate here also
+	-- crashed the encounter's add-spawn handler (nil rztw_entity) on every cycle.
+	if e.timer == "Out of Arena" then
 		if e.self:GetHateListCount() > 0 then
 			local hate_entries = e.self:GetHateList().entries
 			for hate_entry in hate_entries do

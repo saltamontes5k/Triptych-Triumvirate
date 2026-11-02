@@ -91,6 +91,13 @@ por.items = {
   -- "The Corruption of Ro" (task 3398, Tunare's Shrine)
   chalice_of_life     = 85085,
   the_chalice_of_life = 85670,
+
+  -- "Mark of the Spirits" turn-ins (Spirit Hunter Elijo, task 3031)
+  mark_of_okahn       = 85606,
+  mark_of_ravenglass  = 85607,
+  mark_of_stillwillow = 85608,
+  mark_of_xanzerok    = 85609,
+  mark_of_oroshar     = 85610,
 }
 
 -- Entity ids for the Prophecy of Ro content added by the phase-6 SQL.
@@ -115,6 +122,10 @@ por.inspirations = { 52595, 52594, 52598, 52596, 52597, 52599 }
 
 -- The five sandstone tablet pieces (The Key to the Past)
 por.sandstone_tablets = { 36135, 36136, 36137, 36138, 36139 }
+
+-- Task 3031 - Mark of the Spirits (Spirit Hunter Elijo)
+por.mark_of_the_spirits_task = 3031
+por.spirit_marks = { 85606, 85607, 85608, 85609, 85610 }
 
 por.tasks = {
   saga_skins               = 3000,
@@ -142,9 +153,23 @@ por.tasks = {
   exploring_arcstone       = 3028,
   heroes_challenge         = 3029,
   arena_champions_badge    = 3030,
+  mark_of_the_spirits      = 3031,
   -- Raid keys / raid tasks
   entrance_to_daosheen_chamber = 3379,
   corruption_of_ro             = 3398,
+  -- Theme-completion side tasks (v175, 2026-10-23; see utils/sql/20261023_por_theme_completion.sql)
+  lost_brother            = 303187,
+  tipped_balance          = 303188,
+  alley_of_the_damned     = 303189,
+  trouble_with_dirt       = 303190,
+  crossfire               = 303191,
+  into_the_wall           = 303192,
+  arena_masters_challenge = 303193,
+  a_shiv_in_the_ribs      = 303194,
+  tree_spirits            = 303195,
+  giant_problems          = 303196,
+  the_orcish_loggers      = 303197,
+  the_rage_within         = 303198,
 }
 
 por.aa = {
@@ -266,6 +291,23 @@ function por.grant_circle_reward(client)
           n = n + 1
         end
       end
+    end
+  end
+  return n
+end
+
+-- Grant one of two items for every class the (multiclass) client owns:
+-- casters get caster_item, melee/hybrids get melee_item.
+function por.grant_pair(client, caster_item, melee_item)
+  local n = 0
+  for class_id = 1, 16 do
+    if client:HasClassID(class_id) then
+      if por.caster_classes[class_id] then
+        client:SummonFixedItem(caster_item)
+      else
+        client:SummonFixedItem(melee_item)
+      end
+      n = n + 1
     end
   end
   return n

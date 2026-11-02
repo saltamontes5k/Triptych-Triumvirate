@@ -4815,6 +4815,9 @@ namespace RoF2
 			{
 				VARSTRUCT_ENCODE_TYPE(uint32, Buffer, 0x1d600000);
 				Buffer = Buffer - 4;
+				// The legacy destructible flags also encode invisibility 2048.
+				// Retain the spawn's actual visibility so RoF2 can render and target it.
+				Bitfields->invis = emu->invis;
 			}
 
 			// Not currently found
@@ -4837,7 +4840,10 @@ namespace RoF2
 				OtherData = OtherData | 32;
 			}
 			if (emu->DestructibleObject) {
-				OtherData = OtherData | 0xe1;	// Live has 0xe1 for OtherData
+				// Bit 0x20 announces a suffix string later in this packet.
+				// Preserve the computed suffix bit above; forcing it without
+				// suffix bytes shifts the RoF2 mercenary/real-estate tail.
+				OtherData = OtherData | 0xc1;
 			}
 			if (emu->buyer) {
 				OtherData = OtherData | 0x01;

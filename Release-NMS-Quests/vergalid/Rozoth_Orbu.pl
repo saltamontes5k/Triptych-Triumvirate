@@ -13,8 +13,9 @@ sub EVENT_SAY {
     elsif (quest::istaskactive(600412)) {
       quest::say("The garment. Ripped from the rares that haunt these mines -- the trilobites in the far north chamber, the overseers. Bring it to me.");
     }
-    elsif (!quest::istaskcompleted(600413)) {
+    elsif (!quest::istaskactive(600413) && !quest::istaskcompleted(600413)) {
       quest::say("The trail ends in the Steppes, in the far northern caves. Commander Drenkith Zon`Tak keeps her. Tell him: [I am here to free Felena]. Then end him.");
+      quest::assigntask(600413);
     }
     else {
       quest::say("She is safe, and Drenkith is dust. Well done, softskin.");
