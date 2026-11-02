@@ -9,12 +9,12 @@ sub EVENT_SAY {
     quest::say("I have this elixir, you see. It was designed by my brother and everyone knows of it and only the drakkin of Atathus' lineage can stomach it.  All know this.  [" . quest::saylink("Deliver") . "] it to one of our proud council members, named Reakash -- the blue drakkin daughter of Osh`vir.  She will drink it and find that her throat will burn for several days. The council will point their fingers at Ithakis and he will be thrown from the council!");
   }
   if ($text=~/deliver/i) {
-    #You have been assigned the task 'Oh Brother!'
+    # Existing native Deliver task owns completion and achievement credit.
+    if (!quest::istaskactive(6817) && !quest::istaskcompleted(6817)) {
+      quest::assigntask(6817); # Oh Brother!
+    }
     quest::say("May Atathus' flames enlighten you! You have done me a great favor!");
     quest::summonitem(85092); #Atathus` Elixir of Life
-    if (!quest::istaskactive(600248) && !quest::istaskcompleted(600248)) {
-      quest::assigntask(600248); # Oh Brother!
-    }
   }
 }
 
