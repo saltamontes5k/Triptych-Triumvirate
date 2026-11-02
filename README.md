@@ -6,6 +6,26 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (11/1)
+- various server side stability fixes/fixes in general cherrypicked from downstream (Russianranger, GreyMouser69)
+- Achievements has pretty buttons up to UF and offers some rewards now, a bit op and a bit underwhelming, needs to be populated more
+- Populated some of TSS, ROF Achievements by https://github.com/nightstalker6669/eqemu-rof2-achievements
+- Added high inquistor xeru after death of LIS as custom battle
+- fixed eternal spawning vz in tactics, rallos zek pit event
+- populated powar some more, still scaffold
+- Glamour dupe clean up
+- Fellowships in and working, xp-aa needs more testing (https://github.com/nightstalker6669/eqemu-rof2-achievements), camps work in instances, need 2 to create a fellowship 1 to make a camp
+- did a pass of opcodes, various other housing/shroud code from https://github.com/nightstalker6669/EQEmu/tree/rof2-integration, will need a lot more passes etc to get up to par #housing if you want to play with it
+- fixed a bunch of blessings quests, Halloween quests, npc locations (Kree)
+- made the contested rumor about druids and stop rain true
+- added tradeskill knowledge on death on many raid mobs up to about GoD to make them worth farming/killing
+- added scaffold to OMM for silly shroud quests, have not been tested, have not been locked to 85 yet
+- added librarian npc in pok next to seer to work as a specific guide to help with progression pop and beyond, so you don't need 12 tabs open while you play, needs work
+- added legendary and master mercs, gave them bot brains to make them worthy of the title
+- more quest scaffolding esp TBS-SOF-SOD-UF
+- fixed philanthropy duping bug
+
+
 ### This update's changes (10/16)
 - various server side stability fixes
 - fixed shrouds + aggressive dedupe leading to hidden universal AAs (Kree)
@@ -136,9 +156,11 @@ Each folder has its own README with detailed instructions. Start with the server
 - **Item upgrade tiers** — drops can roll as Enchanted or Legendary versions
 - **Offline bazaar** — offline trader/buyer/barter support
 - **Glamour & languages** — mount glamour merchant, armour glamour, and a languages trainer
+- **Personal Power** — Personal procs via blessing of the gods questline, not from AAs, clickies, and not from augs. It follows the PC around
 - **Tome trainers** — located in the bazaar backrooms
 - **Legends of Norrath Card Game** - Trading Card game, for nostalgia, has rewards, free 5 packs a month for existing, packs rare world drop**
 - **Achievements ** - Achievements to keep track of what you've done in Norrath
+- **Fellowship** - Fellowships to call friends to adventure and keep adventuring together easy 
 - **Mercenaries** - Mercs you can hire to help in your higher level adventures
 - **Shrouds** - Shrouds, transform into a different monster-singular class, currently includes one monster quest
 - **Tradeskill by Quest and Raiding** - Tradeskill via Monster quest (well inanimate object quest) and soon raise tradeskills directly via killing of select raid bosses
@@ -241,14 +263,25 @@ Honest state of the world, so you know what you are getting into:
   hooks are one of the biggest gaps in the content along with bad hps.
 - **DoN alternate currency** (radiant/ebon crystals) is not implemented yet.
 - **Shrouds and houses** are still being tuned, especially houses
-- Benefactor guy is broken and easy to dupe stuff with
-- No way to escape your house except by key or port
 - Deity quests rank 3+ need to be put in
 - Many OoW+ AAs don't do anything, there are broken swarm pet spells and broken spells in general
 - merchants LDoN-UF ranges have no or missing stock
 - quest tester went down this week, didn't test Halloween/deity quests yet
 - you have to do everything again for travel achievements
 - achievements hunter system isn't in and nms innate slayer system appears to be too distinct for a clean merge, at best maybe a hybrid system in the future
+- housing needs more passes
+- shroud code needs more passes
+- legendary/master mercs in and have bot brains in merc bodies, future availability for multiclassing possible though currently EQbot AI chokes on it, they're cheap right now but that will change in the future
+- few silly OMM quests in, not properly level locked not properly tested
+- avatar of wing ring in poair is glitchy but completable
+- if there's any major delay entering emps room after engage you get multiple bloods with chance of multiple emperors, strategize wisely
+- new librarian npc to act as offline guide for flagging, he's not 100pct correct on things yet
+- custom xeb (evil zeb) event in but needs finetuning/is buggy
+- tzvz can be cheesed for tradeskill grinding,
+- blessings of gods questline needs more tuning and some deities/agnostic line may not be completable yet
+- various npcs facing the wrong way, wrong appearance etc
+- today you just faceroll and click into vexthal/ssra (emp area is keyed), in the future i may bring the keying quest back so you spend quality time on the moon
+- can also faceroll and click into vp, may change this in future and add vp as progression prereq for something
 
 ---
 
@@ -334,12 +367,10 @@ Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question 
 - explorer path scaffold for ldon+ scaffold, only hero available right now
 - more quests for the Blessing of the gods line
 - more 'monster' quests to grind tradeskills, also kill select raidbosses to raise skills ala the old non-graphical MUDs that inspired EQ
-- old man mckenzie but different, he barely recalls what game he's supposed to be in
-- houses visible in sunrise hills that you get  as freebies vs 1M houses you set in open zone of your choice (it'll work like a bind, no house visible) ala old roguelikes
+- more functional housing system, explore housing in non-neighborhood zone if possible
 - marriage system with live eq style con ally to spouse
 - nimbus and more illusion prizes
 - unique utility spells/aas
----
 
 ## Credits
 
@@ -358,12 +389,17 @@ Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question 
   riker — dinput8 MQ2 crash fixes
   Rockin-Vik — dinput8 crash patch + NMS_WaypointsWnd.xml fix
   thezerodivide - 1440 spell expansion
+  Russianranger - various server fixes
+  GreyMouser69 - various server fixes
+  nightstalker6669 - expanded housing, shroud, fellowship, TSS non raid zone achievement code and complete quests
+  
+  
 
 ## Requirements
 
 - **Server:** CMake 3.12+ (4.x works), a C++17 compiler, MariaDB 10.6+ or MySQL 8.0, Perl
 - **Client add-on:** Visual Studio 2022 with the *Desktop development with C++* workload
-  (build as **Win32/x86** — the client is 32-bit)
+  (build as **Win32/x86** — the client is 32-bit), 4gb patch
 
 ## Licensing
 
