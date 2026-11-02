@@ -823,13 +823,15 @@ void Client::Handle_OP_RealEstateItemMenu(const EQApplicationPacket *app)
 	);
 }
 
-// 0x796c C2S inspect: exactly 4 bytes, the estate id. The recovered reply is:
-// u32 request, u8 type (4 house / 8 plot), u32 0, u8 1, u8 0, five u32 ids (estate, parent,
-// definition, guild, fellowship), four length-prefixed strings (context, display name, owner
-// name, owner handle), four opaque words, u8 show. We answer for plots only, with the ids the
-// 0x6fd0/0x63fd snapshot already registered for the same door: estate = door id,
-// parent = zone id, definition = PlotDefinitionId(door).
+// 0x796c C2S inspect: exactly 4 bytes, the estate id. The recovered reply is the single-plot
+// inspection record: u32 request, u8 estate type (4 personal plot / 8 guild plot), u32 subtype,
+// u16 count (1), five u32 ids (estate, parent, definition, guild, fellowship), four
+// length-prefixed strings (context, display name, owner name, owner handle), four opaque
+// words, u8 show. We answer for plots only, with the ids the 0x6fd0/0x63fd snapshot already
+// registered for the same door: estate = door id, parent = zone id,
+// definition = PlotDefinitionId(door).
 bool SendRealEstateInspection(Client *c, uint32_t estate_id, bool show);
+void SendRealEstateAccessList(Client *c, uint32_t estate_id);
 
 void Client::Handle_OP_RealEstateInspect(const EQApplicationPacket *app)
 {
@@ -839,7 +841,11 @@ void Client::Handle_OP_RealEstateInspect(const EQApplicationPacket *app)
 		return;
 	}
 
-	SendRealEstateInspection(this, ReadU32(app, 0), true);
+	const uint32_t estate_id = ReadU32(app, 0);
+
+	SendRealEstateInspection(this, estate_id, true);
+	// The manage window's access data rides along with the inspection in the retail flow.
+	SendRealEstateAccessList(this, estate_id);
 }
 
 // Builds and sends the 0x796c reply for one estate. show=true opens the window (the answer to
@@ -877,7 +883,9 @@ bool SendRealEstateInspection(Client *c, uint32_t estate_id, bool show)
 
 	Writer w;
 	w.U32(estate_id);                              // request: echo the estate that was asked about
-	w.U8(8);                                       // type 8 = plot
+	// Estate type per the recovered single-plot inspection record: 4 = personal plot,
+	// 8 = guild plot. nms_plot plot_type 1 is the guild-owned row.
+	w.U8(plot_type == 1 ? 8 : 4);
 	w.U32(0);
 	w.U8(1);
 	w.U8(0);
@@ -2201,8 +2209,10 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 
 		if (variant == 3) {
 			// Box the PLAYER at 200 units. If this still leaves the client outside, the
-			// geometry is not the problem -- the id resolution or the ingest is.
-			write_region(door_id, c->GetX(), c->GetY(), c->GetZ(), 200.0f, 200.0f, 200.0f);
+			// geometry is not the problem -- the id resolution or the ingest is. Keyed under
+			// the region id (not the door id): the resolver only accepts an area whose id
+			// equals the plot definition's area_id field.
+			write_region(PlotRegionId(door_id), c->GetX(), c->GetY(), c->GetZ(), 200.0f, 200.0f, 200.0f);
 			++sent;
 			continue;
 		}
@@ -2760,6 +2770,74 @@ void SendRealEstateOwnedList(Client *c)
 	LogInfo("[Housing] sent owned list to [{}]: {} estate(s), {} bytes", c->GetName(), ids.size(), buf.size());
 }
 
+// 0x485d S2C access list: the Manage window's Access/Permissions data. Recovered grammar
+// (upstream protocol docs): u32 estate id, SEVEN unconditional u32 group / u32 capability-mask
+// pairs, u32 member count, then per member an LP32 name and a u32 group id. The client's
+// dispatcher feeds this straight into the Manage window singleton and refreshes it only while
+// the estate matches RealEstate[+152] -- without this packet the manage window has no access
+// data to render and stays a bare context shell.
+//
+// Group ids follow the Manage window's own tier combobox (Everyone, Visitor, Acquaintance,
+// Friend, Trustee, Co-Owner, Owner), so 6 is the owner tier. Capability-mask bit semantics
+// were never recovered; this server does not enforce plot permissions, so every tier is sent
+// fully permissive -- labelled emulator policy, to be narrowed if a tier gate ever matters.
+void SendRealEstateAccessList(Client *c, uint32_t estate_id)
+{
+	if (!c || !zone || !estate_id || estate_id == UINT32_MAX) {
+		return;
+	}
+
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.plot_type, COALESCE(c.name, ''), COALESCE(g.name, '') "
+		"FROM nms_plot p "
+		"JOIN nms_neighborhood nb ON nb.id = p.neighborhood_id "
+		"LEFT JOIN character_data c ON c.id = p.owner_char_id "
+		"LEFT JOIN guilds g ON g.id = p.owner_guild_id "
+		"WHERE nb.zone = '{}' AND p.door_id = {} LIMIT 1",
+		Strings::Escape(zone->GetShortName()), estate_id
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return;
+	}
+
+	auto        row        = plot.begin();
+	const bool  guild_plot = Strings::ToUnsignedInt(row[0] ? row[0] : "0") == 1;
+	std::string owner_name = std::string(row[1] ? row[1] : "");
+	if (guild_plot) {
+		owner_name = std::string(row[2] ? row[2] : "");
+	}
+
+	constexpr uint32_t kTierCount = 7;
+	constexpr uint32_t kOwnerTier = 6;
+
+	Writer w;
+	w.U32(estate_id);
+	for (uint32_t tier = 0; tier < kTierCount; ++tier) {
+		w.U32(tier);             // group id
+		w.U32(0xFFFFFFFFu);      // capability mask: every permission (see note above)
+	}
+
+	if (owner_name.empty()) {
+		w.U32(0);
+	} else {
+		w.U32(1);
+		w.Str(owner_name);
+		w.U32(kOwnerTier);
+	}
+
+	const auto &buf = w.Buffer();
+	auto outapp = new EQApplicationPacket(OP_RealEstateAccess, static_cast<uint32>(buf.size()));
+	std::memcpy(outapp->pBuffer, buf.data(), buf.size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo(
+		"[Housing] sent access list to [{}]: estate [{}] owner '{}' ({} bytes)",
+		c->GetName(), estate_id, owner_name, buf.size()
+	);
+}
+
 void Client::SendRealEstateIdentity()
 {
 	if (!zone) {
@@ -2828,6 +2906,7 @@ void Client::SendRealEstateIdentity()
 			GetName(), zone->GetShortName(), door_id, buf.size()
 		);
 		SendRealEstateOwnedList(this);
+		SendRealEstateAccessList(this, door_id);
 		// The placed furniture draws the same way the building exteriors do in the
 		// neighborhood: the client keeps no copy, so every identity burst re-sends it.
 		SendRealEstateFurniture(this, door_id);
@@ -2938,6 +3017,9 @@ void Client::SendRealEstateIdentity()
 	// without popping the window, which is what the client does when it answers its own 0x796c.
 	for (uint32_t plot_id : owned_plots) {
 		SendRealEstateInspection(this, plot_id, false);
+		// The Manage window renders the access/permission page from this list; seed it with
+		// the inspection so the window is complete before it is first opened.
+		SendRealEstateAccessList(this, plot_id);
 	}
 
 	SendRealEstateAreaManifest(this);

@@ -732,3 +732,44 @@ definitions → zone context (id = plot) → plot objects (id = plot) → region
 to the bucket, so the plot object must be applied *after* the context or it loses the id.
 
 
+
+---
+
+## 19. Eleventh batch (2026-11-01): the Manage window, decoded live
+
+Symptom: menu Manage (and show=1 marker inspects) produce a bare title-only shell.
+Server additions shipped here: `SendRealEstateAccessList` (0x485d, layout = u32 estate +
+7 unconditional group/mask pairs + u32 memberCount + per-member LP32 name + u32 group;
+sent on burst, after every 0x796c, and in interiors), inspection `estate_type` fixed to
+4 personal / 8 guild (was hardcoded 8), `#housing areas 3` re-keyed under PlotRegionId.
+
+### What the dinput8 state probe proved (live client, plot 19)
+
+- Recognition chain is FULLY ALIVE: RealEstate +140=19, +144=5, +148=19, **+152=19**,
+  plot map holds key 19, area hash holds {19, 900019}. The whole section-18 contract works.
+- The Manage window singleton (`dword_D1FCBC`, created unconditionally at UI load) exists
+  with piece non-null, widgets found, full geometry {0,25,605,465}, styles applied.
+- Forced `vtable+216(wnd,1,1,1)` (static 0x7409D0 -> sub_865290) SHOWS the window and the
+  visible flag persists (6 s poll: no transition). **The window never closes -- it renders
+  zero pixels.** Frame capture (D3D backbuffer) 3 s after the show contains no window at
+  all. The report "plot window auto-closes" is the same phenomenon: nothing draws.
+- OnShow override (static 0x740960): when shown it calls `sub_776EF0(F758C4, 76, 0)` --
+  opens tips page 76 (`help/tips/ctxrealestatemanage.html`) in the tips window. **The
+  popup titled `ctxrealestatemana...` is the TIPS WINDOW, not the Manage window.** Its
+  per-page enable flag is `byte_B503FC[88*76]` (UI ini, "Tips" section); setting that
+  flag off stops the popup masking everything else.
+- Bare-Screen test (main Screen stripped to one Label) still rendered nothing -> the
+  failure is in the window's own draw path, not the TabBox/children/XML (file exonerated:
+  piece parses, all tokens exist in the SIDL pool, `<Header>` refs work in MerchantWnd).
+
+### Where the next session picks up
+
+1. The client runtime base was 0x650000 this session (ASLR is ON; the old "no-ASLR
+   0x400000" assumption holds for IDA statics only). Probe reads must stay base-relative.
+2. Dump PlotSearch's +406/geometry WHILE it is open and compare -- in every dump it read
+   active406=0 even when the user had it on screen, which is itself unexplained.
+3. Decompile the remaining Manage vtable slots captured at runtime (base-relative static
+   addresses): +220 CanShow=0x749E50, +224=0x7409A0, +152 OnShow=0x740960 (done: opens
+   tips), +352=0x868440, +288=0x8660E0.
+4. The draw-path gate is the open bug: a full-size, visible-flagged, widget-populated
+   SIDL window that draws nothing, for the Manage window only. The tips popup masks it.
