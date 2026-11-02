@@ -87,7 +87,7 @@ sub GetRandomClassTome {
     $tomes{512}{2} = [121762, 121824];                  # Shaman (Ancestral Aid, Rabid Bear)
     $tomes{1024}{2} = [121632, 121758, 121812];         # Necromancer (Dead Mesmerization, Wake the Dead, Life Burn)
     $tomes{1040}{2} = [121633];                         # Shadowknight, Necromancer (Death Peace)
-    $tomes{2048}{2} = [121691, 121769, 121813, 121821]; # Wizard (Hastened Root, Call of Xuzl, Mana Blast, Prolonged Destruction)
+    $tomes{2048}{2} = [121691, 121769, 121813, 121821, 121848]; # Wizard (Hastened Root, Call of Xuzl, Mana Blast, Prolonged Destruction, Arcane Overkill)
     $tomes{2080}{2} = [121672];                         # Druid, Wizard (Exodus)
     $tomes{4096}{2} = [121639, 121642, 121667, 121794, 121805, 121823]; # Magician (Elem Form: Earth, Elem Pact, Elem Alacrity, Frenzied Burnout, Heart of Stone, Quick Summoning)
     $tomes{8192}{2} = [121686, 121733, 121787];         # Enchanter (Hastened Gathering, Soothing Words, Eldritch Rune)

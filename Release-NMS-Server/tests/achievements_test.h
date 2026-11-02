@@ -2,6 +2,7 @@
 
 #include "../common/achievement_state_updates.h"
 #include "../common/achievements.h"
+#include "../common/classes.h"
 #include "../common/compression.h"
 #include "../common/net/packet.h"
 #include "../common/reward_selection.h"
@@ -35,6 +36,7 @@ public:
 		TEST_ADD(AchievementsTest::ComparisonCountsLayout);
 		TEST_ADD(AchievementsTest::RewardDisplayLayout);
 		TEST_ADD(AchievementsTest::RewardClaimReplyLayout);
+		TEST_ADD(AchievementsTest::RewardClassMaskEligibility);
 		TEST_ADD(AchievementsTest::NpcNameIdentityHashLayout);
 		TEST_ADD(AchievementsTest::SkillWildcardDoesNotAliasSkillZero);
 		TEST_ADD(AchievementsTest::TypeThreeIsPresentationOnly);
@@ -788,6 +790,55 @@ private:
 		TEST_ASSERT(reader.Read<uint8_t>() == 0);
 		TEST_ASSERT(reader.Read<uint8_t>() == 0);
 		TEST_ASSERT(reader.position == reader.size);
+	}
+
+	void RewardClassMaskEligibility()
+	{
+		using namespace EQ::RewardSelection;
+
+		Option option;
+		TEST_ASSERT(option.class_mask == 65535);
+		TEST_ASSERT(OptionEligibleForClass(option, 1u << (Class::Warrior - 1)));
+
+		// Warrior-only option.
+		option.class_mask = 1u << (Class::Warrior - 1);
+		TEST_ASSERT(OptionEligibleForClass(option, 1u << (Class::Warrior - 1)));
+		TEST_ASSERT(!OptionEligibleForClass(option, 1u << (Class::Cleric - 1)));
+		TEST_ASSERT(!OptionEligibleForClass(option, 0));
+
+		// A multiclass character carries the union of its class bits; any one
+		// of them satisfies the mask.
+		const uint32_t paladin_shadowknight_warrior =
+			(1u << (Class::Paladin - 1)) |
+			(1u << (Class::ShadowKnight - 1)) |
+			(1u << (Class::Warrior - 1));
+		TEST_ASSERT(OptionEligibleForClass(option, paladin_shadowknight_warrior));
+
+		option.class_mask = (1u << (Class::Cleric - 1)) | (1u << (Class::Druid - 1));
+		TEST_ASSERT(!OptionEligibleForClass(option, paladin_shadowknight_warrior));
+
+		// Common-only sets use the reserved wire token instead of an option ID.
+		Set common;
+		common.options.push_back({.option_id = 1, .common_to_all = true});
+		common.options.push_back({.option_id = 2, .common_to_all = true});
+		TEST_ASSERT(IsCommonOnly(common));
+		TEST_ASSERT(ValidCanonicalSelection(common, CommonOnlySelection));
+		TEST_ASSERT(!ValidCanonicalSelection(common, 1));
+		TEST_ASSERT(ResolveWireSelection(common, CommonOnlySelection) == CommonOnlySelection);
+		TEST_ASSERT(ResolveWireSelection(common, 1) == 0);
+
+		Set selectable = common;
+		selectable.options.push_back({.option_id = 3, .common_to_all = false});
+		TEST_ASSERT(!IsCommonOnly(selectable));
+		TEST_ASSERT(ValidCanonicalSelection(selectable, 3));
+		TEST_ASSERT(!ValidCanonicalSelection(selectable, CommonOnlySelection));
+		TEST_ASSERT(!ValidCanonicalSelection(selectable, 0));
+		TEST_ASSERT(ResolveWireSelection(selectable, 1) == 0);
+
+		// Empty sets are neither common-only nor selectable.
+		Set empty;
+		TEST_ASSERT(!IsCommonOnly(empty));
+		TEST_ASSERT(!ValidCanonicalSelection(empty, CommonOnlySelection));
 	}
 
 	void EmptyInitializationLayout()

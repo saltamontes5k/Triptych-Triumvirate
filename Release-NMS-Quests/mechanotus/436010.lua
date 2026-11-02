@@ -79,6 +79,14 @@ function event_say(e)
 			.. "to storm Meldrath's Majestic Mansion.")
 	elseif e.message:findi("honors") or e.message:findi("meldrath") or e.message:findi("mansion raid") then
 		request_raid(e)
+	elseif e.message:findi("explore") or e.message:findi("scouts") then
+		if not e.other:IsTaskActive(PROGRESSION_TASK) and not e.other:IsTaskCompleted(PROGRESSION_TASK) then
+			e.self:Say("My scouts cannot get close enough. Walk the mansion's "
+				.. "halls and map what you see -- then we storm it.")
+			eq.task_selector({ PROGRESSION_TASK })
+		else
+			e.self:Say("The mansion is mapped as well as my scouts need. Ask me about your [honors].")
+		end
 	elseif e.message:findi("task") or e.message:findi("work") or e.message:findi("offer") or e.message:findi("jobs") then
 		offer_tasks(e)
 	elseif e.message:findi("ready") or e.message:findi("enter") then

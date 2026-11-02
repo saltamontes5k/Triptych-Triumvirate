@@ -18,23 +18,23 @@ sub GetAccountKey
 
 sub ClassType {
     my $client = plugin::val('$client');
-    my $class  = $client->GetClass();
+    my $class_bits = $client->GetClassesBitmask() || $client->GetClassBitmask();
 
     my %melee_classes = map { $_ => 1 } (1, 7, 9, 16);
     my %caster_classes = map { $_ => 1 } (11, 12, 13, 14);
     my %priest_classes = map { $_ => 1 } (2, 6, 10);
 
-    if (exists $melee_classes{$class}) {
-        return "melee";
+    my ($is_melee, $is_caster, $is_priest) = (0, 0, 0);
+    for my $class_id (1 .. 16) {
+        next unless ($class_bits & (1 << ($class_id - 1)));
+        $is_melee  = 1 if $melee_classes{$class_id};
+        $is_caster = 1 if $caster_classes{$class_id};
+        $is_priest = 1 if $priest_classes{$class_id};
     }
 
-    if (exists $caster_classes{$class}) {
-        return "caster";
-    }
-
-    if (exists $priest_classes{$class}) {
-        return "priest";
-    }
+    return "melee"  if $is_melee;
+    return "caster" if $is_caster;
+    return "priest" if $is_priest;
 
     return "hybrid";
 }

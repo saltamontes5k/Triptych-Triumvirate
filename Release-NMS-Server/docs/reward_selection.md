@@ -58,7 +58,10 @@ Achievements and tasks share six provider-neutral content tables:
 - `rewards` defines typed grants.
 - `reward_sets` defines titled selectable collections.
 - `reward_options` defines ordered choices. An option marked
-  `common_to_all = 1` is granted with every selectable option.
+  `common_to_all = 1` is granted with every selectable option. `class_mask`
+  (bit 0 Warrior .. bit 15 Berserker, default `65535`) restricts which players
+  may see and claim an option; it is only accepted on achievement and task
+  sources.
 - `reward_option_entries` places grants in options.
 - `reward_sources` maps one provider object to one selectable set.
 - `reward_source_entries` maps automatic grants directly to a provider object.
@@ -68,14 +71,18 @@ task. In both cases, `source_id` is the corresponding achievement or task ID.
 Definitions may be reused, but provider authorization and character delivery
 ledgers remain separate.
 
-Automatic catalog entries currently apply only to achievements. Tasks use
+Automatic catalog entries are retired for achievements: every achievement
+reward now lives in a selectable set (a single non-common option when the
+reward is fixed) so it can be claimed from the achievement window. Tasks use
 their established automatic reward fields, and task loading rejects
 `reward_source_entries` rows with `source_type = 2`.
 
 Reward, set, and option IDs sent over the wire must fit in an unsigned 32-bit
 integer. Every referenced reward must be enabled, every loaded option must
 contain at least one reward, and a loaded set must contain at least one
-non-common option. A reward may be reused across sources or sets, but may appear
+non-common option, except an achievement set whose options are all common: that
+set is claimable as a single no-choice grant. A reward may be reused across
+sources or sets, but may appear
 only once within one set and cannot be both automatic and selectable for the
 same source.
 
@@ -201,3 +208,11 @@ remain the durable authority across zoning, disconnects, and server restarts.
 When changing selectable reward content, avoid reusing a reward, option, or set
 ID for a different semantic grant. Stable IDs are part of claim validation and
 idempotency.
+
+Exploration achievements — definitions whose only enabled criteria are
+zone-enter — sit permanently outside the claim lanes: their pending
+selections are not presented, View Reward renders nothing for them, and
+`ClaimReward` refuses the delivery; the automatic lane never queues them.
+Tracking, completion, and points are untouched. The former
+`Achievements:ExplorationRewards` rule was retired (entry 292). See
+[Achievement runtime](achievements.md) under Operational controls.

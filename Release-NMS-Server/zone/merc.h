@@ -52,7 +52,7 @@ public:
 	virtual ~Merc();
 
 	//abstract virtual function implementations requird by base abstract class
-	virtual bool Death(Mob* killer_mob, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, uint8 killed_by = 0, bool is_buff_tic = false);
+	virtual bool Death(Mob* killer_mob, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, KilledByTypes killed_by = KilledByTypes::Killed_NPC, bool is_buff_tic = false) override;
 	virtual void Damage(Mob* from, int64 damage, uint16 spell_id, EQ::skills::SkillType attack_skill, bool avoidable = true, int8 buffslot = -1, bool iBuffTic = false, eSpecialAttacks special = eSpecialAttacks::None);
 	virtual bool Attack(Mob* other, int Hand = EQ::invslot::slotPrimary, bool FromRiposte = false, bool IsStrikethrough = false,
 	bool IsFromSpell = false, ExtraAttackOptions *opts = nullptr);
@@ -117,10 +117,13 @@ public:
 	static MercSpell GetBestMercSpellForAERainNuke(Merc* caster, Mob* target);
 	static MercSpell GetBestMercSpellForNuke(Merc* caster);
 	static MercSpell GetBestMercSpellForNukeByTargetResists(Merc* caster, Mob* target);
+	static MercSpell GetBestMercSpellForRoot(Merc* caster, Mob* target);
+	static MercSpell GetBestMercSpellForDebuff(Merc* caster, Mob* target);
 	static bool CheckAENuke(Merc* caster, Mob* tar, uint16 spell_id, uint8 &numTargets);
 	static bool GetNeedsCured(Mob *tar);
 	bool HasOrMayGetAggro();
 	bool UseDiscipline(int32 spell_id, int32 target);
+	bool UseBotBrain();
 
 	bool IsMerc() const override { return true; }
 	bool IsOfClientBotMerc() const override { return true; }

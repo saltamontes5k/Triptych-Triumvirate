@@ -18,6 +18,7 @@
 -- the brell_audience flag for surviving raiders.
 
 local prog = require("uf_progression")
+local ach = require("achievement_flags")
 
 local ATT_A, ATT_B, ATT_C = 490141, 490142, 490143
 local GEM_GOLEM = 490144
@@ -137,6 +138,7 @@ function event_death_complete(e)
 	end
 	for _, c in ipairs(prog.alive_clients(e.self:GetX(), e.self:GetY(), 300)) do
 		prog.set(c, prog.FLG.brell_audience, 1)
+		ach.set(c, 1749004, 1, 1149004)
 		c:Message(15, "You have been received by Brell Serilis. The Convorteum awaits.")
 	end
 end

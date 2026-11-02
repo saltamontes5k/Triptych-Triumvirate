@@ -1,4 +1,6 @@
 	/* Connecting OpCode Handlers */
+	void Handle_OP_FellowshipAction(const EQApplicationPacket *app);
+	void Handle_OP_FellowshipCampRequest(const EQApplicationPacket *app);
 	void Handle_Connect_0x3e33(const EQApplicationPacket *app);
 	void Handle_Connect_OP_ApproveZone(const EQApplicationPacket *app);
 	void Handle_Connect_OP_ClientError(const EQApplicationPacket *app);
@@ -266,7 +268,29 @@
 	void Handle_OP_RaidDelegateAbility(const EQApplicationPacket* app);
 	void Handle_OP_RaidClearNPCMarks(const EQApplicationPacket* app);
 	void Handle_OP_RandomReq(const EQApplicationPacket* app);
+	void Handle_OP_RealEstateAction5Request(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateEscrow(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateGo(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateHouseSwap(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateInspect(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemInspect(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemMenu(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemQuery(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateLoadLayout(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateNeighborhood(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePack(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePickup(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app);
+	void Handle_OP_RealEstatePurchase(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateSale(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTextRequest(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTransfer(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateVotingOptOut(const EQApplicationPacket *app);
 	void Handle_OP_ReadBook(const EQApplicationPacket *app);
+	void Handle_OP_Unimplemented(const EQApplicationPacket *app);
 	void Handle_OP_RecipeAutoCombine(const EQApplicationPacket *app);
 	void Handle_OP_RecipeDetails(const EQApplicationPacket *app);
 	void Handle_OP_RecipesFavorite(const EQApplicationPacket *app);

@@ -25,9 +25,14 @@ function event_timer(e)
 		e.self:Emote("begins to chant an incantation; mana flows out from her body in all directions. Things begin moving slowly in reverse. You become dizzy from the experience and fall to your knees. As you look up the last thing you can see is Druzzil Ro smiling in your direction. She then waves her arms gracefully and points at you.");
 		eq.set_timer("druzzil5",7000);
 		eq.stop_timer("druzzil4");
-	elseif (e.timer == "druzzil5") then	
+	elseif (e.timer == "druzzil5") then
 		eq.stop_timer("druzzil5");
 		eq.zone_emote(MT.LightGray,"Druzzil Ro has preserved the timeline and restored existence back to its normalcy. You may now loot your hard-earned rewards. Speak to Druzzil when you are ready to [return] to the Plane of Knowledge.");
+		-- The rewind is complete -- and something that should not exist slipped
+		-- through with it. Unlock Xebuxoruk, The Forsaken in potimea: a world
+		-- qglobal his dormant spawn there checks on every respawn tick.
+		eq.target_global("xebuxoruk_unlock", "1", "F", 0, 0, 0);
+		eq.zone_emote(MT.LightGray,"As the timeline settles back into place, you feel a wrongness ripple outward, as if something else slipped through the rewind.");
 	end
 end
 

@@ -6,6 +6,14 @@ EQ::Net::EQStreamManager::EQStreamManager(const EQStreamManagerInterfaceOptions 
 	m_daybreak.OnNewConnection(std::bind(&EQStreamManager::DaybreakNewConnection, this, std::placeholders::_1));
 	m_daybreak.OnConnectionStateChange(std::bind(&EQStreamManager::DaybreakConnectionStateChange, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 	m_daybreak.OnPacketRecv(std::bind(&EQStreamManager::DaybreakPacketRecv, this, std::placeholders::_1, std::placeholders::_2));
+
+	// Nothing wired this callback, so every 'Tossed packet that failed CRC', 'Error processing
+	// packet' and 'Packet of size ... which is less than ...' was discarded without a trace.
+	// That is exactly how a connection can stop exchanging packets -- and then be closed for
+	// unacknowledged resends -- while every log stays silent about the reason.
+	m_daybreak.OnErrorMessage([](const std::string &message) {
+		LogInfo("Net error: {}", message);
+	});
 }
 
 EQ::Net::EQStreamManager::~EQStreamManager()

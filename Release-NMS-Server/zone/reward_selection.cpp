@@ -166,6 +166,7 @@ bool ClientRewardSelection::ValidateSession(
 	for (const auto &option : session.reward_set.options) {
 		if (
 			!option.option_id ||
+			option.option_id == EQ::RewardSelection::CommonOnlySelection ||
 			!option_ids.insert(option.option_id).second ||
 			option.rewards.empty()
 		) {
@@ -222,7 +223,7 @@ bool ClientRewardSelection::AssignWireOptionIds(ChannelState &state)
 	uint64_t next_id = 1;
 	for (auto &session : state.sessions) {
 		for (auto &option : session.reward_set.options) {
-			if (next_id > std::numeric_limits<uint32_t>::max()) {
+			if (next_id >= EQ::RewardSelection::CommonOnlySelection) {
 				return false;
 			}
 			option.wire_option_id = static_cast<uint32_t>(next_id++);
@@ -269,6 +270,7 @@ bool ClientRewardSelection::Open(
 		}
 		if (
 			channel == RewardSelectionChannel::Claimable &&
+			session.source.source != RewardSelectionSource::Achievement &&
 			std::none_of(
 				session.reward_set.options.begin(),
 				session.reward_set.options.end(),
@@ -729,17 +731,9 @@ ClientRewardSelection::ResolveClaim(
 				candidate.channel == RewardSelectionChannel::Claimable &&
 				candidate.pending_reward_id == pending_reward_id &&
 				candidate.reward_set.reward_set_id == reward_set_id &&
-				std::any_of(
-					candidate.reward_set.options.begin(),
-					candidate.reward_set.options.end(),
-					[selected_wire_option_id](
-						const RewardSelectionOption &option
-					) {
-						return
-							!option.common_to_all &&
-							option.wire_option_id == selected_wire_option_id;
-					}
-				);
+				EQ::RewardSelection::ResolveWireSelection(
+					candidate.reward_set, selected_wire_option_id
+				) != 0;
 		}
 	);
 	if (session == state.sessions.end()) {
@@ -750,6 +744,9 @@ ClientRewardSelection::ResolveClaim(
 	ResolvedRewardSelectionClaim resolution;
 	resolution.session = *session;
 	resolution.selected_wire_option_id = selected_wire_option_id;
+	resolution.selected_option_id = EQ::RewardSelection::ResolveWireSelection(
+		session->reward_set, selected_wire_option_id
+	);
 	resolution.session_generation = state.session_generation;
 
 	for (const auto &option : session->reward_set.options) {
@@ -765,15 +762,16 @@ ClientRewardSelection::ResolveClaim(
 			resolution.selected_option_id = option.option_id;
 		}
 	}
-	if (!selected_option) {
+	if (selected_option) {
+		resolution.rewards.insert(
+			resolution.rewards.end(),
+			selected_option->rewards.begin(),
+			selected_option->rewards.end()
+		);
+	}
+	else if (!EQ::RewardSelection::IsCommonOnly(session->reward_set)) {
 		return std::nullopt;
 	}
-
-	resolution.rewards.insert(
-		resolution.rewards.end(),
-		selected_option->rewards.begin(),
-		selected_option->rewards.end()
-	);
 	state.claim_in_flight = true;
 	return resolution;
 }

@@ -843,7 +843,7 @@ bool Client::SummonItem(uint32 item_id, int16 charges, uint32 aug1, uint32 aug2,
 	// put item into inventory
 	bool item_persisted = false;
 	if (to_slot == EQ::invslot::slotCursor) {
-		PushItemOnCursor(*inst);
+		item_persisted = PushItemOnCursor(*inst);
 		SendItemPacket(EQ::invslot::slotCursor, inst, ItemPacketLimbo);
 	} else {
 		item_persisted = PutItemInInventory(to_slot, *inst, true);

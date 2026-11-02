@@ -20,6 +20,8 @@ SET(zone_sources
     client.cpp
     client_achievements.cpp
     client_evolving_items.cpp
+    client_fellowship.cpp
+    client_fellowship_vitality.cpp
     client_bot.cpp
     client_mods.cpp
     client_packet.cpp
@@ -41,6 +43,10 @@ SET(zone_sources
     exp.cpp
     expedition_request.cpp
     fastmath.cpp
+    fellowship_campfire.cpp
+    fellowship_campsite_bonuses.cpp
+    fellowship_campsite_materials.cpp
+    fellowship_chat.cpp
     fearpath.cpp
     forage.cpp
     groups.cpp
@@ -110,6 +116,7 @@ SET(zone_sources
     nms_waypoints.cpp
     nms_vault.cpp
     nms_lon_session.cpp
+    nms_housing.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp
@@ -287,6 +294,9 @@ set(lua_sources
 )
 
 add_library(lua_zone STATIC ${lua_sources})
+IF (LUA_LIBRARY_ENABLED)
+    target_include_directories(lua_zone PRIVATE ${LUA_LIBRARY_INCLUDE})
+ENDIF()
 set_target_properties(lua_zone PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 8)
 
 # perl unity build

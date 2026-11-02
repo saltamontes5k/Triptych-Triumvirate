@@ -2,9 +2,16 @@
 # The Serpent's Spine :: Charm of Lore (artifact turn-ins) + library dialogue
 # Charm: Serpent Seeker's Charm of Lore (52354)
 # Artifacts: 58715-58750 (37 items from across the expansion)
+# NMS: keeps the full in-script charm/artifact system (the reconstruction's
+# plugin::achievement_lore_* calls reference a plugin its repo does not ship)
+# and adds the mesa savage-beast hint from the reconstructed 394227.pl.
 
 sub EVENT_SAY {
   if ($text=~/hail/i) {
+    # Mesa: Soothe the Savage Beast? Native SpeakWith owns progression.
+    if (quest::istaskactivityactive(3040418, 1)) {
+      quest::say("Naeema may know which substance can calm those giants.");
+    }
     if (quest::istaskactivityactive(505746, 0)) { #Getting to Know You: The City Charter
       quest::say("Ah, yes. Mystrana told me you would be stopping by. Head upstairs and grab a copy of the Charter. My staff just finished scribing a new set. We can hardly keep up with the number of new faces who need to learn about our fine city!");
     }

@@ -25,9 +25,12 @@
 #     (never mixed). Citadel = Korafax access + all three Korafax raid
 #     chains + a Tower Key (88343) on the character.
 #
-# Mercenary tier unlocks (Oceangreen=T2 .. Rathe=T5) are represented by the
-# theme flags themselves; mercenaries are enabled server-wide, so the SoD
-# mercenary tasks are authored as standard solo tasks (v145).
+# Mercenary tier cap (Custom:SoDMercTiers): the theme flags drive a
+# per-account '<accountid>-sod-merc-tier' bucket (1 + themes, cap 5 =
+# Oceangreen=T2 .. Rathe=T5, the v89 design). zone/merc.cpp reads it at
+# hire time (CheckCanHireMerc); the bucket is refreshed on every SoD
+# chain-flag change and backfilled on zone-in (SodMercTierBackfill).
+# The SoD mercenary tasks themselves are standard solo tasks (v145).
 #
 # Zone gates (called from zone player.pl EVENT_ENTERZONE):
 #   plugin::SodGateVoid($client, 'thevoidc')
@@ -372,6 +375,8 @@ sub SodOnTaskComplete {
         return unless $client->IsTaskCompleted($tid);
     }
     plugin::SetSubflag($client, 'SoD', $flag, 1);
+    # Theme completion raises the mercenary tier cap (Custom:SoDMercTiers).
+    _sod_update_merc_tier($client);
 }
 
 # Number of themes completed (group OR raid; a theme counts once).
@@ -382,6 +387,26 @@ sub SodThemeCount {
         $n++ if _sod_theme_done($client, $theme);
     }
     return $n;
+}
+
+# Mercenary tier cap bucket (Custom:SoDMercTiers): 1 + themes, cap 5
+# (Oceangreen=T2 .. Rathe=T5). Written as a plain integer bucket the
+# zone reads at hire time (zone/merc.cpp GetSoDMercTierCap).
+sub _sod_update_merc_tier {
+    my ($client) = @_;
+    my $tier = 1 + SodThemeCount($client);
+    $tier = 5 if $tier > 5;
+    my $key = $client->AccountID() . "-sod-merc-tier";
+    my $cur = quest::get_data($key);
+    quest::set_data($key, $tier) if $cur ne $tier;
+}
+
+# Zone-in backfill (global_player.pl EVENT_ENTERZONE): repairs the tier
+# bucket for accounts whose themes predate the feature. GMs skip.
+sub SodMercTierBackfill {
+    my ($client) = @_;
+    return if $client->GetGM();
+    _sod_update_merc_tier($client);
 }
 
 # 1 + themes (A-E), then F for korafax-kuua and G for discord-tower.
@@ -695,6 +720,9 @@ sub SodReport {
     plugin::YellowText("Korafax raids: " . join("/", @raids)
         . "  Tower Key: " . ($client->CountItem($SOD_TOWER_KEY) > 0 ? "yes" : "no"));
     plugin::YellowText("Korafax access: " . (SodKorafaxAccess($client) ? "yes" : "no"));
+    my $merc_tier = 1 + SodThemeCount($client);
+    $merc_tier = 5 if $merc_tier > 5;
+    plugin::YellowText("Mercenary tier cap: $merc_tier (Custom:SoDMercTiers)");
     plugin::YellowText("Your Void: " . uc(SodVoidZone(SodVoidVersion($client)))
         . " (version " . SodVoidVersion($client) . ")");
 }

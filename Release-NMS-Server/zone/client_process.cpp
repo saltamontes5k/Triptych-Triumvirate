@@ -60,6 +60,8 @@ extern volatile bool is_zone_loaded;
 extern WorldServer worldserver;
 extern EntityList entity_list;
 
+void HousingClientProcess(Client *c); // delayed housing burst after zone settle (zone/nms_housing.cpp)
+
 bool Client::Process() {
 	bool ret = true;
 
@@ -72,6 +74,17 @@ bool Client::Process() {
 		if (!IsLD() && zoneinpacket_timer.Check()) {
 			SendAllPackets();
 		}
+
+		HousingClientProcess(this);
+
+		// Coalesced AA table flush: see Client::SendAlternateAdvancementTable.
+		if (m_aa_table_send_pending &&
+			(Timer::GetCurrentTime() - m_aa_table_last_send_ms) >= kAaTableCoalesceMs) {
+			m_aa_table_send_pending = false;
+			SendAlternateAdvancementTable();
+		}
+
+		ProcessFellowship();
 
 		ProcessAchievementRewards();
 
@@ -2146,7 +2159,7 @@ void Client::OPGMTrainSkill(const EQApplicationPacket *app)
 
 		if (skilllevel == 0) {
 			//this is a new skill..
-			uint16 t_level = GetSkillTrainLevel(skill, GetClass());
+			uint16 t_level = GetSkillTrainLevel(skill, trains_class);
 
 			if ((GetClassesBits() & GetPlayerClassBit(trains_class)) == 0) {
 				LogSkills("Tried to train a new skill [{}] which is invalid for this race/class.", skill);

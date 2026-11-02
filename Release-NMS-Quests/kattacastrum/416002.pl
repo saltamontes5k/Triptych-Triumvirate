@@ -11,7 +11,6 @@ sub EVENT_SAY {
   if ($text=~/hail/i) {
     if (quest::istaskcompleted($TASK) && !quest::get_data($client->CharacterID() . "-tbsm-$TASK")) {
       quest::say("The Emperor's fate is the Combine's answer to the Empress. Your Orux, as agreed.");
-      quest::summonitem(79911, $ORUX);
       quest::set_data($client->CharacterID() . "-tbsm-$TASK", 1);
     } elsif (quest::istaskactive($TASK)) {
       quest::say("Akarahotuten waits atop the pyramid. Say [enter] and finish the hunt.");

@@ -5,6 +5,7 @@
 -- Rasper: raidDiscord.html.
 
 local raid = require("sod_raids")
+local ach = require("achievement_flags")
 local EVENT = raid.EVENT.MINDBLIGHT
 local CHEST = raid.CHEST.MINDBLIGHT
 
@@ -23,5 +24,6 @@ function event_signal(e)
 		if exp.valid and not exp:HasLockout(EVENT) then
 			exp:AddLockout(EVENT, eq.seconds("72h"))
 		end
+		ach.set_zone(1647140, 1, 1647140)
 	end
 end

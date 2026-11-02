@@ -10,6 +10,7 @@
 -- trial_creation flag for surviving raiders.
 
 local prog = require("uf_progression")
+local ach = require("achievement_flags")
 
 local MOTE = 490131
 local CHEST = prog.CHEST.creation
@@ -94,6 +95,7 @@ function event_death_complete(e)
 	end
 	for _, c in ipairs(prog.alive_clients(e.self:GetX(), e.self:GetY(), 300)) do
 		prog.set(c, prog.FLG.trial_creation, 1)
+		ach.set(c, 1749004, 1, 1249004)
 		c:Message(15, "You have passed the Trial of Creation.")
 	end
 end

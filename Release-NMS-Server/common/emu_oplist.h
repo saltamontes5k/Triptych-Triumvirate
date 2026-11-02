@@ -181,7 +181,12 @@ N(OP_ExpUpdate),
 N(OP_FaceChange),
 N(OP_Feedback),
 N(OP_FeignDeath),
-N(OP_FellowshipUpdate),
+N(OP_FellowshipUpdate),             // 0x6e4d roster + campfire snapshot (zone -> client)
+N(OP_FellowshipAction),             // 0x7121 native fellowship action (client -> zone)
+N(OP_FellowshipInvite),             // 0x62ab invitation dialog (zone -> client)
+N(OP_FellowshipCampRequest),        // 0x0c12 campsite catalogue request (client -> zone)
+N(OP_FellowshipCampList),           // 0x074d campsite catalogue reply (zone -> client)
+N(OP_FellowshipVitality),           // 0x2cc6 vitality gauges (zone -> client)
 N(OP_FindPersonReply),
 N(OP_FindPersonRequest),
 N(OP_FinishTrade),
@@ -668,25 +673,89 @@ N(OP_ShroudPointsUpdate), // 0x2507: unnamed shroud manager opcode {u32,u32} -> 
 N(OP_ShroudStateUpdate),  // 0x006e: unnamed shroud manager opcode {u32,u32} -> UI notify type 4 (monster points spent?)
 N(OP_PowerSource), // RoF2 client per-instance power source charge (opcode 0x4c89)
 N(OP_NMSLoNSession),       // Server->Client: 0x141C, the card game's one-time login token + where to relay it (world/lon_service.cpp)
-// RoF2 player housing / real estate and /racechange (client->server).
-// Recovered from eqgame.exe build #630 with IDA; upstream EQEmu has no names
-// for these. See docs/rof2-housing-racechange-opcodes.md.
-N(OP_RealEstateRequest),
-N(OP_RealEstatePlotSelect),
-N(OP_RealEstateWindowAction),
-N(OP_RealEstateSearchRequest),
-N(OP_RealEstateDataRequest),
-N(OP_RealEstateNeighborhoodRequest),
-N(OP_RealEstateNameSearch),
-N(OP_RealEstateItemsRequest),
-N(OP_RealEstateItemAction),
-N(OP_RealEstateLayoutSave),
-N(OP_RealEstateManageAction),
-N(OP_RealEstatePlacement),         // 0x626e: house/plot placement, carries world X/Y
-N(OP_RealEstateToggle),
-N(OP_RealEstateItemsAction),
-N(OP_RealEstatePurchaseSelect),    // 0x792c: CRealEstatePurchaseWnd
-N(OP_RealEstatePlotSearchRequest), // 0x796c: CRealEstatePlotSearchWnd
-N(OP_RealEstateManageRequest),     // 0x7ad1: 0x8C struct + world X/Y
+// RoF2 player housing / real estate (both directions).
+// Numbers and names recovered from eqgame.exe build #630 with IDA and cross-checked
+// against the public reconstruction; see docs/rof2-housing-upstream-adoption.md.
+N(OP_RealEstatePickup),              // 0x2036 cursor pickup of a placed item
+N(OP_RealEstateGo),                  // 0x218c enter/visit a neighborhood or plot
+N(OP_RealEstateHouseSwap),           // 0x21ba
+N(OP_RealEstateNeighborhood),        // 0x2691 neighborhood query/response
+N(OP_RealEstateEscrow),              // 0x2aa6
+N(OP_RealEstateItemOperation),       // 0x3424
+N(OP_RealEstateTextRequest),         // 0x3c8b housing-item text prompt; operation unresolved
+N(OP_RealEstatePurchase),            // 0x45be 188-byte C2S purchase transaction
+N(OP_RealEstateItemInspect),         // 0x58c7
+N(OP_RealEstateLoadLayout),          // 0x5b41
+N(OP_RealEstatePack),                // 0x613d
+N(OP_RealEstatePlacementBegin),      // 0x626e placement begin request / preview response
+N(OP_RealEstateVotingOptOut),        // 0x6573
+N(OP_RealEstateStoreAll),            // 0x6917
+N(OP_RealEstateSale),                // 0x792c
+N(OP_RealEstateInspect),             // 0x796c
+N(OP_RealEstateAction5Request),      // 0x7ad1 unresolved item action-5 request
+N(OP_RealEstateDefinitions),         // 0x2698 definition list; must arrive before 0x6fd0
+N(OP_RealEstateZoneContext),         // 0x6fd0 estate snapshot that establishes zone context
+N(OP_RealEstateSnapshot),            // 0x63fd estate snapshot; same body as 0x6fd0
+N(OP_RealEstateRegions),             // 0x49df region manifest; feeds the client spatial index
+// Names recovered from the public rof2-* reconstruction branches; see
+// docs/rof2-opcode-harvest.md. Mapping a name is not behaviour: a handler is attached in
+// Client::MapOpcodes only where this server implements one, and the rest are logged.
+N(OP_RealEstatePlotSearchOpen),       // 0x2b35 S2C one byte, opens the native Plot Search window
+N(OP_RealEstateOwnedList),            // 0x2aa7
+N(OP_RealEstateAccess),               // 0x485d
+N(OP_RealEstateAccessEdit),           // 0x3146
+N(OP_RealEstateTransfer),             // 0x507f
+N(OP_RealEstateItemDelta),            // 0x087f
+N(OP_RealEstateWorldRemove),          // 0x2a9e
+N(OP_RealEstatePlacementSource),      // 0x2523
+N(OP_RealEstatePlacementEnd),         // 0x6213
+N(OP_RealEstateOperationResult),      // 0x1228
+N(OP_RealEstateItemMenu),             // 0x21ec 768-byte item menu query/response
+N(OP_RealEstateCustomInteraction),    // 0x51e3
+N(OP_RealEstateExit),                 // 0x1da9
+N(OP_RealEstateTrophyOpen),           // 0x51a9
+N(OP_RealEstateTrophyToggle),         // 0x756a
+N(OP_RealEstateTrophy),               // 0x4b65
+N(OP_RealEstateTrophyList),           // 0x7697
+N(OP_RealEstateTrophyTimer),          // 0x51ae
+N(OP_RealEstateTrophyClear),          // 0x08bf
+N(OP_RealEstateAnchorConfirm),        // 0x7bb1
+N(OP_RealEstateOwnerItemPurge),       // 0x1967
+N(OP_RealEstateOwnedItemList),        // 0x3e00
+N(OP_RealEstateArchivedList),         // 0x66df
+N(OP_RealEstateSaleResult),           // 0x66bf
+N(OP_RealEstateTransferResult),       // 0x68ba
+N(OP_RealEstateTransferConsent),      // 0x5a63
+N(OP_RealEstateBindSpawn),            // 0x21ea
+N(OP_GuildTrophyAvailable),           // 0x7db5
+N(OP_GuildTrophyActive),              // 0x7dd2
+N(OP_GuildTrophyToggle),              // 0x039d
+N(OP_GuildTrophySave),                // 0x7c1d
+N(OP_GuildTrophyModify),              // 0x7a41
+N(OP_GuildTrophyOptIn),               // 0x02bc
+N(OP_MercenaryAutoAssist),            // 0x0b72
+N(OP_MercenaryAssist),                // 0x7e6f
+N(OP_MercenarySwitch),                // 0x1b37
+N(OP_MercenaryTransferRequest),       // 0x5df8
+N(OP_MercenaryTransferResponse),      // 0x4333
+N(OP_MercenaryUnshroud),              // 0x69ca
+N(OP_MercenaryUnshroudResponse),      // 0x6e9f
+N(OP_MercenaryDead),                  // 0x038f
+N(OP_MercenaryRestricted),            // 0x0e52
+N(OP_MercenaryRestoreReady),          // 0x2749
+N(OP_MercenaryUpkeep),                // 0x5f88
+N(OP_MercenaryCostUpdate),            // 0x3cbc
+N(OP_MercenaryCurrencyMessage),       // 0x29ec
+N(OP_MercenaryTimerUpdate),           // 0x2b4f
+N(OP_SpiritShroudAbilityRequest),     // 0x3acc
+N(OP_SpiritShroudEquipmentRequest),   // 0x4b25
+N(OP_SpiritShroudComplete),           // 0x7786
+N(OP_SpiritShroudBank),               // 0x7b71 keeper storage window
+N(OP_SpiritShroudBankItems),          // 0x1115
+N(OP_SpiritShroudBankEmpty),          // 0x0728
+N(OP_RealEstateWorldItem),           // 0x1045 places a world actor (S2C, ActorRecord only)
+N(OP_RealEstateItemQuery),           // 0x050c client asks for an estate's item list (C2S)
+N(OP_RealEstateItemList),            // 0x1cef estate item list (S2C)
+N(OP_RealEstatePlacementCommit),     // 0x711a placement commit (C2S, 96 bytes)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 // mail and chat opcodes located in ../mail_oplist.h

@@ -1311,10 +1311,8 @@ void QuestManager::safemove() {
 void QuestManager::rain(int weather) {
 	QuestManagerCurrentQuestVars();
 	zone->zone_weather = weather;
-	auto outapp = new EQApplicationPacket(OP_Weather, 8);
-	*((uint32*) &outapp->pBuffer[4]) = (uint32) weather; // Why not just use 0x01/2/3?
-	entity_list.QueueClients(owner, outapp);
-	safe_delete(outapp);
+	zone->weather_intensity = weather > 0 ? 1 : 0;
+	zone->weatherSend();
 }
 
 void QuestManager::snow(int weather) {

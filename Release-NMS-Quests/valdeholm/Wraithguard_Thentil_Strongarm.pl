@@ -1,5 +1,6 @@
 # Wraithguard Thentil Strongarm - Valdeholm
-# The Serpent's Spine :: Armor Supplies (task 600111)
+# The Serpent's Spine :: Armor Supplies (task 600111), Runic Ivory (600723),
+#                        Shade's Bane (600726)
 # Item: Icefall Grizzly Pelt 85789
 # Reward choice: Wraithguard Bracer 53698, Runelinked Bracer 53699,
 #                Fieldwarden's Bracer 53700, Lorekeeper's Bracelet 53701
@@ -15,6 +16,24 @@ sub EVENT_SAY {
     }
     else {
       quest::say("The grizzlies of Icefall Glacier still roam. Bring me their pelts.");
+    }
+  }
+  if ($text=~/ivory/i) {
+    if (!quest::istaskactive(600723) && !quest::istaskcompleted(600723)) {
+      quest::say("The mammoths of Icefall carry runic ivory in their tusks. Four tusks to the Wraithguard quartermaster and the engravers will have their due.");
+      quest::assigntask(600723);
+    }
+    else {
+      quest::say("Four Icefall mammoth tusks, fresh from the herds.");
+    }
+  }
+  if ($text=~/bane/i) {
+    if (!quest::istaskactive(600726) && !quest::istaskcompleted(600726)) {
+      quest::say("There is an old craft for hurting what cannot be hurt. Bring me eight marks of Rallos Zek and a reliquary fragment from the drakes of Ashengate, and I will show you how to forge a [" . quest::saylink("darksphere") . "].");
+      quest::assigntask(600726);
+    }
+    else {
+      quest::say("Eight marks and a reliquary fragment. The forge does the rest.");
     }
   }
   if ($text=~/bracer/i && quest::istaskcompleted(600111) && !defined($qglobals{thentil_reward})) {

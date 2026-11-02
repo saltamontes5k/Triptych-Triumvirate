@@ -766,7 +766,7 @@ Client::~Client() {
 	}
 
 	if (IsTrader()) {
-		TraderRepository::DeleteWhere(database, fmt::format("`char_id` = '{}'", CharacterID()));
+		TraderRepository::DeleteWhere(database, fmt::format("`character_id` = '{}'", CharacterID()));
 
 		SendBecomeTraderToWorld(this, TraderOff);
 		SendTraderMode(TraderOff);
@@ -987,6 +987,11 @@ void Client::ReportConnectingState() {
 
 bool Client::SaveAA()
 {
+	// A failed or in-flight fellowship XP transaction must never be masked by a
+	// later independent save; the commit outcome is authoritative.
+	if (m_fellowship_xp_persistence_failed || m_fellowship_xp_transaction_active)
+		return false;
+
 	// Live-like shroud mode: the in-memory map holds session-scoped shroud AA
 	// entries; never persist the shroud session into the real AA table (the
 	// real set is untouched in memory and restored with the real profile).
@@ -1057,6 +1062,12 @@ bool Client::Save(uint8 iCommitNow)
 
 bool Client::Save(uint8 iCommitNow, bool update_achievements) {
 	if(!ClientDataLoaded())
+		return false;
+
+	// Transactional fellowship vitality commits character XP itself; an
+	// independent save during that window (or after a failed one) would write a
+	// divergent progression state.
+	if (m_fellowship_xp_persistence_failed || m_fellowship_xp_transaction_active)
 		return false;
 
 	// Never persist a shroud form: write the real profile, but keep the live
@@ -2335,6 +2346,10 @@ void Client::ChannelMessageReceived(uint8 chan_num, uint8 language, uint8 lang_s
 
 	switch(chan_num)
 	{
+	case ChatChannel_Fellowship: { /* RoF2 /fsay, channel 21 */
+		SendFellowshipChat(message);
+		break;
+	}
 	case ChatChannel_Guild: { /* Guild Chat */
 		if (!IsInAGuild()) {
 			MessageString(Chat::DefaultText, GUILD_NOT_MEMBER2);	//You are not a member of any guild.
@@ -3142,6 +3157,9 @@ void Client::UpdateWho(uint8 remove)
 	s->race        = GetRace();
 	s->class_      = GetClass();
 	s->level       = GetLevel();
+	// NMS: publish the owned-class mask separately. class_ is the multiclassing
+	// Bard sentinel and is not a usable filter key; see ZoneWho / WhoHasClass.
+	s->classes_bits = GetClassesBits();
 
 	if (m_pp.anon == 0) {
 		s->anon = 0;
@@ -9049,7 +9067,7 @@ bool Client::SetAlternateCurrencyValue(uint32 currency_id, uint32 new_amount)
 	alternate_currency[currency_id] = new_amount;
 	bool persistence_succeeded = true;
 	if (RuleB(Custom, EnableAccountAltCurrency)) {
-		database.UpdateAccountAltCurrencyValue(AccountID(), currency_id, new_amount);
+		persistence_succeeded = database.UpdateAccountAltCurrencyValue(AccountID(), currency_id, new_amount);
 	} else {
 		persistence_succeeded = database.UpdateAltCurrencyValue(CharacterID(), currency_id, new_amount);
 	}
@@ -9120,7 +9138,12 @@ int Client::AddAlternateCurrencyValue(
 		new_value = 0;
 	}
 
-	SetAlternateCurrencyValue(currency_id, static_cast<uint32>(new_value));
+	// Propagate the real persistence outcome: the reward-claim path proves
+	// delivery with this flag, so a dropped write must not read as success.
+	const bool persisted = SetAlternateCurrencyValue(currency_id, static_cast<uint32>(new_value));
+	if (persistence_succeeded) {
+		*persistence_succeeded = persisted;
+	}
 	return new_value;
 }
 
@@ -10156,18 +10179,52 @@ return;
 
 // returns the character's faction level, adjusted for racial, class, and deity modifiers
 int32 Client::GetModCharacterFactionLevel(int32 faction_id) {
-	int32 Modded = GetCharacterFactionLevel(faction_id);
-	FactionMods fm;
-	if (content_db.GetFactionData(&fm, GetClass(), GetFactionRace(), GetDeity(), faction_id))
-	{
-		Modded += fm.base + fm.class_mod + fm.race_mod + fm.deity_mod;
+    int32 base_faction = GetCharacterFactionLevel(faction_id);
 
-		//Tack on any bonuses from Alliance type spell effects
-		Modded += GetFactionBonus(faction_id);
-		Modded += GetItemFactionBonus(faction_id);
-	}
+    if (RuleB(Custom, MulticlassingEnabled)) {
+        int32 bonus_faction = GetFactionBonus(faction_id) + GetItemFactionBonus(faction_id);
+        uint32 race = GetFactionRace();
+        uint32 deity = GetDeity();
 
-	return Modded;
+        int32 worst_faction = 0;
+        bool found_faction_data = false;
+
+        for (const auto& class_bitmask : player_class_bitmasks) {
+            uint8 class_id = class_bitmask.first;
+            uint16 class_bit = class_bitmask.second;
+
+            if ((GetClassesBits() & class_bit) != 0) {
+                FactionMods fm;
+                if (content_db.GetFactionData(&fm, class_id, race, deity, faction_id)) {
+                    int32 class_faction = base_faction + fm.base + fm.class_mod + fm.race_mod + fm.deity_mod + bonus_faction;
+
+                    if (!found_faction_data) {
+                        worst_faction = class_faction;
+                        found_faction_data = true;
+                    } else {
+                        worst_faction = std::min(worst_faction, class_faction);
+                    }
+                }
+            }
+        }
+
+        if (found_faction_data) {
+            return worst_faction;
+        }
+        // No owned classes had valid faction data; fall through to single-class fallback
+    }
+
+    // Single-class fallback (multiclassing off, or multiclassing on but no valid data)
+    FactionMods fm;
+    if (content_db.GetFactionData(&fm, GetClass(), GetFactionRace(), GetDeity(), faction_id)) {
+        base_faction += fm.base + fm.class_mod + fm.race_mod + fm.deity_mod;
+
+        // Tack on any bonuses from Alliance type spell effects
+        base_faction += GetFactionBonus(faction_id);
+        base_faction += GetItemFactionBonus(faction_id);
+    }
+
+    return base_faction;
 }
 
 void Client::MerchantRejectMessage(Mob *merchant, int primaryfaction)
@@ -12451,15 +12508,16 @@ std::vector<int> Client::GetLearnableDisciplines(uint8 min_level, uint8 max_leve
 			continue;
 		}
 
-		if (spells[spell_id].classes[Class::Warrior] == 0) {
+		uint8 required_level = GetSpellLevelForCaster(spell_id);
+		if (required_level == 255) {
 			continue;
 		}
 
-		if (max_level && spells[spell_id].classes[m_pp.class_ - 1] > max_level) {
+		if (max_level && required_level > max_level) {
 			continue;
 		}
 
-		if (min_level > 1 && spells[spell_id].classes[m_pp.class_ - 1] < min_level) {
+		if (min_level > 1 && required_level < min_level) {
 			continue;
 		}
 
@@ -12531,10 +12589,6 @@ std::vector<int> Client::GetScribeableSpells(uint8 min_level, uint8 max_level) {
 			continue;
 		}
 
-		if (spells[spell_id].classes[Class::Warrior] == 0) {
-			continue;
-		}
-
         if (RuleB(Custom, MulticlassingEnabled)) {
             unsigned int classes_bits = GetClassesBits();
             bool any_class_usable = false;
@@ -12597,8 +12651,8 @@ std::vector<int> Client::GetScribeableSpells(uint8 min_level, uint8 max_level) {
 			const auto& g = spell_group_cache.find(spells[spell_id].spell_group);
 			if (g != spell_group_cache.end()) {
 				for (const auto& s : g->second) {
-					if (
-						EQ::ValueWithin(spells[s].classes[m_pp.class_ - 1], min_level, max_level) &&
+					uint8 required_level = GetSpellLevelForCaster(s);
+					if (required_level != 255 && EQ::ValueWithin(required_level, min_level, max_level) &&
 						s == spell_id &&
 						scribeable
 					) {
@@ -13947,10 +14001,17 @@ void Client::MaxSkills()
                     uint16 classSkillCap = (
                         EQ::skills::IsSpecializedSkill(s.first) ?
 						MAX_SPECIALIZED_SKILL :
-						SkillCaps::Instance()->GetSkillCap(classID, s.first, RuleI(Character, MaxLevel)).cap
+						SkillCaps::Instance()->GetSkillCap(classID, s.first, GetLevel()).cap
 					);
+					highestSkillCap = std::max(highestSkillCap, classSkillCap);
 				}
 			}
+		} else {
+			highestSkillCap = (
+				EQ::skills::IsSpecializedSkill(s.first) ?
+				MAX_SPECIALIZED_SKILL :
+				SkillCaps::Instance()->GetSkillCap(GetClass(), s.first, GetLevel()).cap
+			);
 		}
 
 		// Set skill to the highest cap found across all classes
@@ -14725,6 +14786,9 @@ bool Client::AddExtraClass(int class_id) {
 			}
 		}
 
+		// NMS: owned classes changed, so republish the client list. Reached only on
+		// the success path; both failure returns above bypass it.
+		UpdateWho();
 		return true;
 	}
 	return false;
@@ -14833,6 +14897,9 @@ bool Client::RemoveExtraClass(int class_id) {
     SaveCurrency();
     Save();
 
+    // NMS: owned classes changed, so republish the client list. Reached only on
+    // the success path; both validation returns above bypass it.
+    UpdateWho();
     return true;
 }
 

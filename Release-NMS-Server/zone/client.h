@@ -274,6 +274,24 @@ public:
 	Client(); // mocking / testing
 	~Client();
 
+	// RoF2 fellowship (see docs/rof2-fellowship.md)
+	void RefreshFellowship();
+	void ProcessFellowship();
+	void SendFellowshipChat(const char* message);
+	void RefreshFellowshipVitality();
+	bool ProcessFellowshipCombatExperience(ExpSource source, uint64 experience_total, uint64 aa_total, NPC* npc);
+	bool TryFellowshipCalling();
+	uint32 FellowshipID() const { return m_fellowship_id; }
+	bool m_fellowship_xp_persistence_failed = false;
+	bool m_fellowship_xp_transaction_active = false;
+	std::vector<uint8> m_fellowship_vitality_snapshot;
+	std::vector<uint8> m_fellowship_snapshot;
+	uint32 m_fellowship_id = 0;
+	uint64 m_fellowship_refresh_at = 0;
+	uint64 m_fellowship_action_at = 0;
+	uint64 m_fellowship_invite_expires = 0;
+	uint32 m_fellowship_inviter = 0;
+
 	void ReconnectUCS();
 	void RecordStats();
 
@@ -1034,6 +1052,8 @@ public:
 	bool UnlockWaypoint(std::string waypoint_shortname);
 	void SendWaypointList(bool force = true);
 	void   SendLoNSession();               // OP_NMSLoNSession: card game token (zone/nms_lon_session.cpp)
+	void   SendRealEstateIdentity();       // OP_RealEstateZoneContext: tells the client it is standing in a neighborhood
+	void   HousingDoorClick(uint32_t door_id); // lot marker clicked: 0x796c estate details
 	bool AllowAccountWaypoints();
 	bool CheckWaypointGroupFeature();
 	void EnableWaypointGroupFeature();
@@ -1280,6 +1300,11 @@ public:
 	void SendAlternateAdvancementRank(int aa_id, int level);
 	void SendAlternateAdvancementTable();
 	void SendAlternateAdvancementStats();
+	// An AA table send is one packet per usable rank (~1.5k at current table size), so the
+	// zone-in burst of callers is coalesced into one flush instead of being resent.
+	static constexpr uint32 kAaTableCoalesceMs = 400;
+	uint32 m_aa_table_last_send_ms = 0;
+	bool   m_aa_table_send_pending = false;
 	void PurchaseAlternateAdvancementRank(int rank_id);
 	void PurchaseAllAlternateAdvancementRanks(int starting_rank_id);
 	bool GrantAlternateAdvancementAbility(int aa_id, int points, bool ignore_cost = false);
@@ -2116,6 +2141,7 @@ public:
 	void InitializeMercInfo();
 	bool CheckCanSpawnMerc(uint32 template_id);
 	bool CheckCanHireMerc(Mob* merchant, uint32 template_id);
+	uint8 GetSoDMercTierCap();
 	bool CheckCanRetainMerc(uint32 upkeep);
 	bool CheckCanUnsuspendMerc();
 	bool DismissMerc(uint32 MercID);

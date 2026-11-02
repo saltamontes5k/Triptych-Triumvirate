@@ -1,6 +1,7 @@
 -- [[
 -- Overvolt Rigster the IV (442008) -- Dragonscale Hills.
---   * faction task giver (tasks 300007, 300008, 300009, 300026).
+--   * faction task giver (tasks 300007, 300008, 300009, 300026) and the five
+--     Circum missions (303220-303224, Ancient Faycite sections).
 --   * Mechamatic Guardian expedition requester (Rasper: openGuardian.html):
 --       "head into" -> generic instance (guardian zone version 0, the full
 --                      zone, ~20 min respawns -- the only version the named
@@ -11,7 +12,7 @@
 --     gate: level 70+. Entry is by conversation (no door/dz_switch needed).
 -- ]]
 
-local TASKS = { 300007, 300008, 300009, 300026 }
+local TASKS = { 300007, 300008, 300009, 300026, 303220, 303221, 303222, 303223, 303224 }
 local REQUIRES = {}
 
 local FLOORS = {

@@ -15,7 +15,7 @@ function event_signal(e)
 end
 
 function event_enter_zone(e)
-    if e.self:GetClass() == 8 then
+    if e.self:HasClassID(8) then
         local qglobals = eq.get_qglobals(e.self)
         if qglobals["bard15"] == "5" then
             local entity_list = eq.get_entity_list()
@@ -23,7 +23,7 @@ function event_enter_zone(e)
                 eq.spawn2(20290, 140, 0, 1157, 537, 131, 490)
             end
         end
-	elseif (e.self:GetClass() == 6 ) then
+	elseif (e.self:HasClassID(6) ) then
 		local qglobals = eq.get_qglobals(e.self)
         if qglobals["druid_epic"] == "7" then	
 				local entity_list = eq.get_entity_list()

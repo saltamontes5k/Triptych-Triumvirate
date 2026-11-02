@@ -89,7 +89,7 @@ sub get_random_mount {
     my $client = shift;
     my $class_bit = 0;
     if ($client) {
-        $class_bit = 1 << ($client->GetClass() - 1);
+        $class_bit = $client->GetClassesBitmask() || $client->GetClassBitmask();
     }
     my $dbh = plugin::LoadMysql();
 

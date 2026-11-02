@@ -1,3 +1,5 @@
+#include "fellowship_campfire.h"
+
 /*	EQEMu: Everquest Server Emulator
 	Copyright (C) 2001-2003 EQEMu Development Team (http://eqemulator.net)
 
@@ -371,6 +373,14 @@ bool Zone::LoadGroundSpawns() {
 			const uint32 max_allowed = g.spawn[slot_id].max_allowed;
 
 			if (inst) {
+				// Fresh ground-spawn clickies must have their defined charges.
+				// CreateItem defaults to zero; that otherwise produces unusable
+				// quest scrolls such as Touch of the Six. Dropped items retain
+				// their existing charges through the separate Object path.
+				if (inst->GetItem()->MaxCharges > 0) {
+					inst->SetCharges(inst->GetItem()->MaxCharges);
+				}
+
 				for (uint32 i = 0; i < max_allowed; i++) {
 					auto object = new Object(
 						inst,
@@ -880,6 +890,10 @@ bool Zone::IsLoaded() {
 
 void Zone::Shutdown(bool quiet)
 {
+	if (m_shutdown_claimed.exchange(true, std::memory_order_acq_rel)) {
+		return;
+	}
+
 	if (!is_zone_loaded) {
 		return;
 	}
@@ -1123,6 +1137,8 @@ Zone::Zone(uint32 in_zoneid, uint32 in_instanceid, const char* in_short_name)
 
 Zone::~Zone() {
 	LogInfo("Zone destructor called for zone [{}]", short_name);
+
+	ClearFellowshipCampfires();
 
 	spawn2_list.Clear();
 	if (worldserver.Connected()) {
@@ -1424,7 +1440,20 @@ bool Zone::LoadZoneCFG(const char* filename, uint16 instance_version)
 	is_hotzone            = z->hotzone != 0;
 	m_client_update_range = z->client_update_range;
 	default_ruleset       = z->ruleset;
-	allow_mercs           = true;
+	// Mercenary permission for this zone. zone.allow_mercs is optional schema: if the column
+	// is absent the query fails and mercs stay allowed, which is the pre-v280 behaviour. The
+	// hire/unsuspend path already consults AllowMercs(); until now nothing ever set it false.
+	allow_mercs = true;
+	{
+		auto merc_zone = content_db.QueryDatabase(fmt::format(
+			"SELECT allow_mercs FROM zone WHERE zoneidnumber = {} AND version = {} LIMIT 1",
+			ZoneID(filename), static_cast<int>(z->version)
+		));
+		if (merc_zone.Success() && merc_zone.RowCount() && merc_zone.begin()[0]) {
+			allow_mercs = Strings::ToInt(merc_zone.begin()[0]) != 0;
+		}
+		LogInfo("[Mercs] zone [{}] allow_mercs [{}]", filename, allow_mercs ? 1 : 0);
+	}
 	m_graveyard_id        = z->graveyard_id;
 	m_max_clients         = z->maxclients;
 
@@ -1568,6 +1597,8 @@ uint32 Zone::CountAuth() {
 }
 
 bool Zone::Process() {
+	ProcessFellowshipCampfires();
+
 	spawn_conditions.Process();
 
 	if (spawn2_timer.Check()) {

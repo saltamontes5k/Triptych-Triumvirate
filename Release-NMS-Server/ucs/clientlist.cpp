@@ -476,6 +476,14 @@ Clientlist::Clientlist(int ChatPort) {
 	// connection (Clientlist::CheckForStaleConnections), so this only keeps genuinely
 	// quiet-but-alive sessions around.
 	chat_opts.daybreak_options.stale_connection_ms = 3600000;
+
+	// 30s (the default) is shorter than a slow zone load. A client sitting in a loading
+	// screen cannot ACK anything, so UCS would give up and close the chat session mid-zone,
+	// and the player landed with "The universal chat service is temporarily unavailable".
+	// Caught on 10-24 13:03:58: 'reliable packet unacknowledged for [34681] ms' while
+	// potranquility was booting as a dynamic zone; the client was still on the loading
+	// screen. Two minutes covers a slow instance boot with margin.
+	chat_opts.daybreak_options.resend_timeout = 120000;
 	chat_opts.daybreak_options.resend_delay_ms = RuleI(Network, ResendDelayBaseMS);
 	chat_opts.daybreak_options.resend_delay_factor = RuleR(Network, ResendDelayFactor);
 	chat_opts.daybreak_options.resend_delay_min = RuleI(Network, ResendDelayMinMS);
@@ -564,15 +572,15 @@ void Client::CloseConnection() {
 	ClientStream->ReleaseFromUse();
 }
 
+void Client::QueuePacket(const EQApplicationPacket *p, bool ack_req) {
+	ClientStream->QueuePacket(p, ack_req);
+	LastSend = Timer::GetCurrentTime();
+}
+
 void Clientlist::CheckForStaleConnectionsAll()
 {
+	// Keepalives are sent from Clientlist::Process() now -- see the comment there.
 	LogDebug("Checking for stale connections");
-
-	auto it = ClientChatConnections.begin();
-	while (it != ClientChatConnections.end()) {
-		(*it)->SendKeepAlive();
-		++it;
-	}
 }
 
 void Clientlist::CheckForStaleConnections(Client *c) {
@@ -644,11 +652,22 @@ void Clientlist::Process()
 			continue;
 		}
 
+		// Keep this chat session alive from the same loop that processes its packets. A
+		// separate 15s timer was observed to stop firing after a few minutes, and the client
+		// then drops ~40s later with nothing logged anywhere (10-24: last ping 13:57:01,
+		// Judy unavailable 13:57:45, no closed connection, no resend timeout).
+		const auto keepalive_now = Timer::GetCurrentTime();
+		if (keepalive_now - (*it)->LastKeepAlive >= 15000) {
+			(*it)->SendKeepAlive();
+			(*it)->LastKeepAlive = keepalive_now;
+		}
+
 		EQApplicationPacket *app = nullptr;
 
 		bool KeyValid = true;
 
 		while (KeyValid && !(*it)->GetForceDisconnect() && (app = (*it)->ClientStream->PopPacket())) {
+
 			EmuOpcode opcode = app->GetOpcode();
 
 			auto o = (*it)->ClientStream->GetOpcodeManager();

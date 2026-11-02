@@ -247,6 +247,10 @@ bool LoadRewardSelectionCatalog(
 		}
 		if (
 			!row.option_id ||
+			row.option_id == EQ::RewardSelection::CommonOnlySelection ||
+			!row.class_mask || row.class_mask > 65535 ||
+			(source != RewardSelectionSource::Achievement &&
+			 source != RewardSelectionSource::Task && row.class_mask != 65535) ||
 			!staged->second.option_indices.emplace(
 				row.option_id,
 				staged->second.set.options.size()
@@ -269,7 +273,8 @@ bool LoadRewardSelectionCatalog(
 			.sequence = row.sequence,
 			.label = row.label,
 			.common_to_all = row.common_to_all != 0,
-			.flags = row.flags
+			.flags = row.flags,
+			.class_mask = row.class_mask
 		});
 	}
 
@@ -434,7 +439,8 @@ bool LoadRewardSelectionCatalog(
 					: left.option_id < right.option_id;
 			}
 		);
-		if (staged.set.options.empty() || !has_selectable_option) {
+		if (staged.set.options.empty() ||
+			(!has_selectable_option && source != RewardSelectionSource::Achievement)) {
 			LogError("Enabled reward set [{}] has no selectable option", reward_set_id);
 			if (!recover_invalid_task_sets) {
 				return false;

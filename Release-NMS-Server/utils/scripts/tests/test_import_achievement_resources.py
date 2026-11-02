@@ -1637,6 +1637,181 @@ class GeneratedCriteriaTests(unittest.TestCase):
         )
 
 
+    def test_uf_selection_prunes_later_zone_families_and_keeps_uf_travelers(self):
+        categories = [
+            category(10, 0, "General"),
+            category(13, 10, "Level"),
+        ]
+        uf_category_id = None
+        for index, profile in enumerate(
+            IMPORTER.EXPANSION_PROFILES, start=1
+        ):
+            category_id = 1000 + index
+            categories.append(
+                category(category_id, 0, profile.resource_category_name)
+            )
+            if profile.key == "uf":
+                uf_category_id = category_id
+                break
+        self.assertIsNotNone(uf_category_id)
+
+        achievements = (
+            achievement(1748005, "Brell's Rest Traveler"),
+            achievement(100071400, "Housing Zone Traveler"),
+            achievement(100071480, "Hunter of Housing Zone"),
+            achievement(6000, "Late Zone Parent"),
+            achievement(6001, "Grand Parent"),
+            achievement(6002, "Optional Parent"),
+        )
+        associations = tuple(
+            association(uf_category_id, row.achievement_id)
+            for row in achievements
+        )
+        components = (
+            component(1748005, 1, 1, 1148005, "Visit Brell's Rest."),
+            component(100071400, 1, 1, 300001, "Visit Housing Zone"),
+            component(100071480, 1, 1, 300002, "Housing Named"),
+            component(6000, 1, 1, 300003, "Housing Zone Traveler"),
+            component(6001, 1, 1, 300004, "Late Zone Parent"),
+            component(6002, 2, 2, 300005, "Housing Zone Traveler"),
+        )
+        resources = IMPORTER.ResourceSet(
+            categories=tuple(categories),
+            achievements=achievements,
+            category_associations=associations,
+            components=components,
+            component_counts=(),
+        )
+
+        selection = IMPORTER.build_enable_selection(
+            resources,
+            through_expansion="uf",
+        )
+
+        self.assertEqual(selection.through_expansion.key, "uf")
+        self.assertIn(1748005, selection.expansion_achievement_ids)
+        self.assertIn(6002, selection.expansion_achievement_ids)
+        self.assertNotIn(100071400, selection.expansion_achievement_ids)
+        self.assertNotIn(100071480, selection.expansion_achievement_ids)
+        self.assertNotIn(6000, selection.expansion_achievement_ids)
+        self.assertNotIn(6001, selection.expansion_achievement_ids)
+
+        zone_enter = tuple(
+            row
+            for row in selection.generated_criteria
+            if row.event_type == IMPORTER.EVENT_ZONE_ENTER
+        )
+        self.assertEqual(
+            tuple(
+                (row.achievement_id, row.target_id) for row in zone_enter
+            ),
+            ((1748005, 480),),
+        )
+
+    def test_underfoot_suffix_five_traveler_shape_is_pinned(self):
+        resources = IMPORTER.ResourceSet(
+            categories=(category(1700, 0, "Underfoot"),),
+            achievements=(
+                achievement(1748005, "Brell's Rest Traveler"),
+                achievement(1748105, "Fungal Forest Traveler"),
+            ),
+            category_associations=(
+                association(1700, 1748005),
+                association(1700, 1748105),
+            ),
+            components=(
+                component(1748005, 1, 1, 1148005, "Visit Brell's Rest."),
+                # Same suffix, but the component id is not pinned to the
+                # achievement id minus 600000, so the shape must be rejected.
+                component(1748105, 1, 1, 300001, "Visit the Fungal Forest."),
+            ),
+            component_counts=(),
+        )
+        components_by_achievement = IMPORTER._state_components_by_achievement(
+            resources
+        )
+        component_counts = IMPORTER._required_counts(resources)
+
+        criteria, locations, candidates, rejected = (
+            IMPORTER._traveler_criteria(
+                resources,
+                frozenset({1748005, 1748105}),
+                components_by_achievement,
+                component_counts,
+            )
+        )
+
+        self.assertEqual(candidates, 2)
+        self.assertEqual(rejected, 1)
+        self.assertEqual(
+            tuple(
+                (row.achievement_id, row.target_id) for row in criteria
+            ),
+            ((1748005, 480),),
+        )
+        self.assertEqual(set(locations), {"Brell's Rest"})
+
+    def test_from_expansion_selects_only_the_requested_range(self):
+        categories = [category(10, 0, "General"), category(13, 10, "Level")]
+        roots = {}
+        for index, profile in enumerate(
+            IMPORTER.EXPANSION_PROFILES, start=1
+        ):
+            category_id = 1000 + index
+            roots[profile.key] = category_id
+            categories.append(
+                category(category_id, 0, profile.resource_category_name)
+            )
+        achievements = (
+            achievement(1000, "Classic content"),
+            achievement(2000, "Kunark content"),
+            achievement(11000, "Depths of Darkhollow content"),
+            achievement(12000, "Underfoot content"),
+        )
+        associations = (
+            association(roots["classic"], 1000),
+            association(roots["kunark"], 2000),
+            association(roots["dodh"], 11000),
+            association(roots["uf"], 12000),
+        )
+        resources = IMPORTER.ResourceSet(
+            categories=tuple(categories),
+            achievements=achievements,
+            category_associations=associations,
+            components=(),
+            component_counts=(),
+        )
+
+        selection = IMPORTER.build_enable_selection(
+            resources,
+            through_expansion="uf",
+            from_expansion="dodh",
+        )
+
+        self.assertEqual(
+            selection.expansion_achievement_ids, (11000, 12000)
+        )
+        self.assertNotIn(1000, selection.expansion_achievement_ids)
+        # A range selection skips the global General families.
+        self.assertFalse(selection.level_achievement_ids)
+        self.assertFalse(selection.skill_cap_achievement_ids)
+        self.assertFalse(selection.item_achievement_ids)
+
+    def test_from_expansion_after_through_expansion_is_rejected(self):
+        resources = IMPORTER.ResourceSet(
+            categories=(category(10, 0, "General"), category(13, 10, "Level")),
+            achievements=(),
+            category_associations=(),
+            components=(),
+            component_counts=(),
+        )
+        with self.assertRaises(IMPORTER.ResourceError):
+            IMPORTER.build_enable_selection(
+                resources,
+                through_expansion="don",
+                from_expansion="uf",
+            )
+
 class SlayerCriteriaTests(unittest.TestCase):
     @staticmethod
     def resources():
@@ -2368,10 +2543,20 @@ class ReviewedDonCoverageTests(unittest.TestCase):
             ((200085, 1, 2001023, 210880),),
         )
 
-    def test_later_profiles_do_not_apply_don_forced_disables(self):
+    def test_later_profiles_keep_reviewed_coverage_without_don_disables(self):
         resources = self.profile_resources()
-        for profile in ("dodh", "tob"):
+        for profile in ("dodh", "uf", "tob"):
             with self.subTest(profile=profile):
+                selection = IMPORTER.build_enable_selection(
+                    resources, through_expansion=profile
+                )
+                # The 99-ID DoN denylist never leaks into a later profile.
+                self.assertFalse(selection.forced_disabled_achievement_ids)
+                # The audited DoN criteria are cumulative, not DoN-only, so
+                # an Underfoot import cannot regress DoN content.
+                self.assertTrue(selection.reviewed_profile_achievement_ids)
+        for profile in ("classic", "oow"):
+            with self.subTest(profile=profile, earlier=True):
                 selection = IMPORTER.build_enable_selection(
                     resources, through_expansion=profile
                 )

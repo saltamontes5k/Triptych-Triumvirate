@@ -10,7 +10,7 @@ sub EVENT_SAY {
       quest::taskselector(2); #Task: Welcome to Crescent Reach
     }
   }
-  # Behind Closed Doors (TSS) (600581)
+  # NMS preserved: Behind Closed Doors (TSS) (600581)
   if ($text=~/doors/i) {
     if (!quest::istaskactive(600581) && !quest::istaskcompleted(600581)) {
       quest::say("There is a matter best discussed [quietly] - Loren keeps records behind closed doors that the council would rather stayed shut. Speak with him, learn what he keeps, and report back to me. Discreetly.");
