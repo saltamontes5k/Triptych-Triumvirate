@@ -145,15 +145,21 @@ INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES
 	(1520009307,1120002557,100),
 	(1520009308,1120002558,100);
 
--- Spawns. Grimble stands in poknowledge v0 near Devin_Traical's cluster; the
--- controller sits at the frostcrypt safe point; everything else is version 220
--- ONLY, placed on real frostcrypt v0 trash coordinates (sampled from spawn2),
--- spread from the entry halls to the deep halls. Rares hold the far reaches.
+-- Spawns. Grimble stands in poknowledge v0 near Devin_Traical's cluster, and
+-- his spawn is content-flagged 'frostfell' (content_flags id 8, enabled=0):
+-- he only exists once the Frostfell event is switched on, like the stock
+-- Frostfell goblins. The controller sits at the frostcrypt safe point;
+-- everything else is version 220 ONLY, placed on real frostcrypt v0 trash
+-- coordinates (sampled from spawn2), spread from the entry halls to the deep
+-- halls. Rares hold the far reaches.
 DELETE FROM `spawn2` WHERE `id` BETWEEN 1520028450 AND 1520028494;
+INSERT INTO `spawn2`
+	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`,`content_flags`)
+VALUES
+	(1520028450,1520009300,'poknowledge',  0,497,-30,-90,250,640,0,'frostfell');
 INSERT INTO `spawn2`
 	(`id`,`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`,`variance`)
 VALUES
-	(1520028450,1520009300,'poknowledge',  0,497,-30,-90,250,640,0),
 	(1520028451,1520009301,'frostcrypt',220,10,-40,2,0,640,0),
 	(1520028452,1520009302,'frostcrypt',220,99.625,98.0,-14.0,0,600,0),
 	(1520028453,1520009302,'frostcrypt',220,-0.125,181.25,-53.625,0,600,0),
