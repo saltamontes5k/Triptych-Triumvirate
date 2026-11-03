@@ -51,7 +51,7 @@ counts roll every achievement's category chain to its top-level root
 | General | 257 | 2,111 | 182 | 172 | Surplus +1,854 (see below); enabled = custom batch-2 + 11 imported |
 | Tradeskill | 56 | 135 | 0 | 0 | **0/N** — import only, all disabled |
 | The Hero's Journey | 283 | 314 | 210 | 188 | **210/314 enabled, 22 incompletable** — import-enabled |
-| Slayer | 180 | 180 | 0 | 0 | **0/180 — policy** (NMS_slayer_utils.pl owns titles; bridge drafted, never approved) |
+| Slayer | 180 | 180 | 0 | 0 | Was 0/180 by policy — **shipped 2026-11-03**: 142/180 enabled with native race-kill criteria + claimable rewards, side-by-side with the NMS hunter titles (entries 317-330); 38 deferred ([slayer_bridge_deferred.csv](slayer_bridge_deferred.csv)) |
 | Events | 190 | 196 | 0 | 0 | 0/N — out of era |
 | Overseer | 31 | 31 | 0 | 0 | 0/N — Overseer server system absent |
 | EverQuest (Original) | 218 | 357 | 135 | 135 | Surplus +139; enabled = custom batch-2 exact |

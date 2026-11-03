@@ -44826,8 +44826,14 @@ WHERE `zone` = 'eastwastes' AND `number` = 13 AND `target_zone_id` = 128;
 	// "The Hoard Remembers" - curio click-traps in veeshan + poair (v316).
 	// The lair treasure piles/statues/bookcases and the poair floating crystal
 	// pedestals/bookcases are static zone mesh (object table is empty for both
-	// zones), so the traps are invisible OBJ_CURIO_TRAP trigger doors placed on
-	// the prop clusters, anchored on lair-boss and crystal-room NPC coords
+	// zones), so the traps are trigger doors on the prop clusters, anchored
+	// on lair-boss and crystal-room NPC coords. Models are zone-native and
+	// VISIBLE on purpose: doors whose model the client cannot resolve have no
+	// click geometry (live-tested 2026-11-03 - a player clicking all over
+	// Xygoz's lair on invisible-model doors sent no OP_ClickDoor at all), so
+	// each trap renders a real clickable curio: VECOINS101 piles + VEDRSTAT101
+	// statues in veeshan; POTRANQROCK505 (size 40) crystals + POAFLYBK502
+	// flying books on the bookcases in poair.
 	// (bosses 108040/108043/108047/108050/108053/108048; poair doomseeker and
 	// Nilborien spawn clusters). Door band 601+ : veeshan ships max doorid 239,
 	// poair max 22 (with a duplicated stock doorid 1). Handlers live in
@@ -44852,7 +44858,7 @@ WHERE `zone` = 'eastwastes' AND `number` = 13 AND `target_zone_id` = 128;
 	ManifestEntry{
 		.version = 316,
 		.description = "20261103_curio_traps_v316",
-		.check = "SELECT doorid FROM doors WHERE zone = 'veeshan' AND doorid = 601 AND name = 'OBJ_CURIO_TRAP' LIMIT 1",
+		.check = "SELECT doorid FROM doors WHERE zone = 'veeshan' AND doorid = 601 AND name = 'VECOINS101' LIMIT 1",
 		.condition = "not_empty",
 		.match = "",
 		.sql = R"CURIO316(
@@ -44861,29 +44867,29 @@ SET NAMES utf8mb4;
 INSERT IGNORE INTO doors (doorid, zone, version, name, pos_x, pos_y, pos_z, heading,
                           opentype, lockpick, keyitem, door_param, size,
                           client_version_mask, close_timer_ms, min_expansion, max_expansion) VALUES
-(601, 'veeshan', 0, 'OBJ_CURIO_TRAP', -217.6, 1406.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(602, 'veeshan', 0, 'OBJ_CURIO_TRAP', -193.6, 1430.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(603, 'veeshan', 0, 'OBJ_CURIO_TRAP', 550.0, 1451.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(604, 'veeshan', 0, 'OBJ_CURIO_TRAP', 574.0, 1475.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(605, 'veeshan', 0, 'OBJ_CURIO_TRAP', -572.8, 1158.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(606, 'veeshan', 0, 'OBJ_CURIO_TRAP', -548.8, 1182.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(607, 'veeshan', 0, 'OBJ_CURIO_TRAP', -208.0, 308.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(608, 'veeshan', 0, 'OBJ_CURIO_TRAP', -184.0, 332.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(609, 'veeshan', 0, 'OBJ_CURIO_TRAP', 1196.9, 1324.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(610, 'veeshan', 0, 'OBJ_CURIO_TRAP', 1220.9, 1348.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(611, 'veeshan', 0, 'OBJ_CURIO_TRAP', -1325.5, -1167.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(612, 'veeshan', 0, 'OBJ_CURIO_TRAP', -1301.5, -1143.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(601, 'poair', 0, 'OBJ_CURIO_TRAP', -1205.0, 465.0, 6.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(602, 'poair', 0, 'OBJ_CURIO_TRAP', 1456.0, -652.0, 16.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(603, 'poair', 0, 'OBJ_CURIO_TRAP', 1455.0, -533.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(604, 'poair', 0, 'OBJ_CURIO_TRAP', 1493.0, -447.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(605, 'poair', 0, 'OBJ_CURIO_TRAP', 1099.0, -398.0, 5.1, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(606, 'poair', 0, 'OBJ_CURIO_TRAP', 1220.0, -382.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(607, 'poair', 0, 'OBJ_CURIO_TRAP', -1032.0, -307.0, 334.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(608, 'poair', 0, 'OBJ_CURIO_TRAP', -1700.0, 761.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(609, 'poair', 0, 'OBJ_CURIO_TRAP', -1225.0, 505.0, 6.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(610, 'poair', 0, 'OBJ_CURIO_TRAP', 1436.0, -495.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(611, 'poair', 0, 'OBJ_CURIO_TRAP', -1720.0, 770.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1);
+(601, 'veeshan', 0, 'VECOINS101', -217.6, 1406.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(602, 'veeshan', 0, 'VEDRSTAT101', -193.6, 1430.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(603, 'veeshan', 0, 'VECOINS101', 550.0, 1451.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(604, 'veeshan', 0, 'VEDRSTAT101', 574.0, 1475.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(605, 'veeshan', 0, 'VECOINS101', -572.8, 1158.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(606, 'veeshan', 0, 'VEDRSTAT101', -548.8, 1182.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(607, 'veeshan', 0, 'VECOINS101', -208.0, 308.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(608, 'veeshan', 0, 'VEDRSTAT101', -184.0, 332.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(609, 'veeshan', 0, 'VECOINS101', 1196.9, 1324.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(610, 'veeshan', 0, 'VEDRSTAT101', 1220.9, 1348.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(611, 'veeshan', 0, 'VECOINS101', -1325.5, -1167.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(612, 'veeshan', 0, 'VEDRSTAT101', -1301.5, -1143.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(601, 'poair', 0, 'POTRANQROCK505', -1205.0, 465.0, 6.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(602, 'poair', 0, 'POTRANQROCK505', 1456.0, -652.0, 16.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(603, 'poair', 0, 'POTRANQROCK505', 1455.0, -533.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(604, 'poair', 0, 'POTRANQROCK505', 1493.0, -447.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(605, 'poair', 0, 'POTRANQROCK505', 1099.0, -398.0, 5.1, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(606, 'poair', 0, 'POTRANQROCK505', 1220.0, -382.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(607, 'poair', 0, 'POTRANQROCK505', -1032.0, -307.0, 334.9, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(608, 'poair', 0, 'POTRANQROCK505', -1700.0, 761.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
+(609, 'poair', 0, 'POAFLYBK502', -1225.0, 505.0, 6.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(610, 'poair', 0, 'POAFLYBK502', 1436.0, -495.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(611, 'poair', 0, 'POAFLYBK502', -1720.0, 770.0, 46.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1);
 
 INSERT INTO rule_values (ruleset_id, rule_name, rule_value, notes)
 VALUES (1, 'Custom:CurioTraps', 'true',
@@ -47235,6 +47241,11 @@ SELECT 1 FROM achievement_criteria cr JOIN achievements a ON a.id=cr.achievement
 INSERT INTO reward_sets (reward_set_id, title, enabled)
 SELECT 9508300, 'ASSERTION FAILED: slayer criterion with unusable race target', 1 FROM DUAL WHERE EXISTS (
 SELECT 1 FROM achievement_criteria WHERE id BETWEEN 7001000 AND 7001805 AND (target_id = 0 OR target_id > 9999)
+) LIMIT 1;
+
+INSERT INTO reward_sets (reward_set_id, title, enabled)
+SELECT 9508300, 'ASSERTION FAILED: slayer criterion without component', 1 FROM DUAL WHERE EXISTS (
+SELECT 1 FROM achievement_criteria cr WHERE cr.id BETWEEN 7001000 AND 7001805 AND NOT EXISTS (SELECT 1 FROM achievement_components cp WHERE cp.achievement_id=cr.achievement_id AND cp.component_type=cr.component_type AND cp.component_id=cr.component_id)
 ) LIMIT 1;
 
 INSERT INTO reward_sets (reward_set_id, title, enabled)
