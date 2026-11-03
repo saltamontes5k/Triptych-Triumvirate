@@ -32,7 +32,7 @@ sub arcade_game_my_stats {
 			$canvas->banner($c->GetName(), "gold", { y => 6, size => 22 });
 			$canvas->line(60, 44, 260, 44, "gray", 1);
 
-			my $class_name = $STAT_CLASSES{ $c->GetClassID() } // "Adventurer";
+			my $class_name = $STAT_CLASSES{ $c->GetClass() } // "Adventurer";
 			$canvas->text(16, 56, "Level " . $c->GetLevel() . " " . $class_name, { size => 14 });
 
 			my ($hp, $max_hp) = ($c->GetHP(), $c->GetMaxHP());

@@ -14,6 +14,7 @@
 #include "client.h"
 #include "entity.h"
 #include "npc.h"
+#include "nms_window.h"
 #include "zonedb.h"
 #include "string_ids.h"
 
@@ -982,6 +983,204 @@ bool NmsVaultDeleteItem(uint32 character_id, int slot, int bag_slot)
 	return results.Success() && results.RowsAffected() > 0;
 }
 
+// ---- script-window panel (live-NMS style boxes; nms_window framework) ----
+
+static int VaultWindowPageBase(int page)
+{
+	if (page >= 1 && page <= 6) {
+		return (page - 1) * 10 + 1;
+	}
+	if (page == 7) {
+		return NMS_VAULT_CLICKY_BEGIN;
+	}
+	if (page == 8) {
+		return 71;
+	}
+	return NMS_VAULT_PROC_PRIMARY;
+}
+
+static int VaultWindowPageSlots(int page)
+{
+	return page == 9 ? 7 : 10;
+}
+
+static std::string VaultWindowPageLabel(int page)
+{
+	if (page >= 1 && page <= 6) {
+		return fmt::format("Bag {}", page);
+	}
+	if (page == 7) {
+		return "Clicky 1";
+	}
+	if (page == 8) {
+		return "Clicky 2";
+	}
+	return "Proc Locker";
+}
+
+// Builds (or rebuilds) the vault panel for the client's current page. Returns
+// false when the client cannot render script windows, so the caller falls back
+// to the classic VAULTDATA chat lines.
+static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vector<NmsVaultItem> &items)
+{
+	auto &wins = EQ::NMS::GetWindows(c);
+	if (!wins.Capable() || !RuleB(Custom, NMSWindowEnabled)) {
+		return false;
+	}
+
+	const std::string key = fmt::format("vault_{}", c->CharacterID());
+	const int wid = wins.Open(key, "Nautilus Vault", 400, 320, EQ::NMS::WFNoResize);
+	if (!wid) {
+		return false;
+	}
+
+	wins.SetStyle(wid, "#101018", "#3E4A6E", 4, 1);
+	wins.Clear(wid);
+
+	// bank / merchant row
+	wins.AddButton(wid, "Bank", 900, "gold");
+	wins.AddSameLine(wid);
+	wins.AddButton(wid, "Merchant", 901, "gold");
+
+	// page tab row (actions 1..9; active tab tinted gold)
+	for (int page = 1; page <= 9; ++page) {
+		if (page > 1) {
+			wins.AddSameLine(wid);
+		}
+		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
+	}
+
+	// slot grid
+	const int cols = open_page == 9 ? 4 : 5;
+	const int count = VaultWindowPageSlots(open_page);
+	const int rows = (count + cols - 1) / cols;
+	const int base = VaultWindowPageBase(open_page);
+	const int cell = 36;
+	const int gx = 7;
+	const int gy = 6;
+
+	int canvas = wins.AddCanvas(wid, gx * 2 + cols * cell + 2, gy * 2 + rows * cell + 2);
+	if (canvas >= 0) {
+		wins.BeginCanvasFrame(wid, canvas);
+
+		const uint32_t occupied_argb = 0xFF3E4A6E;
+		const uint32_t empty_argb    = 0xFF171921;
+
+		// cell fills first (grid piece renders all cells), then per-box icon
+		// pieces on top
+		std::string colors;
+		for (int i = 0; i < cols * rows; ++i) {
+			const NmsVaultItem *row = NmsVaultFind(items, base + i, 0);
+			if (!colors.empty()) {
+				colors.push_back('\x1F');
+			}
+			colors += fmt::format("{},{}", i, row ? occupied_argb : empty_argb);
+		}
+		wins.AddCanvasGrid(wid, canvas, gx, gy, cols, rows, cell, cell, 100 + open_page, colors);
+
+		for (int i = 0; i < cols * rows; ++i) {
+			const NmsVaultItem *row = NmsVaultFind(items, base + i, 0);
+			if (!row) {
+				continue;
+			}
+
+			// item icon (client art from ItemIcons\<id>.png); the short name
+			// rides along as the no-art fallback label
+			std::string label;
+			uint32 icon_id = 0;
+			if (const auto *itm = database.GetItem(row->item_id)) {
+				icon_id = itm->Icon;
+				label = itm->Name;
+				size_t space = label.find(' ');
+				if (space != std::string::npos) {
+					label.resize(space);
+				}
+				if (label.size() > 7) {
+					label.resize(7);
+				}
+			}
+			if (label.empty()) {
+				label = fmt::format("#{}", row->item_id);
+			}
+			wins.AddCanvasPiece(wid, canvas, EQ::NMS::PieceIcon,
+				gx + (i % cols) * cell + 3, gy + (i / cols) * cell + 3,
+				cell - 6, cell - 6, 0, icon_id, 0, 0, label);
+		}
+	}
+
+	// description line
+	int used = 0;
+	for (int i = 0; i < count; ++i) {
+		if (NmsVaultFind(items, base + i, 0)) {
+			used++;
+		}
+	}
+	const char *hint = "Put an item on your cursor and click an empty box to deposit it. Click an item to withdraw it.";
+	if (open_page == 9) {
+		hint = "Boxes 1-3 override your proc/shield. Boxes 4-7 (Foci/Skill Mod) lend skill mods, instrument mods and focus effects.";
+	} else if (open_page == 7 || open_page == 8) {
+		hint = "Clicky buffs parked in these boxes re-apply automatically on zone-in.";
+	}
+	wins.AddText(wid, fmt::format("{}: {}/{} slots used. {}", VaultWindowPageLabel(open_page), used, count, hint), "gray", true);
+
+	wins.Send(wid);
+	return true;
+}
+
+// Window events for panels keyed "vault_*" (routed from nms_window.cpp).
+// Buttons: 1-9 page tabs, 900 Bank, 901 Merchant. Grid: action 100+page with
+// the cell index in value - occupied box withdraws, empty box deposits from
+// the cursor.
+void NmsVaultOnWindowEvent(Client *c, uint8 kind, uint16 action, uint32 value, uint32 window_id)
+{
+	if (!c || !NmsVaultEnabled()) {
+		return;
+	}
+
+	if (kind == EQ::NMS::EventButton) {
+		if (action >= 1 && action <= 9) {
+			NmsVaultHandlePage(c, action);
+			return;
+		}
+		if (action == 900) {
+			NmsVaultHandleBank(c);
+			EQ::NMS::GetWindows(c).SendLocalAction(static_cast<int>(window_id), 1);
+			return;
+		}
+		if (action == 901) {
+			NmsVaultHandleMerchant(c);
+			return;
+		}
+		return;
+	}
+
+	if (kind == EQ::NMS::EventGrid && action >= 101 && action <= 109) {
+		const int page = action - 100;
+		const int cell = static_cast<int>(value);
+		if (cell < 0 || cell >= VaultWindowPageSlots(page)) {
+			return;
+		}
+		const int slot = VaultWindowPageBase(page) + cell;
+
+		std::vector<NmsVaultItem> items;
+		if (!NmsVaultLoad(c->CharacterID(), items)) {
+			return;
+		}
+
+		if (NmsVaultFind(items, slot, 0)) {
+			NmsVaultHandleWithdraw(c, slot, 0);
+			return;
+		}
+
+		if (c->GetInv().GetItem(EQ::invslot::slotCursor)) {
+			NmsVaultHandleDeposit(c, slot);
+			return;
+		}
+
+		c->Message(Chat::White, "[NMS] Put an item on your cursor and click an empty box to deposit it.");
+	}
+}
+
 void NmsVaultSendRefresh(Client *c, int open_page)
 {
 	if (!c || !NmsVaultEnabled() || !EnsureTables()) {
@@ -990,6 +1189,12 @@ void NmsVaultSendRefresh(Client *c, int open_page)
 
 	std::vector<NmsVaultItem> items;
 	if (!NmsVaultLoad(c->CharacterID(), items)) {
+		return;
+	}
+
+	// Patched clients get the script-window panel (live-NMS style boxes);
+	// everyone else keeps the classic SIDL listbox fed by VAULTDATA lines.
+	if (NmsVaultRefreshWindowPanel(c, open_page, items)) {
 		return;
 	}
 

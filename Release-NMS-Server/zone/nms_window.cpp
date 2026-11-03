@@ -3,6 +3,7 @@
 #include "client.h"
 #include "entity.h"
 #include "npc.h"
+#include "nms_vault.h"
 #include "quest_parser_collection.h"
 #include "questmgr.h"
 #include "../common/rulesys.h"
@@ -70,6 +71,7 @@ const uint8_t MSG_CLEAR  = 3;
 const uint8_t MSG_WIDGET = 4;
 const uint8_t MSG_STYLE  = 6;
 const uint8_t MSG_FRAME  = 7;
+const uint8_t MSG_LOCALACTION = 8;
 
 const size_t NMS_MAX_WIDGETS    = 256;
 const size_t NMS_MAX_TEXT_BYTES = 512;
@@ -1153,7 +1155,31 @@ void WindowManager::HandleEvent(uint8_t kind, uint32_t window_id, uint16_t actio
 		return;
 	}
 
+	// Nautilus Vault panels are engine-driven: their events map onto the vault
+	// handlers instead of the script event stream.
+	if (win->key.rfind("vault_", 0) == 0) {
+		NmsVaultOnWindowEvent(m_client, kind, action, value, window_id);
+		return;
+	}
+
 	DispatchToScripts(kind, win, action, value, text);
+}
+
+// One-shot local action outside the widget model. Action 1 opens the native
+// bank window client-side (the bank UI is not server-drawable).
+bool WindowManager::SendLocalAction(int window_id, int action)
+{
+	Window* win = FindWindow(window_id);
+	if (!win || !m_client || !m_capable) {
+		return false;
+	}
+
+	Buf b;
+	b.U8(MSG_LOCALACTION);
+	b.U32(win->id);
+	b.U16(static_cast<uint16_t>(action));
+	SendBuf(m_client, b);
+	return true;
 }
 
 void WindowManager::DispatchToScripts(uint8_t kind, const Window* win, uint16_t action, uint32_t value, const std::string& text)
@@ -1271,6 +1297,7 @@ void NmsWindowHandlePacket(Client* c, const EQApplicationPacket* app)
 
 	const uint8_t* d = app->pBuffer;
 	uint8_t type = d[0];
+	LogInfo("[NMSWindow] packet from [{}]: type [{}] size [{}]", c->GetName(), type, app->size);
 
 	if (type == 1) {
 		// HELLO: u16 dll_version, u32 caps

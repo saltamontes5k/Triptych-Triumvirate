@@ -212,6 +212,10 @@ void InitializeMQ2Windows()
     DebugSpew("Initializing MQ2 Windows");
     WaypointsWnd::Initialize();
     VaultWnd::Initialize();
+    // queue the arcade/vault shell template at startup so the first Nautilus
+    // Vault open works without a /loadskin (EnsureShell only lazy-loads it,
+    // and a failed first attempt would bounce the player to /loadskin anyway)
+    AddXMLFile("NMS_ArcadeWnd.xml");
 
     //extern PCHAR szItemSlot[];
 

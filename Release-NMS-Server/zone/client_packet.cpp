@@ -68,6 +68,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "client.h"
 #include "nms_vault.h"
 #include "nms_lon_session.h"
+#include "nms_window.h"
 #include "../common/repositories/account_repository.h"
 #include "../common/repositories/character_corpses_repository.h"
 #include "../common/repositories/guild_tributes_repository.h"
@@ -562,6 +563,7 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_ResetAA] = &Client::Handle_OP_ResetAA;
 	ConnectedOpcodes[OP_UnderWorld] = &Client::Handle_OP_UnderWorld;
 	ConnectedOpcodes[OP_WaypointRequest] = &Client::Handle_OP_WaypointRequest;
+	ConnectedOpcodes[OP_NMSWindowEvent] = &Client::Handle_OP_NMSWindowEvent;
 
 	// shared tasks
 	ConnectedOpcodes[OP_SharedTaskRemovePlayer]   = &Client::Handle_OP_SharedTaskRemovePlayer;
@@ -17898,6 +17900,13 @@ void Client::Handle_OP_WaypointRequest(const EQApplicationPacket *app)
 	{
 		TransportToWaypoint(waypoint_request->waypoint_id);
 	}
+}
+
+// Script-drawn NMS windows (hello + player input); the engine lives in
+// nms_window.cpp. See zone/nms_window.h for the wire contract.
+void Client::Handle_OP_NMSWindowEvent(const EQApplicationPacket *app)
+{
+	EQ::NMS::NmsWindowHandlePacket(this, app);
 }
 
 bool Client::IsFilteredAFKPacket(const EQApplicationPacket *p)

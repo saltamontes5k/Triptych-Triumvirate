@@ -90,6 +90,9 @@ enum PieceType : uint8 {
 	PieceBanner   = 7,
 	PieceLabel    = 8,
 	PieceClickable = 9,
+	// rect (x,y) size (a,b), aux = item icon id, text = fallback label when the
+	// client has no art for it (ItemIcons\<id>.png)
+	PieceIcon     = 10,
 };
 
 enum WindowFlagBits : uint32 {
@@ -182,6 +185,9 @@ public:
 	bool Capable() const { return m_capable; }
 	uint16_t DllVersion() const { return m_dll_version; }
 	bool Send(int window_id);    // false = rate limited, changes stay queued
+	// one-shot server->client local action (u8=8, u32 id, u16 action) outside the
+	// widget model; action 1 = open the native bank window (vault panel)
+	bool SendLocalAction(int window_id, int action);
 
 	int  AddHeader(int window_id, const std::string& text, const std::string& color);
 	int  AddText(int window_id, const std::string& text, const std::string& color, bool wrap);

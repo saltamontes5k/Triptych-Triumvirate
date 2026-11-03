@@ -15,6 +15,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -50,6 +51,7 @@ enum NMSWPiece {
 	NMSWP_BANNER    = 7,
 	NMSWP_LABEL     = 8,
 	NMSWP_CLICKABLE = 9,
+	NMSWP_ICON      = 10, // rect (x,y,a=width,b=height), aux = item icon id; text = fallback label
 };
 
 // window flags
@@ -169,6 +171,10 @@ private:
 	void DrawRing(int cx, int cy, float radius, uint32_t argb, float width);
 	void DrawTextStr(int x, int y, const std::string& s, uint32_t argb, int size, int align, int clip_w);
 	int  TextWidth(const std::string& s, int size);
+	// item icon from <eqdir>\ItemIcons\<id>.png (loaded through D3DX, cached);
+	// missing art renders the fallback text instead
+	IDirect3DTexture9* GetIconTexture(uint32_t icon_id);
+	void DrawIcon(int x, int y, int w, int h, uint32_t icon_id, const std::string& fallback_text);
 
 	std::vector<ArcadeWindow> m_wins;
 	uint32_t m_next_id = 1;
@@ -182,6 +188,7 @@ private:
 	ID3DXLine* m_line = nullptr;
 	ID3DXFont* m_font14 = nullptr;
 	ID3DXFont* m_font18 = nullptr;
+	std::map<uint32_t, IDirect3DTexture9*> m_icon_tex; // failures cached as nullptr
 	int m_ofs_x = 0, m_ofs_y = 0; // window origin in screen space (current)
 	ArcadeWindow* m_cur = nullptr;
 

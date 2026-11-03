@@ -47,7 +47,8 @@ private:
 	const uint8_t* m_e;
 };
 
-const uint32_t MSG_OPEN = 1, MSG_CLOSE = 2, MSG_CLEAR = 3, MSG_WIDGET = 4, MSG_SETWID = 5, MSG_STYLE = 6, MSG_FRAME = 7;
+const uint32_t MSG_OPEN = 1, MSG_CLOSE = 2, MSG_CLEAR = 3, MSG_WIDGET = 4, MSG_SETWID = 5, MSG_STYLE = 6, MSG_FRAME = 7, MSG_LOCALACTION = 8;
+
 
 uint32_t ARGB(uint32_t a, uint32_t r, uint32_t g, uint32_t b) { return (a << 24) | (r << 16) | (g << 8) | b; }
 D3DCOLOR Col(uint32_t argb) { return static_cast<D3DCOLOR>(argb); }
@@ -107,6 +108,7 @@ void ParseFramePieces(NMSWin::Widget& wgt, Rd& r)
 			case NMSWP_TEXT:
 			case NMSWP_BANNER:
 			case NMSWP_LABEL:
+			case NMSWP_ICON:
 				p.text = r.Str();
 				break;
 			case NMSWP_GRID: {
@@ -276,6 +278,17 @@ void Manager::OnPacket(void* buf, size_t size)
 				}
 				break;
 			}
+			case MSG_LOCALACTION: {
+				// server-driven local UI: action 1 = open the native bank window
+				// (the Nautilus Vault panel's Bank button routes here)
+				if (!r.Ok(6)) return;
+				r.U32();
+				uint16_t local_action = r.U16();
+				if (local_action == 1 && ppBankWnd && *ppBankWnd) {
+					(*ppBankWnd)->Activate((EQPlayer*)pLocalPlayer);
+				}
+				break;
+			}
 			case MSG_WIDGET:
 			case MSG_SETWID: {
 				if (!r.Ok(8)) return;
@@ -396,11 +409,15 @@ void Manager::EnsureShell(ArcadeWindow& win)
 	static bool xml_added = false;
 	if (!xml_added) {
 		::AddXMLFile("NMS_ArcadeWnd.xml");
-		xml_added = true;
+		// latch the flag only when the template actually registered; a missing
+		// file (UI not updated) must stay retryable on the next window open
+		if (pSidlMgr->FindScreenPieceTemplate("NMS_ArcadeShell")) {
+			xml_added = true;
+		}
 	}
 
 	if (!pSidlMgr->FindScreenPieceTemplate("NMS_ArcadeShell")) {
-		WriteChatf("[Arcade] Shell template missing -- reload the UI (/loadskin).");
+		WriteChatf("[Arcade] Shell template missing -- the UI files are not updated.");
 		return;
 	}
 
@@ -480,6 +497,7 @@ void Manager::SendHello()
 	buf.push_back((NMSW_DLL_VERSION >> 8) & 0xFF);
 	BytesOut(buf, NMSW_CAP_WINDOWS);
 	SendEQMessage(NMSW_OP_EVENT, buf.data(), static_cast<DWORD>(buf.size()));
+	WriteChatf("[Arcade] announcing window support to the server (v%d)", NMSW_DLL_VERSION);
 }
 
 void Manager::OnGameState(DWORD state)
@@ -489,7 +507,14 @@ void Manager::OnGameState(DWORD state)
 			DestroyShell(e);
 		}
 		m_wins.clear();
+		return;
 	}
+
+	// each zone process tracks window capability independently (WindowManager
+	// lives in the zone), so re-announce on every zone-in -- the 9-byte hello
+	// is cheap and idempotent server-side
+	m_hello_sent = false;
+	SendHello();
 }
 
 bool Manager::KeyCaptureActive() const
@@ -790,8 +815,59 @@ void Manager::KillDevice()
 	if (m_line) { m_line->Release(); m_line = nullptr; }
 	if (m_font14) { m_font14->Release(); m_font14 = nullptr; }
 	if (m_font18) { m_font18->Release(); m_font18 = nullptr; }
+	for (auto& kv : m_icon_tex) {
+		if (kv.second) {
+			kv.second->Release();
+		}
+	}
+	m_icon_tex.clear();
 	m_dev_ok = false;
 	m_dev = nullptr;
+}
+
+// item icon art: <eqdir>\ItemIcons\<icon_id>.png (FloatingTextManager loads
+// SpellIcons the same way). Missing files cache as nullptr so a partial pack
+// degrades to the text fallback instead of rescanning the disk every frame.
+IDirect3DTexture9* Manager::GetIconTexture(uint32_t icon_id) {
+	auto it = m_icon_tex.find(icon_id);
+	if (it != m_icon_tex.end()) {
+		return it->second;
+	}
+	IDirect3DTexture9* tex = nullptr;
+	if (m_dev_ok && m_dev) {
+		char path[MAX_STRING];
+		sprintf_s(path, sizeof(path), "%s\\ItemIcons\\%u.png", gszEQPath, icon_id);
+		if (FAILED(D3DXCreateTextureFromFileExA(m_dev, path, D3DX_DEFAULT, D3DX_DEFAULT,
+			1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, D3DX_FILTER_NONE, D3DX_FILTER_NONE,
+			0, NULL, NULL, &tex))) {
+			tex = nullptr;
+		}
+	}
+	m_icon_tex[icon_id] = tex;
+	return tex;
+}
+
+void Manager::DrawIcon(int x, int y, int w, int h, uint32_t icon_id, const std::string& fallback_text) {
+	IDirect3DTexture9* tex = GetIconTexture(icon_id);
+	if (!tex || !m_sprite) {
+		if (!fallback_text.empty() && m_sprite) {
+			DrawTextStr(x + w / 2, y + (std::max)(0, (h - 14) / 2), fallback_text, 0xFFF2F2F2, 12, 1, w);
+		}
+		return;
+	}
+	D3DSURFACE_DESC desc;
+	if (FAILED(tex->GetLevelDesc(0, &desc))) {
+		return;
+	}
+	D3DXVECTOR2 scale(static_cast<float>(w) / static_cast<float>(desc.Width),
+		static_cast<float>(h) / static_cast<float>(desc.Height));
+	D3DXVECTOR2 trans(static_cast<float>(m_ofs_x + x), static_cast<float>(m_ofs_y + y));
+	D3DXMATRIX mat;
+	D3DXMatrixTransformation2D(&mat, NULL, 0.0f, &scale, NULL, 0.0f, &trans);
+	m_sprite->SetTransform(&mat);
+	m_sprite->Draw(tex, NULL, nullptr, nullptr, 0xFFFFFFFF);
+	D3DXMatrixIdentity(&mat);
+	m_sprite->SetTransform(&mat);
 }
 
 void Manager::FillRect(int x, int y, int w, int h, uint32_t argb)
@@ -1042,12 +1118,11 @@ void Manager::Render()
 					break;
 				}
 				case NMSW_ICON:
-					// v1: tinted quad + icon id; no icon-atlas hook yet
+					// real art from <eqdir>\ItemIcons\<id>.png; quad + id if the
+					// pack lacks this icon
 					FillRect(wgt.lx, wgt.ly, wgt.lw, wgt.lh, ARGB(255, 50, 50, 66));
-					FillRect(wgt.lx + 2, wgt.ly + 2, wgt.lw - 4, wgt.lh - 4,
-						wgt.argb ? wgt.argb : ARGB(255, 80, 90, 120));
-					DrawTextStr(wgt.lx + wgt.lw / 2, wgt.ly + wgt.lh / 2 - 7,
-						std::to_string(wgt.icon_id), 0xFFFFFFFF, 14, 1, 0);
+					DrawIcon(wgt.lx + 2, wgt.ly + 2, wgt.lw - 4, wgt.lh - 4,
+						wgt.icon_id, std::to_string(wgt.icon_id));
 					break;
 				case NMSW_ITEMLINK:
 					DrawTextStr(wgt.lx, wgt.ly, wgt.text, ARGB(255, 120, 180, 255), 14, 0, wgt.lw + 60);
@@ -1112,6 +1187,11 @@ void Manager::Render()
 								}
 								break;
 							}
+							case NMSWP_ICON:
+								DrawIcon(px(p.x), py(p.y),
+									(std::max)(1, static_cast<int>(p.a * scale)),
+									(std::max)(1, static_cast<int>(p.b * scale)), p.aux, p.text);
+								break;
 							case NMSWP_CLICKABLE:
 							default:
 								break; // invisible

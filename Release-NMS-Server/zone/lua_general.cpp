@@ -6997,6 +6997,7 @@ luabind::scope lua_register_events() {
 			luabind::value("aggro_say", static_cast<int>(EVENT_AGGRO_SAY)),
 			luabind::value("player_pickup", static_cast<int>(EVENT_PLAYER_PICKUP)),
 			luabind::value("popup_response", static_cast<int>(EVENT_POPUP_RESPONSE)),
+			luabind::value("nms_window", static_cast<int>(EVENT_NMS_WINDOW)),
 			luabind::value("proximity_say", static_cast<int>(EVENT_PROXIMITY_SAY)),
 			luabind::value("cast", static_cast<int>(EVENT_CAST)),
 			luabind::value("cast_begin", static_cast<int>(EVENT_CAST_BEGIN)),

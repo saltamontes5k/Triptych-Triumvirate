@@ -373,13 +373,15 @@ sub arcade_rebuild {
 		my $i = 0;
 		for my $btn (@{ $inst->{buttons} }) {
 			$i++;
+			# manual form: ["Label", sub {...}, color => "gold", enabled => sub {...}]
+			my ($label_src, $fn, %opts) = @$btn;
 			my $enabled = 1;
-			if (ref($btn->{enabled}) eq 'CODE') { $enabled = $btn->{enabled}->($inst) ? 1 : 0; }
-			my $label = ref($btn->[0]) eq 'CODE' ? $btn->[0]->($inst) : "$btn->[0]";
+			if (ref($opts{enabled}) eq 'CODE') { $enabled = $opts{enabled}->($inst) ? 1 : 0; }
+			my $label = ref($label_src) eq 'CODE' ? $label_src->($inst) : "$label_src";
 			my $action = 1000 + $i;
 			$BUTTON_FNS{$win} //= {};
-			$BUTTON_FNS{$win}{$action} = $btn->[1];
-			my $colorstr = defined $btn->{color} ? "$btn->{color}" : "";
+			$BUTTON_FNS{$win}{$action} = $fn;
+			my $colorstr = defined $opts{color} ? "$opts{color}" : "";
 			my $idx = $client->NMSWindowAddButton($win, $label, $action, $colorstr);
 			if ($idx >= 0 && !$enabled) {
 				$client->NMSWindowSetButton($win, $idx, $label, $colorstr, 1);
@@ -470,9 +472,18 @@ sub arcade_on_timer {
 	quest::settimerMS("arcade", $TIMER_MS, $npc) if $any;
 
 	for my $inst (@mine) {
-		arcade_run_tweens($inst);
-		arcade_run_timers($inst);
-		arcade_draw_frame($inst);
+		my $ok = eval {
+			arcade_run_tweens($inst);
+			arcade_run_timers($inst);
+			arcade_draw_frame($inst);
+			1;
+		};
+		if (!$ok) {
+			# a broken game must not spam the error log 20x/second: drop the
+			# instance and let its clock lapse (re-arming happens above only
+			# while an instance is alive)
+			delete $INSTANCES{ $inst->{win_id} };
+		}
 	}
 }
 
