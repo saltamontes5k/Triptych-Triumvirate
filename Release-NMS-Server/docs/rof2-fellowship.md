@@ -82,7 +82,7 @@ string literal at 65,535 bytes). The rows must stay in step with
 | `Custom:Fellowships` | `false` | Master gate. Off means no roster, no `/fsay`, no camp, no vitality. |
 | `Custom:FellowshipCamps` | `true` | Campsite creation and effects. |
 | `Custom:FellowshipVitality` | `true` | Vitality banking and XP/AA sharing. |
-| `Custom:FellowshipCampMembers` | `2` | Living members, including the camper, that must be nearby and out of combat to camp. Clamped to 1-12. |
+| `Custom:FellowshipCampMembers` | `2` | Living members, including the camper, that must be nearby and out of combat to camp. Clamped to 1-12. Live on EQS: `1` (solo camps). |
 | `Custom:FellowshipRosterClass` | `0` | Which of a multiclass character's classes the roster shows (the native row carries one). 0 = earliest, 1 = latest, 2 = base class. |
 
 All entry points test the gate and fail closed. Flip the master rule on only

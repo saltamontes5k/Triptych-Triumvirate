@@ -17,6 +17,9 @@ Release-NMS-Server/release-peq.sql
 # --- DB-derived client data (regenerated via export-client-files.bat) ---
 Release-NMS-Server/export/
 
+# --- LoN card data: client-derived (Daybreak copyright) - recreate locally, never commit ---
+Release-NMS-Server/bin/Release/lon_data/
+
 # --- Maps: repo-root maps/ not tracked; Release-NMS-Server/maps/ ships ---
 /maps/
 
