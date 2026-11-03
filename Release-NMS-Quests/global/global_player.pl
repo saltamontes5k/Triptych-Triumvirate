@@ -736,19 +736,21 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
     # =====================================================================
     if ($spell_id == 44031 && $item_id == 976211) {
         # The old legend, kept: this is a Stop Rain stick. The first cast stops
-        # the rain; a second Stop Rain cast on an already-stilled sky is the
-        # one that brings it back. The bucket marks "I stopped this rain" so
-        # only the caster's own consecutive cast inverts.
+        # the rain; a second Stop Rain cast on the caster's own stillness brings
+        # it back. A click on a dry sky ALWAYS brings rain, legend or not.
         if ($zone->IsRaining()) {
             quest::rain(0);
             $client->SetBucket("karanite-rain-stilled", 1);
             $client->Message(15, "The Rod murmurs, and the rain stops falling.");
-        } elsif ($client->GetBucket("karanite-rain-stilled")) {
+        } else {
+            my $twice_stilled = $client->GetBucket("karanite-rain-stilled");
             $client->SetBucket("karanite-rain-stilled", 0);
             quest::rain(1);
-            $client->Message(15, "Twice-stilled, the sky remembers how to rain: rain begins to fall across the land.");
-        } else {
-            $client->Message(15, "The Rod whispers for stillness, but no rain falls to stop.");
+            if ($twice_stilled) {
+                $client->Message(15, "Twice-stilled, the sky remembers how to rain: rain begins to fall across the land.");
+            } else {
+                $client->Message(15, "The Rod calls the clouds: rain begins to fall across the land.");
+            }
         }
         return 1;
     }
