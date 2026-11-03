@@ -27,9 +27,8 @@ sub CommonCharacterUpdate {
             $client->UnlockWaypoint("fieldofbone");
         }
 
-        if (!$client->KeyRingCheck(22198) && plugin::is_stage_complete_2($client, 'PoP')) {
-            $client->KeyRingAdd(22198);
-        }
+        # No keyring 22198 self-heal: Vex Thal entry is the scepter quest
+        # chain / keyed umbral door now; existing keyring rows grandfathered.
 
         if ($client->IsTaskActivityActive(3, 5) && $client->GetLevel() >= 5) {
             $client->UpdateTaskActivity(3, 5, 1);

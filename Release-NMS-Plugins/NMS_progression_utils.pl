@@ -599,9 +599,9 @@ sub SetSubflag {
                 $client->UnlockWaypoint("iceclad");
             }
 
-            if ($stage eq 'PoP') {     
-                $client->KeyRingAdd(22198);
-            }
+            # PoP no longer grants keyring 22198 (The Scepter of Shadows):
+            # Vex Thal entry is the scepter quest chain / keyed umbral door.
+            # Existing keyring rows were kept (grandfathered).
 
             UpdateCharMaxLevel($client);
             UpdateRaceClassLocks($client);
