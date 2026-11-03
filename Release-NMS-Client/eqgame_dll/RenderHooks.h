@@ -2,6 +2,7 @@
 #include <d3d9.h>
 #include "FloatingTextManager.h"
 #include "MQ2Main.h"
+#include "nms_window.h"
 
 extern FloatingTextManager* g_pFtm;
  // the global direct3d device that we are "borrowing"
@@ -63,6 +64,7 @@ public:
 	HRESULT WINAPI Reset_Detour(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
 		g_pFtm->Cleanup();
+		NMSWin::Manager::Get().OnDeviceReset();
 
 		if (g_pDevice != GetThisDevice())
 		{
@@ -118,6 +120,7 @@ public:
 			if (SUCCEEDED(g_pDevice->CreateStateBlock(D3DSBT_ALL, &stateBlock)) && stateBlock)
 			{
 				g_pFtm->Render();
+				NMSWin::Manager::Get().Render();
 
 				stateBlock->Apply();
 				stateBlock->Release();

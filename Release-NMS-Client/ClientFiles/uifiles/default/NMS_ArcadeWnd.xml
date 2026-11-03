@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<XML ID="EQInterfaceDefinitionLanguage">
+  <Schema xmlns="EverQuestData" xmlns:dt="EverQuestDataTypes" />
+  <!-- NMS script windows (arcade): bare shell only. All content inside the
+       window is drawn by eqgame_dll/nms_window.cpp through the d3d9 hook;
+       the title bar gives native dragging, and NMSArcadeClose is the DLL's
+       own close button (the native closebox stays off so the DLL always
+       learns about closes). -->
+  <Button item="NMSArcadeClose">
+    <ScreenID>NMSArcadeClose</ScreenID>
+    <Font>1</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>364</X>
+      <Y>2</Y>
+    </Location>
+    <Size>
+      <CX>24</CX>
+      <CY>18</CY>
+    </Size>
+    <TooltipReference>Close</TooltipReference>
+    <Style_Checkbox>false</Style_Checkbox>
+    <Text>X</Text>
+    <TextColor>
+      <R>255</R>
+      <G>215</G>
+      <B>0</B>
+    </TextColor>
+    <Template>BDT_SmallNormal</Template>
+  </Button>
+
+  <Screen item="NMS_ArcadeShell">
+    <RelativePosition>false</RelativePosition>
+    <Location>
+      <X>120</X>
+      <Y>100</Y>
+    </Location>
+    <Size>
+      <CX>400</CX>
+      <CY>320</CY>
+    </Size>
+    <Text></Text>
+    <Style_VScroll>false</Style_VScroll>
+    <Style_Border>true</Style_Border>
+    <Style_Transparent>false</Style_Transparent>
+    <DrawTemplate>WDT_Filigree</DrawTemplate>
+    <Style_Titlebar>true</Style_Titlebar>
+    <Style_Closebox>false</Style_Closebox>
+    <Escapable>true</Escapable>
+    <Style_Minimizebox>false</Style_Minimizebox>
+    <Pieces>NMSArcadeClose</Pieces>
+  </Screen>
+</XML>

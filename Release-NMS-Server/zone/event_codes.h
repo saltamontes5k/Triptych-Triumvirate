@@ -149,6 +149,8 @@ typedef enum {
 	EVENT_CHARM_START,
 	EVENT_CHARM_END,
 
+	EVENT_NMS_WINDOW,
+
 	// Add new events before these or Lua crashes
 	EVENT_SPELL_EFFECT_BOT,
 	EVENT_SPELL_EFFECT_BUFF_TIC_BOT,

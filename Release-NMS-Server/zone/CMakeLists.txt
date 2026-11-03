@@ -117,6 +117,7 @@ SET(zone_sources
     nms_vault.cpp
     nms_lon_session.cpp
     nms_housing.cpp
+    nms_window.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp

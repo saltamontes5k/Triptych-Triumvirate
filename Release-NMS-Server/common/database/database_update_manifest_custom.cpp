@@ -44665,4 +44665,46 @@ COMMIT;
 )ROF311M",
 		.content_schema_update = false,
 	},
+
+	// 312: NMS arcade host NPC - Master_of_Games in the Bazaar (npc_types
+	// 1120002560 cloned from the Platinum Arcade halfling 1120001081, stripped
+	// to a clean quest NPC; spawngroup 1520009310 / spawnentry / spawn2
+	// 1520028510 at -215,-815 beside the Platinum Arcade). Quest script
+	// Release-NMS-Quests/bazaar/Master_of_Games.pl hosts the arcade library
+	// (lua_modules/arcade.lua + plugins/NMS_arcade.pl; engine zone/nms_window.h,
+	// opcodes OP_NMSWindowData 0x140A / OP_NMSWindowEvent 0x140B).
+	// Ids verified unused at time of writing: npc band max 1120002558,
+	// spawngroup max 1520009308, spawn2 max 1520028494.
+	// Twin: utils/sql/20261103_master_of_games.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 312,
+		.description = "20261103_master_of_games",
+		.check = "SELECT `id` FROM `npc_types` WHERE `id` = 1120002560 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"MOG312A(-- NMS arcade: Master_of_Games host NPC (Bazaar). See the twin
+-- utils/sql/20261103_master_of_games.sql for the full rationale.
+SET NAMES utf8mb4;
+START TRANSACTION;
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+CREATE TEMPORARY TABLE tmp_npc LIKE npc_types;
+INSERT INTO tmp_npc SELECT * FROM npc_types WHERE id = 1120001081;
+UPDATE tmp_npc SET id = 1120002560, name = 'Master_of_Games', lastname = 'Keeper of the Arcade',
+	level = 75, hp = 30000, mana = 0,
+	loottable_id = 0, merchant_id = 0, greed = 0, alt_currency_id = 0,
+	npc_spells_id = 0, npc_spells_effects_id = 0, npc_faction_id = 0,
+	aggroradius = 0, see_invis = 1, raid_target = 0;
+INSERT IGNORE INTO npc_types SELECT * FROM tmp_npc;
+DROP TEMPORARY TABLE IF EXISTS tmp_npc;
+INSERT IGNORE INTO spawngroup (id, name, spawn_limit, dist, max_x, min_x, max_y, min_y, delay)
+VALUES (1520009310, 'bazaar_master_of_games', 1, 0, 0, 0, 0, 0, 15000);
+INSERT IGNORE INTO spawnentry (spawngroupID, npcID, chance)
+VALUES (1520009310, 1120002560, 100);
+INSERT IGNORE INTO spawn2 (id, spawngroupID, zone, version, x, y, z, heading, respawntime, _condition, cond_value, min_expansion, max_expansion)
+VALUES (1520028510, 1520009310, 'bazaar', 0, -215.0, -815.0, 3.227, 200.0, 1200, 0, 0, -1, -1);
+COMMIT;
+)MOG312A",
+		.content_schema_update = false,
+	},
 };

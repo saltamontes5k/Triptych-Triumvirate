@@ -1219,6 +1219,14 @@ RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP
 RULE_INT(Custom, 	FellowshipCampMembers, 				2, 		"Living fellowship members, including the camper, that must be within 100 units and out of combat to create a campsite. Clamped to 1-12; the native client may still gate its Camp button on its own threshold.")
 RULE_INT(Custom, 	FellowshipRosterClass, 				0, 		"Which class the native fellowship roster shows for a multiclass character (the row has room for one). 0 = earliest class in the game's order, 1 = latest, 2 = the character's base class, 3 = the class bitmask encoded for the NMS client (id 1000+mask), which renders every class.")
 
+// NMS windows / arcade (script-drawn client windows; see zone/nms_window.h)
+RULE_BOOL(Custom, 	NMSWindowEnabled, 					true, 	"Enable the NMSWindow script API (client:NMSWindowOpen etc). Clients without the patched dinput8.dll automatically get the plain-text chat fallback. Requires client dll for real windows.")
+RULE_INT(Custom, 	NMSWindowMaxWindows, 				8, 		"Maximum NMS windows a single player may have open at once. NMSWindowOpen refuses beyond this.")
+RULE_INT(Custom, 	NMSWindowMaxTickers, 				20, 	"Maximum ticker (fast-updating) NMS windows per zone process. NMSWindowOpen with the ticker flag refuses beyond this.")
+RULE_INT(Custom, 	NMSWindowMaxEventsPerSec, 			30, 	"Window input events (buttons/keys/inputs) handled per player per second; excess events are dropped.")
+RULE_INT(Custom, 	NMSWindowMaxPacketsPerSec, 			60, 	"Window data packets sent per player per second; NMSWindowSend returns false while queued past this so scripts can retry next tick.")
+RULE_INT(Custom, 	NMSWindowCanvasPieces, 				290, 	"Maximum canvas draw pieces per game frame; the arcade library enforces this budget and the client renderer caps at the same count.")
+
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
 RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")

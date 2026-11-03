@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "pet_window.h"
 #include "waypoint_window.h"
 #include "vault_window.h"
+#include "nms_window.h"
 
 extern FloatingTextManager* g_pFtm;
 BOOL TurnNotDone=FALSE;
@@ -856,6 +857,7 @@ public:
             ww->OnSetGameState((int)GameState);
         if (VaultWnd* vw = VaultWnd::GetInstance())
             vw->OnSetGameState((int)GameState);
+        NMSWin::Manager::Get().OnGameState(GameState);
         SetGameState_Trampoline(GameState);
     }
 };

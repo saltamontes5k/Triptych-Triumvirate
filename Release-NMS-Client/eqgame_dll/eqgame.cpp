@@ -10,6 +10,7 @@
 #include "xorstr.h"
 #include "waypoint_window.h"
 #include "who_multiclass.h"
+#include "nms_window.h"
 #include "core_log.h"
 
 
@@ -1500,6 +1501,10 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
       HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
       return 1;
   }
+  case 0x140A: // OP_NMSWindowData -- script windows (arcade)
+      NMSWin::Manager::Get().OnPacket(buf, size);
+      return 1; // Suppress from native client
+      break;
   case 0x1402: // OP_WaypointList
       WaypointsWnd::OnIncomingPacket(opcode, buf, size);
       return 1; // Suppress from native client
@@ -1685,6 +1690,10 @@ void FireCAuthHandshake()
 
     UdpSend_Trampoline((DWORD*)g_zone_udp_con, 0, 0, pkt, sizeof(pkt));
     g_cauth_sent = true;
+
+    // Announce window support to the server right after the auth handshake
+    // (the server gates real windows on this hello; old DLLs get chat fallback)
+    NMSWin::Manager::Get().SendHello();
 }
 
 

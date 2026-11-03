@@ -90,6 +90,7 @@ extern volatile bool RunLoops;
 #include "../common/skill_caps.h"
 #include "client.h"
 #include "nms_vault.h"
+#include "nms_window.h"
 #include "client_achievements.h"
 #include "reward_selection.h"
 
@@ -740,6 +741,10 @@ Client::~Client() {
 	// link-death reach here but not SendMerchantEnd, so without this an invisible merchant
 	// NPC stayed spawned for the life of the zone process.
 	NmsVaultOnClientDestroy(this);
+
+	// Tell scripts their NMS windows are closing (zone-out/camp/disconnect) and
+	// release the per-client window state. See zone/nms_window.h.
+	EQ::NMS::NmsWindowOnClientDestroy(this);
 
 	if (ClientVersion() == EQ::versions::ClientVersion::RoF2 && RuleB (Parcel, EnableParcelMerchants)) {
 		DoParcelCancel();

@@ -210,6 +210,7 @@ const char* QuestEventSubroutines[_LargestEventID] = {
 	"EVENT_PET_COMMAND",
 	"EVENT_CHARM_START",
 	"EVENT_CHARM_END",
+	"EVENT_NMS_WINDOW",
 
 	// Must stay in sync with the tail of QuestEventID in event_codes.h
 	"EVENT_SPELL_EFFECT_BOT",
@@ -1886,6 +1887,23 @@ void PerlembParser::ExportEventVariables(
 
 		case EVENT_POPUP_RESPONSE: {
 			ExportVar(package_name.c_str(), "popupid", data);
+			break;
+		}
+
+		// data protocol from nms_window.cpp: "window_id|kind|action|value|text"
+		case EVENT_NMS_WINDOW: {
+			const std::string nms_data(data ? data : "");
+			size_t p1 = nms_data.find('|');
+			size_t p2 = (p1 == std::string::npos) ? std::string::npos : nms_data.find('|', p1 + 1);
+			size_t p3 = (p2 == std::string::npos) ? std::string::npos : nms_data.find('|', p2 + 1);
+			size_t p4 = (p3 == std::string::npos) ? std::string::npos : nms_data.find('|', p3 + 1);
+			if (p4 != std::string::npos) {
+				ExportVar(package_name.c_str(), "nms_window_id", nms_data.substr(0, p1).c_str());
+				ExportVar(package_name.c_str(), "nms_kind", nms_data.substr(p1 + 1, p2 - p1 - 1).c_str());
+				ExportVar(package_name.c_str(), "nms_action", nms_data.substr(p2 + 1, p3 - p2 - 1).c_str());
+				ExportVar(package_name.c_str(), "nms_value", nms_data.substr(p3 + 1, p4 - p3 - 1).c_str());
+				ExportVar(package_name.c_str(), "nms_text", nms_data.substr(p4 + 1).c_str());
+			}
 			break;
 		}
 

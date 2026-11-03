@@ -758,4 +758,6 @@ N(OP_RealEstateItemQuery),           // 0x050c client asks for an estate's item 
 N(OP_RealEstateItemList),            // 0x1cef estate item list (S2C)
 N(OP_RealEstatePlacementCommit),     // 0x711a placement commit (C2S, 96 bytes)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
+N(OP_NMSWindowData),               // 0x140a script-drawn NMS window state: open/close/widgets/canvas frames (S2C)
+N(OP_NMSWindowEvent),              // 0x140b NMS window capability hello + button/key/input/grid/canvas events (C2S)
 // mail and chat opcodes located in ../mail_oplist.h

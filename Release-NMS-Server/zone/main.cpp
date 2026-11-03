@@ -537,7 +537,10 @@ int main(int argc, char **argv)
 	bool eqsf_open               = false;
 	bool websocker_server_opened = false;
 
-	Timer quest_timers(100);
+	// 50 ms so quest timers can hit 20 ticks/second (arcade games tween at
+	// that rate); EVENT_TIMER dispatch cost only pays for entities that have
+	// pending timers
+	Timer quest_timers(50);
 	UpdateWindowTitle(nullptr);
 	std::shared_ptr<EQStreamInterface>                 eqss;
 	EQStreamInterface                                  *eqsi;

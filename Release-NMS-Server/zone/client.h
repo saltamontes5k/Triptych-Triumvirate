@@ -2927,6 +2927,7 @@ public:
 	const std::string &GetMailKey() const;
 	void ShowZoneShardMenu();
 	void Handle_OP_ChangePetName(const EQApplicationPacket *app);
+	void Handle_OP_NMSWindowEvent(const EQApplicationPacket *app); // script windows, see nms_window.h
 	bool IsFilteredAFKPacket(const EQApplicationPacket *p);
 	void CheckAutoIdleAFK(PlayerPositionUpdateClient_Struct *p);
 	void SyncWorldPositionsToClient(bool ignore_idle = false);
