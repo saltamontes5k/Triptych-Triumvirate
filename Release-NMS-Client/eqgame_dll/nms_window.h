@@ -139,6 +139,8 @@ struct ArcadeWindow {
 	int active_input = -1;          // widget index of the focused input
 	std::string input_buffer;
 	bool closed_event_sent = false;
+	bool frame_logged = false;      // one-shot diagnostics
+	bool draw_logged = false;
 	std::vector<HitRegion> hits;
 };
 

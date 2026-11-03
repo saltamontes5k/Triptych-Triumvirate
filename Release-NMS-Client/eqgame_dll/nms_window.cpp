@@ -218,6 +218,7 @@ void Manager::OnPacket(void* buf, size_t size)
 				win->flags = flags;
 				win->relayout_needed = true;
 				win->closed_event_sent = false;
+				WriteChatf("[Arcade] open id=%u key=%s %ux%u", id, key.c_str(), w, h);
 				EnsureShell(*win);
 				break;
 			}
@@ -270,10 +271,16 @@ void Manager::OnPacket(void* buf, size_t size)
 						ParseFramePieces(e.widgets[idx], r);
 						e.relayout_needed = true;
 						parsed = true;
+						if (!e.frame_logged) {
+							e.frame_logged = true;
+							WriteChatf("[Arcade] frame for win %u canvas idx %u: %d pieces",
+								id, idx, (int)e.widgets[idx].pieces.size());
+						}
 						break;
 					}
 				}
 				if (!parsed) {
+					WriteChatf("[Arcade] frame DROP win %u idx %u", id, idx);
 					r.skip(r.e() - r.p());
 				}
 				break;
@@ -313,6 +320,22 @@ void Manager::OnPacket(void* buf, size_t size)
 				Widget wgt;
 				wgt.kind = kind;
 				wgt.same_line = same != 0;
+				{
+					// TEMP DEBUG: wire dump for vault panels
+					bool is_vault = false;
+					for (auto& e : m_wins) {
+						if (e.id == id && e.key.rfind("vault_", 0) == 0) { is_vault = true; break; }
+					}
+					if (is_vault) {
+						FILE* df = NULL;
+						fopen_s(&df, "vault_debug.txt", "a");
+						if (df) {
+							fprintf(df, "msg=%u id=%u idx=%u kind=%u same=%u rem=%zu\n",
+								msg, id, idx, kind, same, (size_t)(r.e() - r.p()));
+							fclose(df);
+						}
+					}
+				}
 
 				switch (kind) {
 					case NMSW_HEADER:
@@ -803,6 +826,23 @@ void Manager::Relayout(ArcadeWindow& win)
 					}
 				}
 	}
+
+	// TEMP DEBUG: layout dump for vault windows
+	for (auto& e : m_wins) {
+		if (e.key.rfind("vault_", 0) == 0 && e.shell) {
+			FILE* df = NULL;
+			fopen_s(&df, "vault_debug.txt", "a");
+			if (df) {
+				RECT& rc = WndRect(e.shell);
+				fprintf(df, "== layout shell=%dx%d ==\n", (int)(rc.right - rc.left), (int)(rc.bottom - rc.top));
+				for (auto& w : e.widgets) {
+					fprintf(df, "w kind=%u same=%d lx=%d ly=%d lw=%d lh=%d text='%s' argb=%08x\n",
+						w.kind, w.same_line ? 1 : 0, w.lx, w.ly, w.lw, w.lh, w.text.c_str(), w.argb);
+				}
+				fclose(df);
+			}
+		}
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -1024,6 +1064,13 @@ void Manager::Render()
 		}
 		if (win.relayout_needed) {
 			Relayout(win);
+		}
+		if (!win.draw_logged) {
+			win.draw_logged = true;
+			int pieces = 0;
+			for (auto& w : win.widgets) { pieces += (int)w.pieces.size(); }
+			WriteChatf("[Arcade] draw win %u: %d widgets, %d canvas pieces",
+				win.id, (int)win.widgets.size(), pieces);
 		}
 
 		RECT& rc = WndRect(win.shell);

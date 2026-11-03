@@ -1091,14 +1091,20 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	wins.SetStyle(wid, "#101018", "#3E4A6E", 4, 1);
 	wins.Clear(wid);
 
-	// bank / merchant row
-	wins.AddButton(wid, "Bank", 900, "gold");
+	// bank / merchant row (default grey face; solid gold reads as a progress bar)
+	wins.AddButton(wid, "Bank", 900, "");
 	wins.AddSameLine(wid);
-	wins.AddButton(wid, "Merchant", 901, "gold");
+	wins.AddButton(wid, "Merchant", 901, "");
 
-	// page tab row (actions 1..9; active tab tinted gold)
-	for (int page = 1; page <= 9; ++page) {
+	// page tabs: two rows so nine buttons fit the 388px interior
+	for (int page = 1; page <= 6; ++page) {
 		if (page > 1) {
+			wins.AddSameLine(wid);
+		}
+		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
+	}
+	for (int page = 7; page <= 9; ++page) {
+		if (page > 7) {
 			wins.AddSameLine(wid);
 		}
 		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
