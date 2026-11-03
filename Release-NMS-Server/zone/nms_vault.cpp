@@ -19,6 +19,7 @@
 #include "string_ids.h"
 
 #include <fmt/format.h>
+#include <ctime>
 #include <unordered_map>
 #include <vector>
 
@@ -44,6 +45,8 @@ namespace {
 		uint32 ranged = 0;
 		uint32 ranged_aug[6] = {0, 0, 0, 0, 0, 0};
 		LockerModItem mods[4];
+		std::vector<uint32> clicky_items;
+		time_t next_clicky_check = 0;
 	};
 
 	std::unordered_map<uint32, LockerCache> locker_cache;
@@ -267,6 +270,52 @@ namespace {
 			return false;
 		}
 		return true;
+	}
+
+	// Beneficial buffs stay up for as long as the item is in the vault. Everything else keeps
+	// the old one-shot on zone-in: an instant spell has no buff to hold, and re-applying
+	// invisibility or Divine Aura every minute would interrupt the player.
+	bool IsPermanentVaultClicky(uint16 spell_id)
+	{
+		return IsBuffSpell(spell_id)
+			&& IsBeneficialSpell(spell_id)
+			&& !IsDisciplineBuff(spell_id)
+			&& !IsInvisibleSpell(spell_id)
+			&& !IsEffectInSpell(spell_id, SE_DivineAura);
+	}
+
+	void KeepVaultClickyBuff(Client *c, uint16 spell_id)
+	{
+		auto *buffs = c->GetBuffs();
+		const int buff_count = c->GetMaxTotalSlots();
+		for (int slot = 0; slot < buff_count; ++slot) {
+			if (buffs[slot].spellid != spell_id) {
+				continue;
+			}
+			if (buffs[slot].ticsremaining != PERMANENT_BUFF_DURATION) {
+				buffs[slot].ticsremaining = PERMANENT_BUFF_DURATION;
+				c->SendBuffDurationPacket(buffs[slot], slot);
+			}
+			return;
+		}
+		// Blocked by a stronger buff or no free slot: try again on a later check, without the
+		// "did not take hold" message AddBuff would send each time.
+		if (c->CanBuffStack(spell_id, c->GetCasterLevel(spell_id)) >= 0) {
+			c->ApplySpellBuff(spell_id, PERMANENT_BUFF_DURATION);
+		}
+	}
+
+	void ApplyVaultClicky(Client *c, const EQ::ItemData *item)
+	{
+		if (!CanUseVaultClicky(c, item)) {
+			return;
+		}
+		const auto spell_id = static_cast<uint16>(item->Click.Effect);
+		if (IsPermanentVaultClicky(spell_id)) {
+			KeepVaultClickyBuff(c, spell_id);
+		} else {
+			c->SpellOnTarget(spell_id, c);
+		}
 	}
 
 	void CollectClickySpells(const std::vector<NmsVaultItem> &items, int slot, std::vector<uint16> &out)
@@ -824,6 +873,11 @@ void NmsVaultRefreshCache(Client *c)
 		}
 		if (const auto *item = database.GetItem(row->item_id)) {
 			cache.secondary_is_shield = item->ItemType == EQ::item::ItemTypeShield;
+		}
+	}
+	for (const auto &row : items) {
+		if (row.slot >= NMS_VAULT_CLICKY_BEGIN && row.slot <= NMS_VAULT_CLICKY_END) {
+			cache.clicky_items.push_back(row.item_id);
 		}
 	}
 	locker_cache[c->CharacterID()] = cache;
@@ -1731,18 +1785,37 @@ void NmsVaultApplyClickies(Client *c)
 			|| row.slot > NMS_VAULT_CLICKY_END) {
 			continue;
 		}
-		const auto *item = database.GetItem(row.item_id);
-		if (CanUseVaultClicky(c, item)) {
-			c->SpellOnTarget(item->Click.Effect, c);
-		}
+		ApplyVaultClicky(c, database.GetItem(row.item_id));
 		for (const auto &inner : items) {
 			if (inner.slot != row.slot || inner.bag_slot <= 0) {
 				continue;
 			}
-			const auto *bag_item = database.GetItem(inner.item_id);
-			if (CanUseVaultClicky(c, bag_item)) {
-				c->SpellOnTarget(bag_item->Click.Effect, c);
-			}
+			ApplyVaultClicky(c, database.GetItem(inner.item_id));
+		}
+	}
+}
+
+// Runs on the client's buff tic. Brings back vault clicky buffs lost to a dispel or death, and
+// picks up an item as soon as it is deposited, since depositing rebuilds the cache.
+void NmsVaultKeepClickies(Client *c)
+{
+	if (!c) {
+		return;
+	}
+	auto cached = locker_cache.find(c->CharacterID());
+	if (cached == locker_cache.end() || cached->second.clicky_items.empty()) {
+		return;
+	}
+	const time_t now = time(nullptr);
+	if (now < cached->second.next_clicky_check) {
+		return;
+	}
+	cached->second.next_clicky_check = now + 60;
+
+	for (const auto item_id : cached->second.clicky_items) {
+		const auto *item = database.GetItem(item_id);
+		if (CanUseVaultClicky(c, item) && IsPermanentVaultClicky(static_cast<uint16>(item->Click.Effect))) {
+			KeepVaultClickyBuff(c, static_cast<uint16>(item->Click.Effect));
 		}
 	}
 }

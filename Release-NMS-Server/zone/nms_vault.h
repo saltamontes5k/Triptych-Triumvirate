@@ -72,6 +72,7 @@ void NmsVaultOnMerchantEnd(Client *c);
 void NmsVaultOnClientDestroy(Client *c);
 void NmsVaultRefreshCache(Client *c);
 void NmsVaultApplyClickies(Client *c);
+void NmsVaultKeepClickies(Client *c);
 const EQ::ItemData *NmsVaultProcItem(Client *c, uint16 hand);
 int NmsVaultProcAugs(Client *c, uint16 hand, const EQ::ItemData **out_augs, int max_augs);
 void NmsVaultApplyLockerBonuses(Client *c, StatBonuses *b);
