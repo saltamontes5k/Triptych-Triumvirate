@@ -1230,6 +1230,48 @@ bool ClientAchievementState::Reconcile()
 			succeeded;
 	}
 
+	// Kill counters are the durable fact behind NpcRaceKill criteria: seed each
+	// component with the highest matching counter. Criteria within a component
+	// are alternatives, and SetProgress is absolute, so this stays idempotent
+	// across logins instead of compounding like an incremental event would.
+	const auto &race_kill_criteria =
+		AchievementManager::Instance().Criteria(EventType::NpcRaceKill);
+	if (!race_kill_criteria.empty()) {
+		std::map<
+			std::tuple<uint32_t, uint8_t, uint32_t>,
+			uint32_t
+		> race_component_counts;
+		for (const auto *criterion : race_kill_criteria) {
+			const auto counter = m_client.kill_counters.find(
+				static_cast<int>(criterion->target_id)
+			);
+			if (counter == m_client.kill_counters.end() || counter->second <= 0) {
+				continue;
+			}
+			auto &slot = race_component_counts[{
+				criterion->achievement_id,
+				criterion->component_type,
+				criterion->component_id
+			}];
+			slot = std::max<uint32_t>(
+				slot,
+				static_cast<uint32_t>(counter->second)
+			);
+		}
+		for (const auto &[component_key, count] : race_component_counts) {
+			succeeded =
+				SetProgress(
+					std::get<0>(component_key),
+					std::get<1>(component_key),
+					std::get<2>(component_key),
+					count,
+					false,
+					false
+				) &&
+				succeeded;
+		}
+	}
+
 	for (const auto achievement_id : dependencies) {
 		if (achievement_id && HasCompleted(achievement_id)) {
 			succeeded = ProcessEvent(
