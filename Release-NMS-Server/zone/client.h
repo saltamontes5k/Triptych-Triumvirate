@@ -667,6 +667,7 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 
 	uint32 GetClassesBits() const;
 	bool   AddExtraClass(int class_id, bool ignore_limit = false); // NMS: ignore_limit for #multiclass forceadd
+	static int GetMaxPlayerClasses(); // NMS: rule Custom:MaxPlayerClasses clamped to 1-16
 	bool   RemoveExtraClass(int class_id);
 
 	// guild pool regen shit. Sends a SpawnAppearance with a value that regens to value * 0.001
