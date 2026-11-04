@@ -1083,7 +1083,10 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	}
 
 	const std::string key = fmt::format("vault_{}", c->CharacterID());
-	const int wid = wins.Open(key, "Nautilus Vault", 400, 320, EQ::NMS::WFNoResize);
+	// The live NMS vault is a wide window: nine page tabs share one row and the
+	// slot boxes stay square. At 400px the tabs wrapped to three rows and the
+	// grid read as a single dark slab, so size for the row, not for a dialog.
+	const int wid = wins.Open(key, "Nautilus Vault", 1100, 340, EQ::NMS::WFNoResize);
 	if (!wid) {
 		return false;
 	}
@@ -1096,37 +1099,46 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	wins.AddSameLine(wid);
 	wins.AddButton(wid, "Merchant", 901, "");
 
-	// page tabs in two rows: Bags 1-5, then Bag 6 with Clicky 1/2 and Proc
-	// Locker. Letting the sixth bag fall through to the client's row wrap left
-	// it alone on a third row with the clickies underneath it.
-	for (int page = 1; page <= 5; ++page) {
+	// page tabs: nine in one row, selected one lit the live-NMS blue
+	for (int page = 1; page <= 9; ++page) {
 		if (page > 1) {
 			wins.AddSameLine(wid);
 		}
-		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
+		wins.AddButton(wid, VaultWindowPageLabel(page), page,
+			page == open_page ? "#5AA9E6" : "");
 	}
-	for (int page = 6; page <= 9; ++page) {
-		if (page > 6) {
-			wins.AddSameLine(wid);
+
+	// hint line sits between the tabs and the boxes, as on the live server
+	int used = 0;
+	for (int i = 0; i < VaultWindowPageSlots(open_page); ++i) {
+		if (NmsVaultFind(items, VaultWindowPageBase(open_page) + i, 0)) {
+			used++;
 		}
-		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
 	}
+	const char *hint = "Put an item on your cursor and click an empty box to deposit it. Click an item to withdraw it.";
+	if (open_page == 9) {
+		hint = "Boxes 1-3 override your proc/shield. Boxes 4-7 (Foci/Skill Mod) lend skill mods, instrument mods and focus effects.";
+	} else if (open_page == 7 || open_page == 8) {
+		hint = "Clicky buffs parked in these boxes re-apply automatically on zone-in.";
+	}
+	wins.AddText(wid, fmt::format("{}: {}/{} slots used. {}", VaultWindowPageLabel(open_page), used,
+		VaultWindowPageSlots(open_page), hint), "#D9A641", true);
 
 	// slot grid
 	const int cols = open_page == 9 ? 4 : 5;
 	const int count = VaultWindowPageSlots(open_page);
 	const int rows = (count + cols - 1) / cols;
 	const int base = VaultWindowPageBase(open_page);
-	const int cell = 36;
-	const int gx = 7;
-	const int gy = 6;
+	const int cell = 42;   // square boxes; the client draws a 1px bevel per cell
+	const int gx = 8;
+	const int gy = 8;
 
 	int canvas = wins.AddCanvas(wid, gx * 2 + cols * cell + 2, gy * 2 + rows * cell + 2);
 	if (canvas >= 0) {
 		wins.BeginCanvasFrame(wid, canvas);
 
-		const uint32_t occupied_argb = 0xFF3E4A6E;
-		const uint32_t empty_argb    = 0xFF171921;
+		const uint32_t occupied_argb = 0xFF44527A;
+		const uint32_t empty_argb    = 0xFF1E2230;
 
 		// cell fills first (grid piece renders all cells), then per-box icon
 		// pieces on top
@@ -1169,21 +1181,6 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 				cell - 6, cell - 6, 0, icon_id, 0, 0, label);
 		}
 	}
-
-	// description line
-	int used = 0;
-	for (int i = 0; i < count; ++i) {
-		if (NmsVaultFind(items, base + i, 0)) {
-			used++;
-		}
-	}
-	const char *hint = "Put an item on your cursor and click an empty box to deposit it. Click an item to withdraw it.";
-	if (open_page == 9) {
-		hint = "Boxes 1-3 override your proc/shield. Boxes 4-7 (Foci/Skill Mod) lend skill mods, instrument mods and focus effects.";
-	} else if (open_page == 7 || open_page == 8) {
-		hint = "Clicky buffs parked in these boxes re-apply automatically on zone-in.";
-	}
-	wins.AddText(wid, fmt::format("{}: {}/{} slots used. {}", VaultWindowPageLabel(open_page), used, count, hint), "gray", true);
 
 	wins.Send(wid);
 	return true;

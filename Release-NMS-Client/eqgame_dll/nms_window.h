@@ -15,6 +15,7 @@
 #include <d3d9.h>
 #include <d3dx9.h>
 
+#include <list>
 #include <map>
 #include <string>
 #include <vector>
@@ -143,6 +144,12 @@ struct ArcadeWindow {
 	bool frame_logged = false;      // one-shot diagnostics
 	bool draw_logged = false;
 	bool click_logged = false;
+	bool drop_logged = false;       // a canvas frame arrived for a missing widget
+	bool frame_size_logged = false; // first FitShell application
+	bool frame_reset_logged = false;// rect was reset behind FitShell
+	int fit_h = 0;                  // height the laid-out content needs (see Relayout)
+	DWORD last_click_ms = 0;        // de-dupes XWM_LCLICK vs XWM_LMOUSEUP
+	int msg_log = 0;                // one-shot trace of unhandled notifications
 	std::vector<HitRegion> hits;
 };
 
@@ -191,10 +198,14 @@ private:
 	IDirect3DTexture9* GetIconTexture(uint32_t icon_id);
 	void DrawIcon(int x, int y, int w, int h, uint32_t icon_id, const std::string& fallback_text);
 
-	std::vector<ArcadeWindow> m_wins;
+	// list, not vector: shells keep an ArcadeWindow* and a reallocation on the
+	// second window would leave those pointers dangling inside the UI callbacks
+	std::list<ArcadeWindow> m_wins;
 	uint32_t m_next_id = 1;
 	bool m_hello_sent = false;      // capability chat announced
 	DWORD m_next_hello = 0;         // capability heartbeat (see SendHello)
+	bool m_lbutton_down = false;    // physical LMB edge detect for the click poll
+	bool m_press_logged = false;    // one-shot proof the poll is running
 
 	// d3d resources
 	IDirect3DDevice9* m_dev = nullptr;

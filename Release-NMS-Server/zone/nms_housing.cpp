@@ -892,7 +892,7 @@ bool SendRealEstateInspection(Client *c, uint32_t estate_id, bool show)
 	w.U32(estate_id);
 	w.U32(zone->GetZoneID());                      // parent: the neighbourhood object, as 0x6fd0 sent it
 	w.U32(PlotDefinitionId(estate_id));
-	w.U32(owner_guild ? owner_guild : 0xFFFFFFFFu);
+	w.U32(owner_guild ? owner_guild : 0);          // 0 = no guild; -1 would fail the client's plot predicate
 	w.U32(0);                                      // fellowship
 	w.Str(context);                                // the native title reads "<context>, <address>"
 	w.Str(PlotStreetAddress(estate_id));
@@ -2006,7 +2006,9 @@ void SendRealEstatePlotObjects(Client *c)
 		plot.static_id     = door_id;
 		plot.parent_id     = zone_id;                  // +28: the neighborhood object
 		plot.definition_id = PlotDefinitionId(door_id); // +32: this plot's own definition
-		plot.guild_id      = owner_guild ? owner_guild : 0xFFFFFFFFu;
+		// 0xFFFFFFFF reads as "absent" to the client's estate predicate (sub_5B41D0 demands
+		// guild_id != -1 for a plot estate); 0 means "no guild" and passes the gate.
+		plot.guild_id      = owner_guild ? owner_guild : 0;
 		plot.owner_name    = plot_type == 1 ? guild_name : owner_name;
 		plot.dynamic_name  = PlotStreetAddress(door_id);
 		plot.expiry_time   = upkeep_unix;   // 0 = no paid-upkeep timestamp
@@ -2682,7 +2684,9 @@ void Client::Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app)
 	);
 }
 
-// Re-sends the exterior preview for every building placed on a lot this character may see.
+// Re-sends the exterior preview for every building placed on any lot in the zone -- not just
+// the ones the incoming character owns. Every player standing in a neighbourhood has to receive
+// these, otherwise a house is only ever visible to its owner.
 // Placement consumes the item, so the building survives a client restart only because the
 // lot records which item built it (nms_plot.house_item_id, custom migration 264).
 void SendRealEstateExteriors(Client *c)
@@ -2702,9 +2706,8 @@ void SendRealEstateExteriors(Client *c)
 		"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
 		"LEFT JOIN items it ON it.id = p.house_item_id "
 		"WHERE n.zone = '{}' AND p.house_item_id > 0 "
-		"  AND (p.owner_char_id = {} OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
 		"ORDER BY p.door_id",
-		Strings::Escape(zone_name), c->CharacterID(), c->GuildID()
+		Strings::Escape(zone_name)
 	));
 
 	if (!rows.Success() || !rows.RowCount()) {

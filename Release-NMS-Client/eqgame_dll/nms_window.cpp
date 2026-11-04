@@ -155,14 +155,29 @@ public:
 
 	int WndNotification(CXWnd* pWnd, unsigned int Message, void* data)
 	{
-		if (Message == XWM_LCLICK) {
+		// A plain SIDL client area reports the release as XWM_LMOUSEUP; XWM_LCLICK
+		// is what *controls* send. Only listening for LCLICK left the whole window
+		// inert -- the title bar still dragged because that is native chrome, but
+		// nothing inside it ever answered a click.
+		if (Message == XWM_LCLICK || Message == XWM_LMOUSEUP) {
 			if (m_close && pWnd == m_close) {
-				Manager::Get().SendClosed(*m_win);
+				if (Message == XWM_LCLICK) {
+					Manager::Get().SendClosed(*m_win);
+				}
 				return 1;
 			}
-			PMOUSEINFO m = EQADDR_MOUSE;
-			Manager::Get().ClickWindow(*m_win, static_cast<int>(m->X), static_cast<int>(m->Y));
+			if (m_win) {
+				PMOUSEINFO m = EQADDR_MOUSE;
+				Manager::Get().ClickWindow(*m_win, static_cast<int>(m->X), static_cast<int>(m->Y));
+			}
 			return 1;
+		}
+
+		// one-shot trace of what else reaches us, so a dead client area can be
+		// told apart from a hit-test miss without another round trip
+		if (m_win && m_win->msg_log < 8) {
+			m_win->msg_log++;
+			WriteChatf("[Arcade] wnd msg %u pWnd %p (close %p)", Message, (void*)pWnd, (void*)m_close);
 		}
 		return CCustomWnd::WndNotification(pWnd, Message, data);
 	}
@@ -280,7 +295,16 @@ void Manager::OnPacket(void* buf, size_t size)
 					}
 				}
 				if (!parsed) {
-					WriteChatf("[Arcade] frame DROP win %u idx %u", id, idx);
+					// per-frame chatter when a ticker window and the widget list
+					// disagree: report the first one only
+					ArcadeWindow* dw = nullptr;
+					for (auto& e : m_wins) {
+						if (e.id == id) { dw = &e; break; }
+					}
+					if (dw && !dw->drop_logged) {
+						dw->drop_logged = true;
+						WriteChatf("[Arcade] frame DROP win %u idx %u (further drops silent)", id, idx);
+					}
 					r.skip(r.e() - r.p());
 				}
 				break;
@@ -606,6 +630,14 @@ bool Manager::FeedKey(uint32_t dik, bool down)
 // ---------------------------------------------------------------------------
 bool Manager::ClickWindow(ArcadeWindow& win, int sx, int sy)
 {
+	// one physical click can reach us twice (notification path + the button poll
+	// in Render); this guard keeps the first and drops the echo
+	const DWORD now = GetTickCount();
+	if (now - win.last_click_ms < 150) {
+		return true;
+	}
+	win.last_click_ms = now;
+
 	RECT& rc = WndRect(win.shell);
 	int wx = sx - rc.left;
 	int wy = sy - rc.top;
@@ -677,7 +709,13 @@ void Manager::FitShell(ArcadeWindow& win)
 	RECT& rc = WndRect(win.shell);
 
 	int want_w = static_cast<int>(win.w) + 24;
-	int want_h = static_cast<int>(win.h) + 37;
+	// The wire's h is the drawing area the script asked for, but the games put
+	// their button row *below* the canvas, so the layout usually needs more than
+	// h + chrome. Relayout records that in fit_h; without honouring it here this
+	// function yanked the frame back to the short size on the next packet and
+	// the grow-to-fit below pushed it out again -- a rect that flipped between
+	// two heights every tick, with the body drawn to whichever one was current.
+	int want_h = (std::max)(static_cast<int>(win.h) + 37, win.fit_h);
 	want_w = (std::max)(220, (std::min)(1400, want_w));
 	want_h = (std::max)(140, (std::min)(1000, want_h));
 
@@ -691,11 +729,25 @@ void Manager::FitShell(ArcadeWindow& win)
 		rc.top = (std::max)(0, scr_h - want_h - 48);
 	}
 
-	if ((rc.right - rc.left) != want_w || (rc.bottom - rc.top) != want_h) {
+	const int seen_w = static_cast<int>(rc.right - rc.left);
+	const int seen_h = static_cast<int>(rc.bottom - rc.top);
+	if (seen_w != want_w || seen_h != want_h) {
 		rc.right = rc.left + want_w;
 		rc.bottom = rc.top + want_h;
-		WriteChatf("[Arcade] window %u frame %dx%d for content %ux%u",
-			win.id, want_w, want_h, static_cast<unsigned>(win.w), static_cast<unsigned>(win.h));
+
+		// One line per window, plus one if the game puts the rect back after we
+		// set it: that second case means some other path owns the rect and the
+		// frame keeps flipping between the template size and ours.
+		if (!win.frame_size_logged) {
+			win.frame_size_logged = true;
+			WriteChatf("[Arcade] win %u frame %dx%d for content %ux%u",
+				win.id, want_w, want_h, static_cast<unsigned>(win.w), static_cast<unsigned>(win.h));
+		}
+		else if (!win.frame_reset_logged) {
+			win.frame_reset_logged = true;
+			WriteChatf("[Arcade] win %u frame RESET behind us: was %dx%d, saw %dx%d",
+				win.id, want_w, want_h, seen_w, seen_h);
+		}
 	}
 
 	// NMSArcadeClose is authored at X=364 (24x18) for the template's fixed 400px
@@ -889,8 +941,14 @@ void Manager::Relayout(ArcadeWindow& win)
 	// widgets never spill past the frame (the layout loop tracks y + line_h)
 	{
 		RECT& rc2 = WndRect(win.shell);
-		int needed_bottom = y + line_h + pad + 2;
-		int current_bottom = static_cast<int>(rc2.bottom - rc2.top);
+		const int needed_bottom = y + line_h + pad + 2;
+		const int current_bottom = static_cast<int>(rc2.bottom - rc2.top);
+
+		// remember it so FitShell stops resetting the frame to the requested
+		// height on the next packet (that fight is what made these windows
+		// flicker between two heights, with the buttons hanging off the body)
+		win.fit_h = (std::max)(static_cast<int>(win.h) + 37, needed_bottom);
+
 		if (needed_bottom > current_bottom) {
 			rc2.bottom = rc2.top + needed_bottom;
 		}
@@ -948,7 +1006,9 @@ void Manager::DrawIcon(int x, int y, int w, int h, uint32_t icon_id, const std::
 	IDirect3DTexture9* tex = GetIconTexture(icon_id);
 	if (!tex || !m_sprite) {
 		if (!fallback_text.empty() && m_sprite) {
-			DrawTextStr(x + w / 2, y + (std::max)(0, (h - 14) / 2), fallback_text, 0xFFF2F2F2, 12, 1, w);
+			// no ItemIcons art on this client: the server's short item name has to
+			// fit inside one slot box, so draw it small and clipped to the cell
+			DrawTextStr(x + w / 2, y + (std::max)(0, (h - 12) / 2), fallback_text, 0xFFDDE3F0, 10, 1, w);
 		}
 		return;
 	}
@@ -1326,6 +1386,47 @@ void Manager::Render()
 		return;
 	}
 
+	// A SIDL client area that owns no child controls never delivers click
+	// notifications to the window itself, so WndNotification is never called for
+	// it -- which is why the whole panel was inert while its title bar still
+	// dragged. Poll the physical button here instead (Render runs every frame)
+	// and use the MouseOver byte EQ maintains on the topmost window under the
+	// cursor: if ours is the one being hovered, the click belongs to us.
+	if (GetGameState() == GAMESTATE_INGAME) {
+		const bool down = (GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0;
+		const bool pressed = down && !m_lbutton_down;
+		m_lbutton_down = down;
+		if (pressed) {
+			PMOUSEINFO m = EQADDR_MOUSE;
+			const int mx = static_cast<int>(m->X);
+			const int my = static_cast<int>(m->Y);
+
+			// Topmost of *our* windows under the cursor wins. CXWnd::MouseOver
+			// looked like the natural test, but its offset in this client build
+			// reads 0 for a window that is plainly under the cursor, so the poll
+			// never claimed anything. Geometry first; the frame rect is the one
+			// field we know is right because the interior tracks it while dragged.
+			if (!m_press_logged) {
+				m_press_logged = true;
+				WriteChatf("[Arcade] click poll live: press at %d,%d", mx, my);
+			}
+
+			ArcadeWindow* target = nullptr;
+			for (auto& win : m_wins) {
+				if (!win.shell) {
+					continue;
+				}
+				RECT& r = WndRect(win.shell);
+				if (mx >= r.left && mx < r.right && my >= r.top && my < r.bottom) {
+					target = &win;
+				}
+			}
+			if (target) {
+				ClickWindow(*target, mx, my);
+			}
+		}
+	}
+
 	IDirect3DDevice9* dev = g_pDevice;
 	if (!dev) {
 		return;
@@ -1540,12 +1641,15 @@ void Manager::Render()
 								DrawTextStr(px(p.x) + static_cast<int>(p.a * scale) / 2, py(p.y), p.text, 0xFFFFFFFF, 14, 1, static_cast<int>(p.a * scale) - 4);
 								break;
 							case NMSWP_GRID: {
-								// every cell gets an outline: a slot grid whose empty
-								// cells are only a hair off the panel colour reads as
-								// one blank slab instead of boxes
+								// Slot boxes, live-NMS style: a 2px gutter between
+								// cells, then a light top/left and dark bottom/right
+								// bevel. Filling the whole cell and outlining it in one
+								// mid tone was what made the grid read as a single dark
+								// slab with a faint lattice on it.
 								const int cw = (std::max)(1, static_cast<int>(p.a * scale));
 								const int chh = (std::max)(1, static_cast<int>(p.b * scale));
-								const uint32_t edge = ARGB(255, 74, 88, 122);
+								const int bw = (std::max)(1, cw - 2);
+								const int bh = (std::max)(1, chh - 2);
 								int cells = 0;
 								for (const auto& cell : p.grid) {
 									if (piece_budget-- <= 0) {
@@ -1553,13 +1657,14 @@ void Manager::Render()
 									}
 									const int col = cell.first % std::max<uint16_t>(1, p.aux);
 									const int row = cell.first / std::max<uint16_t>(1, p.aux);
-									const int cx = px(p.x + col * p.a);
-									const int cy = py(p.y + row * p.b);
-									FillRect(cx, cy, cw, chh, cell.second);
-									DrawLine(cx, cy, cx + cw, cy, edge, 1.f);
-									DrawLine(cx, cy + chh - 1, cx + cw, cy + chh - 1, edge, 1.f);
-									DrawLine(cx, cy, cx, cy + chh, edge, 1.f);
-									DrawLine(cx + cw - 1, cy, cx + cw - 1, cy + chh, edge, 1.f);
+									const int bx = px(p.x + col * p.a) + 1;
+									const int by = py(p.y + row * p.b) + 1;
+
+									FillRect(bx, by, bw, bh, cell.second);
+									FillRect(bx, by, bw, 1, ARGB(255, 152, 166, 206));              // top
+									FillRect(bx, by, 1, bh, ARGB(255, 118, 132, 172));              // left
+									FillRect(bx, by + bh - 1, bw, 1, ARGB(255, 28, 32, 44));        // bottom
+									FillRect(bx + bw - 1, by, 1, bh, ARGB(255, 40, 46, 62));        // right
 									if (++cells > 4096) {
 										break;
 									}
