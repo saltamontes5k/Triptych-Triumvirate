@@ -416,6 +416,7 @@ set(gm_command_sources
     gm_commands/modifynpcstat.cpp
     gm_commands/movechar.cpp
     gm_commands/movement.cpp
+    gm_commands/multiclass.cpp
     gm_commands/myskills.cpp
     gm_commands/mysql.cpp
     gm_commands/mystats.cpp

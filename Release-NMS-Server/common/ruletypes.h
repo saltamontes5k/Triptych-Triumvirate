@@ -1211,6 +1211,7 @@ RULE_BOOL(Custom, 	ServerAuthStats, 						true, "Enable this rule in order to se
 RULE_BOOL(Custom, 	MulticlassingEnabled, 					true, "Enable this to enable all multiclass-related tweaks. Requires ServerAuthStats and UseDynamicAATimers for full functionality.")
 RULE_BOOL(Custom, 	UseDynamicAATimers, 					true, "Enable using dynamic AA timers. Required to deconflict multiclass AA timers")
 RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that share a name, showing and granting only the strongest line per name.")
+RULE_INT(Custom, 	MaxPlayerClasses, 						3,		"Highest number of classes a character may hold. Read by #multiclass, Client::AddExtraClass, NMS_multiclass_utils.pl and the class trainers; #multiclass forceadd can exceed it.")
 
 // Fellowships (native RoF2; see docs/rof2-fellowship.md)
 RULE_BOOL(Custom, 	Fellowships, 						false, 	"Enable the RoF2 fellowship system: membership, roster window, /fsay chat, campsites and vitality.")
