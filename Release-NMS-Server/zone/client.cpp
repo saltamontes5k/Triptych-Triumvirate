@@ -6335,12 +6335,15 @@ std::string Client::GetPetVanityName(int class_id) {
 
 bool Client::KeyRingRemove(uint32 item_id)
 {
+	// NMS: pass end() too. erase(end()) is UB when the key is missing (with MSVC 14.44
+	// Release this corrupts memory), and the single-iterator form left duplicates behind.
 	keyring.erase(
 		std::remove(
 			keyring.begin(),
 			keyring.end(),
 			item_id
-		)
+		),
+		keyring.end()
 	);
 
 	const auto removed = KeyringRepository::DeleteWhere(
