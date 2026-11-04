@@ -4343,7 +4343,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Charm: {
-			if (!caster || !PassCharismaCheck(caster, buff.spellid)) {
+			// NMS: the slot may already have been faded and refilled by an earlier effect
+			// this tic (fade spell, dispel suppression): the charisma check below would read
+			// the wrong spell or SPELL_UNKNOWN (0xFFFF) past the end of spells[]
+			const bool charm_broke = buff.spellid != spell.id;
+
+			if (charm_broke || !caster || !PassCharismaCheck(caster, buff.spellid)) {
 				BuffFadeByEffect(SE_Charm);
 
 				// Remove from hate list of any NPC's hate list and remove all NPCs this hate list
@@ -4357,6 +4362,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Root: {
+			// NMS: the slot may already have been faded by an earlier effect this tic; the
+			// break check reads spells[buff.spellid] and would index SPELL_UNKNOWN (0xFFFF)
+			if (buff.spellid != spell.id) {
+				break;
+			}
+
 			/* Root formula derived from extensive personal live parses - Kayen
 			ROOT has a 70% chance to do a resist check to break.
 			*/
@@ -4375,6 +4386,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Fear: {
+			// NMS: the slot may already have been faded by an earlier effect this tic; the
+			// break check reads spells[buff.spellid] and would index SPELL_UNKNOWN (0xFFFF)
+			if (buff.spellid != spell.id) {
+				break;
+			}
+
 			if (zone->random.Roll(RuleI(Spells, FearBreakCheckChance))) {
 				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster,0,0,true);
 
@@ -4602,6 +4619,11 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses, bool suppress, uint32 su
 
 	for (int i=0; i < EFFECT_COUNT; i++)
 	{
+		// NMS: a suppressed buff faded its effects when it was suppressed, and SPELL_SUPPRESSED
+		// indexes past the end of spells[]: reading it crashes the zone when the suppression expires
+		if(!IsValidSpell(buffs[slot].spellid))
+			break;
+
 		if(IsBlankSpellEffect(buffs[slot].spellid, i))
 			continue;
 
