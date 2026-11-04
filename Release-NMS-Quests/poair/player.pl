@@ -39,8 +39,9 @@ sub EVENT_TIMER {
 
 sub curio_click {
   # Guard: the whitelist IS the trap. Doors 1, 2 and 21 (rainbow, exit book,
-  # tranquility pad) are stock and never react here.
-  return unless ($doorid >= 601 && $doorid <= 611);
+  # tranquility pad) are stock and never react here. 601-608 + 612 = the
+  # clock crystals and the goblet; 609-611 = the bookcases.
+  return unless ($doorid >= 601 && $doorid <= 612);
   return if (quest::get_rule("Custom:CurioTraps") ne "true");
   if ($client->GetGM()) {
     $client->Message(15, "The hoard respects its makers. Door $doorid felt your touch and spared you.");
@@ -52,7 +53,7 @@ sub curio_click {
   quest::set_data($cd_key, 1, 120);
 
   # Bookcases: the rumor, made true. Every single time.
-  if ($doorid >= 609) {
+  if ($doorid >= 609 && $doorid <= 611) {
     quest::ze(15, "The bookcase accepts " . $client->GetName() . ". Overdue.");
     $client->Message(15, "The bookcase swallows you whole and files you under 'Returned'.");
     quest::movepc(202, 1016, 16, 390.7, 130);

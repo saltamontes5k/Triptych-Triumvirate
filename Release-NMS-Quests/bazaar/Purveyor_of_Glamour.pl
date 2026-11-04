@@ -1,14 +1,28 @@
-sub EVENT_ITEM { 
+sub EVENT_ITEM {
     my $clientName = $client->GetCleanName();
     my $dbh = plugin::LoadMysql();
 
-	if (plugin::check_handin(\%itemcount, 24152 => 1)) {
-		my $random_result = get_random_glamour();
-		if ($random_result) {
-			plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
-			$client->SummonItem($random_result);
+	if (exists $itemcount{24152} && $itemcount{24152} > 0) {
+		unless (has_room_for_glamour($client)) {
+			whisper_make_room($client, $clientName);
 			$dbh->disconnect();
+			plugin::return_items(\%itemcount);
 			return;
+		}
+		if (plugin::check_handin(\%itemcount, 24152 => 1)) {
+			my $random_result = get_random_glamour();
+			if ($random_result) {
+				plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these...");
+				$client->SummonItem($random_result);
+				$dbh->disconnect();
+				return;
+			} else {
+				# the pool query failed; hand the token back rather than eating it
+				plugin::Whisper("How strange. I seem to have misplaced my crafting tools. Your token is returned - please try again later.");
+				$client->SummonItem(24152);
+				$dbh->disconnect();
+				return;
+			}
 		}
 	}
     
@@ -30,17 +44,31 @@ sub EVENT_ITEM {
     
     # If we have exactly 4 glamour items, process them for recycling
     if ($total_glamours == 4) {
+        unless (has_room_for_glamour($client)) {
+            whisper_make_room($client, $clientName);
+            $dbh->disconnect();
+            plugin::return_items(\%itemcount);
+            return;
+        }
         if (plugin::check_handin(\%itemcount, %glamour_handin)) {
             # Get a random new glamour
             my $random_result = get_random_glamour();
-            
+
             if (defined $random_result) {
-                plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these..."); 
+                plugin::Whisper("Ah, recycling old glamours! An environmentally conscious choice, $clientName. Let me craft something new from these...");
                 $client->SummonItem($random_result);
                 $dbh->disconnect();
                 return; # Skip the rest of the processing
             } else {
-                plugin::Whisper("How strange. I seem to have misplaced my crafting tools. Please try again later.");
+                # the pool query failed; hand the glamours back rather than eating them
+                plugin::Whisper("How strange. I seem to have misplaced my crafting tools. Your Glamours are returned - please try again later.");
+                foreach my $glamour_id (keys %glamour_handin) {
+                    for (my $i = 0; $i < $glamour_handin{$glamour_id}; $i++) {
+                        $client->SummonItem($glamour_id);
+                    }
+                }
+                $dbh->disconnect();
+                return;
             }
         }
     }
@@ -53,6 +81,10 @@ sub EVENT_ITEM {
 
             my $glamour_id = find_glamour_for_item($dbh, $item_id, $item_name);
             if (defined $glamour_id) {
+                unless (has_room_for_glamour($client)) {
+                    whisper_make_room($client, $clientName);
+                    next;   # the item stays in %itemcount and is returned below
+                }
                 if (plugin::check_handin(\%itemcount, $item_id => 1, "platinum" => 5000)) {
                     plugin::Whisper("Perfect! Here, I had a Glamour almost ready. I'll just need to attune it to your $item_name! Enjoy!");
                     $client->SummonFixedItem($glamour_id);
@@ -121,9 +153,12 @@ sub EVENT_SAY {
             $response = "I'm sorry, $clientName. You don't have enough Triune of Fate, please return when you have enough to pay me.";
         } else {
             my $random_result = get_random_glamour();
-            
-            if ($random_result && plugin::SpendTriuneOfFate($client, 2)) {
+
+            if ($random_result && has_room_for_glamour($client) && plugin::SpendTriuneOfFate($client, 2)) {
                 $client->SummonItem($random_result);
+            } elsif ($random_result && !has_room_for_glamour($client)) {
+                # no room means no sale: the currency is never spent undelivered
+                whisper_make_room($client, $clientName);
             }
         }
     }
@@ -143,6 +178,19 @@ sub SerializeList {
 sub DeserializeList {
     my $string = shift;
     return split(',', $string);
+}
+
+# The Purveyor must never take payment without handing over the goods. Quest
+# summons land on the cursor (or a free bag slot), so a free cursor is a
+# sufficient precondition for a guaranteed delivery.
+sub has_room_for_glamour {
+    my ($client) = @_;
+    return ($client->GetItemIDAt(0) == 0) ? 1 : 0;
+}
+
+sub whisper_make_room {
+    my ($client, $clientName) = @_;
+    plugin::Whisper("Make room for the work first, $clientName - empty your cursor, then ask me again. I refuse to take payment I cannot repay with a Glamour.");
 }
 
 # Work out which Glamour to hand back for a given item.

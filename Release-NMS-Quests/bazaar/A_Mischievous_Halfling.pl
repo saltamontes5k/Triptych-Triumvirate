@@ -11,7 +11,7 @@
 
 sub EVENT_SAY {
     if ($text =~ /hail/i) {
-        quest::whisper("Welcome to the Platinum Arcade, $name! One roll costs either " . quest::saylink("wager 20000 platinum", 1, "20,000 platinum pieces") . " or " . quest::saylink("five Triune's of Fate", 1, "five Triune's of Fate") . ". Click either option to roll, or hand me exactly 20,000 platinum. I can also " . quest::saylink("provide food and drink", 1, "provide food and drink") . " for you, free of charge.");
+        quest::whisper("Welcome to the Platinum Arcade, $name! One roll costs either " . quest::saylink("wager 20000 platinum", 1, "20,000 platinum pieces") . ", " . quest::saylink("five Triune's of Fate", 1, "five Triune's of Fate") . " or " . quest::saylink("wager 5 AA points", 1, "5 spendable AA points") . ". Click either option to roll, or hand me exactly 20,000 platinum. I can also " . quest::saylink("provide food and drink", 1, "provide food and drink") . " for you, free of charge.");
     }
     elsif ($text =~ /wager 20000 platinum/i) {
         if ($client->TakeMoneyFromPP(20000000, 1)) {
@@ -29,6 +29,18 @@ sub EVENT_SAY {
         }
         else {
             quest::whisper("You need five Triune's of Fate for a roll.");
+        }
+    }
+    elsif ($text =~ /wager 5 AA points/i) {
+        if ($client->GetAAPoints() >= 5) {
+            # AA spend goes through the setter: AddAAPoints takes an unsigned
+            # count, so a deduction has to be a SetAAPPoints-of-current-minus-5.
+            $client->SetAAPoints($client->GetAAPoints() - 5);
+            quest::whisper("Five AA points accepted. Rolling the dice!");
+            RollCasinoPrize();
+        }
+        else {
+            quest::whisper("You need 5 spendable AA points on hand for a roll.");
         }
     }
     elsif ($text =~ /provide food and drink/i) {

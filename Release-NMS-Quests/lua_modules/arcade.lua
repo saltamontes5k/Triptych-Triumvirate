@@ -452,7 +452,9 @@ local function rebuild_widgets(inst)
 		inst._status_widget = client:NMSWindowAddProgress(win, 0, "green", "")
 	end
 
-	-- buttons row
+	-- buttons row: one horizontal row under the canvas. Without the same-line
+	-- markers each button got its own row, so a four-button game stacked them
+	-- down the window and pushed the frame twice as tall as its artwork.
 	inst._button_widget_base = {}
 	if inst.buttons then
 		for i, btn in ipairs(inst.buttons) do
@@ -462,6 +464,7 @@ local function rebuild_widgets(inst)
 			local action = NEXT_ACTION + i
 			button_fns[win] = button_fns[win] or {}
 			button_fns[win][action] = btn[2]
+			if i > 1 then client:NMSWindowAddSameLine(win) end
 			local idx = client:NMSWindowAddButton(win, label, action, btn.color and tostring(btn.color) or "")
 			if idx >= 0 and not enabled then
 				client:NMSWindowSetButton(win, idx, label, btn.color and tostring(btn.color) or "", true)

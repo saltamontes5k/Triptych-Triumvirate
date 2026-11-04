@@ -14,8 +14,15 @@ function event_trade(e)
 		e.other:Faction(1561,50);    -- Faction: Concillium Universus
 		e.other:Faction(1483,-5);    -- Faction: Seru
 		e.other:Faction(1486,-25);   -- Faction: Heart of Seru
-		-- Confirmed Live Experience
-		e.other:QuestReward(e.self,{items = {3650,7096},exp = 10000}); -- Items: Seal of Katta, Arx Key
+		if (e.other:KeyRingCheck(3650) or e.other:CountItem(3650) > 0) then
+			-- The shards are the crafting material and are still eaten, but a second
+			-- Arx Key copy would just be absorbed by the keyring and vanish - grant
+			-- everything except the key itself on a repeat turn-in.
+			e.other:QuestReward(e.self,{items = {7096},exp = 10000}); -- Items: Seal of Katta
+		else
+			-- Confirmed Live Experience
+			e.other:QuestReward(e.self,{items = {3650,7096},exp = 10000}); -- Items: Seal of Katta, Arx Key
+		end
 	end
 	item_lib.return_items(e.self, e.other, e.trade)
 end
