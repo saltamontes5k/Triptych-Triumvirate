@@ -44867,18 +44867,18 @@ SET NAMES utf8mb4;
 INSERT IGNORE INTO doors (doorid, zone, version, name, pos_x, pos_y, pos_z, heading,
                           opentype, lockpick, keyitem, door_param, size,
                           client_version_mask, close_timer_ms, min_expansion, max_expansion) VALUES
-(601, 'veeshan', 0, 'VECOINS101', -217.6, 1406.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(602, 'veeshan', 0, 'VEDRSTAT101', -193.6, 1430.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(603, 'veeshan', 0, 'VECOINS101', 550.0, 1451.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(604, 'veeshan', 0, 'VEDRSTAT101', 574.0, 1475.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(605, 'veeshan', 0, 'VECOINS101', -572.8, 1158.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(606, 'veeshan', 0, 'VEDRSTAT101', -548.8, 1182.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(601, 'veeshan', 0, 'VECOINS101', -217.6, 1406.0, 445.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(602, 'veeshan', 0, 'VEDRSTAT101', -193.6, 1430.0, 445.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(603, 'veeshan', 0, 'VECOINS101', 550.0, 1451.0, 260.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(604, 'veeshan', 0, 'VEDRSTAT101', 574.0, 1475.0, 260.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(605, 'veeshan', 0, 'VECOINS101', -572.8, 1158.6, 683.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(606, 'veeshan', 0, 'VEDRSTAT101', -548.8, 1182.6, 683.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (607, 'veeshan', 0, 'VECOINS101', -208.0, 308.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (608, 'veeshan', 0, 'VEDRSTAT101', -184.0, 332.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(609, 'veeshan', 0, 'VECOINS101', 1196.9, 1324.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(610, 'veeshan', 0, 'VEDRSTAT101', 1220.9, 1348.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(611, 'veeshan', 0, 'VECOINS101', -1325.5, -1167.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(612, 'veeshan', 0, 'VEDRSTAT101', -1301.5, -1143.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(609, 'veeshan', 0, 'VECOINS101', 1196.9, 1324.4, 763.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(610, 'veeshan', 0, 'VEDRSTAT101', 1220.9, 1348.4, 763.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(611, 'veeshan', 0, 'VECOINS101', -1325.5, -1167.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(612, 'veeshan', 0, 'VEDRSTAT101', -1301.5, -1143.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (601, 'poair', 0, 'POTRANQROCK505', -1205.0, 465.0, 6.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
 (602, 'poair', 0, 'POTRANQROCK505', 1456.0, -652.0, 16.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
 (603, 'poair', 0, 'POTRANQROCK505', 1455.0, -533.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
@@ -47269,5 +47269,80 @@ SELECT 1 FROM DUAL HAVING (SELECT COUNT(*) FROM reward_sources WHERE source_type
 ) LIMIT 1;
 )SLAYER330",
 		.content_schema_update = false,
+	},
+
+	// "Throne of the First Brood" - NetHack thrones in veeshan (v331).
+	// The lair thrones are unclickable statics, so each gets a trigger DOOR
+	// beside it rendered as VEBRAZ101 (royal brazier - zone-native model,
+	// proven clickable; invisible/unknown-model doors have no click geometry
+	// on this client, live-tested 2026-11-03). Throne handlers live in
+	// quests/veeshan/player.pl (curio_throne): the NetHack throne table
+	// adapted to clicking - 2/3 nothing ("out of place" / "very comfortable"
+	// once crowned via Crown of King Tranix + the curio_crowned bucket),
+	// 1/3 a fate from the adapted table of 11 (NO wishes, NO genocide - the
+	// throne only threatens: insight/much-better/see-invis/attribute-up/
+	// 15%-HP tithe/electric shock/10% gold tithe/royal court summon/curse/
+	// wrenching lair teleport/pretzel). Door 630 = Phara Dar's Queen Throne
+	// running the Vlad's Throne homage: a pure curse table (level drain, a
+	// bad experience sitting on a throne; grease stun; Torbas' Acid Blast
+	// 1415 acid drench - can kill, "an acidic chair"; demon-summon; bless/
+	// curse; forced lair teleport).
+	// Z = LAIR FLOOR (trash-mob spawn2 z near the boss - bosses hover: Phara
+	// Dar's floor is ~280.5 while her body is at 299.9; doors authored at
+	// boss z floated at her neck). Royal-seat offsets are boss-adjacent;
+	// final alignment to the statics is done in-game with #door edit.
+	// Doorids 621 Druushk, 622 Hoshkar, 623 Nexona, 624 Silverwing, 625
+	// Xygoz, 630 Queen Throne. Band 613-640 verified empty at authoring
+	// (stock max doorid 239, v316 traps 601-612). Gate Custom:CurioTraps,
+	// shared curio_cd 120s cooldown, GM wink.
+	// Twin: utils/sql/20261104_throne_of_the_first_brood_v331.sql (keep in sync).
+	ManifestEntry{
+		.version = 331,
+		.description = "20261104_throne_of_the_first_brood_v331",
+		.check = "SELECT doorid FROM doors WHERE zone = 'veeshan' AND doorid = 621 AND name = 'VEBRAZ101' LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"THRONE331(
+SET NAMES utf8mb4;
+
+INSERT IGNORE INTO doors (doorid, zone, version, name, pos_x, pos_y, pos_z, heading,
+                          opentype, lockpick, keyitem, door_param, size,
+                          client_version_mask, close_timer_ms, min_expansion, max_expansion) VALUES
+(621, 'veeshan', 0, 'VEBRAZ101', -220.6, 1433.0, 445.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(622, 'veeshan', 0, 'VEBRAZ101', 547.0, 1478.0, 260.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(623, 'veeshan', 0, 'VEBRAZ101', -575.8, 1185.6, 683.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(624, 'veeshan', 0, 'VEBRAZ101', -211.0, 335.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(625, 'veeshan', 0, 'VEBRAZ101', 1193.9, 1351.4, 763.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(626, 'veeshan', 0, 'VEBRAZ101', -1313.5, -1180.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(630, 'veeshan', 0, 'VEBRAZ101', -1338.5, -1170.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1);
+)THRONE331",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// 332: Vex Thal Lucid Shard drop-rate floor. Live feedback 2026-11-04:
+	// the Scepter of Shadows grind is too slow. All 10 shards (22185-22194)
+	// are plain lootdrop_entries.chance values; the 100 shard entries ranged
+	// 1.2%-100% (most 5-35%), 95 of them under 50. Raise the floor to 50:
+	// only rows BELOW 50 move (95 rows), entries already at/above 50 are
+	// untouched. Idempotent via the chance < 50 guard. Pure rate tuning -
+	// no item rows, no scripts; takes effect on zone restarts of the shard
+	// zones. Twin: utils/sql/20261104_vt_shard_rates.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 332,
+		.description = "20261104_vt_shard_rates",
+		.check = "SELECT COUNT(*) FROM `lootdrop_entries` WHERE `item_id` BETWEEN 22185 AND 22194 AND `chance` < 50",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"(
+-- Vex Thal Lucid Shard drop-rate floor (2026-11-04): raise every shard lootdrop entry
+-- below 50% to exactly 50%. Guarded: only raises, never lowers; idempotent.
+SET NAMES utf8mb4;
+UPDATE `lootdrop_entries`
+SET `chance` = 50
+WHERE `item_id` BETWEEN 22185 AND 22194
+  AND `chance` < 50;
+)",
 	},
 };

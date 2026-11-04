@@ -1,12 +1,18 @@
 # Plane of Air - "The Hoard Remembers" curio click-traps (migration v316).
-# Invisible OBJ_CURIO_TRAP trigger doors sit on the floating crystal
-# pedestals (601-608) and the bookcases (609-611). The crystals roll the
-# terrible things: doomseeker adds, Color Cloud AOE paralyze, a buff wipe,
-# the Drunken Stupor brew spell, or the divine rage of Xegony. The bookcases
-# really do send you back to the Plane of Knowledge - landing in the library,
-# next to Grand Librarian Maelin. The stock Xegony rainbow (door 1) and its
-# relock timer below are untouched.
-# Gate: Custom:CurioTraps; per-char 120s cooldown; GMs are spared.
+# ONLY our curio props react, nothing else in the zone:
+#   - floating crystals: doors 601-608 (POTRANQROCK505, size 40) on the
+#     doomseeker/Nilborien island clusters
+#   - bookcases: doors 609-611 (POAFLYBK502, the flying book) - these really
+#     do file you back to the Plane of Knowledge, landing in the library next
+#     to Grand Librarian Maelin
+# Deliberately NOT trapped (stock, load-bearing): door 1 = the Xegony rainbow
+# (keyed, handled above), door 2 = the flying book EXIT porter to
+# potranquility (dest_zone set - never trap a working exit), door 21 = the
+# tranquility rock pad.
+# Crystal clicks roll the terrible things: doomseeker adds, Color Cloud AOE
+# paralyze, a buff wipe, the Drunken Stupor brew spell, or the divine rage of
+# Xegony.
+# Gate: Custom:CurioTraps; per-char 120s cooldown; GMs get the wink.
 
 sub EVENT_CLICKDOOR {
   if($doorid == 1) {
@@ -32,7 +38,9 @@ sub EVENT_TIMER {
 }
 
 sub curio_click {
-  return if ($doorid < 601 || $doorid > 611);
+  # Guard: the whitelist IS the trap. Doors 1, 2 and 21 (rainbow, exit book,
+  # tranquility pad) are stock and never react here.
+  return unless ($doorid >= 601 && $doorid <= 611);
   return if (quest::get_rule("Custom:CurioTraps") ne "true");
   if ($client->GetGM()) {
     $client->Message(15, "The hoard respects its makers. Door $doorid felt your touch and spared you.");

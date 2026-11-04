@@ -8,16 +8,22 @@
 -- 7536, port-to-poair, and bookcase port-to-PoK).
 --
 -- The props themselves are static zone mesh (object table is empty for both
--- zones), so the traps are trigger DOORS placed on the prop clusters
--- (anchored on lair boss / crystal-room NPC coords). Door models are
--- zone-native and VISIBLE on purpose: doors whose model name the client
--- cannot resolve have no click geometry (live-tested 2026-11-03: a player
--- clicking all over Xygoz's lair against invisible-model doors produced no
--- OP_ClickDoor at all), so each trap renders as a real, clickable curio -
--- VP treasure piles use VECOINS101, statues/shelves use VEDRSTAT101;
--- poair crystals use POTRANQROCK505 at size 40, bookcases use POAFLYBK502
--- (the flying book). All are models the zone's own doors already render,
--- so the client provably has them.
+-- zones), so the traps are trigger DOORS placed on the prop clusters (veeshan
+-- anchored on lair-boss coords, poair on crystal-room NPC coords). Door
+-- models are zone-native and VISIBLE on purpose: doors whose model name the
+-- client cannot resolve have no click geometry (live-tested 2026-11-03: a
+-- player clicking all over Xygoz's lair against invisible-model doors sent no
+-- OP_ClickDoor at all), so each trap renders as a real, clickable curio.
+--
+-- Z-LEVELS: lair floors, NOT boss body z - bosses hover (Phara Dar's body is
+-- at z 299.9 while her floor props sit at ~280; doors authored at boss z
+-- floated at her neck). Floor z per lair = trash-mob spawn2 z near the boss:
+-- Druushk 445, Hoshkar 260, Nexona 683, Silverwing 465.5, Xygoz 763,
+-- Phara Dar 280.5.
+--
+-- ALSO NOTE: VP's stock data already ships clickable curio doors in Phara
+-- Dar's lair (doors 162-184 coins/jewels, 195-204 boxes, 205-206 statues) -
+-- those are whitelisted in quests/veeshan/player.pl and need no DB rows.
 --
 -- Door bands: veeshan existing max doorid = 239; poair existing max = 22
 -- (plus a duplicated stock doorid 1; the duplicate rows differ in `version`)
@@ -43,18 +49,18 @@ SET NAMES utf8mb4;
 INSERT IGNORE INTO doors (doorid, zone, version, name, pos_x, pos_y, pos_z, heading,
                           opentype, lockpick, keyitem, door_param, size,
                           client_version_mask, close_timer_ms, min_expansion, max_expansion) VALUES
-(601, 'veeshan', 0, 'VECOINS101', -217.6, 1406.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(602, 'veeshan', 0, 'VEDRSTAT101', -193.6, 1430.0, 457.8, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(603, 'veeshan', 0, 'VECOINS101', 550.0, 1451.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(604, 'veeshan', 0, 'VEDRSTAT101', 574.0, 1475.0, 289.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(605, 'veeshan', 0, 'VECOINS101', -572.8, 1158.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(606, 'veeshan', 0, 'VEDRSTAT101', -548.8, 1182.6, 689.4, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(601, 'veeshan', 0, 'VECOINS101', -217.6, 1406.0, 445.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(602, 'veeshan', 0, 'VEDRSTAT101', -193.6, 1430.0, 445.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(603, 'veeshan', 0, 'VECOINS101', 550.0, 1451.0, 260.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(604, 'veeshan', 0, 'VEDRSTAT101', 574.0, 1475.0, 260.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(605, 'veeshan', 0, 'VECOINS101', -572.8, 1158.6, 683.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(606, 'veeshan', 0, 'VEDRSTAT101', -548.8, 1182.6, 683.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (607, 'veeshan', 0, 'VECOINS101', -208.0, 308.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (608, 'veeshan', 0, 'VEDRSTAT101', -184.0, 332.0, 465.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(609, 'veeshan', 0, 'VECOINS101', 1196.9, 1324.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(610, 'veeshan', 0, 'VEDRSTAT101', 1220.9, 1348.4, 779.6, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(611, 'veeshan', 0, 'VECOINS101', -1325.5, -1167.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
-(612, 'veeshan', 0, 'VEDRSTAT101', -1301.5, -1143.2, 299.9, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(609, 'veeshan', 0, 'VECOINS101', 1196.9, 1324.4, 763.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(610, 'veeshan', 0, 'VEDRSTAT101', 1220.9, 1348.4, 763.0, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(611, 'veeshan', 0, 'VECOINS101', -1325.5, -1167.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
+(612, 'veeshan', 0, 'VEDRSTAT101', -1301.5, -1143.2, 280.5, 0, 58, -1, 0, 0, 100, 4294967295, 5000, -1, -1),
 (601, 'poair', 0, 'POTRANQROCK505', -1205.0, 465.0, 6.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
 (602, 'poair', 0, 'POTRANQROCK505', 1456.0, -652.0, 16.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
 (603, 'poair', 0, 'POTRANQROCK505', 1455.0, -533.0, 46.4, 0, 58, -1, 0, 0, 40, 4294967295, 5000, -1, -1),
