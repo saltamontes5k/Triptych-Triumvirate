@@ -403,3 +403,317 @@ resolved that session.
   probeless build waiting to be swapped in; live `dinput8.dll` — last probe build.
 - This file is uncommitted; commit or move it as desired. It contains nothing that
   violates the push-hygiene rules.
+
+## 8. Draw-path map — 2026-11-04 static pass
+
+Added after a full static sweep of the paint path plus one live field capture. 8.1 and 8.6 exist to
+stop the next session re-running dead ends; 8.3 and 8.5 are the new instrument and the new procedure.
+
+### 8.1 Correction to the §4 table, and a dead end
+
+- The Manage CanShow slot is `vt+220 = static **0x747E50**`, not 0x749E50 (digits transposed).
+  0x749E50 lands mid-body in `sub_749CD0` (a tab-page refresh routine), which is why "not yet
+  decompiled" produced nonsense. The probe's runtime read `slot220=0x00997E50` was correct all
+  along; only the transcription was wrong.
+- **CanShow is satisfied and is a dead end.** `sub_747E50` reads `RE[+152]`, hashes it against the
+  plot map at RE+4/+8, requires the hit's first dword to be non-null, then calls `loc_747740` and
+  returns 1. On failure it emits eqstr 727 via `sub_51F1A0` and returns 0. Because OnShow
+  (`sub_740960`) only runs *after* +406 is set, and OnShow is what raises the tips popup the operator
+  sees, CanShow demonstrably returned 1 in the failing flow.
+
+### 8.2 The paint chain (static, imagebase 0x400000)
+
+- Frame driver `sub_53CCA0` calls `sub_877600` with `ecx = dword_15D3D00` (the UI manager). The call
+  is guarded by `dword_D1F3B8 != 3` and one local flag.
+- `sub_877600` walks the manager draw array at manager+0x14 (count) / manager+0x18 (`CXWnd*` array):
+  - `Id(wnd)` is just `*(wnd+372)` — the **owner**. owner == 0 → eligible to draw; owner != 0 →
+    eligible only if `*(wnd+0x120) >= 1000`, otherwise skipped for that frame.
+  - then requires `wnd[406] != 0` **and** `(*(mgr->vt+0xC))(mgr, wnd)`.
+  - then calls `sub_868A10(wnd)`. The whole loop is skipped when `*(mgr+0x104) != 0`.
+- `sub_868A10(wnd)` — per-window draw, in order:
+  1. `if (!wnd[406]) return 0;` — visible
+  2. `if (wnd[34]) sub_8680B0(wnd, &clip);` — **recompute clip into wnd+136..+148**
+  3. `if (wnd[431]) return 0;` — **clip is empty ⇒ nothing draws at all**
+  4. `wnd[432]` (draw mode): == 1 → require `(vt+32)(wnd) >= 0`; == 2 → extra rect path; else straight on
+  5. `vt+8 >= 0 && vt+12 >= 0`, a 0x200 ms hover/blink test, `sub_868BA0(wnd) >= 0`
+  6. `(vt+16)(wnd)` — this is `DrawSelf`, and it is the `0x4A1780` (`return 0`) **stub** in both the
+     Manage and Neighborhood vtables. It is not the painter; a successful vt+16 is not evidence of pixels.
+- `sub_8680B0` computes clip = window rect ∩ owner rect (`sub_66F620`), else the window rect via
+  `sub_8638D0`; then **sets `wnd[431]` = (all four clip components == -1)** and clears `wnd[34]`.
+- `sub_868BA0` = draw children: walks `wnd+0x10` (first child) then `child[2]` (next sibling) with the
+  same gates per child, plus `if (wnd[462]) return 0;` and the alpha handling — style&0x800 →
+  global alpha = `wnd[25]`; `wnd[413]` → global alpha = alpha * `wnd[376]` / 255.
+- `vt+8 = sub_86A000` paints the window's own frame/fill from the style bits at +132.
+- Manage vtable = `off_9F8600`; byte offsets: 8→0x86A000, 12→0x4A1780 stub, 16→0x4A1780 stub,
+  152→0x740960 OnShow, 216→0x7409D0 Show, 220→0x747E50 CanShow, 224→0x7409A0 (returns 1),
+  288→0x8660E0 Move, 352→0x868440 invalidate/flush.
+- **Manage vs Neighborhood vtable diff is only slots 1, 136, 140, 152, 196, 216, 220, 224, 360** — none
+  of them a paint routine. The paint path is 100% shared, so the bug is *state at draw time*, not a
+  wrong virtual.
+
+### 8.3 New instrument: +34 and the clip rect are a built-in "was Draw ever called" probe
+
+`sub_8680B0` clears +34 and writes +136..+148, so the object itself records whether the draw loop has
+ever reached it:
+
+| observation | meaning |
+|---|---|
+| `wnd[34] == 1` and clip == (0,0,0,0) | never drawn since the last invalidate |
+| `wnd[34] == 0` and clip == window rect | Draw ran; clip == (0,25,605,465) for Manage |
+
+Live baseline, 2026-11-04 14:30, client at char select with all four RealEstate windows created:
+
+```
+MANAGE vis=0 vis2=0 clipEMPTY=0 dirty34=1 alpha=255 fade=1 mode=1 noch=0 clip=(0,0,0,0) rect=(0,25,605,465) style=0x00010A4C owner=0
+NEIGHB vis=0 vis2=0 clipEMPTY=0 dirty34=1 alpha=255 fade=1 mode=1 noch=0 clip=(0,0,0,0) rect=(246,369,926,725) style=0x00010A4C owner=0
+PLOT   same shape, rect=(551,352,1051,587)
+ITEMS  same shape, rect=(400,400,862,920)
+```
+
+At rest the four windows are **identical on every draw-relevant field**. The pre-show state does not
+discriminate; whatever breaks only appears once the window is shown. That kills "alpha is 0",
+"owner clips it away" and "wrong draw virtual" as at-rest explanations.
+
+### 8.4 Who shows and who hides `dword_D1FCBC`
+
+Show (`vt+216 = 0x7409D0` → `0x865290`):
+
+- `sub_4E4E60` — the `manage` / `trophies` / `plot` / `items` command; `Show(visible == 0, 1, 1)`, a toggle.
+- `sub_537D30` — auto-show when a nearby spawn has `[spawn+38] == 0xA1` and the player is inside
+  `[playerCtx+79*4 float] + 20.0`, only when `!wnd[406]`. This is the expected "walk onto the lot" popup.
+- `sub_5B2500` — packet opcode **17854 (0x45BE)** with a non-zero payload byte → `Show(1,1,1)`.
+
+Hide:
+
+- `sub_4E4E60` again (the toggle).
+- **`sub_627760`** (vtable `0x9E2570`, a companion window's show/hide handler). On show it records
+  `wnd[557] = Manage[406]`; on hide it runs `if (!wnd[557] && dword_D1FCBC) Show(Manage, 0, 1, 1)` —
+  **it force-hides Manage when it closes, unless Manage was already up when it opened.** Besides the
+  toggle this is the only explicit "hide Manage" site in the binary, and it can close the window a few
+  seconds after it opens. Identifying the owner of vtable `0x9E2570` is the next static step.
+
+### 8.5 Preferred procedure from here: an external sampler, not a DLL
+
+`C:\EQS\tools\wndsampler.ps1` reads the live client through `ReadProcessMemory` only — **no rebuild,
+no deploy, no client restart**, which removes the entire probe-build cycle from §5 from the loop. It
+resolves the module base itself, re-resolves the window pointers every 60 ms and appends a line only
+when state changes, so a one-frame visibility blip is caught.
+
+Per window it reports `vis(+406) vis2(+468) clipEMPTY(+431) dirty34(+34) alpha(+376) fade(+413)
+mode(+432) noch(+462) +288 clip rect rect style owner(+372) piece(+0x1E0) child(+0x10)`, plus
+`drawlist=` — whether that window pointer is inside the manager array at `dword_15D3D00` +0x14/+0x18.
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File C:\EQS\tools\wndsampler.ps1
+# env WNDSCAN_SEC overrides the 2 h default; output goes to C:\EQS\tmp\wndscan.log
+```
+
+Run it, log in, stand on the owned lot, press Manage, then read the log:
+
+- `drawlist=inlist@N/M` and dirty34 flipping 1→0 with a non-empty clip ⇒ **Draw is called**; the failure
+  is inside the paint, so the next stop is `sub_868BA0` / `sub_86A000` with the clip values in hand.
+- `drawlist=NOTINLIST` ⇒ the window never enters the draw array — a registration bug, not a paint bug.
+  Then diff the `sub_5B9E30` registration against Neighborhood and find what fills manager+0x18.
+- `vis` never observed at 1 ⇒ it is shown and re-hidden between frames; chase §8.4's hide path, the
+  `sub_627760` companion first.
+
+The old probe could not answer any of this: it sampled every 5 s from the render thread and had no
+concept of the draw array, so a one-frame show/hide was invisible to it.
+
+### 8.6 Ruled out by this pass
+
+- CanShow (§8.1).
+- Owner/parent clipping: `owner(+372) == 0` on all four windows, so the parent-clip branch of
+  `sub_8680B0` is not taken at rest.
+- Alpha 0 / faded out: `+376 == 255` and `+413 == 1` at rest, so the global alpha evaluates to 255.
+- Wrong draw virtual: the paint vtables are identical between Manage and the working Neighborhood window.
+- `vt+16` as the painter: it is the base `return 0` stub; do not detour it expecting pixels.
+- The "second visible byte" (+468) is simply a copy of +406 — both are written by `0x865290`.
+
+### 8.7 Live result, 2026-11-04 14:50-14:55 — the window is not invisible, it is closed
+
+This section replaces the premise of §1. The Manage window renders correctly. What actually happens is
+that the client hides it again within milliseconds of every show, so it is never visible at draw time.
+Everything in §8.2-§8.6 about paint gates describes a path that is never reached for other reasons.
+
+Evidence, in the order it was taken (all against the live client, read-only unless stated):
+
+1. **State sampler** (`tools/wndsampler.ps1`, 60 ms, change-triggered): over ~5 minutes spanning the
+   zone-in and the operator's click, **zero samples with `vis=1`**. Consistently
+   `vis=0 dirty34=1 clip=(0,0,0,0) drawlist=inlist@776/1047` — in the draw array, never painted.
+2. **CanShow evaluated live**: `RE+152=19`, table modulus 20011, `bucket[19]` head `0x30C03FA8`,
+   node found at hop 0, `value=0x30E55400` non-null ⇒ `sub_747E50` returns 1. The show gate is open.
+3. **Flash catcher** (`tools/flashcatcher.ps1`, max-rate poll of +406): exactly two transitions per
+   click, each show/hide pair **1 ms apart** —
+   `14:51:52.021 vis=1` → `14:51:52.022 vis=0`, and `14:52:06.154` → `14:52:06.155`.
+   The window is shown and re-hidden inside a single millisecond.
+4. **Forced visibility**: writing `+406=+468=1` from outside gets reverted in 0-104 ms, repeatedly
+   (samples: 21, 3, 0, 4.97, 4, 2.06, 12, 5, 1, 42, 99, 104 ms) — a continuous or ~10 Hz re-hide,
+   not a one-shot.
+5. **The re-hide is Manage-specific.** The identical write to Neighborhood, Items and PlotSearch
+   **sticks** (all three still visible after the 400 ms measurement window). Only `dword_D1FCBC` is
+   killed.
+6. **Rendering is fine.** Holding `vis=1` in a tight loop (26,776 writes over 2 s) produced
+   `dirty34=0` and `clip=(0,25,605,465)` — i.e. `sub_8680B0` ran, the clip equals the full window
+   rect, and the paint path executed normally. Nothing was clipped, faded or skipped.
+7. **The hide does not go through `HideSelf`.** `0x740940` (`vt+360`, Manage-only) was patched live
+   to `ret`; the re-hide continued unchanged (95, 3.97, 98 ms). The caller invokes Show(0)
+   (`0x7409D0` → `0x865290`) directly. The byte was restored and verified afterwards.
+8. **Only writer of +406 is `sub_865290`.** A full byte-pattern scan of image writes to `[reg+196h]`
+   returns exactly 7 sites: `0x8653D5` (in `sub_865290`) and six in buff/spell-effect initialisers and
+   item classes that only touch their own arrays. So the window cannot be "un-visible" except through
+   a Show(0) call.
+9. **Not the tips window.** `dword_F758C4` (`vt 0x9FCDD8`, rect `1560,358,1714,378` — matches the
+   small ctx bar in the screenshot) had `vis=0` throughout the periods when Manage was being re-hidden.
+
+Conclusion: the defect is a **Manage-only re-hide loop**, not a rendering defect. Two callers are known
+to hide this window (`sub_4E4E60` toggle, `sub_627760` companion, and the latter's vtable
+`0x9E2570` has no instance in session), but neither explains a continuous re-hide with no input, so a
+third caller exists that reaches the window by a path that does not reference `dword_D1FCBC`.
+
+Next steps, in order:
+
+1. Identify the caller by hooking `0x7409D0` (or `0x865290`) in a probe build and logging the return
+   address of every a2==0 call. This is the one measurement that ends the hunt; it needs a client
+   restart, unlike everything in §8.5.
+2. Cheap trigger tests before that: (a) rename `dinput8.dll` out of the way and try Manage — the
+   addon hooks DirectInput, and two dispatches of one click would explain the 1 ms show/hide pair
+   exactly, since `sub_4E4E60` is a toggle; (b) close every context/menu window first, then test,
+   to see whether the re-hide needs menu state.
+3. Only after the caller is known: decide whether the fix is client (XML/ini), addon (input), or
+   server (a packet that drives the hide).
+
+### 8.8 ROOT CAUSE — the Manage window is closed by its own per-frame update (2026-11-04 15:31)
+
+Found with an in-process trace hook on `sub_865290` (the only writer of `+406`), capturing the
+return address, the `a2` argument and `this`. Filtered to the Manage window, there is exactly one
+hider:
+
+```
+MANAGE a2=0 caller static=0x00748212   -> inside sub_748180, Manage's vtable+196 virtual
+```
+
+`sub_748180` runs while the window is up and hides it when its estate check fails:
+
+```c
+if (*(BYTE*)(this + 406)) {                       // only while visible
+  re  = sub_5B3540();                             // RealEstate state manager
+  v3  = re[38];                                   // +0x98 = +152, the current plot id
+  if (v3 == -1) { Show(this, 0, 1, 1); }          // hide
+  ... plot map lookup for v3 ...
+  if (!*v5 || !sub_5B41D0(*v5)) {                 // hide
+      Show(this, 0, 1, 1);
+      return sub_865F20(this);
+  }
+}
+```
+
+`sub_5B41D0` is the predicate `CanShow` (`sub_747E50`) does **not** check — that is the whole
+discrepancy: `CanShow` only requires the plot-map entry to be non-null, so the window opens for one
+frame, and then this updater closes it because the *estate record* fails validation:
+
+```c
+type = sub_7F4FA0(re + 0x74, estate[8]);          // definition-table lookup, 10 = not found
+return (type == 4 && estate[11] && *(estate[11] + 8))   // personal plot: owner record present
+    || (type == 8 && estate[9] != -1);                  // guild plot: guild id set
+```
+
+with `sub_7F6270(x) == (x == 4)`, `sub_7F6280(x) == (x == 8)`, and `sub_7F4FA0` walking the table
+at `RE+0x74` (bucket at +4, modulus at +8, node key at +0x6C, type at +0x3C, default 10).
+
+Consequences that match every observation:
+
+- **Neighborhood**: plot id resolves and the entry exists (so `CanShow` passes), but the definition
+  lookup does not yield 4 or 8, or the owner/guild field is unset, so the updater hides the window
+  within a frame or two. Foreground showed exactly that: visible 1 ms, then `+406 = 0`, and forcing
+  `+406 = 1` gets reverted in 0-104 ms.
+- **Veeshan's Peak**: there is no housing state, the updater never runs, so the window stays open
+  indefinitely. The operator confirmed this behaviour in play.
+- Plot Search uses the same pattern, which is why it "auto-closes" only in a neighborhood.
+
+Next step is a one-shot live evaluation, not more reverse engineering: `tools/predeval_manage_predicate.ps1`
+reproduces the whole predicate from outside the process and prints the definition id, the resolved
+type, `estate[+0x24]`, and the `estate[+0x2C]` owner pointer, so it names the exact field the server
+must populate. Run it while standing on the owned lot.
+
+The fix will be server-side in `nms_housing.cpp` — the 0x796c inspection reply and/or the state that
+builds the client's estate record has to make `sub_5B41D0` true. Nothing in the client XML, the skin
+or the draw path is implicated; §8.2-§8.7 stand as proof that rendering was never the problem.
+
+#### 8.8.1 Confirmed against live data (2026-11-04 15:36)
+
+`tools/predeval_manage_predicate.ps1` reproduced the predicate from outside the process while the
+operator stood on the owned lot:
+
+```
+plot(RE+152)=19   estate=0x44D532C0
+  estate+0x20 (definition id) = 519
+  estate+0x24 (guild_id)      = -1
+  estate+0x2C (owner record)  = 0
+  definition 519 resolves to type = 8
+  PREDICATE sub_5B41D0 = False
+```
+
+`+0x20/+0x24` are exactly `EstateSnapshot::definition_id` and `EstateSnapshot::guild_id`
+(`nms_housing.cpp` 1702-1718, serialized at 1720-1747). The check fails on the type-8 branch because
+`guild_id == 0xFFFFFFFF`.
+
+#### 8.8.2 Why the data is inconsistent
+
+`nms_housing.cpp` 447-453 defines the estate kinds, and 1894 registers **every** plot with
+`kRealEstateKindPlot = 8`:
+
+```
+kRealEstateKindNeighborhood = 5
+kRealEstateKindHouse        = 4
+kRealEstateKindPlot         = 8
+```
+
+Meanwhile the single-plot inspection reply (line 888) sends `plot_type == 1 ? 8 : 4` — i.e. 4 for a
+personal plot. The client validates the Manage gate against the **definition** type (8), not the
+inspection type, and its type-8 branch demands a guild id. A personal plot has none, so the snapshot
+writes `0xFFFFFFFF` (line 2009) and the window is closed every frame.
+
+In Veeshan's Peak there is no housing state, so `sub_748180` never runs and the window stays open —
+matching the operator's observation exactly.
+
+
+#### 8.8.4 Applied 2026-11-04 15:47 (built, not yet live)
+
+Option 2 shipped, plus the unrelated exterior-visibility fix the operator reported (another player
+zoned in could not see the house):
+
+- `SendRealEstateInspection` and `SendRealEstatePlotObjects`: `guild_id` is now **0** rather than
+  `0xFFFFFFFF` when a plot has no guild, so the client's `sub_5B41D0` type-8 branch
+  (`guild_id != -1`) passes. `0xFFFFFFFF` was our own convention; the client reads it as "absent".
+- `SendRealEstateExteriors`: the ownership filter came off the query, so every client entering a
+  neighbourhood receives every placed building, not only its own. Previously a house was visible
+  only to its owner, which is why a summoned character arrived to an empty lot.
+
+Option 1 (registering personal plots as `kRealEstateKindHouse`) was **not** applied: its branch in
+`sub_5B41D0` requires `estate[+0x2C]` to be a non-null owner record with a non-zero field at +8, and
+the live object had `+0x2C == 0`. Changing the type without seeding that record would only move the
+failure, so the change was kept to the single dword that the client actually tests.
+
+Build: `rebuild_server.bat` green, `Build/bin/Release/zone.exe` relinked 15:47. Not live until the
+zone processes restart. Retest after restart: Manage window should stay up and paint; Plot Search
+uses an analogous updater and is unverified until then.
+
+#### 8.8.3 Fix options
+
+1. **Make the definition type match the inspection type.** In the owned-plot loop (line 1894), set
+   `plot.type = plot_type == 1 ? kRealEstateKindPlot : kRealEstateKindHouse`, so a personal plot is
+   registered as 4. The type-4 branch then requires `estate[+0x2C]` (owner record) to be non-null
+   with a non-zero field at +8 — currently 0, so this may need the owner/handle fields to seed it.
+   Principled, but two variables move at once.
+2. **Stop sending `0xFFFFFFFF` for "no guild".** Send 0 (`estate[+0x24] != -1`), at line 2009 and
+   the matching field in the inspection reply (line 895). One dword, verifiable in seconds, but it
+   tells the client the estate belongs to guild 0, which may surface in guild-oriented UI.
+
+Fastest confirmation, no rebuild: patch the live estate record's `+0x24` to 0 with
+`ReadProcessMemory`/`WriteProcessMemory` and force the window visible. If it then stays up and
+paints, option 2 is proven and option 1 can be evaluated afterwards on its merits.
+
+
+
+
