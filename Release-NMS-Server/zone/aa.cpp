@@ -1662,6 +1662,11 @@ void Client::PurchaseAlternateAdvancementRank(int rank_id) {
 		return;
 	}
 
+	if(!HasRoomForAlternateAdvancementAbility(rank)) {
+		Message(Chat::Red, fmt::format("You cannot learn more than {} different alternate abilities.", MAX_PP_AA_ARRAY).c_str());
+		return;
+	}
+
 	if(!CanPurchaseAlternateAdvancementRank(rank, true, true)) {
 		// Shroud AAs are buyable only while transformed; explain instead of
 		// failing silently when the window is used in a normal form.
@@ -2397,6 +2402,11 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 		return false;
 	}
 
+	// NMS: a brand-new ability needs a free slot in the client's AA list
+	if (IsClient() && !CastToClient()->HasRoomForAlternateAdvancementAbility(rank)) {
+		return false;
+	}
+
 	// You cannot purchase grant only AAs they can only be assigned
 	if (a->id == 17786) {
 		check_grant = false; // such a hack lol
@@ -3033,6 +3043,22 @@ bool Client::HasAlreadyPurchasedRank(AA::Rank* rank) {
 	}
 
 	return false;
+}
+
+// NMS: the client profile holds MAX_PP_AA_ARRAY AA entries, one per owned ability. Ranks of an
+// ability the character already owns reuse that ability's entry, so only brand-new abilities
+// need a free slot; without this check purchasing or granting past the limit corrupts the
+// profile and the OP_RespondAA packet.
+bool Client::HasRoomForAlternateAdvancementAbility(AA::Rank* rank) {
+	if (!rank || !rank->base_ability) {
+		return false;
+	}
+
+	if (aa_ranks.find(rank->base_ability->id) != aa_ranks.end()) {
+		return true;
+	}
+
+	return aa_ranks.size() < MAX_PP_AA_ARRAY;
 }
 
 void Client::ListPurchasedAAs(Client *to, std::string search_criteria)
