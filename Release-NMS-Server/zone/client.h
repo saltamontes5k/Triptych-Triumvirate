@@ -1050,6 +1050,7 @@ public:
 	const NmsWaypointsRepository::NmsWaypoints* GetWaypoint(int waypoint_id);
 	bool UnlockWaypoint(int32 waypoint_id);
 	bool UnlockWaypoint(std::string waypoint_shortname);
+	bool ForgetWaypoint(int32 waypoint_id);
 	void SendWaypointList(bool force = true);
 	void   SendLoNSession();               // OP_NMSLoNSession: card game token (zone/nms_lon_session.cpp)
 	void   SendRealEstateIdentity();       // OP_RealEstateZoneContext: tells the client it is standing in a neighborhood

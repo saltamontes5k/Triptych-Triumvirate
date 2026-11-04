@@ -128,6 +128,7 @@ void command_loc(Client *c, const Seperator *sep);
 void command_housing(Client *c, const Seperator *sep);
 void command_leaverealestate(Client *c, const Seperator *sep);
 void command_logs(Client *c, const Seperator *sep);
+void command_map(Client *c, const Seperator *sep);
 void command_makepet(Client *c, const Seperator *sep);
 void command_memspell(Client *c, const Seperator *sep);
 void command_merchantshop(Client *c, const Seperator *sep);

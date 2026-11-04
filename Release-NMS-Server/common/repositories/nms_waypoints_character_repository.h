@@ -48,6 +48,20 @@ public:
         return result.id > 0;
     }
 
+    // Remove a waypoint from a character
+    static bool RemoveWaypoint(Database& db, uint64 character_id, int32 waypoint_id) {
+        auto removed = DeleteWhere(
+            db,
+            fmt::format(
+                "character_id = {} AND waypoint_id = {}",
+                character_id,
+                waypoint_id
+            )
+        );
+
+        return removed > 0;
+    }
+
     // Get all waypoint IDs for a character
     static std::vector<int32> GetWaypointIds(Database& db, uint64 character_id) {
         std::vector<int32> waypoint_ids;

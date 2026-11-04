@@ -409,6 +409,7 @@ set(gm_command_sources
     gm_commands/lootsim.cpp
     gm_commands/loc.cpp
     gm_commands/logs.cpp
+    gm_commands/map.cpp
     gm_commands/makepet.cpp
     gm_commands/memspell.cpp
     gm_commands/merchantshop.cpp

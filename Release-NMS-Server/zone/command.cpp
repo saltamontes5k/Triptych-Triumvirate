@@ -173,6 +173,7 @@ int command_init(void)
 		command_add("housing", "Inspect and manage player housing plots", AccountStatus::GMAdmin, command_housing) ||
 		command_add("leaverealestate", "Leave a house interior and return to the neighborhood", AccountStatus::Player, command_leaverealestate) ||
 		command_add("logs", "Manage anything to do with logs", AccountStatus::GMImpossible, command_logs) ||
+		command_add("map", "[add|remove] [Zone Short Name|Expansion|all] - Unlock or remove waypoints for you or your target", AccountStatus::GMAdmin, command_map) ||
 		command_add("makepet", "[Pet Name] - Make a pet", AccountStatus::Guide, command_makepet) ||
 		command_add("memspell", "[Spell ID] [Spell Gem] - Memorize a Spell by ID to the specified Spell Gem for you or your target", AccountStatus::Guide, command_memspell) ||
 		command_add("merchantshop", "Closes or opens your target merchant's shop", AccountStatus::GMAdmin, command_merchantshop) ||

@@ -188,6 +188,28 @@ bool Client::UnlockWaypoint(int32 waypoint_id)
 	return added;
 }
 
+bool Client::ForgetWaypoint(int32 waypoint_id)
+{
+	bool removed = false;
+
+	if (AllowAccountWaypoints())
+	{
+		removed = NmsWaypointsAccountRepository::RemoveWaypoint(database, AccountID(), waypoint_id);
+	}
+	else
+	{
+		removed = NmsWaypointsCharacterRepository::RemoveWaypoint(database, CharacterID(), waypoint_id);
+	}
+
+	if (removed)
+	{
+		LogWaypointsDetail("Removing waypoint [{}] for [{}]", waypoint_id, GetCleanName());
+		m_unlocked_waypoints.clear();
+	}
+
+	return removed;
+}
+
 void Client::SendWaypointList(bool force)
 {
 	auto &all_waypoints = zone->GetAllWaypoints();
