@@ -14580,26 +14580,25 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 
 	EQ::ItemInstance* inst = database.CreateItem(item, charges);
 
-	int single_price = (item->Price * item->SellRate);
+	// compute the price in 64-bit: a high-price item times a large quantity can
+	// overflow 32-bit and wrap the echoed price (which is uint32) into a huge value
+	int64_t single_price = static_cast<int64_t>(item->Price) * static_cast<int64_t>(item->SellRate);
 
 	// Don't use SellCostMod if using UseClassicPriceMod
 	if (!RuleB(Merchant, UseClassicPriceMod)) {
-		single_price *= RuleR(Merchant, SellCostMod);
+		single_price = static_cast<int64_t>(static_cast<double>(single_price) * RuleR(Merchant, SellCostMod));
 	}
 
 	if (RuleB(Merchant, UsePriceMod) && tmp) {
-		single_price *= Client::CalcPriceMod(tmp, false);
+		single_price = static_cast<int64_t>(static_cast<double>(single_price) * Client::CalcPriceMod(tmp, false));
 	}
 
-	single_price = EQ::ClampLower(single_price, 1);
+	single_price = std::max<int64_t>(single_price, 1);
 
-	if (item->MaxCharges > 1) {
-		mpo->price = single_price;
-	} else {
-		mpo->price = single_price * mp->quantity;
-	}
+	int64_t total_price = (item->MaxCharges > 1) ? single_price : (single_price * static_cast<int64_t>(mp->quantity));
 
-	if (mpo->price < 0)	{
+	if (total_price < 1 || total_price > static_cast<int64_t>(0xFFFFFFFFLL)) {
+		// the total cannot be represented as copper in the purchase packet; refuse instead of wrapping
 		MessageString(Chat::White, ALREADY_SOLD);
 		safe_delete(outapp);
 		safe_delete(inst);
@@ -14607,10 +14606,12 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		return;
 	}
 
-	// this area needs some work..two inventory insertion check failure points
-	// below do not return player's money..is this the intended behavior?
+	mpo->price = static_cast<uint32_t>(total_price);
 
-	if (!TakeMoneyFromPP(mpo->price)) {
+	// this area needs some work..two inventory insertion check failure points
+	// below did not return player's money; reimburse on the way out
+
+	if (!TakeMoneyFromPP(static_cast<uint64_t>(total_price))) {
 		auto message = fmt::format(
 			"Vendor Cheat attempted to buy qty [{}] of item_id [{}] item_name[{}] that cost [{}] copper but only has platinum [{}] gold [{}] silver [{}] copper [{}]",
 			mpo->quantity,
@@ -14635,12 +14636,16 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		freeslotid = m_inv.FindFreeSlot(false, true, item->Size);
 	}
 
-	// shouldn't we be reimbursing if these two fail?
+	// the money is already taken at this point; give it back if nothing was delivered
+	auto refund_failed_purchase = [&]() {
+		AddMoneyToPP(static_cast<uint64_t>(total_price), true);
+	};
 
 	//make sure we are not completely full...
 	if (freeslotid == EQ::invslot::slotCursor) {
 		if (m_inv.GetItem(EQ::invslot::slotCursor) != nullptr) {
 			Message(Chat::Red, "You do not have room for any more items.");
+			refund_failed_purchase();
 			safe_delete(outapp);
 			safe_delete(inst);
 			return;
@@ -14649,6 +14654,7 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 
 	if (!stacked && freeslotid == INVALID_INDEX) {
 		Message(Chat::Red, "You do not have room for any more items.");
+		refund_failed_purchase();
 		safe_delete(outapp);
 		safe_delete(inst);
 		return;

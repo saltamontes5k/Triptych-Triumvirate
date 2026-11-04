@@ -1904,11 +1904,13 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 	// will say 11, but the client will have 1 left on their cursor, so we have
 	// to figure out the conversion ourselves
 
-	amount_to_add = amount_to_take * ((float)CoinTypeCoppers(mc->cointype1) / (float)CoinTypeCoppers(mc->cointype2));
+	// exact integer conversion: doing this in float silently loses coin once an
+	// amount exceeds float precision (~16.7 million)
+	amount_to_add = (amount_to_take * CoinTypeCoppers(mc->cointype1)) / CoinTypeCoppers(mc->cointype2);
 
 	// the amount we're adding could be different than what was requested, so
 	// we have to adjust the amount we take as well
-	amount_to_take = amount_to_add * ((float)CoinTypeCoppers(mc->cointype2) / (float)CoinTypeCoppers(mc->cointype1));
+	amount_to_take = (amount_to_add * CoinTypeCoppers(mc->cointype2)) / CoinTypeCoppers(mc->cointype1);
 
 	// now we should have a from_bucket, a to_bucket, an amount_to_take
 	// and an amount_to_add

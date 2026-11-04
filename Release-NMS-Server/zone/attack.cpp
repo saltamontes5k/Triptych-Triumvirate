@@ -2687,6 +2687,12 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 		LogAttackDetail("{} Mob{} currently aggroed.", zone->MobsAggroCount(), zone->MobsAggroCount() != 1 ? "s" : "");
 	}
 
+	// stop any in-flight cast: a corpse that completes its spell after death keeps
+	// "casting" from the grave (e.g. an Infectious Cloud ticking off a corpse)
+	if (IsCasting()) {
+		InterruptSpell();
+	}
+
 	ShieldAbilityClearVariables();
 
 	SetHP(0);

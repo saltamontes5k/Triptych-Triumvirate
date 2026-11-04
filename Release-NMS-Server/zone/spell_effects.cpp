@@ -2344,40 +2344,58 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				break;
 			}
 
-			case SE_SummonPC:
-			{
-				if (!caster) {
-					break;
-				}
-
-				if (IsClient()) {
-					if (caster->IsClient()) {
-						if (!entity_list.IsInSameGroupOrRaidGroup(caster->CastToClient(), CastToClient())) {
-							caster->MessageString(Chat::SpellFailure, TARGET_GROUP_MEMBER);
-							break;
-						}
-
-						// clear aggro when summoned in zone and further than aggro clear distance rule.
-						if (RuleR(Spells, CallOfTheHeroAggroClearDist) == 0 || caster->CalculateDistance(GetX(), GetY(), GetZ()) >= RuleR(Spells, CallOfTheHeroAggroClearDist)) {
-							if (RuleB(Spells, EvacClearCharmPet)) {
-								entity_list.ClearAggro(this, true);
-							} else {
-								entity_list.ClearAggro(this);
-							}
-						}
-					} else if (!RuleB(Combat, SummonMeleeRange) && caster->GetZoneID() == GetZoneID() && caster->CombatRange(this)) {
+				case SE_SummonPC:
+				{
+					if (!caster) {
 						break;
 					}
 
-					CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), caster->GetX(),
+					if (IsClient()) {
+						if (caster->IsClient()) {
+							if (!entity_list.IsInSameGroupOrRaidGroup(caster->CastToClient(), CastToClient())) {
+								caster->MessageString(Chat::SpellFailure, TARGET_GROUP_MEMBER);
+								break;
+							}
+
+							// clear aggro when summoned in zone and further than aggro clear distance rule.
+							if (RuleR(Spells, CallOfTheHeroAggroClearDist) == 0 || caster->CalculateDistance(GetX(), GetY(), GetZ()) >= RuleR(Spells, CallOfTheHeroAggroClearDist)) {
+								if (RuleB(Spells, EvacClearCharmPet)) {
+									entity_list.ClearAggro(this, true);
+								} else {
+									entity_list.ClearAggro(this);
+								}
+							}
+
+							CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), caster->GetX(),
 							       caster->GetY(), caster->GetZ(), caster->GetHeading(), 2,
 							       SummonPC);
-					MessageString(Chat::Spells, PLAYER_SUMMONED);
-				} else {
-					caster->Message(Chat::Red, "This spell can only be cast on players.");
+							MessageString(Chat::Spells, PLAYER_SUMMONED);
+						} else {
+							// an NPC summoning a player into its own position can embed the
+							// player in geometry when the NPC is off the floor; snap the
+							// destination to the ground and refuse the summon when the NPC
+							// position is not on a valid floor. Player casts (CoTH) keep the
+							// unrestricted behavior above.
+							float dest_x = caster->GetX();
+							float dest_y = caster->GetY();
+							float dest_z = caster->GetZ();
+							float ground_z = caster->FindGroundZ(dest_x, dest_y);
+
+							if (ground_z == BEST_Z_INVALID || std::fabs(ground_z - dest_z) > 50.0f) {
+								caster->Message(Chat::Red, "Your summon fails; the destination is not safe.");
+								break;
+							}
+
+							CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), dest_x,
+							       dest_y, ground_z, caster->GetHeading(), 2,
+							       SummonPC);
+							MessageString(Chat::Spells, PLAYER_SUMMONED);
+						}
+					} else {
+						caster->Message(Chat::Red, "This spell can only be cast on players.");
+					}
+					break;
 				}
-				break;
-			}
 
 			case SE_Silence:
 			{
