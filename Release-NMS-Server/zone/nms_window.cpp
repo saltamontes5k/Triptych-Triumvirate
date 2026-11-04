@@ -963,6 +963,10 @@ bool WindowManager::AddCanvasPiece(int window_id, int widget, int type, int x, i
 		case PieceText:
 		case PieceBanner:
 		case PieceLabel:
+		// the client reads a fallback label for icon pieces (it shows the text
+		// when <eqdir>\ItemIcons\<id>.png is missing); leaving it off the wire
+		// desyncs the frame payload and the widgets after it are dropped
+		case PieceIcon:
 			piece.Str(text);
 			break;
 		default:

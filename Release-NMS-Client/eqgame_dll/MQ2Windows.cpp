@@ -212,10 +212,11 @@ void InitializeMQ2Windows()
     DebugSpew("Initializing MQ2 Windows");
     WaypointsWnd::Initialize();
     VaultWnd::Initialize();
-    // queue the arcade/vault shell template at startup so the first Nautilus
-    // Vault open works without a /loadskin (EnsureShell only lazy-loads it,
-    // and a failed first attempt would bounce the player to /loadskin anyway)
-    AddXMLFile("NMS_ArcadeWnd.xml");
+    // NOTE: do not AddXMLFile("NMS_ArcadeWnd.xml") here - at startup the queued
+    // file is parsed by the LOGIN screen UI load, before the theme's draw
+    // templates exist (WDT_Filigree/BDT_SmallNormal undefined there), and the
+    // login parser throws "error in xml". The shell template is lazy-loaded on
+    // the first vault open instead (then /loadskin applies it).
 
     //extern PCHAR szItemSlot[];
 

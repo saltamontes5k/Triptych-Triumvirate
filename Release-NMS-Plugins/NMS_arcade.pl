@@ -137,6 +137,41 @@ sub top {
 
 sub client { my ($self) = @_; return $self->{you}; }
 
+# manual conveniences -------------------------------------------------------
+sub random { my ($self, $a, $b) = @_; return int($a) + int(rand($b - $a + 1)); }
+
+sub random_choice { my ($self, $list) = @_; return $list->[ int(rand(scalar @$list)) ]; }
+
+sub new_deck {
+	my @deck;
+	for my $suit ("h", "d", "c", "s") {
+		for my $rank (2 .. 10) { push @deck, { rank => $rank, suit => $suit }; }
+		for my $face ("J", "Q", "K", "A") { push @deck, { rank => $face, suit => $suit }; }
+	}
+	for my $i (reverse 1 .. $#deck) {
+		my $j = int(rand($i + 1));
+		@deck[ $i, $j ] = @deck[ $j, $i ];
+	}
+	return \@deck;
+}
+
+sub redraw { my ($self) = @_; $self->refresh(); }
+
+# set the status line under the play area
+sub game_status {
+	my ($self, $text) = @_;
+	my $client = $self->{you};
+	my $win = $self->{win_id};
+	return unless $client && $win && $client->NMSWindowIsOpen($win);
+	if (defined $self->{_status_widget} && $self->{_status_widget} >= 0) {
+		$client->NMSWindowSetProgress($win, $self->{_status_widget}, 0, defined $text ? "$text" : "");
+	}
+}
+
+sub message { my ($self, $text) = @_; $self->{you}->Message(15, "$text") if $self->{you}; }
+
+sub quit { my ($self) = @_; $self->{you}->NMSWindowClose($self->{win_id}) if $self->{you} && $self->{win_id}; }
+
 sub every {
 	my ($self, $ms, $fn) = @_;
 	push @{ $self->{_timers} }, { t0 => time(), ms => $ms, fn => $fn, rep => 1 };
@@ -359,7 +394,7 @@ sub arcade_rebuild {
 	return unless $client && $win && $client->NMSWindowIsOpen($win);
 
 	$client->NMSWindowClear($win);
-	$client->NMSWindowAddHeader($win, $inst->{title} // $inst->{key}, "gold");
+	# no auto header: games draw their own banner/title piece
 	$inst->{_canvas_widget} = $client->NMSWindowAddCanvas($win, $inst->{width}, $inst->{height});
 
 	$inst->{_status_widget} = -1;
@@ -540,6 +575,10 @@ sub arcade_start {
 	my %inst = %{ $template };   # shallow copy; games keep their own state rows
 	bless \%inst, 'NMSArcade';
 	$inst{you} = $client;
+	# manual: game.you.{name, level, class} auto-filled for games
+	$inst{you_name} = $client->GetName();
+	$inst{you_level} = $client->GetLevel();
+	$inst{you_classid} = $client->GetClass();
 	$inst{npc} = $npc;
 	$inst{npc_id} = $npc ? $npc->GetID() : 0;
 	$inst{key} = $template->{key} // $template->{title} // "game";

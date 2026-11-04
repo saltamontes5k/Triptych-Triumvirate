@@ -320,23 +320,6 @@ void Manager::OnPacket(void* buf, size_t size)
 				Widget wgt;
 				wgt.kind = kind;
 				wgt.same_line = same != 0;
-				{
-					// TEMP DEBUG: wire dump for vault panels
-					bool is_vault = false;
-					for (auto& e : m_wins) {
-						if (e.id == id && e.key.rfind("vault_", 0) == 0) { is_vault = true; break; }
-					}
-					if (is_vault) {
-						FILE* df = NULL;
-						fopen_s(&df, "vault_debug.txt", "a");
-						if (df) {
-							fprintf(df, "msg=%u id=%u idx=%u kind=%u same=%u rem=%zu\n",
-								msg, id, idx, kind, same, (size_t)(r.e() - r.p()));
-							fclose(df);
-						}
-					}
-				}
-
 				switch (kind) {
 					case NMSW_HEADER:
 					case NMSW_TEXT:
@@ -445,8 +428,8 @@ void Manager::EnsureShell(ArcadeWindow& win)
 	}
 
 	int open_count = static_cast<int>(m_wins.size());
-	int cascade_x = 120 + (open_count % 6) * 48;
-	int cascade_y = 100 + (open_count % 6) * 40;
+	int cascade_x = 560 + (open_count % 6) * 48;
+	int cascade_y = 120 + (open_count % 6) * 40;
 
 	ArcadeShellWnd* shell = new ArcadeShellWnd(&win);
 	win.shell = (CXWnd*)shell;
@@ -460,6 +443,9 @@ void Manager::EnsureShell(ArcadeWindow& win)
 	rc.top = cascade_y;
 	rc.right = cascade_x + w;
 	rc.bottom = cascade_y + h;
+
+	// size the frame to the requested content before it is ever painted
+	FitShell(win);
 
 	win.shell->Show(true, true);
 	win.relayout_needed = true;
@@ -507,11 +493,15 @@ void Manager::SendEvent(uint32_t id, uint8_t kind, uint16_t action, uint32_t val
 	SendEQMessage(NMSW_OP_EVENT, buf.data(), static_cast<DWORD>(buf.size()));
 }
 
+// The capability HELLO is idempotent server side (it only sets m_capable), so
+// it is re-sent rather than fired once: SetGameState(INGAME) can run before the
+// new zone's connection is up, and the 9 bytes are then dropped on the floor --
+// that zone process never marks the client capable, the vault falls back to the
+// legacy VAULTDATA window and the arcade answers "your client cannot draw
+// arcade windows". Only the first one chats.
 void Manager::SendHello()
 {
-	if (m_hello_sent) {
-		return;
-	}
+	const bool first = !m_hello_sent;
 	m_hello_sent = true;
 
 	std::vector<uint8_t> buf;
@@ -520,7 +510,10 @@ void Manager::SendHello()
 	buf.push_back((NMSW_DLL_VERSION >> 8) & 0xFF);
 	BytesOut(buf, NMSW_CAP_WINDOWS);
 	SendEQMessage(NMSW_OP_EVENT, buf.data(), static_cast<DWORD>(buf.size()));
-	WriteChatf("[Arcade] announcing window support to the server (v%d)", NMSW_DLL_VERSION);
+
+	if (first) {
+		WriteChatf("[Arcade] announcing window support to the server (v%d, build " __DATE__ " " __TIME__ ")", NMSW_DLL_VERSION);
+	}
 }
 
 void Manager::OnGameState(DWORD state)
@@ -534,10 +527,10 @@ void Manager::OnGameState(DWORD state)
 	}
 
 	// each zone process tracks window capability independently (WindowManager
-	// lives in the zone), so re-announce on every zone-in -- the 9-byte hello
-	// is cheap and idempotent server-side
-	m_hello_sent = false;
+	// lives in the zone), so re-announce on every zone-in -- and keep at it in
+	// Render, because this state change can precede the zone connection
 	SendHello();
+	m_next_hello = GetTickCount() + HELLO_INTERVAL_MS;
 }
 
 bool Manager::KeyCaptureActive() const
@@ -622,6 +615,15 @@ bool Manager::ClickWindow(ArcadeWindow& win, int sx, int sy)
 		return false;
 	}
 
+	// one-shot: proves clicks reach the shell and shows where they land, so a
+	// "nothing is clickable" report can be told apart from a hit-test miss
+	if (!win.click_logged) {
+		win.click_logged = true;
+		WriteChatf("[Arcade] click win %u at %d,%d (frame %d,%d, %d hits)",
+			win.id, wx, wy, static_cast<int>(rc.left), static_cast<int>(rc.top),
+			static_cast<int>(win.hits.size()));
+	}
+
 	// iterate hits back-to-front (draw order)
 	for (auto it = win.hits.rbegin(); it != win.hits.rend(); ++it) {
 		const HitRegion& h = *it;
@@ -658,6 +660,57 @@ bool Manager::ClickWindow(ArcadeWindow& win, int sx, int sy)
 // ---------------------------------------------------------------------------
 // layout
 // ---------------------------------------------------------------------------
+// Give the shell the size the wire asked for. The NMS_ArcadeShell template is
+// one fixed 400x320 frame, so without this every script window came out at the
+// template's size: blackjack (460x320) had its canvas squashed by the canvas
+// fit (min(1, w/cw, h/ch)), and coin_flip (320x250) sat in the top-left corner
+// of a much larger frame with its buttons jammed against the bottom edge.
+//
+// The frame keeps its chrome *inside* the rect it is given, so the shell is
+// sized to hold the requested drawing area plus that chrome:
+//   width  = 6px border + 6px content inset, both sides            (+24)
+//   height = 24px title bar + 6px bottom border + the 7px the
+//            layout's first-row offset adds (y starts at 28, +3)   (+37)
+// which leaves the interior exactly w x h -- canvas pieces then scale 1:1.
+void Manager::FitShell(ArcadeWindow& win)
+{
+	RECT& rc = WndRect(win.shell);
+
+	int want_w = static_cast<int>(win.w) + 24;
+	int want_h = static_cast<int>(win.h) + 37;
+	want_w = (std::max)(220, (std::min)(1400, want_w));
+	want_h = (std::max)(140, (std::min)(1000, want_h));
+
+	// keep the frame on screen: the cascade opens at x=560 / y=120
+	const int scr_w = GetSystemMetrics(SM_CXSCREEN);
+	const int scr_h = GetSystemMetrics(SM_CYSCREEN);
+	if (rc.left + want_w > scr_w) {
+		rc.left = (std::max)(0, scr_w - want_w - 8);
+	}
+	if (rc.top + want_h > scr_h) {
+		rc.top = (std::max)(0, scr_h - want_h - 48);
+	}
+
+	if ((rc.right - rc.left) != want_w || (rc.bottom - rc.top) != want_h) {
+		rc.right = rc.left + want_w;
+		rc.bottom = rc.top + want_h;
+		WriteChatf("[Arcade] window %u frame %dx%d for content %ux%u",
+			win.id, want_w, want_h, static_cast<unsigned>(win.w), static_cast<unsigned>(win.h));
+	}
+
+	// NMSArcadeClose is authored at X=364 (24x18) for the template's fixed 400px
+	// width, so any other frame width would leave it outside the title bar.
+	// Anchor it to the right edge on every pass: the SIDL load re-resolves
+	// children when the template is (re)parsed. The 24x18 mirrors the XML.
+	if (win.close_btn) {
+		RECT& c = WndRect(win.close_btn);
+		c.top = rc.top + 2;
+		c.bottom = c.top + 18;
+		c.right = rc.right - 12;
+		c.left = c.right - 24;
+	}
+}
+
 void Manager::Relayout(ArcadeWindow& win)
 {
 	win.relayout_needed = false;
@@ -666,6 +719,8 @@ void Manager::Relayout(ArcadeWindow& win)
 	if (!win.shell) {
 		return;
 	}
+
+	FitShell(win);
 
 	RECT& rc = WndRect(win.shell);
 	const int interior_w = (std::max)(50, static_cast<int>(rc.right - rc.left) - 12);
@@ -698,12 +753,8 @@ void Manager::Relayout(ArcadeWindow& win)
 				break;
 			case NMSW_TEXT:
 				if (wgt.wrap) {
-					RECT calc = {0, 0, interior_w - pad * 2, 0};
-					if (m_font14) {
-						m_font14->DrawTextA(nullptr, wgt.text.c_str(), -1, &calc, DT_WORDBREAK | DT_CALCRECT, 0xFFFFFFFF);
-					}
 					wgt_w = interior_w - pad * 2;
-					wgt_h = (std::max)(14, static_cast<int>(calc.bottom - calc.top));
+					wgt_h = TextHeightWrapped(wgt.text, 14, wgt_w);
 				}
 				else {
 					wgt_w = TextWidth(wgt.text, 14);
@@ -761,10 +812,17 @@ void Manager::Relayout(ArcadeWindow& win)
 			y += line_h + 3;
 			line_h = 0;
 		}
+		else if (line_h > 0 && x + wgt_w + pad > interior_w) {
+			// row is full: wrap to the next line rather than squashing the
+			// widget into a sliver hanging off the right edge
+			x = pad;
+			y += line_h + 3;
+			line_h = 0;
+		}
 
 		// clamp wide widgets to the interior
-		if (wgt_w > interior_w - x - pad) {
-			wgt_w = (std::max)(10, interior_w - x - pad);
+		if (wgt_w > interior_w - pad * 2) {
+			wgt_w = (std::max)(10, interior_w - pad * 2);
 		}
 
 		wgt.lx = x;
@@ -827,22 +885,17 @@ void Manager::Relayout(ArcadeWindow& win)
 				}
 	}
 
-	// TEMP DEBUG: layout dump for vault windows
-	for (auto& e : m_wins) {
-		if (e.key.rfind("vault_", 0) == 0 && e.shell) {
-			FILE* df = NULL;
-			fopen_s(&df, "vault_debug.txt", "a");
-			if (df) {
-				RECT& rc = WndRect(e.shell);
-				fprintf(df, "== layout shell=%dx%d ==\n", (int)(rc.right - rc.left), (int)(rc.bottom - rc.top));
-				for (auto& w : e.widgets) {
-					fprintf(df, "w kind=%u same=%d lx=%d ly=%d lw=%d lh=%d text='%s' argb=%08x\n",
-						w.kind, w.same_line ? 1 : 0, w.lx, w.ly, w.lw, w.lh, w.text.c_str(), w.argb);
-				}
-				fclose(df);
-			}
+	// grow the shell when the laid-out content is taller than the interior so
+	// widgets never spill past the frame (the layout loop tracks y + line_h)
+	{
+		RECT& rc2 = WndRect(win.shell);
+		int needed_bottom = y + line_h + pad + 2;
+		int current_bottom = static_cast<int>(rc2.bottom - rc2.top);
+		if (needed_bottom > current_bottom) {
+			rc2.bottom = rc2.top + needed_bottom;
 		}
 	}
+
 }
 
 // ---------------------------------------------------------------------------
@@ -853,8 +906,12 @@ void Manager::KillDevice()
 	if (m_white) { m_white->Release(); m_white = nullptr; }
 	if (m_sprite) { m_sprite->Release(); m_sprite = nullptr; }
 	if (m_line) { m_line->Release(); m_line = nullptr; }
-	if (m_font14) { m_font14->Release(); m_font14 = nullptr; }
-	if (m_font18) { m_font18->Release(); m_font18 = nullptr; }
+	for (auto& kv : m_text_tex) {
+		if (kv.second.tex) {
+			kv.second.tex->Release();
+		}
+	}
+	m_text_tex.clear();
 	for (auto& kv : m_icon_tex) {
 		if (kv.second) {
 			kv.second->Release();
@@ -961,43 +1018,295 @@ void Manager::DrawRing(int cx, int cy, float radius, uint32_t argb, float width)
 	m_line->End();
 }
 
+// ---------------------------------------------------------------------------
+// text: GDI rasterised into cached textures
+//
+// D3DXCreateFontA returns a non-null ID3DXFont on this client, but every
+// DrawText call on it -- measuring (DT_CALCRECT) and drawing alike -- returns 0
+// and does nothing. That is what collapsed every script window: TextWidth()
+// handed back the untouched 4000px probe rect, so each button clamped to the
+// full interior width and its label was centred 2000px off the window. GDI text
+// works, so measure with GetTextExtentPoint32 and rasterise glyphs into an
+// A8R8G8B8 texture that the sprite blits.
+// ---------------------------------------------------------------------------
+HDC Manager::GdiDC()
+{
+	if (!m_dc) {
+		m_dc = CreateCompatibleDC(nullptr);
+	}
+	return m_dc;
+}
+
+HFONT Manager::GdiFont(int size)
+{
+	const int px = (size >= 17) ? 18 : 14;
+	HFONT& slot = (px >= 17) ? m_hfont18 : m_hfont14;
+	if (!slot) {
+		slot = CreateFontA(-px, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, PROOF_QUALITY,
+			DEFAULT_PITCH | FF_DONTCARE, "Arial");
+	}
+	return slot;
+}
+
 int Manager::TextWidth(const std::string& s, int size)
 {
-	ID3DXFont* font = (size >= 17) ? m_font18 : m_font14;
-	if (!font) {
+	if (s.empty()) {
+		return 0;
+	}
+	HDC dc = GdiDC();
+	HFONT font = GdiFont(size);
+	if (!dc || !font) {
 		return static_cast<int>(s.size()) * 8;
 	}
-	RECT rc = {0, 0, 4000, 100};
-	font->DrawTextA(nullptr, s.c_str(), -1, &rc, DT_CALCRECT | DT_NOPREFIX, 0xFFFFFFFF);
-	return static_cast<int>(rc.right - rc.left);
+	HGDIOBJ old = SelectObject(dc, font);
+	SIZE sz = {};
+	GetTextExtentPoint32A(dc, s.c_str(), static_cast<int>(s.size()), &sz);
+	SelectObject(dc, old);
+	return sz.cx;
+}
+
+int Manager::TextHeightWrapped(const std::string& s, int size, int width)
+{
+	if (s.empty() || width <= 0) {
+		return 16;
+	}
+	HDC dc = GdiDC();
+	HFONT font = GdiFont(size);
+	if (!dc || !font) {
+		return 16;
+	}
+	HGDIOBJ old = SelectObject(dc, font);
+	RECT rc = {0, 0, width, 0};
+	DrawTextA(dc, s.c_str(), -1, &rc, DT_WORDBREAK | DT_CALCRECT | DT_NOPREFIX);
+	SelectObject(dc, old);
+	return (std::max)(14, static_cast<int>(rc.bottom - rc.top));
+}
+
+// Rasterise one string into a white-glyph A8R8G8B8 texture (cached; the sprite
+// tints it per draw). Alpha comes from the glyph coverage, RGB is forced white
+// so the tint stays clean.
+IDirect3DTexture9* Manager::GetTextTexture(const std::string& s, int size, int& out_w, int& out_h)
+{
+	out_w = out_h = 0;
+	if (s.empty() || !m_dev) {
+		return nullptr;
+	}
+
+	const std::pair<int, std::string> key(size, s);
+	auto it = m_text_tex.find(key);
+	if (it != m_text_tex.end()) {
+		out_w = it->second.w;
+		out_h = it->second.h;
+		return it->second.tex;
+	}
+	// cache churn guard: strings are few and stable, but a ticker would grow it
+	if (m_text_tex.size() > 512) {
+		for (auto& kv : m_text_tex) {
+			if (kv.second.tex) {
+				kv.second.tex->Release();
+			}
+		}
+		m_text_tex.clear();
+	}
+
+	HDC dc = GdiDC();
+	HFONT font = GdiFont(size);
+	if (!dc || !font) {
+		return nullptr;
+	}
+
+	HGDIOBJ old_font = SelectObject(dc, font);
+	SIZE ext = {};
+	if (!GetTextExtentPoint32A(dc, s.c_str(), static_cast<int>(s.size()), &ext) || ext.cx <= 0) {
+		SelectObject(dc, old_font);
+		return nullptr;
+	}
+	// headroom on each axis: glyph overhang and descenders sit outside the
+	// reported extent often enough to matter on short labels
+	const int w = ext.cx + 2;
+	const int h = (std::max)(16, static_cast<int>(ext.cy) + 1);
+
+	BITMAPINFO bi = {};
+	bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bi.bmiHeader.biWidth = w;
+	bi.bmiHeader.biHeight = -h; // top-down
+	bi.bmiHeader.biPlanes = 1;
+	bi.bmiHeader.biBitCount = 32;
+	bi.bmiHeader.biCompression = BI_RGB;
+
+	void* bits = nullptr;
+	HBITMAP dib = CreateDIBSection(dc, &bi, DIB_RGB_COLORS, &bits, nullptr, 0);
+	if (!dib || !bits) {
+		SelectObject(dc, old_font);
+		if (dib) {
+			DeleteObject(dib);
+		}
+		return nullptr;
+	}
+	HGDIOBJ old_bmp = SelectObject(dc, dib);
+	SetBkMode(dc, TRANSPARENT);
+	SetTextColor(dc, RGB(255, 255, 255));
+	TextOutA(dc, 1, 0, s.c_str(), static_cast<int>(s.size()));
+
+	// GDI leaves the alpha channel at 0: derive it from the glyph coverage and
+	// force RGB white so the sprite's tint is the only colour source
+	uint32_t* px = static_cast<uint32_t*>(bits);
+	for (int i = 0; i < w * h; i++) {
+		const uint32_t c = px[i];
+		const uint32_t a = (std::max)(c & 0xFF, (std::max)((c >> 8) & 0xFF, (c >> 16) & 0xFF));
+		px[i] = (a << 24) | 0x00FFFFFF;
+	}
+
+	IDirect3DTexture9* tex = nullptr;
+	if (FAILED(D3DXCreateTexture(m_dev, w, h, 1, 0, D3DFMT_A8R8G8B8,
+			D3DPOOL_MANAGED, &tex)) || !tex) {
+		SelectObject(dc, old_bmp);
+		SelectObject(dc, old_font);
+		DeleteObject(dib);
+		return nullptr;
+	}
+
+	D3DLOCKED_RECT lk;
+	if (SUCCEEDED(tex->LockRect(0, &lk, nullptr, 0))) {
+		for (int y = 0; y < h; y++) {
+			memcpy(static_cast<uint8_t*>(lk.pBits) + static_cast<size_t>(y) * lk.Pitch,
+				static_cast<const uint8_t*>(bits) + static_cast<size_t>(y) * w * 4,
+				static_cast<size_t>(w) * 4);
+		}
+		tex->UnlockRect(0);
+	}
+
+	SelectObject(dc, old_bmp);
+	SelectObject(dc, old_font);
+	DeleteObject(dib);
+
+	TextTex entry;
+	entry.tex = tex;
+	entry.w = w;
+	entry.h = h;
+	m_text_tex[key] = entry;
+
+	out_w = w;
+	out_h = h;
+	return tex;
 }
 
 void Manager::DrawTextStr(int x, int y, const std::string& s, uint32_t argb, int size, int align, int clip_w)
 {
-	ID3DXFont* font = (size >= 17) ? m_font18 : m_font14;
-	if (!font || s.empty() || (argb >> 24) == 0) {
+	if (s.empty() || (argb >> 24) == 0 || !m_sprite) {
 		return;
 	}
 
-	RECT rc;
+	int w = 0, h = 0;
+	IDirect3DTexture9* tex = GetTextTexture(s, size, w, h);
+	if (!tex) {
+		return;
+	}
+
+	int dx = x;
 	if (align == 1) {
-		int w = TextWidth(s, size);
-		rc.left = m_ofs_x + x - w / 2;
-		rc.right = rc.left + w + 2;
+		dx -= w / 2;
 	}
 	else if (align == 2) {
-		int w = TextWidth(s, size);
-		rc.left = m_ofs_x + x - w;
-		rc.right = rc.left + w + 2;
+		dx -= w;
 	}
-	else {
-		rc.left = m_ofs_x + x;
-		rc.right = clip_w > 0 ? m_ofs_x + x + clip_w + 2 : m_ofs_x + x + TextWidth(s, size) + 2;
-	}
-	rc.top = m_ofs_y + y;
-	rc.bottom = rc.top + size + 6;
 
-	font->DrawTextA(m_sprite, s.c_str(), -1, &rc, DT_NOPREFIX | ((clip_w > 0) ? DT_END_ELLIPSIS : 0), Col(argb));
+	if (clip_w > 0 && w > clip_w) {
+		// ellipsis by real metrics rather than a texture-wide clip: keep the
+		// longest prefix that still fits with "..."
+		const int target = (std::max)(8, clip_w);
+		std::string cut = s;
+		while (!cut.empty() && TextWidth(cut + "...", size) > target) {
+			cut.resize(cut.size() - 1);
+		}
+		if (cut.empty()) {
+			return;
+		}
+		int cw = 0, ch = 0;
+		IDirect3DTexture9* t2 = GetTextTexture(cut + "...", size, cw, ch);
+		if (!t2) {
+			return;
+		}
+		tex = t2;
+		w = cw;
+	}
+
+	D3DXVECTOR3 pos(static_cast<float>(m_ofs_x + dx), static_cast<float>(m_ofs_y + y), 0.f);
+	m_sprite->Draw(tex, nullptr, nullptr, &pos, Col(argb));
+}
+
+// greedy word wrap through the same GDI metrics the layout uses
+void Manager::DrawWrapped(int x, int y, int width, const std::string& s, uint32_t argb)
+{
+	if (s.empty() || width <= 8) {
+		return;
+	}
+	const int line_h = 16;
+	std::string line;
+	int row = 0;
+	size_t i = 0;
+	while (i <= s.size()) {
+		const size_t space = s.find(' ', i);
+		const std::string word = s.substr(i, (space == std::string::npos ? s.size() : space) - i);
+		const std::string probe = line.empty() ? word : line + " " + word;
+		if (!line.empty() && TextWidth(probe, 14) > width) {
+			DrawTextStr(x, y + row * line_h, line, argb, 14, 0, 0);
+			++row;
+			line = word;
+		}
+		else {
+			line = probe;
+		}
+		if (space == std::string::npos) {
+			break;
+		}
+		i = space + 1;
+		if (row > 64) {
+			break;
+		}
+	}
+	if (!line.empty()) {
+		DrawTextStr(x, y + row * line_h, line, argb, 14, 0, 0);
+	}
+}
+
+void Manager::SetScissor(const RECT& rc)
+{
+	if (!m_dev) {
+		return;
+	}
+	D3DVIEWPORT9 vp = {};
+	if (FAILED(m_dev->GetViewport(&vp))) {
+		return;
+	}
+	// an out-of-bounds scissor rect makes SetScissorRect fail (and the previous
+	// rect stay in force), so clamp to the viewport first
+	RECT r = rc;
+	if (r.left < static_cast<LONG>(vp.X)) {
+		r.left = static_cast<LONG>(vp.X);
+	}
+	if (r.top < static_cast<LONG>(vp.Y)) {
+		r.top = static_cast<LONG>(vp.Y);
+	}
+	if (r.right > static_cast<LONG>(vp.X + vp.Width)) {
+		r.right = static_cast<LONG>(vp.X + vp.Width);
+	}
+	if (r.bottom > static_cast<LONG>(vp.Y + vp.Height)) {
+		r.bottom = static_cast<LONG>(vp.Y + vp.Height);
+	}
+	if (r.right <= r.left || r.bottom <= r.top) {
+		return;
+	}
+	m_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, TRUE);
+	m_dev->SetScissorRect(&r);
+}
+
+void Manager::ClearScissor()
+{
+	if (m_dev) {
+		m_dev->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -1005,6 +1314,14 @@ void Manager::DrawTextStr(int x, int y, const std::string& s, uint32_t argb, int
 // ---------------------------------------------------------------------------
 void Manager::Render()
 {
+	// slow capability heartbeat: see SendHello. Cheap enough (9 bytes / 5s) to
+	// leave running for the whole session, and it heals a dropped zone-in HELLO
+	if (GetGameState() == GAMESTATE_INGAME &&
+		static_cast<int32_t>(GetTickCount() - m_next_hello) >= 0) {
+		m_next_hello = GetTickCount() + HELLO_INTERVAL_MS;
+		SendHello();
+	}
+
 	if (m_wins.empty()) {
 		return;
 	}
@@ -1037,11 +1354,7 @@ void Manager::Render()
 		}
 		D3DXCreateSprite(dev, &m_sprite);
 		D3DXCreateLine(dev, &m_line);
-		D3DXCreateFontA(dev, 14, 0, FW_NORMAL, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-			PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &m_font14);
-		D3DXCreateFontA(dev, 18, 0, FW_BOLD, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
-			PROOF_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Arial", &m_font18);
-		m_dev_ok = m_sprite && m_line && m_font14 && m_font18;
+		m_dev_ok = m_sprite && m_line != nullptr;
 		if (!m_dev_ok) {
 			return;
 		}
@@ -1076,10 +1389,13 @@ void Manager::Render()
 		RECT& rc = WndRect(win.shell);
 		m_ofs_x = rc.left;
 		m_ofs_y = rc.top;
+		// content must never paint outside its own frame: without this a window
+		// whose layout overflows spills over neighbouring UI (and over the game)
+		SetScissor(rc);
 		int interior_w = (std::max)(50, static_cast<int>(rc.right - rc.left) - 12);
 		int interior_h = (std::max)(40, static_cast<int>(rc.bottom - rc.top) - 30);
 
-		uint32_t bg = win.style_bg ? win.style_bg : ARGB(235, 18, 19, 30);
+		uint32_t bg = win.style_bg ? win.style_bg : ARGB(255, 18, 19, 30);
 		uint32_t border = win.style_border ? win.style_border : ARGB(255, 196, 168, 96);
 
 		FillRect(6, 24, interior_w, interior_h, bg);
@@ -1101,10 +1417,8 @@ void Manager::Render()
 					break;
 				case NMSW_TEXT:
 					if (wgt.wrap) {
-						RECT tr = {m_ofs_x + wgt.lx, m_ofs_y + wgt.ly,
-							m_ofs_x + wgt.lx + wgt.lw, m_ofs_y + wgt.ly + wgt.lh + 2};
-						m_font14->DrawTextA(m_sprite, wgt.text.c_str(), -1, &tr,
-							DT_WORDBREAK | DT_NOPREFIX, Col(wgt.argb ? wgt.argb : 0xFFFFFFFF));
+						DrawWrapped(wgt.lx, wgt.ly, wgt.lw, wgt.text,
+							wgt.argb ? wgt.argb : 0xFFFFFFFF);
 					}
 					else {
 						DrawTextStr(wgt.lx, wgt.ly, wgt.text, wgt.argb ? wgt.argb : 0xFFFFFFFF, 14, 0, wgt.lw);
@@ -1120,7 +1434,11 @@ void Manager::Render()
 					}
 					FillRect(wgt.lx, wgt.ly, wgt.lw, wgt.lh, face);
 					FillRect(wgt.lx, wgt.ly, wgt.lw, 1, ARGB(120, 255, 255, 255));
-					uint32_t tcol = wgt.disabled ? ARGB(255, 150, 150, 150) : 0xFFFFFFFF;
+					// light faces (the gold "current page" tab) need dark ink
+					const int luma = static_cast<int>(((face >> 16) & 0xFF) * 30 +
+						((face >> 8) & 0xFF) * 59 + (face & 0xFF) * 11) / 100;
+					uint32_t tcol = wgt.disabled ? ARGB(255, 150, 150, 150)
+						: (luma > 140 ? ARGB(255, 20, 20, 26) : 0xFFFFFFFF);
 					DrawTextStr(wgt.lx + wgt.lw / 2, wgt.ly + 3, wgt.text, tcol, 14, 1, 0);
 					break;
 				}
@@ -1222,15 +1540,29 @@ void Manager::Render()
 								DrawTextStr(px(p.x) + static_cast<int>(p.a * scale) / 2, py(p.y), p.text, 0xFFFFFFFF, 14, 1, static_cast<int>(p.a * scale) - 4);
 								break;
 							case NMSWP_GRID: {
+								// every cell gets an outline: a slot grid whose empty
+								// cells are only a hair off the panel colour reads as
+								// one blank slab instead of boxes
+								const int cw = (std::max)(1, static_cast<int>(p.a * scale));
+								const int chh = (std::max)(1, static_cast<int>(p.b * scale));
+								const uint32_t edge = ARGB(255, 74, 88, 122);
+								int cells = 0;
 								for (const auto& cell : p.grid) {
 									if (piece_budget-- <= 0) {
 										break;
 									}
-									int col = cell.first % std::max<uint16_t>(1, p.aux);
-									int row = cell.first / std::max<uint16_t>(1, p.aux);
-									FillRect(px(p.x + col * p.a), py(p.y + row * p.b),
-										(std::max)(1, static_cast<int>(p.a * scale)),
-										(std::max)(1, static_cast<int>(p.b * scale)), cell.second);
+									const int col = cell.first % std::max<uint16_t>(1, p.aux);
+									const int row = cell.first / std::max<uint16_t>(1, p.aux);
+									const int cx = px(p.x + col * p.a);
+									const int cy = py(p.y + row * p.b);
+									FillRect(cx, cy, cw, chh, cell.second);
+									DrawLine(cx, cy, cx + cw, cy, edge, 1.f);
+									DrawLine(cx, cy + chh - 1, cx + cw, cy + chh - 1, edge, 1.f);
+									DrawLine(cx, cy, cx, cy + chh, edge, 1.f);
+									DrawLine(cx + cw - 1, cy, cx + cw - 1, cy + chh, edge, 1.f);
+									if (++cells > 4096) {
+										break;
+									}
 								}
 								break;
 							}
@@ -1250,6 +1582,7 @@ void Manager::Render()
 					break;
 			}
 		}
+		ClearScissor();
 	}
 
 	m_sprite->End();

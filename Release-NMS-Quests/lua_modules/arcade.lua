@@ -194,6 +194,57 @@ function GameMetatable.client(self)
 	return self.you
 end
 
+-- manual conveniences -------------------------------------------------------
+function GameMetatable.random(self, a, b)
+	return math.random(a, b)
+end
+
+function GameMetatable.random_choice(self, list)
+	return list[math.random(#list)]
+end
+
+function GameMetatable.new_deck(self)
+	local SUITS = { "h", "d", "c", "s" }
+	local deck = {}
+	for _, suit in ipairs(SUITS) do
+		for rank = 2, 10 do
+			table.insert(deck, { rank = rank, suit = suit })
+		end
+		for _, face in ipairs({ "J", "Q", "K", "A" }) do
+			table.insert(deck, { rank = face, suit = suit })
+		end
+	end
+	for i = #deck, 2, -1 do
+		local j = math.random(i)
+		deck[i], deck[j] = deck[j], deck[i]
+	end
+	return deck
+end
+
+function GameMetatable.redraw(self)
+	self:refresh()
+end
+
+-- set the status line under the play area (games may also pass status=false
+-- in the game table to remove the line entirely)
+function GameMetatable.status(self, text)
+	local client, win = self.you, self.win_id
+	if not client or not win or not client:NMSWindowIsOpen(win) then return end
+	if self._status_widget and self._status_widget >= 0 then
+		client:NMSWindowSetProgress(win, self._status_widget, 0, tostring(text or ""))
+	end
+end
+
+function GameMetatable.message(self, text)
+	if self.you then self.you:Message(15, tostring(text)) end
+end
+
+GameMetatable.say = GameMetatable.message
+
+function GameMetatable.quit(self)
+	if self.you and self.win_id then self.you:NMSWindowClose(self.win_id) end
+end
+
 -- repeating / one-shot game timers
 function GameMetatable.every(self, ms, fn)
 	table.insert(self._timers, { t0 = os.clock(), ms = ms, fn = fn, repeat_ = true })
@@ -292,10 +343,14 @@ function Canvas:ring(cx, cy, radius, c, width)
 	self:_piece(table.concat({5, cx, cy, radius, 0, num(color(c, 0xFFFFFFFF)), width or 2, 0, 0, ""}, ",")) -- RING
 end
 
+local ALIGN_IDS = { left = 0, center = 1, right = 2 }
+
 function Canvas:text(x, y, s, opts)
 	opts = opts or {}
 	s = tostring(s)
-	self:_piece(table.concat({6, x, y, 0, 0, num(color(opts.color, 0xFFFFFFFF)), opts.size or 14, opts.align or 0, 0, s}, ",")) -- TEXT
+	local align = opts.align or 0
+	if type(align) == "string" then align = ALIGN_IDS[string.lower(align)] or 0 end
+	self:_piece(table.concat({6, x, y, 0, 0, num(color(opts.color, 0xFFFFFFFF)), opts.size or 14, align, 0, s}, ",")) -- TEXT
 end
 
 function Canvas:banner(s, c, opts)
@@ -389,8 +444,7 @@ local function rebuild_widgets(inst)
 	if not client or not win or not client:NMSWindowIsOpen(win) then return end
 
 	client:NMSWindowClear(win)
-
-	client:NMSWindowAddHeader(win, inst.title or inst.key, "gold")
+	-- no auto header: games draw their own banner/title piece
 	inst._canvas_widget = client:NMSWindowAddCanvas(win, inst.width, inst.height)
 
 	inst._status_widget = -1
@@ -555,6 +609,10 @@ function Arcade.start(template, client, npc)
 	inst._tweens = {}
 	inst._rebuild = true
 	inst.you = client
+	-- manual: game.you.{name, level, class} auto-filled for games
+	inst.you_name = client:GetName()
+	inst.you_level = client:GetLevel()
+	inst.you_classid = client:GetClass()
 	inst.npc = npc
 	inst.npc_id = npc and npc:GetID() or 0
 	inst.key = template.key or template.title or "game"

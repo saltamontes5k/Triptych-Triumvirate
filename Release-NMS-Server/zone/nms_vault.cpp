@@ -1096,15 +1096,17 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	wins.AddSameLine(wid);
 	wins.AddButton(wid, "Merchant", 901, "");
 
-	// page tabs: two rows so nine buttons fit the 388px interior
-	for (int page = 1; page <= 6; ++page) {
+	// page tabs in two rows: Bags 1-5, then Bag 6 with Clicky 1/2 and Proc
+	// Locker. Letting the sixth bag fall through to the client's row wrap left
+	// it alone on a third row with the clickies underneath it.
+	for (int page = 1; page <= 5; ++page) {
 		if (page > 1) {
 			wins.AddSameLine(wid);
 		}
 		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");
 	}
-	for (int page = 7; page <= 9; ++page) {
-		if (page > 7) {
+	for (int page = 6; page <= 9; ++page) {
+		if (page > 6) {
 			wins.AddSameLine(wid);
 		}
 		wins.AddButton(wid, VaultWindowPageLabel(page), page, page == open_page ? "gold" : "");

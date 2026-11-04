@@ -23,6 +23,7 @@
 #define NMSW_OP_EVENT 0x140B
 
 #define NMSW_DLL_VERSION 2
+#define HELLO_INTERVAL_MS 5000
 #define NMSW_CAP_WINDOWS 1
 
 // widget kinds (server nms_window.h WidgetKind)
@@ -141,6 +142,7 @@ struct ArcadeWindow {
 	bool closed_event_sent = false;
 	bool frame_logged = false;      // one-shot diagnostics
 	bool draw_logged = false;
+	bool click_logged = false;
 	std::vector<HitRegion> hits;
 };
 
@@ -149,7 +151,7 @@ public:
 	static Manager& Get();
 
 	void OnPacket(void* buf, size_t size);        // 0x140A from the world stream
-	void SendHello();                             // once, after the CAuth handshake
+	void SendHello();                             // capability HELLO (idempotent, re-sent)
 	void SendEvent(uint32_t id, uint8_t kind, uint16_t action, uint32_t value, const std::string& text);
 	void Render();                                // EndScene hook
 	void OnGameState(DWORD state);                // zoning: drop everything silently
@@ -164,6 +166,7 @@ private:
 	void EnsureShell(ArcadeWindow& win);
 	void DestroyShell(ArcadeWindow& win);
 	void Relayout(ArcadeWindow& win);
+	void FitShell(ArcadeWindow& win);                 // frame = requested w/h + chrome
 	void SendClosed(ArcadeWindow& win);
 	bool ClickWindow(ArcadeWindow& win, int sx, int sy); // screen-space hit test
 
@@ -173,6 +176,16 @@ private:
 	void DrawRing(int cx, int cy, float radius, uint32_t argb, float width);
 	void DrawTextStr(int x, int y, const std::string& s, uint32_t argb, int size, int align, int clip_w);
 	int  TextWidth(const std::string& s, int size);
+	int  TextHeightWrapped(const std::string& s, int size, int width);
+	void DrawWrapped(int x, int y, int width, const std::string& s, uint32_t argb);
+	// This client's d3dx9 font object is createable but dead: every DrawText
+	// (measuring or drawing) returns 0, so text is rasterised through GDI into
+	// a cached A8R8G8B8 texture and blitted with the sprite instead.
+	HDC  GdiDC();
+	HFONT GdiFont(int size);
+	IDirect3DTexture9* GetTextTexture(const std::string& s, int size, int& out_w, int& out_h);
+	void SetScissor(const RECT& rc);
+	void ClearScissor();
 	// item icon from <eqdir>\ItemIcons\<id>.png (loaded through D3DX, cached);
 	// missing art renders the fallback text instead
 	IDirect3DTexture9* GetIconTexture(uint32_t icon_id);
@@ -180,7 +193,8 @@ private:
 
 	std::vector<ArcadeWindow> m_wins;
 	uint32_t m_next_id = 1;
-	bool m_hello_sent = false;
+	bool m_hello_sent = false;      // capability chat announced
+	DWORD m_next_hello = 0;         // capability heartbeat (see SendHello)
 
 	// d3d resources
 	IDirect3DDevice9* m_dev = nullptr;
@@ -188,8 +202,14 @@ private:
 	IDirect3DTexture9* m_white = nullptr;
 	ID3DXSprite* m_sprite = nullptr;
 	ID3DXLine* m_line = nullptr;
-	ID3DXFont* m_font14 = nullptr;
-	ID3DXFont* m_font18 = nullptr;
+	HDC m_dc = nullptr;                    // measured/rasterised text goes here
+	HFONT m_hfont14 = nullptr;
+	HFONT m_hfont18 = nullptr;
+	struct TextTex {
+		IDirect3DTexture9* tex = nullptr;
+		int w = 0, h = 0;
+	};
+	std::map<std::pair<int, std::string>, TextTex> m_text_tex; // glyph atlas per string
 	std::map<uint32_t, IDirect3DTexture9*> m_icon_tex; // failures cached as nullptr
 	int m_ofs_x = 0, m_ofs_y = 0; // window origin in screen space (current)
 	ArcadeWindow* m_cur = nullptr;
