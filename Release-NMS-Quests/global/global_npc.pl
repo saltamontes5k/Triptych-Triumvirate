@@ -31,7 +31,7 @@ sub EVENT_SAY {
             );
             
             my $greeting = $class_greetings{$player_class_id} // "Greetings, traveler. Are you seeking guidance or knowledge?";
-            if (!($classes & plugin::GetClassBitmask($player_class_id)) && plugin::GetClassesCount($client) < 3) {
+            if (!($classes & plugin::GetClassBitmask($player_class_id)) && plugin::GetClassesCount($client) < plugin::GetMaxClasses()) {
                 plugin::NPCTell($greeting);
             }
         }        
@@ -80,7 +80,7 @@ sub EVENT_SAY {
         }
 
         if ($text eq "class_confirm") {
-            if (plugin::GetClassesCount($client) < 3) {
+            if (plugin::GetClassesCount($client) < plugin::GetMaxClasses()) {
                 plugin::AddClass($player_class_id);
                 plugin::NPCTell("Welcome, $class_name, and be known!");
             }

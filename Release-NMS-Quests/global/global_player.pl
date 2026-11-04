@@ -870,6 +870,10 @@ sub EVENT_SAY {
             } else {
                 $client->Message(13, "Invalid number. Please provide a number between 0 and 9.");
             }
+        } elsif ($text=~/^#progression\b\s*(.*)$/i) {
+            # GM progression support tool (NMS_progression_utils)
+            $client->Message(13, "Disregard the command not recognized error.");
+            plugin::ProgressionCommand($client, $1);
         } elsif ($text=~/#setpopflag\s+(\S+)(?:\s+(\d))?/i) {
             my ($flag, $number) = ($1, $2 // 1);  # Default $number to 1 if not provided
 
