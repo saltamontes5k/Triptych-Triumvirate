@@ -44859,7 +44859,7 @@ WHERE `zone` = 'eastwastes' AND `number` = 13 AND `target_zone_id` = 128;
 		.version = 316,
 		.description = "20261103_curio_traps_v316",
 		.check = "SELECT doorid FROM doors WHERE zone = 'veeshan' AND doorid = 601 AND name = 'VECOINS101' LIMIT 1",
-		.condition = "not_empty",
+		.condition = "empty", // NMS: run when the probe door is absent; not_empty skipped the insert on fresh databases
 		.match = "",
 		.sql = R"CURIO316(
 SET NAMES utf8mb4;
@@ -47300,7 +47300,7 @@ SELECT 1 FROM DUAL HAVING (SELECT COUNT(*) FROM reward_sources WHERE source_type
 		.version = 331,
 		.description = "20261104_throne_of_the_first_brood_v331",
 		.check = "SELECT doorid FROM doors WHERE zone = 'veeshan' AND doorid = 621 AND name = 'VEBRAZ101' LIMIT 1",
-		.condition = "not_empty",
+		.condition = "empty", // NMS: run when the probe door is absent; not_empty skipped the insert on fresh databases
 		.match = "",
 		.sql = R"THRONE331(
 SET NAMES utf8mb4;
