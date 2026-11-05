@@ -647,19 +647,18 @@ bool Manager::ClickWindow(ArcadeWindow& win, int sx, int sy)
 		return false;
 	}
 
-	// one-shot: proves clicks reach the shell and shows where they land, so a
-	// "nothing is clickable" report can be told apart from a hit-test miss
-	if (!win.click_logged) {
-		win.click_logged = true;
-		WriteChatf("[Arcade] click win %u at %d,%d (frame %d,%d, %d hits)",
-			win.id, wx, wy, static_cast<int>(rc.left), static_cast<int>(rc.top),
-			static_cast<int>(win.hits.size()));
-	}
-
 	// iterate hits back-to-front (draw order)
 	for (auto it = win.hits.rbegin(); it != win.hits.rend(); ++it) {
 		const HitRegion& h = *it;
 		if (wx >= h.x && wx < h.r && wy >= h.y && wy < h.b) {
+			// one line per hit, capped: this is the only diagnostic left, and it
+			// prints exactly the kind/action the server judges the event on
+			if (win.click_log_count < 6) {
+				win.click_log_count++;
+				WriteChatf("[Arcade] click %u kind %u action %u at %d,%d",
+					win.id, h.kind, h.action, wx, wy);
+			}
+
 			if (h.kind == NMSW_EV_CANVAS) {
 				SendEvent(win.id, NMSW_EV_CANVAS, h.action, 0, std::string());
 			}
@@ -738,16 +737,10 @@ void Manager::FitShell(ArcadeWindow& win)
 		// One line per window, plus one if the game puts the rect back after we
 		// set it: that second case means some other path owns the rect and the
 		// frame keeps flipping between the template size and ours.
-		if (!win.frame_size_logged) {
-			win.frame_size_logged = true;
-			WriteChatf("[Arcade] win %u frame %dx%d for content %ux%u",
-				win.id, want_w, want_h, static_cast<unsigned>(win.w), static_cast<unsigned>(win.h));
-		}
-		else if (!win.frame_reset_logged) {
-			win.frame_reset_logged = true;
-			WriteChatf("[Arcade] win %u frame RESET behind us: was %dx%d, saw %dx%d",
-				win.id, want_w, want_h, seen_w, seen_h);
-		}
+		// silent: the geometry is settled, and this per-window chatter was most
+		// of what showed up in chat
+		(void)seen_w;
+		(void)seen_h;
 	}
 
 	// NMSArcadeClose is authored at X=364 (24x18) for the template's fixed 400px
@@ -1406,11 +1399,6 @@ void Manager::Render()
 			// reads 0 for a window that is plainly under the cursor, so the poll
 			// never claimed anything. Geometry first; the frame rect is the one
 			// field we know is right because the interior tracks it while dragged.
-			if (!m_press_logged) {
-				m_press_logged = true;
-				WriteChatf("[Arcade] click poll live: press at %d,%d", mx, my);
-			}
-
 			ArcadeWindow* target = nullptr;
 			for (auto& win : m_wins) {
 				if (!win.shell) {

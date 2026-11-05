@@ -1317,7 +1317,12 @@ void NmsWindowHandlePacket(Client* c, const EQApplicationPacket* app)
 
 	if (type == 2) {
 		// EVENT: u32 window_id, u8 kind, u16 action, u32 value, u8 len + text
-		if (app->size < 14) {
+		//
+		// The fixed part is 13 bytes (1 type + 4 id + 1 kind + 2 action + 4 value
+		// + 1 length), so a click with no text -- which is every button and grid
+		// click -- is exactly 13. Requiring 14 dropped *every* click ever sent:
+		// the packets arrived, logged, and were thrown away one line later.
+		if (app->size < 13) {
 			return;
 		}
 		uint32_t window_id = static_cast<uint32_t>(d[1]) | (static_cast<uint32_t>(d[2]) << 8) |

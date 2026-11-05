@@ -150,6 +150,7 @@ struct ArcadeWindow {
 	int fit_h = 0;                  // height the laid-out content needs (see Relayout)
 	DWORD last_click_ms = 0;        // de-dupes XWM_LCLICK vs XWM_LMOUSEUP
 	int msg_log = 0;                // one-shot trace of unhandled notifications
+	int click_log_count = 0;        // capped click diagnostics
 	std::vector<HitRegion> hits;
 };
 
