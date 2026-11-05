@@ -332,7 +332,8 @@ void ShutdownMQ2Windows()
 // NMS: a skin's EQUI.xml may already <Include> a file the add-on injects (players who added
 // NMS_WaypointsWnd.xml by hand). Loading it twice trips "Schema error - Duplicate item" on the
 // first TextureInfo it declares, and the client refuses the whole UI. Track what the original
-// file includes and skip those.
+// file includes and skip those. Whitespace is ignored and commented-out includes must not
+// count - "<!-- <Include>x.xml</Include> -->" means the skin author wants the add-on copy.
 static std::string LowerIncludeName(const char *s, size_t n)
 {
     // Trimmed as well as lowered: the players this targets edited EQUI.xml by hand, and
@@ -347,10 +348,42 @@ static std::string LowerIncludeName(const char *s, size_t n)
     return out;
 }
 
-static void NoteIncludeLine(const char *line, std::set<std::string> &seen)
+static std::string StripXMLComments(const std::string &line, bool &inComment)
 {
+    // Carry the comment state across lines: an "<!--" without its "-->" on the same line
+    // keeps everything after it commented until a later line closes the comment.
+    std::string out;
+    size_t pos = 0;
+    while (pos < line.size()) {
+        if (inComment) {
+            size_t close = line.find("-->", pos);
+            if (close == std::string::npos) {
+                pos = line.size();
+            } else {
+                pos = close + 3;
+                inComment = false;
+            }
+        } else {
+            size_t open = line.find("<!--", pos);
+            if (open == std::string::npos) {
+                out += line.substr(pos);
+                pos = line.size();
+            } else {
+                out += line.substr(pos, open - pos);
+                inComment = true;
+                pos = open + 4;
+            }
+        }
+    }
+    return out;
+}
+
+static void NoteIncludeLine(const char *line, std::set<std::string> &seen, bool &inComment)
+{
+    std::string cleaned = StripXMLComments(line, inComment);
+
     // Every tag on the line, not just the first - a hand-edited EQUI.xml can carry several.
-    for (const char *inc = strstr(line, "<Include>"); inc; inc = strstr(inc, "<Include>")) {
+    for (const char *inc = strstr(cleaned.c_str(), "<Include>"); inc; inc = strstr(inc, "<Include>")) {
         const char *start = inc + 9;
         const char *end = strstr(start, "</Include>");
         if (!end)
@@ -399,8 +432,9 @@ bool GenerateMQUI()
         return false;
     }
     std::set<std::string> seenIncludes;
+    bool inComment = false;
     while (fgets(Buffer, 2048, forg)) {
-        NoteIncludeLine(Buffer, seenIncludes);
+        NoteIncludeLine(Buffer, seenIncludes, inComment);
         if (strstr(Buffer, "</Composite>")) {
             DebugSpew("GenerateMQUI::Inserting our xml files");
             PMQXMLFILE      pFile = pXMLFiles;
@@ -451,8 +485,9 @@ bool GenerateMQUI()
                 return false;
             }
             std::set<std::string> seenIncludes;
+            bool skinInComment = false;
             while (fgets(Buffer, 2048, forg)) {
-                NoteIncludeLine(Buffer, seenIncludes);
+                NoteIncludeLine(Buffer, seenIncludes, skinInComment);
                 if (strstr(Buffer, "</Composite>")) {
                     //DebugSpew("GenerateMQUI::Inserting our xml files");
                     PMQXMLFILE      pFile = pXMLFiles;
