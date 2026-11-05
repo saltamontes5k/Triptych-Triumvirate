@@ -1595,16 +1595,42 @@ void Client::ClearDynamicAATimers() {
 
     CharacterDynamicAaTimersRepository::DeleteByCharacterId(database, CharacterID());
 
-    LogDebug("Cleared all dynamic AA timers");
+	LogDebug("Cleared all dynamic AA timers");
 }
 
-
-void Client::ResetAlternateAdvancementTimer(int ability) {
-	AA::Rank *rank = zone->GetAlternateAdvancementRank(casting_spell_aa_id);
-	if(rank) {
-		SendAlternateAdvancementTimer(rank->spell_type, 0, time(0));
-		p_timers.Clear(&database, rank->spell_type + pTimerAAStart);
+// NMS: the timer an AA's cooldown runs on; unlike GetDynamicAATimer it never assigns a new one
+std::optional<int> Client::FindAlternateAdvancementTimer(const AA::Rank *rank)
+{
+	if (!rank || !rank->base_ability) {
+		return std::nullopt;
 	}
+
+	if (!RuleB(Custom, UseDynamicAATimers)) {
+		return rank->spell_type;
+	}
+
+	if (m_aa_timers_cache.empty()) {
+		GetDynamicAATimers();
+	}
+
+	const auto e = m_aa_timers_cache.find(rank->base_ability->id);
+	if (e == m_aa_timers_cache.end()) {
+		return std::nullopt;
+	}
+
+	return e->second;
+}
+
+bool Client::ResetAlternateAdvancementTimer(int rank_id) {
+	// NMS: takes an AA rank ID (#find aa prints it); the old body ignored the argument and read casting_spell_aa_id
+	const auto timer_id = FindAlternateAdvancementTimer(zone->GetAlternateAdvancementRank(rank_id));
+	if (!timer_id) {
+		return false;
+	}
+
+	SendAlternateAdvancementTimer(*timer_id, 0, static_cast<int>(time(nullptr)));
+	p_timers.Clear(&database, *timer_id + pTimerAAStart);
+	return true;
 }
 
 void Client::ResetAlternateAdvancementTimers() {
@@ -1646,9 +1672,12 @@ void Client::ResetOnDeathAlternateAdvancement() {
 		if (!rank)
 			continue;
 
-		// since they're dying, we just need to clear the DB
-		if (ability->reset_on_death)
-			p_timers.Clear(&database, rank->spell_type + pTimerAAStart);
+		// NMS: with dynamic AA timers the cooldown runs on the per-character id; the DB spell_type belongs to another AA
+		if (ability->reset_on_death) {
+			if (const auto timer_id = FindAlternateAdvancementTimer(rank)) {
+				p_timers.Clear(&database, *timer_id + pTimerAAStart);
+			}
+		}
 	}
 }
 

@@ -91,6 +91,7 @@ namespace EQ
 #endif
 
 #include <float.h>
+#include <optional>
 #include <set>
 #include <algorithm>
 #include <memory>
@@ -1286,6 +1287,8 @@ public:
 	int GetDynamicAATimer(int aa_id);
 	int SetDynamicAATimer(int aa_id);
 	void ClearDynamicAATimers();
+	// NMS: the timer an AA's cooldown runs on; unlike GetDynamicAATimer it never assigns a new one
+	std::optional<int> FindAlternateAdvancementTimer(const AA::Rank *rank);
 
 	void GetAllToggleAAStatus();
 	void SetToggleAAStatus(int ability_id, bool status);
@@ -1315,7 +1318,7 @@ public:
 	void SendAlternateAdvancementPoints();
 	void SendAlternateAdvancementTimer(int ability, int begin, int end);
 	void SendAlternateAdvancementTimers();
-	void ResetAlternateAdvancementTimer(int ability);
+	bool ResetAlternateAdvancementTimer(int rank_id); // NMS: takes an AA rank ID, returns whether a timer was found
 	void ResetAlternateAdvancementTimers();
 	void ResetOnDeathAlternateAdvancement();
 
