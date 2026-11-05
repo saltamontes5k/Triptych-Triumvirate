@@ -695,9 +695,15 @@ Option 1 (registering personal plots as `kRealEstateKindHouse`) was **not** appl
 the live object had `+0x2C == 0`. Changing the type without seeding that record would only move the
 failure, so the change was kept to the single dword that the client actually tests.
 
-Build: `rebuild_server.bat` green, `Build/bin/Release/zone.exe` relinked 15:47. Not live until the
-zone processes restart. Retest after restart: Manage window should stay up and paint; Plot Search
-uses an analogous updater and is unverified until then.
+Build: `rebuild_server.bat` green, `Build/bin/Release/zone.exe` relinked 15:47; zones restarted 16:05
+and the operator confirmed the Manage window now stays up and paints. **Verified live.**
+
+Known cosmetic side effect: the estate now presents as a *guild* estate, because the client's model
+is house(`kRealEstateKindHouse` 4) = personal-with-owner-record and plot(`kRealEstateKindPlot` 8) =
+guild, and we deliberately satisfied the type-8 branch. Making the label read "personal" means
+switching the definition to 4 *and* getting the client to fill `estate[+0x2C]` (an owner record with
+a non-zero field at +8), which was null in every live sample. That is the next piece of work if the
+label matters; it does not affect whether the window works.
 
 #### 8.8.3 Fix options
 
