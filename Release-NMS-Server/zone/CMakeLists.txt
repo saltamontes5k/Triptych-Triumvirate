@@ -115,6 +115,7 @@ SET(zone_sources
     titles.cpp
     nms_waypoints.cpp
     nms_vault.cpp
+    nms_starvation.cpp
     nms_lon_session.cpp
     nms_housing.cpp
     nms_window.cpp

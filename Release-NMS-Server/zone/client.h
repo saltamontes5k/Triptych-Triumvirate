@@ -2435,6 +2435,10 @@ private:
 	void DoHPRegen();
 	void DoManaRegen();
 	void DoStaminaHungerUpdate();
+	// Nethack-style starvation hunger clock (zone/nms_starvation.cpp); runs on
+	// the consumption tick right after DoStaminaHungerUpdate. Gated on
+	// Custom:StarvationDeath + the Character food rules.
+	void ProcessStarvation();
 	void CalcRestState();
 	void UpdateRestTimer(uint32 new_timer);
 

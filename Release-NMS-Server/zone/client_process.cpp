@@ -693,8 +693,10 @@ bool Client::Process() {
 		}
 
 		// this is independent of the tick timer
-		if (consume_food_timer.Check())
+		if (consume_food_timer.Check()) {
 			DoStaminaHungerUpdate();
+			ProcessStarvation();
+		}
 
 		if (!focused_pet_id || !entity_list.GetNPCByID(focused_pet_id)) {
 			if (GetPet()) {
