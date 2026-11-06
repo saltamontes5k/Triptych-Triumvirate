@@ -56,9 +56,9 @@ sub arcade_game_blackjack {
 	return {
 		key    => "blackjack",
 		title  => "Blackjack",
-		width  => 460,
-		height => 320,
-		style  => "wood",
+		width  => 570,
+		height => 420,
+		style  => "felt",
 
 		start => sub {
 			my ($g) = @_;
@@ -100,8 +100,8 @@ sub arcade_game_blackjack {
 			}
 
 			$canvas->text(230, 240, $g->{msg}, { size => 14, align => 1 });
-			$canvas->chip_count(230, 262, $g->saved("chips", 100));
-			$canvas->chip_stack(60, 250, int($g->saved("chips", 100) / 100));
+			$canvas->chip_count(230, 262, $g->plat());
+			$canvas->chip_stack(60, 250, int($g->plat() / 100));
 		},
 
 		buttons => [
@@ -126,7 +126,7 @@ sub arcade_game_blackjack {
 sub _bj_deal {
 	my ($g) = @_;
 	return if $g->{phase} ne "bet" && $g->{phase} ne "done";
-	if ($g->saved("chips", 100) < 10) {
+	if ($g->plat() < 10) {
 		$g->{msg} = "You need 10 chips for a hand.";
 		return;
 	}
@@ -226,24 +226,23 @@ sub _bj_settle {
 		else                 { $how = "push"; }
 	}
 
-	my $c = $g->saved("chips", 100);
 	if ($how eq "win" || $how eq "dealer_bust") {
-		$g->save("chips", $c + 10);
-		$g->{msg} = "You win +10 chips!";
+		$g->payout(10);
+		$g->{msg} = "You win +10 plat!";
 	}
 	elsif ($how eq "blackjack") {
-		$g->save("chips", $c + 25);
-		$g->{msg} = "Blackjack! +25 chips.";
+		$g->payout(25);
+		$g->{msg} = "Blackjack! +25 plat.";
 	}
 	elsif ($how eq "push") {
 		$g->{msg} = "Push -- bet returned.";
 	}
 	else {
-		$g->save("chips", $c - 10);
-		$g->{msg} = $how eq "bust" ? "Bust. -10 chips." : "Dealer wins. -10 chips.";
+		$g->stake(10);
+		$g->{msg} = $how eq "bust" ? "Bust. -10 plat." : "Dealer wins. -10 plat.";
 	}
 
-	$g->leaderboard("chips", $g->saved("chips", 100));
+	$g->leaderboard("chips", $g->plat());
 	$g->refresh();
 }
 

@@ -37,10 +37,37 @@ constexpr uint32_t kPlotOwnerGuild  = 8;
 
 // Street address for a lot. The native windows title a plot "<neighbourhood>, <address>", and
 // the address is a server-supplied string -- the client has no per-lot address of its own.
-// Numbered off the door id so it is stable across restarts; street names follow the same
-// convention the retail neighbourhoods use ("101 Bazaar Street").
+//
+// Real addresses come from nms_plot_address, recovered from the client's own map file
+// (maps/neighborhood_1.txt): the P-labels there are map-space, and world = (-x, -y), with each
+// label sitting about 113 units off its door. Loaded once per process and cached.
+// utils/sql/20261106_housing_plot_addresses.sql seeds the table.
+//
+// Anything unmapped falls back to the generated "<100 + door_id> <street>" form, which keeps
+// every lot addressable even on a database without the table.
 std::string PlotStreetAddress(uint32_t door_id)
 {
+	static std::unordered_map<uint32_t, std::string> s_addresses;
+	static bool s_loaded = false;
+
+	if (!s_loaded) {
+		s_loaded = true;
+
+		auto rows = database.QueryDatabase("SELECT door_id, address FROM nms_plot_address");
+		if (rows.Success()) {
+			for (auto row : rows) {
+				if (row[0] && row[1]) {
+					s_addresses[Strings::ToUnsignedInt(row[0])] = std::string(row[1]);
+				}
+			}
+		}
+	}
+
+	const auto found = s_addresses.find(door_id);
+	if (found != s_addresses.end()) {
+		return found->second;
+	}
+
 	static const char *streets[] = {
 		"Bazaar Street", "Sunrise Lane", "Market Row", "Willow Way",
 		"Lantern Court", "Harvest Row", "Beacon Street", "Orchard Lane"
@@ -1970,10 +1997,9 @@ void SendRealEstatePlotObjects(Client *c)
 		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
 		"LEFT JOIN character_data c ON c.id = p.owner_char_id "
 		"LEFT JOIN guilds g ON g.id = p.owner_guild_id "
-		"WHERE n.zone = '{}' AND (p.owner_char_id = {} "
-		"  OR (p.owner_guild_id > 0 AND p.owner_guild_id = {})) "
+		"WHERE n.zone = '{}' "
 		"ORDER BY p.door_id",
-		Strings::Escape(zone_name), c->CharacterID(), c->GuildID()
+		Strings::Escape(zone_name)
 	));
 
 	if (!rows.Success() || !rows.RowCount()) {
@@ -2134,9 +2160,11 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 		"FROM nms_plot p "
 		"JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
 		"JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 "
-		"WHERE n.zone = '{}' AND (p.owner_char_id = {} "
-		"  OR (p.owner_guild_id > 0 AND p.owner_guild_id = {}))",
-		Strings::Escape(zone_name), c->CharacterID(), c->GuildID()
+		// Every plot in the zone, not just this character's: the "inside a plot" test is what
+		// lets anyone inspect a lot, and an owner-filtered manifest leaves every other player
+		// with RealEstate[+152] == -1 and the "you must be inside a plot or house" refusal.
+		"WHERE n.zone = '{}'",
+		Strings::Escape(zone_name)
 	));
 
 	if (!rows.Success() || !rows.RowCount()) {
@@ -2873,7 +2901,11 @@ void Client::SendRealEstateIdentity()
 		house_def.id                   = 2;
 		house_def.area_id              = nb_id;
 		house_def.zone_id              = nb_id;
-		house_def.type                 = kRealEstateKindHouse;
+		// The client's Manage predicate (sub_5B41D0) validates a kind-4 estate through an owner
+		// record pointer it never fills for us (estate[+0x2C] stays null), so a house-kind estate
+		// is refused and the window is closed every frame. Registered as a plot instead, the same
+		// predicate takes its kind-8 branch, which only requires a guild id -- see guild_id below.
+		house_def.type                 = kRealEstateKindPlot;
 		house_def.max_items            = 300;
 		house_def.max_non_estate_items = 300;
 		house_def.max_npc_items        = 5;
@@ -2892,8 +2924,9 @@ void Client::SendRealEstateIdentity()
 		EstateSnapshot interior_snapshot;
 		interior_snapshot.estate_id     = door_id;
 		interior_snapshot.definition_id = 2;
+		interior_snapshot.guild_id      = 0;   // -1 fails the kind-8 branch of sub_5B41D0
 		interior_snapshot.owner_name    = GetName();
-		interior_snapshot.dynamic_name  = fmt::format("Plot {}", door_id);
+		interior_snapshot.dynamic_name  = PlotStreetAddress(door_id);   // "103 Park Circle", not "Plot 19"
 
 		Writer w;
 		WriteEstateSnapshot(w, interior_snapshot);

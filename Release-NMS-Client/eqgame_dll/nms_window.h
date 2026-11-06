@@ -137,6 +137,7 @@ struct ArcadeWindow {
 	std::vector<Widget> widgets;
 	EQClasses::CXWnd* shell = nullptr;
 	EQClasses::CXWnd* close_btn = nullptr;
+	EQClasses::CXWnd* surface = nullptr;   // full-interior child: stops drag-everything
 	bool relayout_needed = true;
 	int active_input = -1;          // widget index of the focused input
 	std::string input_buffer;
@@ -151,6 +152,7 @@ struct ArcadeWindow {
 	DWORD last_click_ms = 0;        // de-dupes XWM_LCLICK vs XWM_LMOUSEUP
 	int msg_log = 0;                // one-shot trace of unhandled notifications
 	int click_log_count = 0;        // capped click diagnostics
+	bool want_close = false;        // close box clicked; Render destroys it
 	std::vector<HitRegion> hits;
 };
 

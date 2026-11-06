@@ -137,6 +137,27 @@ sub top {
 
 sub client { my ($self) = @_; return $self->{you}; }
 
+# The table's chips are the platinum the player is carrying, as on the live
+# server: the count on the table IS the purse and bets move real money.
+sub plat {
+	my ($self) = @_;
+	return 0 unless $self->{you};
+	return int($self->{you}->GetCarriedMoney() / 1000);
+}
+
+sub stake {
+	my ($self, $n) = @_;
+	return 1 if !$n || $n <= 0;
+	return 0 unless $self->{you} && $self->plat() >= $n;
+	return $self->{you}->TakeMoneyFromPP($n * 1000) ? 1 : 0;
+}
+
+sub payout {
+	my ($self, $n) = @_;
+	return unless $n && $n > 0 && $self->{you};
+	$self->{you}->AddMoneyToPP(0, 0, 0, int($n));
+}
+
 # manual conveniences -------------------------------------------------------
 sub random { my ($self, $a, $b) = @_; return int($a) + int(rand($b - $a + 1)); }
 
@@ -240,8 +261,8 @@ sub grid {
 	my $action = $opts->{action} // 0;
 	if ($action) {
 		# the game receives grid clicks as its on_grid coderef: $fn->($inst, $cell)
-		$plugin::GRID_FNS{ $self->{_win_id} } //= {};
-		$plugin::GRID_FNS{ $self->{_win_id} }{$action} = sub {
+		$GRID_FNS{ $self->{_win_id} } //= {};
+		$GRID_FNS{ $self->{_win_id} }{$action} = sub {
 			my ($inst, $cell) = @_;
 			my $fn = $inst->{on_grid};
 			$fn->($inst, $cell) if ref($fn) eq 'CODE';
@@ -288,8 +309,8 @@ sub clickable {
 	my ($self, $x, $y, $w, $h, $fn) = @_;
 	$self->{_click_seq} //= 0;
 	my $action = 2000 + $self->{_click_seq}++;
-	$plugin::CLICK_FNS{ $self->{_win_id} } //= {};
-	$plugin::CLICK_FNS{ $self->{_win_id} }{$action} = $fn;
+	$CLICK_FNS{ $self->{_win_id} } //= {};
+	$CLICK_FNS{ $self->{_win_id} }{$action} = $fn;
 	$self->_piece(join(",", 9, $x, $y, $w, $h, 0, $action, 0, 0, ""));
 }
 
@@ -404,28 +425,39 @@ sub arcade_rebuild {
 		$inst->{_status_widget} = $client->NMSWindowAddProgress($win, 0, "green", "");
 	}
 
-	if ($inst->{buttons}) {
-		my $i = 0;
-		for my $btn (@{ $inst->{buttons} }) {
-			$i++;
-			# manual form: ["Label", sub {...}, color => "gold", enabled => sub {...}]
-			my ($label_src, $fn, %opts) = @$btn;
-			my $enabled = 1;
-			if (ref($opts{enabled}) eq 'CODE') { $enabled = $opts{enabled}->($inst) ? 1 : 0; }
-			my $label = ref($label_src) eq 'CODE' ? $label_src->($inst) : "$label_src";
-			my $action = 1000 + $i;
-			$BUTTON_FNS{$win} //= {};
-			$BUTTON_FNS{$win}{$action} = $fn;
-			my $colorstr = defined $opts{color} ? "$opts{color}" : "";
-			my $idx = $client->NMSWindowAddButton($win, $label, $action, $colorstr);
-			if ($idx >= 0 && !$enabled) {
-				$client->NMSWindowSetButton($win, $idx, $label, $colorstr, 1);
-			}
-		}
-	}
+	# Buttons are drawn on the canvas (arcade_draw_buttons below), the way the
+	# live client does it: inline text along the bottom of the table, not a row
+	# of grey widgets under it. Nothing is appended after the canvas, so the
+	# window is exactly the size the game asked for.
 
 	$client->NMSWindowSend($win);
 	$inst->{_rebuild} = 0;
+}
+
+# Inline text buttons along the bottom of the canvas, live-client style: amber,
+# dimmed when disabled, each with its own clickable box.
+sub arcade_draw_buttons {
+	my ($inst, $canvas) = @_;
+	return unless $inst->{buttons};
+	my $x = 12;
+	my $y = ($inst->{height} // 300) - 26;
+	for my $btn (@{ $inst->{buttons} }) {
+		my ($label_src, $fn) = @$btn;
+		my %opts = @$btn;
+		my $enabled = 1;
+		if (ref($opts{enabled}) eq 'CODE') { $enabled = $opts{enabled}->($inst) ? 1 : 0; }
+		my $label = ref($label_src) eq 'CODE' ? $label_src->($inst) : "$label_src";
+		my $w = length($label) * 7 + 8;
+		$w = 28 if $w < 28;
+		$canvas->text($x + $w / 2, $y, $label, {
+			size => 13, align => 1,
+			color => $enabled ? 0xFFD9A641 : 0xFF6E6E6E,
+		});
+		if ($enabled && ref($fn) eq 'CODE') {
+			$canvas->clickable($x - 2, $y - 3, $w + 4, 18, $fn);
+		}
+		$x += $w + 10;
+	}
 }
 
 sub arcade_draw_frame {
@@ -446,6 +478,7 @@ sub arcade_draw_frame {
 		if (ref($inst->{draw}) eq 'CODE') {
 			$inst->{draw}->($inst, $canvas);
 		}
+		arcade_draw_buttons($inst, $canvas);
 	}
 
 	if ($inst->{_status_widget} && $inst->{_status_widget} >= 0 && ref($inst->{status}) eq 'CODE') {
@@ -600,7 +633,11 @@ sub arcade_start {
 	}
 	$inst{win_id} = $win;
 
-	if ($template->{style} eq "wood") {
+	if ($template->{style} eq "felt") {
+		# live card tables are green felt, not the wood/brown skin
+		$client->NMSWindowSetStyle($win, "0xFF16311F", "0xFF2E6A48", 0, 1);
+	}
+	elsif ($template->{style} eq "wood") {
 		$client->NMSWindowSetStyle($win, "0xF02A2416", "0xFFC4A860", 0, 1);
 	}
 	elsif ($template->{style} eq "night") {

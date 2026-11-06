@@ -7,8 +7,9 @@ local BET = 10
 
 local SUITS = { "h", "d", "c", "s" }
 
+-- the table's chips are the player's carried platinum (live behaviour)
 local function chips(self)
-	return self:saved("chips", 100)
+	return self:plat()
 end
 
 local function new_deck()
@@ -55,9 +56,9 @@ end
 return Arcade.game {
 	key = "blackjack",
 	title = "Blackjack",
-	width = 460,
-	height = 320,
-	style = "wood",
+	width = 570,
+	height = 420,
+	style = "felt",
 
 	start = function(self)
 		self.phase = "bet"
@@ -165,20 +166,19 @@ return Arcade.game {
 			else how = "push" end
 		end
 
-		local c = chips(self)
 		if how == "win" or how == "dealer_bust" then
-			self:save("chips", c + BET)
-			self.msg = "You win +" .. BET .. " chips!"
+			self:payout(BET)
+			self.msg = "You win +" .. BET .. " plat!"
 		elseif how == "blackjack" then
-			self:save("chips", c + math.floor(BET * 2.5))
-			self.msg = "Blackjack! +" .. math.floor(BET * 2.5) .. " chips."
+			self:payout(math.floor(BET * 2.5))
+			self.msg = "Blackjack! +" .. math.floor(BET * 2.5) .. " plat."
 		elseif how == "push" then
 			self.msg = "Push -- bet returned."
 		else
-			self:save("chips", c - BET)
-			self.msg = (how == "bust") and "Bust. -" .. BET .. " chips."
-				or ((how == "lose") and "Dealer wins. -" .. BET .. " chips."
-				or "Dealer wins. -" .. BET .. " chips.")
+			self:stake(BET)
+			self.msg = (how == "bust") and "Bust. -" .. BET .. " plat."
+				or ((how == "lose") and "Dealer wins. -" .. BET .. " plat."
+				or "Dealer wins. -" .. BET .. " plat.")
 		end
 
 		self:leaderboard("chips", chips(self))

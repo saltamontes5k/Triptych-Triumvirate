@@ -199,6 +199,31 @@ function GameMetatable.random(self, a, b)
 	return math.random(a, b)
 end
 
+-- The arcade stakes are the platinum the player is carrying, as on the live
+-- server: the chip count on the table IS your purse, and bets move real money.
+function GameMetatable.plat(self)
+	if not self.you then
+		return 0
+	end
+	return math.floor(self.you:GetCarriedMoney() / 1000)
+end
+
+function GameMetatable.stake(self, n)
+	if n <= 0 then
+		return true
+	end
+	if not self.you or self:plat() < n then
+		return false
+	end
+	return self.you:TakeMoneyFromPP(n * 1000) and true or false
+end
+
+function GameMetatable.payout(self, n)
+	if n > 0 and self.you then
+		self.you:AddMoneyToPP(0, 0, 0, n)
+	end
+end
+
 function GameMetatable.random_choice(self, list)
 	return list[math.random(#list)]
 end
@@ -452,28 +477,36 @@ local function rebuild_widgets(inst)
 		inst._status_widget = client:NMSWindowAddProgress(win, 0, "green", "")
 	end
 
-	-- buttons row: one horizontal row under the canvas. Without the same-line
-	-- markers each button got its own row, so a four-button game stacked them
-	-- down the window and pushed the frame twice as tall as its artwork.
+	-- Buttons are drawn on the canvas (draw_buttons below), the way the live
+	-- client does it: inline text along the bottom of the table, not a row of
+	-- grey widgets under it. That keeps the window exactly the size the game
+	-- asked for, since nothing is appended after the canvas any more.
 	inst._button_widget_base = {}
-	if inst.buttons then
-		for i, btn in ipairs(inst.buttons) do
-			local enabled = true
-			if btn.enabled then enabled = btn.enabled(inst) and true or false end
-			local label = (type(btn[1]) == "function") and btn[1](inst) or tostring(btn[1])
-			local action = NEXT_ACTION + i
-			button_fns[win] = button_fns[win] or {}
-			button_fns[win][action] = btn[2]
-			if i > 1 then client:NMSWindowAddSameLine(win) end
-			local idx = client:NMSWindowAddButton(win, label, action, btn.color and tostring(btn.color) or "")
-			if idx >= 0 and not enabled then
-				client:NMSWindowSetButton(win, idx, label, btn.color and tostring(btn.color) or "", true)
-			end
-		end
-	end
 
 	client:NMSWindowSend(win)
 	inst._rebuild = false
+end
+
+-- Inline text buttons along the bottom of the canvas, live-client style:
+-- amber, dimmed when disabled, each with its own clickable box.
+local function draw_buttons(inst, canvas)
+	if not inst.buttons then
+		return
+	end
+	local x = 12
+	local y = inst.height - 26
+	for _, btn in ipairs(inst.buttons) do
+		local label = (type(btn[1]) == "function") and btn[1](inst) or tostring(btn[1])
+		local enabled = true
+		if btn.enabled then enabled = btn.enabled(inst) and true or false end
+		local w = math.max(28, string.len(label) * 7 + 8)
+		canvas:text(x + w / 2, y, label,
+			{ size = 13, align = 1, color = enabled and 0xFFD9A641 or 0xFF6E6E6E })
+		if enabled and btn[2] then
+			canvas:clickable(x - 2, y - 3, w + 4, 18, function(g) btn[2](g) end)
+		end
+		x = x + w + 10
+	end
 end
 
 local function draw_frame(inst)
@@ -493,6 +526,7 @@ local function draw_frame(inst)
 		if inst.draw then
 			inst:draw(canvas)
 		end
+		draw_buttons(inst, canvas)
 	end
 
 	if inst._status_widget and inst._status_widget >= 0 and type(inst.status) == "function" then
@@ -635,7 +669,10 @@ function Arcade.start(template, client, npc)
 	end
 	inst.win_id = win
 
-	if template.style == "wood" then
+	if template.style == "felt" then
+		-- live arcade tables are card-table green, not the wood/brown skin
+		client:NMSWindowSetStyle(win, "0xFF16311F", "0xFF2E6A48", 0, 1)
+	elseif template.style == "wood" then
 		client:NMSWindowSetStyle(win, "0xF02A2416", "0xFFC4A860", 0, 1)
 	elseif template.style == "night" then
 		client:NMSWindowSetStyle(win, "0xF0141420", "0xFF3050C0", 0, 1)

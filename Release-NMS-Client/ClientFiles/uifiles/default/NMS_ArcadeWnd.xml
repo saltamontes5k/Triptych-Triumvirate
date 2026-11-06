@@ -32,6 +32,27 @@
     <Template>BDT_SmallNormal</Template>
   </Button>
 
+  <!-- Full-interior click surface. Without a real child control, EQ has nothing
+       under the cursor inside the frame and treats the whole window as title
+       bar: the drag cursor everywhere, and a press starts a move. It is hidden
+       by the DLL's own interior fill (drawn later, over it). -->
+  <Button item="NMSArcadeSurface">
+    <ScreenID>NMSArcadeSurface</ScreenID>
+    <Font>4</Font>
+    <RelativePosition>true</RelativePosition>
+    <Location>
+      <X>6</X>
+      <Y>24</Y>
+    </Location>
+    <Size>
+      <CX>380</CX>
+      <CY>290</CY>
+    </Size>
+    <Style_Checkbox>false</Style_Checkbox>
+    <Text></Text>
+    <Template>BDT_SmallNormal</Template>
+  </Button>
+
   <Screen item="NMS_ArcadeShell">
     <RelativePosition>false</RelativePosition>
     <Location>
@@ -52,5 +73,6 @@
     <Escapable>true</Escapable>
     <Style_Minimizebox>false</Style_Minimizebox>
     <Pieces>NMSArcadeClose</Pieces>
+    <Pieces>NMSArcadeSurface</Pieces>
   </Screen>
 </XML>

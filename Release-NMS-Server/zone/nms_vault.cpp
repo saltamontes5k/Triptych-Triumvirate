@@ -1073,12 +1073,13 @@ static std::string VaultWindowPageLabel(int page)
 }
 
 // Builds (or rebuilds) the vault panel for the client's current page. Returns
-// false when the client cannot render script windows, so the caller falls back
-// to the classic VAULTDATA chat lines.
+// false when the script panel is off (Custom:NMSVaultScriptPanel, default off —
+// the vault ships as the classic native list) or the client cannot render
+// script windows, so the caller falls back to the classic VAULTDATA chat lines.
 static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vector<NmsVaultItem> &items)
 {
 	auto &wins = EQ::NMS::GetWindows(c);
-	if (!wins.Capable() || !RuleB(Custom, NMSWindowEnabled)) {
+	if (!RuleB(Custom, NMSVaultScriptPanel) || !wins.Capable() || !RuleB(Custom, NMSWindowEnabled)) {
 		return false;
 	}
 
@@ -1086,7 +1087,7 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	// The live NMS vault is a wide window: nine page tabs share one row and the
 	// slot boxes stay square. At 400px the tabs wrapped to three rows and the
 	// grid read as a single dark slab, so size for the row, not for a dialog.
-	const int wid = wins.Open(key, "Nautilus Vault", 1100, 340, EQ::NMS::WFNoResize);
+	const int wid = wins.Open(key, "Nautilus Vault", 680, 420, EQ::NMS::WFNoResize);
 	if (!wid) {
 		return false;
 	}
@@ -1124,12 +1125,13 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 	wins.AddText(wid, fmt::format("{}: {}/{} slots used. {}", VaultWindowPageLabel(open_page), used,
 		VaultWindowPageSlots(open_page), hint), "#D9A641", true);
 
-	// slot grid
-	const int cols = open_page == 9 ? 4 : 5;
-	const int count = VaultWindowPageSlots(open_page);
-	const int rows = (count + cols - 1) / cols;
+	// slot row: the live vault lays every box out in ONE row of numbered cells,
+	// not a wrapped grid, so the page reads the same shape on every tab
+	const int cols = VaultWindowPageSlots(open_page);
+	const int count = cols;
+	const int rows = 1;
 	const int base = VaultWindowPageBase(open_page);
-	const int cell = 42;   // square boxes; the client draws a 1px bevel per cell
+	const int cell = 38;   // matches the live box size at this font
 	const int gx = 8;
 	const int gy = 8;
 
@@ -1151,6 +1153,13 @@ static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vect
 			colors += fmt::format("{},{}", i, row ? occupied_argb : empty_argb);
 		}
 		wins.AddCanvasGrid(wid, canvas, gx, gy, cols, rows, cell, cell, 100 + open_page, colors);
+
+		// box numbers in the top-left corner, as the live client draws them
+		for (int i = 0; i < cols; ++i) {
+			wins.AddCanvasPiece(wid, canvas, EQ::NMS::PieceText,
+				gx + i * cell + 3, gy + 1, 0, 0, 0xFF8E97AD, 10, 0, 0,
+				fmt::format("{}", i + 1));
+		}
 
 		for (int i = 0; i < cols * rows; ++i) {
 			const NmsVaultItem *row = NmsVaultFind(items, base + i, 0);
@@ -1251,8 +1260,9 @@ void NmsVaultSendRefresh(Client *c, int open_page)
 		return;
 	}
 
-	// Patched clients get the script-window panel (live-NMS style boxes);
-	// everyone else keeps the classic SIDL listbox fed by VAULTDATA lines.
+	// Patched clients get the script-window panel (live-NMS style boxes) only
+	// when Custom:NMSVaultScriptPanel is on (default off); everyone else keeps
+	// the classic SIDL listbox fed by VAULTDATA lines.
 	if (NmsVaultRefreshWindowPanel(c, open_page, items)) {
 		return;
 	}

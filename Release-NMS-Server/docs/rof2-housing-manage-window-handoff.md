@@ -678,6 +678,101 @@ In Veeshan's Peak there is no housing state, so `sub_748180` never runs and the 
 matching the operator's observation exactly.
 
 
+
+
+## 10. Neighbourhood-wide visibility (2026-11-06, after the §9 deployment)
+
+Three owner filters had the same shape and all three broke the same way — a client only ever learned
+about its own lot:
+
+| sender | symptom | state |
+|---|---|---|
+| `SendRealEstateExteriors` | other players could not see the house | fixed, live (Zexxus confirmed) |
+| `SendRealEstatePlotObjects` | Manage could not open on a neighbour's plot | fixed, waiting on restart |
+| `SendRealEstateAreaManifest` | "you must be inside a plot or house" on a neighbour's plot | fixed, waiting on restart |
+
+The region manifest was the subtle one: without a region for the lot underfoot, `RealEstate[+152]`
+stays `-1`, so `sub_747E50` (CanShow) refuses before the window is ever created. Measured with two
+clients side by side, one owner and one visitor, standing on the same lot:
+
+```
+pid=2316  (owner)   plot=19 zone=19 feet=19
+pid=20244 (visitor) plot=-1 zone=1  feet=1
+```
+
+Also fixed in the same pending build: the interior's window title used `fmt::format("Plot {}", door_id)`
+instead of `PlotStreetAddress(door_id)`, so a house in the interior still read "Plot 19" while the
+exterior read "103 Park Circle".
+
+### Still open: the house binding inside the interior
+
+The Items window shows `House N/A`, `Crate N/A` and greyed Shed/Closet/Storage buttons. Those bind
+to a **kind-4 house** estate; §9 replaced the interior's kind-4 estate with a kind-8 plot to satisfy
+the Manage predicate, so the window no longer has a house to attach to. The two requirements are
+different estate kinds for the same lot, which is what `EstateSnapshot::children` exists for —
+register the house as a child of the plot estate instead of choosing one kind. Not implemented.
+
+## 9. House interiors — same gate, different branch (2026-11-06)
+
+The exterior Manage window works after §8.8. Inside a house interior (`phinterior1a`) it was still
+truncated. Measured live with `tools/predeval_manage_predicate.ps1`:
+
+```
+plot(RE+152)=19   estate=0x1F61A6F0
+  definition id = 2        -> type 4 (kRealEstateKindHouse)
+  guild_id      = -1
+  owner record  = 0x00000000
+  PREDICATE sub_5B41D0 = False
+```
+
+`SendRealEstateZoneContext` registers the interior as a **kind-4 house** definition (`house_def`,
+nms_housing.cpp ~2872). The predicate's kind-4 branch is:
+
+```c
+type == 4 && estate[+0x2C] && *(estate[+0x2C] + 8)
+```
+
+`estate[+0x2C]` is an owner-record pointer the client never fills from anything we send — the
+snapshot carries only `owner_name`/`owner_handle` strings, and populating the name did not create
+the record. So a kind-4 estate can never satisfy the gate with our payload. The kind-8 branch only
+asks for `guild_id != -1`.
+
+Proved live by patching the client (definition type 4 -> 8, guild -1 -> 0):
+
+```
+vis=1  dirty34=0  clip=(250,330,855,770)
+after forcing stops: vis=1 dirty34=0     -- stays up on its own
+```
+
+Applied to the server:
+
+- `house_def.type = kRealEstateKindPlot` (was `kRealEstateKindHouse`).
+- `interior_snapshot.guild_id = 0` (the `EstateSnapshot` default of `0xFFFFFFFF` fails the check).
+
+**Watch for regressions.** The original comment claimed the client's hierarchy walk needs a kind-4
+estate to find ("you must be inside a plot or house"). Reverting is one line if furniture placement
+or that message comes back — the alternative is finding what fills `estate[+0x2C]`, which is the
+same missing piece that would let personal plots report as personal rather than guild (§8.8.4).
+
+Also fixed in the same pending build: **plot objects are no longer owner-filtered.**
+`SendRealEstatePlotObjects` only sent lots where `owner_char_id = me` (or the guild matched), so the
+client had no estate record for anyone else's plot and clicking a neighbouring marker could not open
+Manage at all — `CanShow` (`sub_747E50`) needs a plot-map hit. The query now returns every plot in
+the zone, which is the same class of bug as the exterior broadcast in §8.8.4.
+
+Build state: **deployed 2026-11-06 12:11.** Servers were stopped on the operator's instruction, the
+address migration was applied (`nms_plot_address`, 69 rows), and `zone.exe` relinked. An earlier
+interrupted build had left 125 truncated objects behind, which surfaced as `LNK1136: invalid or
+corrupt file`; clearing every non-unity object newer than the interruption fixed it. Live in this
+build: the interior kind-8 change, plot objects for every plot in the zone, and real street
+addresses from `nms_plot_address` (generated address remains the fallback).
+
+Map note: `C:\Games\EQTriune\maps\neighborhood.txt` and `neighborhood_1.txt` were checked for
+house addresses. The `P` labels are service markers only (`Brewing`, `Forge`, `Market`,
+`to_Guild_Lobby`); the large file has no text labels at all. Plot outlines exist as `L` line
+geometry, so real street addresses would have to be derived from those polygons and matched to
+`nms_plot.door_id` — a separate piece of work, not a lookup.
+
 #### 8.8.4 Applied 2026-11-04 15:47 (built, not yet live)
 
 Option 2 shipped, plus the unrelated exterior-visibility fix the operator reported (another player

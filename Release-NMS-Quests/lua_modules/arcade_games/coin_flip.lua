@@ -5,8 +5,9 @@ local Arcade = require("arcade")
 
 local BET = 10
 
+-- chips on the table are the player's carried platinum (live behaviour)
 local function chips(self)
-	return self:saved("chips", 100)
+	return self:plat()
 end
 
 return Arcade.game {
@@ -55,11 +56,11 @@ return Arcade.game {
 		self:tween(self, "spin", 1, 900, "out", function(g)
 			g.busy = false
 			if g.result == g.pick then
-				g:save("chips", chips(g) + BET)
-				g.msg = g.result .. "! +" .. BET .. " chips."
+				g:payout(BET)
+				g.msg = g.result .. "! +" .. BET .. " plat."
 			else
-				g:save("chips", chips(g) - BET)
-				g.msg = g.result .. ". -" .. BET .. " chips."
+				g:stake(BET)
+				g.msg = g.result .. ". -" .. BET .. " plat."
 			end
 		end)
 	end,

@@ -148,6 +148,13 @@ public:
 		if (m_close && (win->flags & NMSW_F_NOCLOSE)) {
 			m_close->Show(false, true);
 		}
+		// real child covering the interior: with nothing under the cursor inside
+		// the frame, EQ treats the whole window as title bar (drag cursor
+		// everywhere, press starts a move). The DLL's interior fill draws over
+		// this later, so it is invisible; it just needs to exist and to be sized.
+		if (win) {
+			win->surface = GetChildItem("NMSArcadeSurface");
+		}
 		CXStr title(const_cast<char*>(win->title.c_str()));
 		(reinterpret_cast<CXWnd*>(this))->SetWindowTextA(title);
 		SetWndNotification(ArcadeShellWnd);
@@ -642,6 +649,18 @@ bool Manager::ClickWindow(ArcadeWindow& win, int sx, int sy)
 	int wx = sx - rc.left;
 	int wy = sy - rc.top;
 
+	// The close box is drawn by us (below) inside the title-bar strip, so it has
+	// to be tested before the title-bar early return. The host UI template's own
+	// close button never resolves on this client build, which is why the windows
+	// had no way out but camping.
+	{
+		const int bx = static_cast<int>(rc.right - rc.left) - 24;
+		if (wx >= bx && wx < bx + 16 && wy >= 4 && wy < 20) {
+			win.want_close = true; // Render destroys it after this loop
+			return true;
+		}
+	}
+
 	// title-bar rows belong to the native chrome (drag etc.)
 	if (wy < 24) {
 		return false;
@@ -754,6 +773,15 @@ void Manager::FitShell(ArcadeWindow& win)
 		c.right = rc.right - 12;
 		c.left = c.right - 24;
 	}
+
+	// the click surface tracks the interior the layout uses (6px in, 24px down)
+	if (win.surface) {
+		RECT& s = WndRect(win.surface);
+		s.left = rc.left + 6;
+		s.right = rc.right - 6;
+		s.top = rc.top + 24;
+		s.bottom = rc.bottom - 6;
+	}
 }
 
 void Manager::Relayout(ArcadeWindow& win)
@@ -807,7 +835,10 @@ void Manager::Relayout(ArcadeWindow& win)
 				}
 				break;
 			case NMSW_BUTTON:
-				wgt_w = (std::max)(70, TextWidth(wgt.text, 14) + 20);
+				// the live client's tabs are text-width, not a fixed 70px slab:
+				// that floor is what forced the vault out to 1100px so nine of
+				// them could share a row
+				wgt_w = (std::max)(44, TextWidth(wgt.text, 14) + 20);
 				wgt_h = 22;
 				break;
 			case NMSW_TABLE: {
@@ -1413,6 +1444,25 @@ void Manager::Render()
 				ClickWindow(*target, mx, my);
 			}
 		}
+
+		// close-box clicks were only flagged during the hit test: destroy those
+		// windows now, outside the loop that walks m_wins
+		if (!m_wins.empty()) {
+			std::vector<uint32_t> closing;
+			for (auto& win : m_wins) {
+				if (win.want_close) {
+					closing.push_back(win.id);
+				}
+			}
+			for (uint32_t id : closing) {
+				for (auto& win : m_wins) {
+					if (win.id == id) {
+						SendClosed(win);
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	IDirect3DDevice9* dev = g_pDevice;
@@ -1492,6 +1542,17 @@ void Manager::Render()
 		DrawLine(6, 24 + interior_h, 6 + interior_w, 24 + interior_h, border, 1.f);
 		DrawLine(6, 24, 6, 24 + interior_h, border, 1.f);
 		DrawLine(6 + interior_w, 24, 6 + interior_w, 24 + interior_h, border, 1.f);
+
+		// Close box: the SIDL template's own button does not resolve on this
+		// client, so the X is drawn here and hit-tested in ClickWindow. The
+		// native closebox is off in the XML precisely so this is the only way out
+		// and the server always learns about the close.
+		{
+			const int bx = static_cast<int>(rc.right - rc.left) - 24;
+			FillRect(bx, 4, 16, 16, ARGB(190, 30, 27, 24));
+			DrawLine(bx + 4, 7, bx + 12, 17, ARGB(255, 236, 200, 96), 1.4f);
+			DrawLine(bx + 12, 7, bx + 4, 17, ARGB(255, 236, 200, 96), 1.4f);
+		}
 
 		int piece_budget = 290;
 
