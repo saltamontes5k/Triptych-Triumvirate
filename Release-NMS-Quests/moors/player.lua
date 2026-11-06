@@ -3,11 +3,17 @@
 -- NMS King of the Monsters moors-v40 monster mission hooks, ported here from the
 -- retired player.pl so the single lua player script owns every player event in
 -- this zone. Requires the lua GetZoneInstanceVersion client binding.
+-- rof2b additions (2026-11-05): the Sunderock Springs crossroads-sign entry
+-- (prepare_board extends the blightfire board before the selector builds), and
+-- the Short Sharp Sting partisan + bixie journal fragments.
 local blightfire = require("achievement_quest_blightfire")
 local bixie_scenes = require("achievement_quest_bixie_scenes")
 local spirits = require("achievement_quest_blightfire_spirits")
 local welcome = require("achievement_quest_blightfire_welcome")
 local champion = require("achievement_quest_blightfire_champion")
+local sting = require("achievement_quest_sting")
+local journal = require("achievement_quest_bixie_journal")
+local sunderock = require("achievement_quest_sunderock")
 -- The Stone Hive chain starts from moors givers (Vreshnar/Brezuu/Idriak);
 -- run its task bookkeeping here too so accepts in this zone stay in sync.
 local stonehive = require("achievement_quest_stonehive")
@@ -21,6 +27,9 @@ local hunt_version    = 40
 local hunt_controller = 1520001970
 
 function event_click_door(e)
+	-- Sunderock extends the crossroads board data first so the blightfire
+	-- callback below builds one combined selector (never two).
+	sunderock.prepare_board(e)
 	local result = blightfire.click_door(e)
 	if result ~= nil then return result end
 	result = bixie_scenes.click_door(e)
@@ -31,12 +40,18 @@ end
 function event_enter_zone(e)
 	bixie_scenes.player_enter(e)
 	welcome.player_event(e)
+	sting.enter(e)
 end
 
 function event_task_accepted(e)
 	welcome.player_accepted(e)
 	champion.player(e)
 	stonehive.accepted(e)
+	sting.accepted(e)
+end
+
+function event_task_update(e)
+	sting.updated(e)
 end
 
 function event_task_stage_complete(e)
@@ -54,8 +69,17 @@ function event_task_complete(e)
 end
 
 function event_timer(e)
+	if sting.timer(e) then return end
 	if bixie_scenes.player_timer(e) then return end
 	welcome.player_timer(e)
+end
+
+function event_item_click_client(e)
+	journal.open(e)
+end
+
+function event_combine_validate(e)
+	return journal.validate(e)
 end
 
 function event_signal(e)
