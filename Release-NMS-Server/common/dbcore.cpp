@@ -389,6 +389,46 @@ void DBcore::SetMutex(Mutex *mutex)
 	DBcore::m_mutex = mutex;
 }
 
+// "DELIMITER <token>" is a mysql client directive, not SQL. Scripts written for the client
+// (every migration twin under utils/sql, and anything sourced through #dburl) terminate stored
+// programs and anonymous blocks with a token the server cannot parse. Mirror the client's line
+// scan: drop the directive lines and fold the active terminator back to ";". Scripts without a
+// directive are returned untouched.
+static std::string FoldClientDelimiterDirectives(const std::string &sql)
+{
+	std::string delimiter = ";";
+	std::string folded;
+
+	for (auto &line: Strings::Split(sql, "\n")) {
+		std::string trimmed = line;
+		Strings::Trim(trimmed);
+
+		if (Strings::BeginsWith(Strings::ToLower(trimmed), "delimiter")) {
+			std::string token = trimmed.substr(9);
+			Strings::Trim(token);
+			if (!token.empty()) {
+				delimiter = token;
+			}
+			continue;
+		}
+
+		const bool comment_line = Strings::BeginsWith(trimmed, "--") || Strings::BeginsWith(trimmed, "#");
+		if (delimiter != ";" && !comment_line && Strings::EndsWith(trimmed, delimiter)) {
+			size_t trailing_start = line.size();
+			while (trailing_start > 0 && isspace((unsigned char) line[trailing_start - 1])) {
+				--trailing_start;
+			}
+
+			line = trimmed.substr(0, trimmed.size() - delimiter.size()) + ";" + line.substr(trailing_start);
+		}
+
+		folded += line;
+		folded += "\n";
+	}
+
+	return folded;
+}
+
 // executes multiple statements in one query
 // do not use this in application logic
 // this was built and maintained for database migrations only
@@ -407,7 +447,14 @@ MySQLRequestResult DBcore::QueryDatabaseMulti(const std::string &query)
 	}
 	auto r = MySQLRequestResult{};
 
-	int status = mysql_real_query(mysql, query.c_str(), query.length());
+	const bool        has_client_delimiter = Strings::ContainsLower(query, "delimiter");
+	const std::string sql                  = has_client_delimiter ? FoldClientDelimiterDirectives(query) : query;
+
+	if (has_client_delimiter) {
+		LogInfo("Folded client DELIMITER directives before executing a multi-statement script");
+	}
+
+	int status = mysql_real_query(mysql, sql.c_str(), sql.length());
 
 	// A failed multi-statement query has no usable result set to drain.
 	if (status != 0) {
@@ -419,10 +466,10 @@ MySQLRequestResult DBcore::QueryDatabaseMulti(const std::string &query)
 		}
 
 		// error logging
-		if (error_number > 0 && !query.empty() && error_number != 1065) {
+		if (error_number > 0 && !sql.empty() && error_number != 1065) {
 			std::string error_raw   = fmt::format("{}", error_message);
 			std::string mysql_err   = Strings::Trim(error_raw);
-			std::string clean_query = Strings::Replace(query, "\n", "");
+			std::string clean_query = Strings::Replace(sql, "\n", "");
 			LogMySQLError("[{}] ({}) query [{}]", mysql_err, error_number, clean_query);
 		}
 
@@ -445,7 +492,7 @@ MySQLRequestResult DBcore::QueryDatabaseMulti(const std::string &query)
 	// there could be a query with a semicolon in the actual data, this is best effort for
 	// logging / display purposes
 	// rare that we see this when this is only used in DDL statements
-	auto pieces = Strings::Split(query, ";");
+	auto pieces = Strings::Split(sql, ";");
 
 	// process each statement result
 	do {
