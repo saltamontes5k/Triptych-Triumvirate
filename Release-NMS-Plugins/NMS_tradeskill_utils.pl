@@ -36,8 +36,15 @@
 # (Client::MaxSkill, the same rule the #train trainer in global/Zapf.pl uses):
 # tradeskills cap at 300, Fishing at 200, Alcohol Tolerance at 375, and a
 # low-level character cannot be pushed past their level's cap.
+#
+# Gated by the Custom:RaidTradeskillRewards server rule (default on). Ops
+# toggle: #rules setdb Custom:RaidTradeskillRewards false + #reload rules
+# (or #rules reload per zone). While the rule answers anything but "true"
+# the whole award is skipped silently -- no marquee, no message.
 
 # Skill ids (common/skills.h).
+my $TRADESKILL_REWARD_RULE = 'Custom:RaidTradeskillRewards';
+
 my @ALL_TRADESKILLS = (
     55, # Fishing
     56, # Make Poison
@@ -314,6 +321,13 @@ sub AwardTradeskillKillCredit {
     return 0 unless ($client && $npc);
     return 0 unless ($client->IsClient() && $npc->IsNPC());
     return 0 if ($npc->GetLevel() < $TRADESKILL_MIN_NPC_LEVEL);
+
+    # Master switch (Custom:RaidTradeskillRewards). quest::get_rule returns
+    # "true"/"false" for compiled bool rules; any other answer (rule not yet
+    # compiled into the running zone binary, empty DB row) treats as off, so
+    # the reward only fires on an explicit "true". Toggle live with
+    # #rules setdb Custom:RaidTradeskillRewards false + #reload rules.
+    return 0 if (quest::get_rule($TRADESKILL_REWARD_RULE) ne 'true');
 
     my $points = GetTradeskillKillReward($npc);
     return 0 unless ($points);
