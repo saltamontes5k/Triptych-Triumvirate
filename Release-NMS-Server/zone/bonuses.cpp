@@ -723,6 +723,15 @@ void Mob::ApplyAABonuses(const AA::Rank &rank, StatBonuses *newbon)
 			/*if (base1 > newbon->movementspeed)	//or should we use a total value?
 				newbon->movementspeed = base1;*/
 			break;
+		case SE_AllStats:
+			newbon->STR += base_value;
+			newbon->STA += base_value;
+			newbon->DEX += base_value;
+			newbon->AGI += base_value;
+			newbon->INT += base_value;
+			newbon->WIS += base_value;
+			newbon->CHA += base_value;
+			break;
 		case SE_STR:
 			newbon->STR += base_value;
 			break;
@@ -1172,6 +1181,9 @@ void Mob::ApplyAABonuses(const AA::Rank &rank, StatBonuses *newbon)
 			break;
 		}
 
+		case SE_TwoHandBluntBlock:
+			newbon->TwoHandBluntBlock += base_value;
+			break;
 		case SE_CriticalHitChance: {
 			// Bad data or unsupported new skill
 			if (limit_value > EQ::skills::HIGHEST_SKILL)
