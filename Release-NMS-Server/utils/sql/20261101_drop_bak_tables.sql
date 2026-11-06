@@ -35,7 +35,7 @@
 -- sweep already-banded aa_ranks rows down a tier). The shipped release zip has
 -- custom_version >= 160, so that path is unreachable in practice.
 --
--- Pre-drop safety copy: Temp\opencode\bak_tables_dump_20261101.sql (all 27
+-- Pre-drop safety copy: bak_tables_dump_20261101.sql in local Temp (all 27
 -- tables, ~40 MB). Post-drop verified: zero matches for %bak%/%backup%/bk_%/
 -- new_table; spawn2/spawngroup/spawnentry/npc_types/aa_ranks/rewards row
 -- counts identical before and after; db_version.custom_version unchanged.
