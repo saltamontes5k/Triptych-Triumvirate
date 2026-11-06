@@ -167,6 +167,13 @@ DETOUR_TRAMPOLINE_EMPTY(
 	int __fastcall BardCastBard_Trampoline(const void*, void*, const void*, int)
 );
 
+// When false the BardCastBard detour passes every cast straight to the original function.
+// Skipping the original for non-bard spells (the song-toggle fix) also suppressed the
+// caster's own cast animation for every non-song spell -- the cause of the missing
+// casting-animation "dance" reported 2026-11-06. Flip to true to restore the old
+// song-toggle behavior while the surgical fix is pending.
+bool isBardCastBardHookEnabled = false;
+
 // NMS: CSkillMgr::IsAvailable Hook
 #define CSkillMgr__IsAvailable_x                                   0x5BAE40
 using IsAvailable_t = bool(__fastcall*)(void*, void*, int);
@@ -1156,6 +1163,13 @@ static int __fastcall BardCastBard_Detour(
 	const void* pSpell,
 	int caster_class)
 {
+	// Disabled path: pass every cast to the original function. Returning 0 for non-bard
+	// spells also skipped the original's cast-start work, killing the caster's own cast
+	// animation for every non-song spell. See isBardCastBardHookEnabled above.
+	if (!isBardCastBardHookEnabled) {
+		return BardCastBard_Trampoline(pThis, pEdx, pSpell, caster_class);
+	}
+
 	if (!pSpell) {
 		return 0;
 	}
