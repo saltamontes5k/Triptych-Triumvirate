@@ -1,24 +1,32 @@
+# Compiled binaries are never tracked - this repo ships source only.
+# Build outputs and runtime payloads stay out of git; build from source.
+*.exe
+*.dll
+*.lib
+*.so
+*.pdb
+
 # --- Secrets / local configs (never commit) ---
 Release-NMS-Server/eqemu_config.json
 Release-NMS-Server/eqemu_config.json.bak-pre-spire
 Release-NMS-Server/login.json
-opencode.json
 
-# --- Server build / runtime ---
+# --- Server build / runtime (recreate locally, never commit) ---
 Release-NMS-Server/Build/
 Release-NMS-Server/vcpkg/
 Release-NMS-Server/perl/
 Release-NMS-Server/logs/
 Release-NMS-Server/shared_memory/
-Release-NMS-Server/spire.exe
-Release-NMS-Server/spire.exe.*
 Release-NMS-Server/release-peq.sql
-
-# --- DB-derived client data (regenerated via export-client-files.bat) ---
 Release-NMS-Server/export/
+Release-NMS-Server/bin/
+Release-NMS-Server/shared/
 
-# --- LoN card data: client-derived (Daybreak copyright) - recreate locally, never commit ---
+# --- Client-derived data (Daybreak copyright - recreate locally, never commit) ---
 Release-NMS-Server/bin/Release/lon_data/
+Release-NMS-Client/ClientFiles/*.txt
+Release-NMS-Client/ClientFiles/*.bak-*
+Release-NMS-Client/ClientFiles/Resources/*.txt
 
 # --- Maps: repo-root maps/ not tracked; Release-NMS-Server/maps/ ships ---
 /maps/
@@ -31,13 +39,11 @@ backups/
 .vscode/
 *.user
 *.suo
-*.userosv
 *.sln.docstates
 *.VC.db
 *.opendb
 *.ipch
 *.idb
-*.pdb
 .idea/
 
 # --- Build outputs (client add-on) ---
@@ -48,63 +54,10 @@ Release-NMS-Client/eqgame_dll/eqgame_dll_rof2/Release/
 Release-NMS-Client/Release/
 *.recipe
 *.tlog
-
-# --- Node / MCP ---
-everquest1-mcp/node_modules/
-everquest1-mcp/dist/
-everquest1-mcp/.git/
+*.log
 
 # --- OS cruft ---
 Thumbs.db
 .DS_Store
 desktop.ini
-
-# --- Local-only: harness config, internal docs, reference, tooling ---
-/AGENTS.md
-/agents/
-/Release-NMS-Deploy/
-/reference/
-/eqemu_docs/
-/shroudref/
-/race_content/
-/tools/
-/CLIENTF
-/.zcode/
-
-# --- Local ops scripts / scratch (never published) ---
-/*.bat
-/*.py
-/shroud_state.py
-/tmp/
-/tmp_housing_ida/
-/tmp_housing_shots/
-
-# --- Server runtime (bin is a junction to Build/bin/Release) ---
-/Release-NMS-Server/bin/
-/Release-NMS-Server/shared/
-
-# --- Exported client data / build logs ---
-Release-NMS-Client/ClientFiles/*.txt
-Release-NMS-Client/ClientFiles/*.dll
-Release-NMS-Client/*.log
-*.log
-
-# --- Local-only MCP servers / patch scratch ---
-/eqemu-mcp-server/
-/everquest1-mcp/
-/*.patch
-Release-NMS-Client/ClientFiles/Resources/*.txt
-
-
-# --- Local-only personal folders / client backups (never commit) ---
-/EQ Triune Project/
-/Loot System Plugin/
-Release-NMS-Client/ClientFiles/*.bak-*
-
-# --- Internal audit notes / staging materials (local-only, never publish) ---
-/Release-NMS-Quests/_staging/
-/Release-NMS-Server/docs/quest-audit-*.md
-/Release-NMS-Server/docs/sod-progression.md
-
-# Python scratch
 __pycache__/

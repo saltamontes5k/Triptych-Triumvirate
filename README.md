@@ -6,6 +6,11 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (11/10)
+- compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
+- history scrubbed so the old binary blobs are gone for real, fresh clones are much lighter
+- the database zip and the maps are still included, nothing else moved
+
 ### This update's changes (11/1)
 - various server side stability fixes/fixes in general cherrypicked from downstream (Russianranger, GreyMouser69)
 - Achievements has pretty buttons up to UF and offers some rewards now, a bit op and a bit underwhelming, needs to be populated more
@@ -141,7 +146,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 
 | Folder | What it is |
 | --- | --- |
-| [`Release-NMS-Server/`](Release-NMS-Server/) | The server (EQEmu-based), pre-built binaries, and the database dump |
+| [`Release-NMS-Server/`](Release-NMS-Server/) | The server (EQEmu-based) source and the database dump |
 | [`Release-NMS-Client/`](Release-NMS-Client/) | `dinput8.dll` client add-on + the modified UI files |
 | [`Release-NMS-Quests/`](Release-NMS-Quests/) | Quest scripts (Perl / Lua) |
 | [`Release-NMS-Plugins/`](Release-NMS-Plugins/) | Perl plugins the quests depend on |
@@ -184,13 +189,10 @@ They are already in place for a fresh checkout — no separate download needed.
 **3. Set up the database.** Unzip `Release-NMS-Server/database/release-peq.zip` and import it
 into an empty schema. It contains **no player data** — it is a fresh world.
 
-**4. Run the server.** Pre-built Windows binaries are in `Release-NMS-Server/bin/Release/`
-(`world.exe`, `zone.exe`, `ucs.exe`, `queryserv.exe`, `loginserver.exe`, `eqlaunch.exe` and
-`shared_memory.exe`, plus their DLLs and opcode/patch configs). Copy
+**4. Build and run the server.** Binaries are **not shipped** — build from source (see
+**Building** below); they land in `Build\bin\Release\`. Copy
 `eqemu_config.json.example` and `login.json.example` to their real names and set your DB
 credentials, then start `world.exe` (or use the included `start-servers.bat`).
-
-Prefer to build from source instead? See **Building** below.
 
 **5. Install quests and plugins.** Copy `Release-NMS-Quests/` into your server's `quests/` folder
 and `Release-NMS-Plugins/` into `quests/plugins/`.
@@ -206,8 +208,10 @@ export-client-files.bat <your-EQ-client-folder>
 It runs the exporter and copies all four files into your client folder and its `Resources\`
 folder. Re-run any time you change spells, skills or item text in the database.
 
-**7. Install the client add-on.** Copy `Release-NMS-Client/ClientFiles/` over your client.
-See [the client README](Release-NMS-Client/README.md) — it also covers the known art gaps.
+**7. Install the client add-on.** Build `dinput8.dll` from `Release-NMS-Client/eqgame_dll`
+(VS 2022, **Win32/x86** — it is not shipped) and copy `Release-NMS-Client/ClientFiles/`
+over your client. See [the client README](Release-NMS-Client/README.md) — it also covers
+the known art gaps.
 
 ---
 
