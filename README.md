@@ -8,6 +8,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 ---
 ### This update's changes (11/10)
 - compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
+- lon card data (bin/Release/lon_data, client-derived) removed from history too - recreate it locally like the gitignore always said
 - history scrubbed so the old binary blobs are gone for real, fresh clones are much lighter
 - the database zip and the maps are still included, nothing else moved
 
