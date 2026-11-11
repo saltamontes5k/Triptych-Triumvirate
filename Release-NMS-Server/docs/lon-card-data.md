@@ -36,7 +36,8 @@ Source: any RoF2-or-later client install that still carries the card game —
 `<EverQuest>\LegendsOfNorrath\data`
 Target: `<server root>\lon_data` — next to `world.exe`, i.e. `Release-NMS-Server\Build\bin\Release\lon_data`
 
-The result must be **exactly 62 files** shaped like this:
+The server needs these **62 core files** (copying the client folder wholesale is fine too — the
+extra client files `ban.dat`, `restrict.dat` and `locale\*` are simply ignored):
 
 ```
 lon_data\
@@ -124,8 +125,8 @@ Do exactly this, in order, and stop if a check fails:
    `archetypes\storage.dat` present. If none exists, stop and report — do not invent or download the data.
 2. Run `recreate-lon-data.bat <client>` from the repo root, or copy `LegendsOfNorrath\data\*` to
    `Release-NMS-Server\Build\bin\Release\lon_data\` (robocopy `/E`).
-3. Assert `(Get-ChildItem lon_data -Recurse -File).Count -eq 62` and that
-   `archetypes\index.dat`, `archetypes\storage.dat`, `campaign.dat` and at least 52 `.eqd` files exist.
+3. Assert `archetypes\index.dat`, `archetypes\storage.dat`, `campaign.dat` and at least 52 `.eqd`
+   files exist (a wholesale client copy also carries `ban.dat`/`restrict.dat`/`locale\*` — fine).
 4. Confirm `rule_values` has `Custom:LoNEnabled = true` and `Custom:LoNDataPath = lon_data`.
 5. Start or restart `world` **only with the player-facing go-ahead**, then read the boot log for
    `[LoN] card data: [...] archetypes ([0] unreadable) ...` and check the numbers in §3.
