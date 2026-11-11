@@ -11,12 +11,12 @@ if "%~1"=="" (
 )
 
 set "CLIENT=%~1"
-set "EXEDIR=%~dp0Release-NMS-Server\bin\Release"
+set "EXEDIR=%~dp0Release-NMS-Server\Build\bin\Release"
 set "EXPORT=%EXEDIR%\export"
 
 if not exist "%EXEDIR%\export_client_files.exe" (
     echo ERROR: %EXEDIR%\export_client_files.exe not found.
-    echo Build the server first, or confirm Release-NMS-Server\bin\Release exists.
+    echo Build the server first, or confirm Release-NMS-Server\Build\bin\Release exists.
     exit /b 1
 )
 

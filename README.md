@@ -8,7 +8,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 ---
 ### This update's changes (11/10)
 - compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
-- lon card data (bin/Release/lon_data, client-derived) removed from history too - recreate it locally like the gitignore always said
+- lon card data (client-derived) removed from history too - one command puts it back from your own client: recreate-lon-data.bat <client-folder> (see Release-NMS-Server/docs/lon-card-data.md)
 - history scrubbed so the old binary blobs are gone for real, fresh clones are much lighter
 - the database zip and the maps are still included, nothing else moved
 
@@ -213,6 +213,16 @@ folder. Re-run any time you change spells, skills or item text in the database.
 (VS 2022, **Win32/x86** — it is not shipped) and copy `Release-NMS-Client/ClientFiles/`
 over your client. See [the client README](Release-NMS-Client/README.md) — it also covers
 the known art gaps.
+
+**8. Optional — Legends of Norrath card game.** The card data is Daybreak-copyright, so it is
+not shipped either — recreate it from your own client:
+
+```
+recreate-lon-data.bat <your-EQ-client-folder>
+```
+
+Until you run it the card game simply stays off (one log line per world boot) and everything
+else is unaffected. Details: [the LoN card data doc](Release-NMS-Server/docs/lon-card-data.md).
 
 ---
 

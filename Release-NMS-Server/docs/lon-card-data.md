@@ -34,7 +34,7 @@ Rules in `rule_values` (from the shipped snapshot):
 
 Source: any RoF2-or-later client install that still carries the card game —
 `<EverQuest>\LegendsOfNorrath\data`
-Target: `<server root>\lon_data` — next to `world.exe`, i.e. `Release-NMS-Server\bin\Release\lon_data`
+Target: `<server root>\lon_data` — next to `world.exe`, i.e. `Release-NMS-Server\Build\bin\Release\lon_data`
 
 The result must be **exactly 62 files** shaped like this:
 
@@ -58,10 +58,18 @@ lon_data\
     tournament\README.txt
 ```
 
+One-command path — from the repo root:
+
+```
+recreate-lon-data.bat <EverQuest-folder>
+```
+
+Manual equivalent:
+
 ```powershell
 $client = "C:\EverQuest"                                        # a RoF2 client with the card game
 $src    = Join-Path $client "LegendsOfNorrath\data"
-$dest   = "C:\EQS\Release-NMS-Server\Build\bin\Release\lon_data"
+$dest   = Join-Path (Get-Location) "Release-NMS-Server\Build\bin\Release\lon_data"   # run from the repo root
 robocopy $src $dest /E /NFL /NDL /NJH /NP /R:1 /W:1              # rc 0-7 = success
 (Get-ChildItem $dest -Recurse -File).Count                       # expect 62
 ```
@@ -105,7 +113,7 @@ Leaving the folder absent is enough as well; the only difference is one error li
 
 ```gitignore
 # Client-derived card data (Daybreak-copyright) — recreate locally, never commit
-Release-NMS-Server/bin/Release/lon_data/
+Release-NMS-Server/Build/bin/Release/lon_data/
 ```
 
 ## 6. For an LLM following these instructions
@@ -114,7 +122,8 @@ Do exactly this, in order, and stop if a check fails:
 
 1. Locate a RoF2+ client install containing `LegendsOfNorrath\data` with `archetypes\index.dat` and
    `archetypes\storage.dat` present. If none exists, stop and report — do not invent or download the data.
-2. Copy `LegendsOfNorrath\data\*` to `Release-NMS-Server\bin\Release\lon_data\` (robocopy `/E`).
+2. Run `recreate-lon-data.bat <client>` from the repo root, or copy `LegendsOfNorrath\data\*` to
+   `Release-NMS-Server\Build\bin\Release\lon_data\` (robocopy `/E`).
 3. Assert `(Get-ChildItem lon_data -Recurse -File).Count -eq 62` and that
    `archetypes\index.dat`, `archetypes\storage.dat`, `campaign.dat` and at least 52 `.eqd` files exist.
 4. Confirm `rule_values` has `Custom:LoNEnabled = true` and `Custom:LoNDataPath = lon_data`.
