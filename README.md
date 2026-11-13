@@ -6,6 +6,21 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (11/13)
+
+- Housing and furniture placement works at a basic level still has some kinks, follow the menu guide, lot rent isn't in so hold on to Georgist High Fantasy Monopoly dreams
+- Mercs charge what they are worth
+- Various fixes to potimeA, if you killed quarm should be able to click on one of the dials on the gem monster side of potimeA for a special battle
+- Starvation/thirst code, off by default, customizable
+- LoN cards save progress and free starter kits in the bazaar, also an npc that sells them
+- Personal loot is in with 0 (off) and 4 other options, only 1 where you and your group mate(s) each get a copy has been tested extensively, also loot theft halted with 1-4 on
+- No more grief kills of the vault merchant
+- Various quest fixes, powater/poearth issues
+- MacroQuest coexistence hardened: the old gCXStrAccess "drain" retired for read-only observation, plus a breadcrumb on the client's out-of-memory trap so crash dumps finally explain themselves.
+- LoN soundtrack stops with the card game; vault bag contents carry icon + slot.
+- A little bird rebrand due to player bias against elementals
+- Rule-gated bazaar exile — unauthed-client handling is now a rule; disabled means one polite note per zone-in instead of the countdown
+
 ### This update's changes (11/10)
 - compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
 - lon card data (client-derived) removed from history too - one command puts it back from your own client: recreate-lon-data.bat <client-folder> (see Release-NMS-Server/docs/lon-card-data.md)
@@ -297,6 +312,8 @@ Honest state of the world, so you know what you are getting into:
 - various npcs facing the wrong way, wrong appearance etc
 - today you just faceroll and click into vexthal/ssra (emp area is keyed), in the future i may bring the keying quest back so you spend quality time on the moon
 - can also faceroll and click into vp, may change this in future and add vp as progression prereq for something
+- Arcade added in hastily still needs buttons and doesn't fully work
+- curio traps in veeshan/poair (don't click the loot) has not been heavily tested
 
 ---
 
@@ -389,6 +406,8 @@ Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: 
 - marriage system with live eq style con ally to spouse
 - nimbus and more illusion prizes
 - unique utility spells/aas
+- consolidate evolving items and our basic-enhanced-legendary scaffold to free up the powersource slot
+- fix the shroud tab and remove shroud dependency on external dll
 
 ## Credits
 
