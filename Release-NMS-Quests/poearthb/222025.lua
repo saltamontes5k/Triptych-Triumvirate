@@ -21,3 +21,7 @@ function event_timer(e)
 			end
 		end
 end
+
+function event_death_complete(e)
+	eq.signal(222012, 1); -- #rathe_controller: count this councilman as down
+end

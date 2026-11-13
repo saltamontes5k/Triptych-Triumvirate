@@ -605,6 +605,27 @@ private:
 	// Waypoints
 	std::vector<NmsWaypointsRepository::NmsWaypoints> m_all_waypoints = { };
 
+	// NMS windows: live ticker (fast-updating) windows opened in this zone
+	// (see zone/nms_window.h; budget under Custom:NMSWindowMaxTickers)
+	uint32_t nms_ticker_windows = 0;
+
+public:
+	// ticker budget accounting used by the NMS window engine
+	uint32_t NmsTickerWindows() const { return nms_ticker_windows; }
+	void NmsTickerWindowsAdd(int delta)
+	{
+		if (delta >= 0) {
+			nms_ticker_windows += static_cast<uint32_t>(delta);
+		}
+		else if (nms_ticker_windows > static_cast<uint32_t>(-delta)) {
+			nms_ticker_windows -= static_cast<uint32_t>(-delta);
+		}
+		else {
+			nms_ticker_windows = 0;
+		}
+	}
+
+private:
 	uint32_t m_zone_server_id = 0;
 };
 

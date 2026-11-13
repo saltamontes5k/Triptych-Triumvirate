@@ -90,6 +90,7 @@ extern volatile bool RunLoops;
 #include "../common/skill_caps.h"
 #include "client.h"
 #include "nms_vault.h"
+#include "nms_window.h"
 #include "client_achievements.h"
 #include "reward_selection.h"
 
@@ -741,6 +742,10 @@ Client::~Client() {
 	// NPC stayed spawned for the life of the zone process.
 	NmsVaultOnClientDestroy(this);
 
+	// Tell scripts their NMS windows are closing (zone-out/camp/disconnect) and
+	// release the per-client window state. See zone/nms_window.h.
+	EQ::NMS::NmsWindowOnClientDestroy(this);
+
 	if (ClientVersion() == EQ::versions::ClientVersion::RoF2 && RuleB (Parcel, EnableParcelMerchants)) {
 		DoParcelCancel();
 	}
@@ -999,6 +1004,13 @@ bool Client::SaveAA()
 		return true;
 	}
 
+	// Native Spirit Shroud forms: the in-memory map holds only the form's
+	// monster ranks; the real set lives in the snapshot profile. Purchases
+	// persist through spirit_shroud_allocations instead.
+	if (m_spirit_shroud_template) {
+		return true;
+	}
+
 	std::vector<CharacterAlternateAbilitiesRepository::CharacterAlternateAbilities> v;
 
 	uint32 aa_points_spent = 0;
@@ -1175,7 +1187,7 @@ bool Client::Save(uint8 iCommitNow, bool update_achievements) {
 	}
 
 	if (dead || (!GetMerc() && !GetMercInfo().IsSuspended)) {
-		memset(&m_mercinfo, 0, sizeof(struct MercInfo));
+		memset(m_mercinfo, 0, sizeof(m_mercinfo));
 	}
 
 	m_pp.lastlogin = time(nullptr);
@@ -6330,12 +6342,15 @@ std::string Client::GetPetVanityName(int class_id) {
 
 bool Client::KeyRingRemove(uint32 item_id)
 {
+	// NMS: pass end() too. erase(end()) is UB when the key is missing (with MSVC 14.44
+	// Release this corrupts memory), and the single-iterator form left duplicates behind.
 	keyring.erase(
 		std::remove(
 			keyring.begin(),
 			keyring.end(),
 			item_id
-		)
+		),
+		keyring.end()
 	);
 
 	const auto removed = KeyringRepository::DeleteWhere(
@@ -7966,14 +7981,24 @@ void Client::SetSavedPetCommand(uint8 class_id, uint8 command_id, bool new_state
 
     switch (command_id) {
         case CUSTOM_PET_ASSIST: states.assist = new_state; break;
-        case PET_HOLD: states.hold = new_state; break;
-        case PET_GHOLD: states.ghold = new_state; break;
+        case PET_HOLD: states.hold = new_state; if (new_state) { states.ghold = false; } break;
+        case PET_GHOLD: states.ghold = new_state; if (new_state) { states.hold = false; } break;
         case PET_FOCUS: states.focus = new_state; break;
         case PET_SPELLHOLD: states.spellhold = new_state; break;
         case PET_TAUNT: states.taunt = new_state; break;
     }
 
     CharacterPetCommandStatesRepository::SetCommandState(database, CharacterID(), class_id, command_id, new_state ? 1 : 0);
+
+    // Hold and GHold are mutually exclusive in memory (Mob::SetHeld / Mob::SetGHold
+    // clear the other), but the clear used to stay in memory only, so both rows
+    // could read 1. ConfigureInitialCommands() replays them in a fixed order
+    // (hold, then ghold), which silently resurrected the older setting -- a pet
+    // whose last order was "hold" came back GHeld. Persist the clear too.
+    if (new_state && (command_id == PET_HOLD || command_id == PET_GHOLD)) {
+        const uint8 other_command = (command_id == PET_HOLD) ? PET_GHOLD : PET_HOLD;
+        CharacterPetCommandStatesRepository::SetCommandState(database, CharacterID(), class_id, other_command, 0);
+    }
 }
 
 void Client::SuspendMinion(int value)
@@ -9267,6 +9292,13 @@ void Client::AddAutoXTarget(Mob *m, bool send)
 	for (int i = 0; i < GetMaxXTargets(); ++i) {
 		if (XTargets[i].Type == Auto && XTargets[i].ID == 0) {
 			XTargets[i].ID = m->GetID();
+			// Keep the server-side name in sync with the slot. SendXTargetPacket()
+			// carries m->GetCleanName(), but SendXTargetUpdates() (the bulk reorder
+			// path) writes XTargets[i].Name — leaving it empty here meant any later
+			// bulk update for this slot pushed a blank name and the client rendered
+			// the row with no name and no bar, i.e. the target silently disappeared
+			// from the Extended Target window while it was still on us.
+			strn0cpy(XTargets[i].Name, m->GetCleanName(), 64);
 
 			if (send) { // if we don't send we're bulk sending updates later on
 				SendXTargetPacket(i, m);
@@ -9542,6 +9574,10 @@ void Client::ProcessXTargetAutoHaters()
 
 		if (XTargets[i].ID != 0 && !GetXTargetAutoMgr()->contains_mob(XTargets[i].ID)) {
 			XTargets[i].ID = 0;
+			// Clear the cached name too. SendXTargetUpdates() writes XTargets[i].Name
+			// for dirty slots, so a prune that left the old name behind shipped an
+			// ID-less entry with a live-looking name to the client.
+			XTargets[i].Name[0] = 0;
 			XTargets[i].dirty = true;
 		}
 
@@ -9593,6 +9629,26 @@ void Client::ProcessXTargetAutoHaters()
 			if (empty_slots.empty())
 				break;
 		}
+	}
+
+	// A slot that is still empty after the manager pass means the shared auto-hater
+	// list has nothing mapped to it. That happens whenever a mob already had us on its
+	// hate list before the slot was cleared (group/raid join, death, the prune above):
+	// Mob::AddToHateList() only calls AddAutoXTarget() on the *first* hate add, so the
+	// mob never re-enters the manager and the window stays short of what is actually
+	// on us -- the "group AoEs five mobs but one client's Extended Target window shows
+	// one" case. Re-adopt every mob that still has us on its hate list (or feign
+	// memory) and re-seed the manager from it.
+	bool has_empty_auto_slot = false;
+	for (int i = 0; i < GetMaxXTargets(); ++i) {
+		if (XTargets[i].Type == Auto && XTargets[i].ID == 0) {
+			has_empty_auto_slot = true;
+			break;
+		}
+	}
+
+	if (has_empty_auto_slot && XTargetAutoAddHaters) {
+		entity_list.RefreshAutoXTargets(this);
 	}
 
 	m_dirtyautohaters = false;
@@ -9691,114 +9747,195 @@ void Client::SendWebLink(const char *website)
 	}
 }
 
+uint8 Client::GetMercenaryCapacity()
+{
+	if (ClientVersion() < EQ::versions::ClientVersion::RoF2) {
+		return 1;
+	}
+
+	// Base slots are free. Each purchased slot is stored on the character bucket
+	// so it survives zoning and relogging; the compiled MAXMERCS is the ceiling.
+	int base = RuleI(Mercs, BaseMercenaries);
+	int maximum = RuleI(Mercs, MaxMercenaries);
+	if (base < 1) {
+		base = 1;
+	}
+	if (maximum < base) {
+		maximum = base;
+	}
+	if (maximum > MAXMERCS) {
+		maximum = MAXMERCS;
+	}
+
+	int purchased = Strings::ToInt(GetBucket("eqemu.mercenary.extra_slots"), 0);
+	if (purchased < 0) {
+		purchased = 0;
+	}
+
+	int capacity = base + purchased;
+	if (capacity > maximum) {
+		capacity = maximum;
+	}
+
+	return static_cast<uint8>(capacity);
+}
+
+int Client::GetFirstFreeMercSlot()
+{
+	const int capacity = GetMercenaryCapacity();
+	for (int slot_id = 0; slot_id < capacity; slot_id++) {
+		if (m_mercinfo[slot_id].mercid == 0) {
+			return slot_id;
+		}
+	}
+
+	return -1;
+}
+
 void Client::SendMercPersonalInfo()
 {
-	uint32 mercTypeCount = 1;
-	uint32 mercCount = 1; //TODO: Un-hardcode this and support multiple mercs like in later clients than SoD.
-	uint32 i = 0;
-	uint32 altCurrentType = 19; //TODO: Implement alternate currency purchases involving mercs!
+	// Refresh the active contract's remaining upkeep before advertising it.
+	if (GetMerc() && !GetMercInfo().IsSuspended) {
+		GetMercInfo().MercTimerRemaining = GetMercTimer()->GetRemainingTime();
+	}
 
-	MercTemplate *mercData = &zone->merc_templates[GetMercInfo().MercTemplateID];
+	const bool multiple = ClientVersion() >= EQ::versions::ClientVersion::RoF2;
+	uint8 slots[MAXMERCS] = {};
+	uint32 count = 0;
+	int32 selected = -1;
 
-	int stancecount = 0;
-	stancecount += zone->merc_stance_list[GetMercInfo().MercTemplateID].size();
-	if(stancecount > MAX_MERC_STANCES || mercCount > MAX_MERC || mercTypeCount > MAX_MERC_GRADES)
-	{
-		Log(Logs::General, Logs::Mercenaries, "SendMercPersonalInfo canceled: (%i) (%i) (%i) for %s", stancecount, mercCount, mercTypeCount, GetName());
-		SendMercMerchantResponsePacket(0);
+	const int capacity = GetMercenaryCapacity();
+	for (int slot = 0; slot < capacity; ++slot) {
+		if (!multiple && slot != GetMercSlot()) {
+			continue;
+		}
+		const auto& info = GetMercInfo(slot);
+		if (!info.mercid) {
+			continue;
+		}
+		if (zone->merc_templates.find(info.MercTemplateID) == zone->merc_templates.end()) {
+			continue;
+		}
+		if (zone->merc_stance_list[info.MercTemplateID].size() > MAX_MERC_STANCES) {
+			Log(Logs::General, Logs::Mercenaries, "SendMercPersonalInfo canceled: stance count too high for slot %u of %s", slot, GetName());
+			return;
+		}
+		if (slot == GetMercSlot()) {
+			selected = count;
+		}
+		slots[count++] = static_cast<uint8>(slot);
+	}
+
+	if (!count) {
+		SendClearMercInfo();
 		return;
 	}
+
+	// The selected index must address an emitted row. If the old active slot
+	// was just emptied (dismiss/transfer), fall back to the first owned row.
+	if (selected < 0) {
+		SetMercSlot(slots[0]);
+		selected = 0;
+	}
+
+	// The native roster row carries a command/state word at offset 41 and the
+	// selected stance INDEX at offset 45. Neither is the storage slot number.
+	auto fill_roster_entry = [this](MercenaryListEntry_Struct& entry, const MercInfo& info) {
+		const auto* data = zone->GetMercTemplate(info.MercTemplateID);
+		if (!data) {
+			return;
+		}
+		entry.MercID            = data->MercTemplateID;
+		entry.MercType          = data->MercType;
+		entry.MercSubType       = data->MercSubType;
+		entry.PurchaseCost      = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(data->MercTemplateID, GetLevel(), 0) : 0;
+		entry.UpkeepCost        = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(data->MercTemplateID, GetLevel(), 0) : 0;
+		entry.Status            = 0;
+		entry.AltCurrencyCost   = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(data->MercTemplateID, GetLevel(), 19) : 0;
+		entry.AltCurrencyUpkeep = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(data->MercTemplateID, GetLevel(), 19) : 0;
+		entry.AltCurrencyType   = 19;
+		entry.MercUnk01         = 0;
+		entry.TimeLeft          = info.MercTimerRemaining;
+		entry.MerchantSlot      = info.IsSuspended ? 0 : 5;
+		entry.MercUnk02         = 0;
+		entry.StanceCount       = 0;
+		entry.MercUnk03         = 0;
+		entry.MercUnk04         = 1;
+		strn0cpy(entry.MercName, info.merc_name, sizeof(entry.MercName));
+
+		uint32 index = 0;
+		for (const auto& stance : zone->merc_stance_list[data->MercTemplateID]) {
+			entry.Stances[index].StanceIndex = index;
+			entry.Stances[index].Stance      = stance.StanceID;
+			if (stance.StanceID == info.Stance) {
+				entry.MercUnk02 = index;
+			}
+			++index;
+		}
+		entry.StanceCount = index;
+	};
+
+	auto fill_data_entry = [this](MercenaryData_Struct& entry, const MercInfo& info) {
+		const auto* data = zone->GetMercTemplate(info.MercTemplateID);
+		if (!data) {
+			return;
+		}
+		entry.MercID            = data->MercTemplateID;
+		entry.MercType          = data->MercType;
+		entry.MercSubType       = data->MercSubType;
+		entry.PurchaseCost      = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(data->MercTemplateID, GetLevel(), 0) : 0;
+		entry.UpkeepCost        = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(data->MercTemplateID, GetLevel(), 0) : 0;
+		entry.Status            = 0;
+		entry.AltCurrencyCost   = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(data->MercTemplateID, GetLevel(), 19) : 0;
+		entry.AltCurrencyUpkeep = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(data->MercTemplateID, GetLevel(), 19) : 0;
+		entry.AltCurrencyType   = 19;
+		entry.MercUnk01         = 0;
+		entry.TimeLeft          = info.MercTimerRemaining;
+		entry.MerchantSlot      = info.IsSuspended ? 0 : 5;
+		entry.MercUnk02         = 0;
+		entry.StanceCount       = 0;
+		entry.MercUnk03         = 0;
+		entry.MercUnk04         = 1;
+		strn0cpy(entry.MercName, info.merc_name, sizeof(entry.MercName));
+
+		uint32 index = 0;
+		for (const auto& stance : zone->merc_stance_list[data->MercTemplateID]) {
+			entry.Stances[index].StanceIndex = index;
+			entry.Stances[index].Stance      = stance.StanceID;
+			if (stance.StanceID == info.Stance) {
+				entry.MercUnk02 = index;
+			}
+			++index;
+		}
+		entry.StanceCount = index;
+	};
 
 	if (ClientVersion() >= EQ::versions::ClientVersion::RoF) {
 		auto outapp = new EQApplicationPacket(OP_MercenaryDataUpdate, sizeof(MercenaryDataUpdate_Struct));
-		auto mdus   = (MercenaryDataUpdate_Struct *) outapp->pBuffer;
+		auto mdus   = (MercenaryDataUpdate_Struct*)outapp->pBuffer;
+		memset(mdus, 0, sizeof(MercenaryDataUpdate_Struct));
 
-		mdus->MercStatus                    = 0;
-		mdus->MercCount                     = mercCount;
-		mdus->MercData[i].MercID            = mercData->MercTemplateID;
-		mdus->MercData[i].MercType          = mercData->MercType;
-		mdus->MercData[i].MercSubType       = mercData->MercSubType;
-		mdus->MercData[i].PurchaseCost      = Merc::CalcPurchaseCost(mercData->MercTemplateID, GetLevel(), 0);
-		mdus->MercData[i].UpkeepCost        = Merc::CalcUpkeepCost(mercData->MercTemplateID, GetLevel(), 0);
-		mdus->MercData[i].Status            = 0;
-		mdus->MercData[i].AltCurrencyCost   = Merc::CalcPurchaseCost(
-			mercData->MercTemplateID,
-			GetLevel(),
-			altCurrentType
-		);
-		mdus->MercData[i].AltCurrencyUpkeep = Merc::CalcPurchaseCost(
-			mercData->MercTemplateID,
-			GetLevel(),
-			altCurrentType
-		);
-		mdus->MercData[i].AltCurrencyType   = altCurrentType;
-		mdus->MercData[i].MercUnk01         = 0;
-		mdus->MercData[i].TimeLeft          = GetMercInfo().MercTimerRemaining;    //GetMercTimer().GetRemainingTime();
-		mdus->MercData[i].MerchantSlot      = i + 1;
-		mdus->MercData[i].MercUnk02         = 1;
-		mdus->MercData[i].StanceCount       = zone->merc_stance_list[mercData->MercTemplateID].size();
-		mdus->MercData[i].MercUnk03         = 0;
-		mdus->MercData[i].MercUnk04         = 1;
-
-		strn0cpy(mdus->MercData[i].MercName, GetMercInfo().merc_name, sizeof(mdus->MercData[i].MercName));
-
-		uint32 stanceindex = 0;
-		if (mdus->MercData[i].StanceCount != 0) {
-			auto iter = zone->merc_stance_list[mercData->MercTemplateID].begin();
-			while (iter != zone->merc_stance_list[mercData->MercTemplateID].end()) {
-				mdus->MercData[i].Stances[stanceindex].StanceIndex = stanceindex;
-				mdus->MercData[i].Stances[stanceindex].Stance      = (iter->StanceID);
-				stanceindex++;
-				++iter;
-			}
+		mdus->MercStatus = selected;
+		mdus->MercCount  = count;
+		for (uint32 row = 0; row < count; ++row) {
+			fill_data_entry(mdus->MercData[row], GetMercInfo(slots[row]));
 		}
-
-		mdus->MercData[i].MercUnk05 = 1;
+		// RoF2 carries available capacity once, after the complete row array.
+		mdus->MercData[0].MercUnk05 = GetMercenaryCapacity();
 		FastQueuePacket(&outapp);
-		safe_delete(outapp);
-		return;
-	} else {
-		auto outapp = new EQApplicationPacket(OP_MercenaryDataResponse, sizeof(MercenaryMerchantList_Struct));
-		auto mml    = (MercenaryMerchantList_Struct *) outapp->pBuffer;
-
-		mml->MercTypeCount = mercTypeCount; //We should only have one merc entry.
-		mml->MercGrades[i] = 1;
-
-		mml->MercCount                  = mercCount;
-		mml->Mercs[i].MercID            = mercData->MercTemplateID;
-		mml->Mercs[i].MercType          = mercData->MercType;
-		mml->Mercs[i].MercSubType       = mercData->MercSubType;
-		mml->Mercs[i].PurchaseCost      = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(mercData->MercTemplateID, GetLevel(), 0) : 0;
-		mml->Mercs[i].UpkeepCost        = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(mercData->MercTemplateID, GetLevel(), 0) : 0;
-		mml->Mercs[i].Status            = 0;
-		mml->Mercs[i].AltCurrencyCost   = RuleB(Mercs, ChargeMercPurchaseCost) ? Merc::CalcPurchaseCost(mercData->MercTemplateID, GetLevel(), altCurrentType) : 0;
-		mml->Mercs[i].AltCurrencyUpkeep = RuleB(Mercs, ChargeMercUpkeepCost) ? Merc::CalcUpkeepCost(mercData->MercTemplateID, GetLevel(), altCurrentType) : 0;
-		mml->Mercs[i].AltCurrencyType   = altCurrentType;
-		mml->Mercs[i].MercUnk01         = 0;
-		mml->Mercs[i].TimeLeft          = GetMercInfo().MercTimerRemaining;
-		mml->Mercs[i].MerchantSlot      = i + 1;
-		mml->Mercs[i].MercUnk02         = 1;
-		mml->Mercs[i].StanceCount       = zone->merc_stance_list[mercData->MercTemplateID].size();
-		mml->Mercs[i].MercUnk03         = 0;
-		mml->Mercs[i].MercUnk04         = 1;
-
-		strn0cpy(mml->Mercs[i].MercName, GetMercInfo().merc_name, sizeof(mml->Mercs[i].MercName));
-
-		int stanceindex = 0;
-		if (mml->Mercs[i].StanceCount != 0) {
-			auto iter = zone->merc_stance_list[mercData->MercTemplateID].begin();
-			while (iter != zone->merc_stance_list[mercData->MercTemplateID].end()) {
-				mml->Mercs[i].Stances[stanceindex].StanceIndex = stanceindex;
-				mml->Mercs[i].Stances[stanceindex].Stance      = (iter->StanceID);
-				stanceindex++;
-				++iter;
-			}
-		}
-
-		FastQueuePacket(&outapp);
-		safe_delete(outapp);
 		return;
 	}
+
+	// SoD and earlier: one contract only.
+	auto outapp = new EQApplicationPacket(OP_MercenaryDataResponse, sizeof(MercenaryMerchantList_Struct));
+	auto mml    = (MercenaryMerchantList_Struct*)outapp->pBuffer;
+	memset(mml, 0, sizeof(MercenaryMerchantList_Struct));
+	const auto& only = GetMercInfo(slots[0]);
+	mml->MercTypeCount = 1;
+	mml->MercGrades[0] = (only.MercTemplateID && zone->GetMercTemplate(only.MercTemplateID)) ? zone->GetMercTemplate(only.MercTemplateID)->MercType : 0;
+	mml->MercCount     = 1;
+	fill_roster_entry(mml->Mercs[0], only);
+	FastQueuePacket(&outapp);
 }
 
 void Client::SendClearMercInfo()
@@ -11167,10 +11304,32 @@ void Client::ProcessAggroMeter()
 		app->WriteUInt8(i);
 		app->WriteUInt16(m_aggrometer.get_pct(i));
 	};
+
+	// One definition of "how much of the top hater's aggro is <with>". The reference is
+	// the hater's current target when that target really is on its hate list, and the
+	// actual top hate entry otherwise: an AI target can be a pet that already dropped
+	// off the list, a corpse, or a stale pointer, and GetHateRatio() answers its 999
+	// sentinel in that case -- which is where rows could show a nonsense percentage.
+	auto hate_ratio = [](Mob *hater, Mob *with) -> int {
+		if (!hater || !with || !hater->CheckAggro(with)) {
+			return 0;
+		}
+
+		Mob *top = hater->GetTarget();
+		if (!top || !hater->CheckAggro(top)) {
+			top = hater->GetHateTop();
+		}
+
+		if (!top || !hater->CheckAggro(top)) {
+			return 0;
+		}
+
+		return hater->GetHateRatio(top, with);
+	};
 	// TODO: Player entry should either be lock or yourself, ignoring lock for now
 	// player, secondary, and group depend on your target/lock
 	if (cur_tar) {
-		if (m_aggrometer.set_pct(AggroMeter::AT_Player, cur_tar->GetHateRatio(cur_tar->GetTarget(), this)))
+		if (m_aggrometer.set_pct(AggroMeter::AT_Player, hate_ratio(cur_tar, this)))
 			add_entry(AggroMeter::AT_Player);
 
 		if (m_aggrometer.set_pct(AggroMeter::AT_Secondary, has_aggro ? cur_tar->GetHateRatio(this, secondary) : secondary ? 100 : 0))
@@ -11184,7 +11343,7 @@ void Client::ProcessAggroMeter()
 					int at_id = AggroMeter::AT_Group1;
 					for (const auto& m : raid->members) {
 						if (m.member && m.member != this && m.group_number == gid) {
-							if (m_aggrometer.set_pct(static_cast<AggroMeter::AggroTypes>(at_id), cur_tar->GetHateRatio(cur_tar->GetTarget(), m.member)))
+							if (m_aggrometer.set_pct(static_cast<AggroMeter::AggroTypes>(at_id), hate_ratio(cur_tar, m.member)))
 								add_entry(static_cast<AggroMeter::AggroTypes>(at_id));
 							at_id++;
 							if (at_id > AggroMeter::AT_Group5)
@@ -11199,7 +11358,7 @@ void Client::ProcessAggroMeter()
 				int at_id = AggroMeter::AT_Group1;
 				for (int i = 0; i < MAX_GROUP_MEMBERS; ++i) {
 					if (group->members[i] && group->members[i] != this) {
-						if (m_aggrometer.set_pct(static_cast<AggroMeter::AggroTypes>(at_id), cur_tar->GetHateRatio(cur_tar->GetTarget(), group->members[i])))
+						if (m_aggrometer.set_pct(static_cast<AggroMeter::AggroTypes>(at_id), hate_ratio(cur_tar, group->members[i])))
 							add_entry(static_cast<AggroMeter::AggroTypes>(at_id));
 						at_id++;
 					}
@@ -11227,17 +11386,30 @@ void Client::ProcessAggroMeter()
 	// if the entry is an NPC it's our hate relative to the NPCs current tank
 	// if it's a PC, it's their hate relative to our current target
 	for (int i = 0; i < GetMaxXTargets(); ++i) {
-		if (XTargets[i].ID) {
-			auto mob = entity_list.GetMob(XTargets[i].ID);
-			if (mob) {
-				int ratio = 0;
-				if (mob->IsNPC())
-					ratio = mob->GetHateRatio(mob->GetTarget(), this);
-				else if (cur_tar)
-					ratio = cur_tar->GetHateRatio(cur_tar->GetTarget(), mob);
-				if (m_aggrometer.set_pct(static_cast<AggroMeter::AggroTypes>(AggroMeter::AT_XTarget1 + i), ratio))
-					add_entry(static_cast<AggroMeter::AggroTypes>(AggroMeter::AT_XTarget1 + i));
+		auto at = static_cast<AggroMeter::AggroTypes>(AggroMeter::AT_XTarget1 + i);
+		auto *mob = XTargets[i].ID ? entity_list.GetMob(XTargets[i].ID) : nullptr;
+
+		if (!mob) {
+			// Row emptied (target cleared, spawn gone): blank the cached spawn id and
+			// clear the percentage instead of leaving the last value on screen.
+			m_aggrometer.set_xtarget_id(i, 0);
+			if (m_aggrometer.set_pct(at, 0)) {
+				add_entry(at);
 			}
+			continue;
+		}
+
+		// A fill, a reorder out of ProcessXTargetAutoHaters(), or a respawn changes
+		// which spawn this row points at. The meter only transmits percentages that
+		// changed, so the value cached for the row would otherwise stay the previous
+		// occupant's number -- force this row's percentage out on the next change.
+		if (m_aggrometer.set_xtarget_id(i, mob->GetID())) {
+			m_aggrometer.force_pct(at);
+		}
+
+		int ratio = mob->IsNPC() ? hate_ratio(mob, this) : hate_ratio(cur_tar, mob);
+		if (m_aggrometer.set_pct(at, ratio)) {
+			add_entry(at);
 		}
 	}
 
@@ -14757,7 +14929,13 @@ uint32 Client::GetClassesBits() const
 	}
 }
 
-bool Client::AddExtraClass(int class_id) {
+// NMS: plugin::GetMaxClasses clamps the rule the same way, so the server and the quests report one limit
+int Client::GetMaxPlayerClasses()
+{
+	return EQ::Clamp(RuleI(Custom, MaxPlayerClasses), 1, static_cast<int>(Class::PLAYER_CLASS_COUNT));
+}
+
+bool Client::AddExtraClass(int class_id, bool ignore_limit) {
 	if (RuleB(Custom, MulticlassingEnabled) && class_id >= Class::Warrior && class_id <= Class::Berserker) {
 		int classes_bits = GetClassesBits();
 
@@ -14771,7 +14949,8 @@ bool Client::AddExtraClass(int class_id) {
 
 		int n_class_bit = GetPlayerClassBit(class_id);
 
-		if (class_count > 2 || (classes_bits & n_class_bit)) {
+		// NMS: limit read from a rule so quests and server share one value; GMs can force past it
+		if ((!ignore_limit && class_count >= GetMaxPlayerClasses()) || (classes_bits & n_class_bit)) {
 			return false;
 		}
 		else {

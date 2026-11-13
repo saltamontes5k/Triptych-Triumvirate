@@ -36,6 +36,8 @@ struct DynamicZoneLocation;
 enum WaterRegionType : int;
 enum class DynamicZoneMemberStatus;
 
+namespace SpiritShroud { struct Template; }
+
 namespace EQ
 {
 	struct ItemData;
@@ -91,6 +93,7 @@ namespace EQ
 #endif
 
 #include <float.h>
+#include <optional>
 #include <set>
 #include <algorithm>
 #include <memory>
@@ -582,7 +585,7 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool        OpenShroudWindow(Mob* npc);
 	void        ApplyShroud(uint32 shroud_id);
 	void        RemoveShroud(bool send_updates = true);
-	void        SaveShroudSnapshot(uint32 shroud_id);
+	void        SaveShroudSnapshot(uint32 shroud_id, bool native_template = false);
 	void        ClearShroudSnapshot();
 	void        LoadAndApplyShroudState();
 	void        ResendShroudState();
@@ -607,6 +610,41 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	uint32 ShroudAbilityMaxRank(uint32 aa_id) const;
 	void ShroudPurgeOwnedAAs();
 	void FillShroudTransformExtras(ShroudSelf_Struct *shroud);
+
+	// Native RoF2 Spirit Shroud protocol (Custom:EnableSpiritShrouds; see
+	// zone/client_spirit_shroud.cpp and reference/nsqemu-spirit-shrouds/
+	// AUDIT-EQS.md). The quest path above is untouched; both paths share the
+	// m_shrouded flag machinery but key their forms separately.
+	bool IsSpiritShrouded() const { return m_spirit_shroud_template != 0; }
+	const SpiritShroud::Template *SpiritShroudDefinition() const { return m_spirit_shroud_definition.get(); }
+	bool LoadSpiritShroudState();
+	void OpenSpiritShrouds();
+	void OpenSpiritShroudBank();
+	void ChangeSpiritShroud(uint32_t template_id);
+	void ReapplyNativeShroud(uint32_t template_id);
+	void EnterNativeShroud(uint32_t template_id);
+	void RestoreNativeShroud();
+	void IssueNativeStarterItems(const SpiritShroud::Template &t);
+	void RemoveNativeStarterItems(uint32_t template_id);
+	void ShroudRebuildAAArray();
+	void ShroudRebuildRanksFromPP();
+	bool HasSpiritShroudRank(uint32_t rank) const;
+	void SendSpiritShroudProgress();
+	bool TrySpiritShroudAbility(uint32_t action, uint32_t ability);
+	bool CompleteSpiritShroudReturn(uint32_t rank_id);
+	bool IsSpiritShroudStarterItem(const EQ::ItemInstance *item) const;
+	bool CanTransferSpiritShroudItemTree(const EQ::ItemInstance *item) const;
+	void PurchaseSpiritShroudRank(uint32_t rank_id, bool saved_set);
+	float SpiritShroudModelSize() const;
+	std::optional<uint32_t> SpiritShroudAbilityMinimumLevel(uint16_t spell_id, uint32_t rank_id) const;
+	void AwardSpiritShroudExperience(ExpSource source, uint64_t amount, uint8 conlevel = 0xFF,
+		bool already_calculated = false, uint64_t aa_amount = 0);
+	void CalculateSpiritShroudExperience(uint64_t amount, uint8 conlevel, uint32_t percent_to_aa,
+		uint64_t earned_aa, uint64_t &normal, uint64_t &aa, uint64_t &progression);
+	bool RecordSpiritShroudDeath(uint32_t corpse_id, uint64_t requested_loss, uint64_t &applied_loss);
+	bool CanAcceptSpiritShroudResurrection(uint32_t corpse_id);
+	bool SettleSpiritShroudResurrection(uint32_t corpse_id, uint32_t spell_id, uint64_t offered_loss, bool &handled);
+	bool ProcessSpiritShroudCompletion();
 
 	void SetPetCommandState(int button, int state);
 
@@ -666,7 +704,8 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	int64 CalcManaRegenCap() final;
 
 	uint32 GetClassesBits() const;
-	bool   AddExtraClass(int class_id);
+	bool   AddExtraClass(int class_id, bool ignore_limit = false); // NMS: ignore_limit for #multiclass forceadd
+	static int GetMaxPlayerClasses(); // NMS: rule Custom:MaxPlayerClasses clamped to 1-16
 	bool   RemoveExtraClass(int class_id);
 
 	// guild pool regen shit. Sends a SpawnAppearance with a value that regens to value * 0.001
@@ -1050,6 +1089,7 @@ public:
 	const NmsWaypointsRepository::NmsWaypoints* GetWaypoint(int waypoint_id);
 	bool UnlockWaypoint(int32 waypoint_id);
 	bool UnlockWaypoint(std::string waypoint_shortname);
+	bool ForgetWaypoint(int32 waypoint_id);
 	void SendWaypointList(bool force = true);
 	void   SendLoNSession();               // OP_NMSLoNSession: card game token (zone/nms_lon_session.cpp)
 	void   SendRealEstateIdentity();       // OP_RealEstateZoneContext: tells the client it is standing in a neighborhood
@@ -1107,6 +1147,11 @@ public:
 	inline void SetNmsVaultMerchant(bool value) { m_nms_vault_merchant = value; }
 	inline uint32 GetNmsVaultMerchantId() const { return m_nms_vault_merchant_id; }
 	inline void SetNmsVaultMerchantId(uint32 value) { m_nms_vault_merchant_id = value; }
+	// /nmsloot: the CAuth handshake passed (Handle_OP_CAuth); offer capability requires it
+	inline bool IsClientDllAuthorized() const { return CAuthorized; }
+	// /nmsloot: the client said the Hailstone personal-loot Hello (action 20) in this zone
+	inline bool GetNmsPersonalLootWindow() const { return m_nms_personal_loot_window; }
+	inline void SetNmsPersonalLootWindow(bool value) { m_nms_personal_loot_window = value; }
 
 	uint16 MaxSkill(EQ::skills::SkillType skill_id, uint16 class_id, uint8 level) const;
 	uint16 MaxSkillOriginal(EQ::skills::SkillType skill_id, uint16 class_id, uint16 level) const;
@@ -1284,6 +1329,8 @@ public:
 	int GetDynamicAATimer(int aa_id);
 	int SetDynamicAATimer(int aa_id);
 	void ClearDynamicAATimers();
+	// NMS: the timer an AA's cooldown runs on; unlike GetDynamicAATimer it never assigns a new one
+	std::optional<int> FindAlternateAdvancementTimer(const AA::Rank *rank);
 
 	void GetAllToggleAAStatus();
 	void SetToggleAAStatus(int ability_id, bool status);
@@ -1297,7 +1344,7 @@ public:
 	bool   m_aa_winner_valid   = false;
 
 	//New AA Methods
-	void SendAlternateAdvancementRank(int aa_id, int level);
+	void SendAlternateAdvancementRank(int aa_id, int level, const SpiritShroud::Template *shroud_preview = nullptr);
 	void SendAlternateAdvancementTable();
 	void SendAlternateAdvancementStats();
 	// An AA table send is one packet per usable rank (~1.5k at current table size), so the
@@ -1313,7 +1360,7 @@ public:
 	void SendAlternateAdvancementPoints();
 	void SendAlternateAdvancementTimer(int ability, int begin, int end);
 	void SendAlternateAdvancementTimers();
-	void ResetAlternateAdvancementTimer(int ability);
+	bool ResetAlternateAdvancementTimer(int rank_id); // NMS: takes an AA rank ID, returns whether a timer was found
 	void ResetAlternateAdvancementTimers();
 	void ResetOnDeathAlternateAdvancement();
 
@@ -1326,6 +1373,7 @@ public:
 	void AutoGrantAAPoints();
 	void GrantAllAAPoints(uint8 unlock_level = 0, bool skip_grant_only = false);
 	bool HasAlreadyPurchasedRank(AA::Rank* rank);
+	bool HasRoomForAlternateAdvancementAbility(AA::Rank* rank); // NMS
 	void ListPurchasedAAs(Client *to, std::string search_criteria = std::string());
 
 	// NMS: duplicate AA line deconfliction (multiple abilities sharing a name)
@@ -2154,6 +2202,8 @@ public:
 	MercInfo& GetMercInfo(uint8 slot) { return m_mercinfo[slot]; }
 	MercInfo& GetMercInfo() { return m_mercinfo[mercSlot]; }
 	uint8 GetNumberOfMercenaries();
+	uint8 GetMercenaryCapacity();
+	int GetFirstFreeMercSlot();
 	void SetMerc(Merc* newmerc);
 	void SendMercResponsePackets(uint32 ResponseType);
 	void SendMercMerchantResponsePacket(int32 response_type);
@@ -2429,6 +2479,10 @@ private:
 	void DoHPRegen();
 	void DoManaRegen();
 	void DoStaminaHungerUpdate();
+	// Nethack-style starvation hunger clock (zone/nms_starvation.cpp); runs on
+	// the consumption tick right after DoStaminaHungerUpdate. Gated on
+	// Custom:StarvationDeath + the Character food rules.
+	void ProcessStarvation();
 	void CalcRestState();
 	void UpdateRestTimer(uint32 new_timer);
 
@@ -2532,6 +2586,7 @@ private:
 	int sent_inventory;
 
 	Timer m_initial_wc;
+	Timer m_nms_loot_restore_timer; // /nmsloot: delayed pending-offer restore after zone-in
 	Client::AttackMode m_attack_mode = AttackMode::UNDEFINED;
 
 	// https://github.com/EQEmu/Server/pull/2479
@@ -2540,6 +2595,7 @@ private:
 	bool m_nms_vault_bank = false;
 	bool m_nms_vault_merchant = false;
 	uint32 m_nms_vault_merchant_id = 0;
+	bool m_nms_personal_loot_window = false; // said Hello in this zone: Hailstone's loot window, not OP_NmsLootOffer
 public:
 	bool IsLockSavePosition() const;
 	void SetLockSavePosition(bool lock_save_position);
@@ -2605,6 +2661,11 @@ private:
 	Timer bot_camp_timer;
 	Timer process_timer;
 	Timer consume_food_timer;
+	// Starvation clock arm confirmation (zone/nms_starvation.cpp): consecutive
+	// consumption ticks the hungry/thirsty condition has held without a bucket.
+	// Fed players cross the line for only 1-3 ticks (the client auto-consumes
+	// back above it); only genuinely unfed players reach ArmConfirmTicks.
+	uint8 m_starvation_arm_ticks = 0;
 	Timer zoneinpacket_timer;
 	Timer linkdead_timer;
 	Timer dead_timer;
@@ -2691,6 +2752,18 @@ private:
 	// granted fresh per shroud apply, spent on shroud AAs only, reset on leave.
 	// Kept out of m_pp so the ShroudPersistGuard never sees it.
 	uint32               m_shroud_points             = 0;
+	// Native RoF2 Spirit Shroud protocol state (Custom:EnableSpiritShrouds).
+	// m_spirit_shroud_template keys the active form from
+	// spirit_shroud_templates; the quest path's m_shroud_id stays 0 for it.
+	bool                 m_spirit_shroud_transition  = false;
+	uint32               m_spirit_shroud_template    = 0;
+	uint64_t             m_spirit_shroud_revision    = 0;
+	uint32               m_spirit_shroud_keeper      = 0;
+	uint64_t             m_spirit_shroud_menu_until  = 0;
+	uint64_t             m_spirit_shroud_progress_sent = 0;
+	uint8                m_spirit_shroud_resource_refreshes = 0;
+	std::set<uint32_t>   m_spirit_shroud_aa_ranks;
+	std::shared_ptr<const SpiritShroud::Template> m_spirit_shroud_definition;
 	uint32               m_shroud_points_spent       = 0;
 
 	bool bZoning;
@@ -2927,6 +3000,7 @@ public:
 	const std::string &GetMailKey() const;
 	void ShowZoneShardMenu();
 	void Handle_OP_ChangePetName(const EQApplicationPacket *app);
+	void Handle_OP_NMSWindowEvent(const EQApplicationPacket *app); // script windows, see nms_window.h
 	bool IsFilteredAFKPacket(const EQApplicationPacket *p);
 	void CheckAutoIdleAFK(PlayerPositionUpdateClient_Struct *p);
 	void SyncWorldPositionsToClient(bool ignore_idle = false);

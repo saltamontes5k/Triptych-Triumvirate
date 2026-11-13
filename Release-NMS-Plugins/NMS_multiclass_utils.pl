@@ -27,9 +27,8 @@ sub CommonCharacterUpdate {
             $client->UnlockWaypoint("fieldofbone");
         }
 
-        if (!$client->KeyRingCheck(22198) && plugin::is_stage_complete_2($client, 'PoP')) {
-            $client->KeyRingAdd(22198);
-        }
+        # No keyring 22198 self-heal: Vex Thal entry is the scepter quest
+        # chain / keyed umbral door now; existing keyring rows grandfathered.
 
         if ($client->IsTaskActivityActive(3, 5) && $client->GetLevel() >= 5) {
             $client->UpdateTaskActivity(3, 5, 1);
@@ -306,11 +305,20 @@ sub HasMeleeClass {
     return 0;
 }
 
+sub GetMaxClasses {
+    my $max = int(quest::get_rule("Custom:MaxPlayerClasses") || 3);
+
+    # Below 1 would leave a character classless; above 16 the class loop would never end
+    return 1  if $max < 1;
+    return 16 if $max > 16;
+    return $max;
+}
+
 sub AddClass {
     my $class_id = shift;
     my $client = shift || plugin::val('$client');
 
-    if ($class_id && $class_id > 0 && $class_id < 17 && GetClassesCount($client) < 3) {
+    if ($class_id && $class_id > 0 && $class_id < 17 && GetClassesCount($client) < GetMaxClasses()) {
         $client->AddExtraClass($class_id);
         quest::ding();
 
@@ -325,7 +333,7 @@ sub AddClass {
             $client->UpdateTaskActivity(3, 2, 1);
         }
 
-        if (GetClassesCount() > 2 && CheckUniqueClass($client->GetClassesBitmask())) {
+        if (GetClassesCount() >= GetMaxClasses() && CheckUniqueClass($client->GetClassesBitmask())) {
             my $class_bits          = $client->GetClassesBitmask();
             quest::set_data("class-$class_bits", $class_bits);
             plugin::WorldAnnounce("$name has become the FIRST $full_class_name.");            
@@ -449,8 +457,8 @@ sub IsValidToAddClass {
     # Check if the client already has this class
     my $has_class_already = ($class_bits & (1 << ($class_id_to_add - 1))) ? 1 : 0;
 
-    # Determine if eligible to add: less than 3 classes and doesn't already have this class
-    return ($classes_count < 3 && !$has_class_already);
+    # Determine if eligible to add: fewer than the max classes and doesn't already have this class
+    return ($classes_count < GetMaxClasses() && !$has_class_already);
 }
 
 sub HasClass {

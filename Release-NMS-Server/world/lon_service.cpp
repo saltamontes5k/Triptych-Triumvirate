@@ -389,8 +389,12 @@ bool ParseArchetype(const uint8_t *p, size_t n, uint32_t &arch, CardInfo &out)
 	return !r.bad;
 }
 
-// A deck file's 50 card ids: varint 50 followed by 50 (card, 0) pairs, found by scanning
-// the file as a stream of varints (the same way the Python prototype proved it).
+// A deck file's cards: the draw deck (a count followed by that many (card, 0) pairs), then
+// the deck's avatar (one card) and its quest pile (four). All of them belong to the deck --
+// the client's Validation -> Ownership checks every card in it -- so a starter deck that
+// granted only the draw deck left its own deck unplayable ("You do not own the following
+// cards"), and no game could be started with it, skirmish included. The .eqd is a serialised
+// EQDeck (0x11172); the avatar and the quests follow the draw deck in every shipped file.
 std::vector<uint32_t> DeckCards(const std::vector<uint8_t> &deck)
 {
 	std::vector<uint32_t> v;
@@ -400,20 +404,55 @@ std::vector<uint32_t> DeckCards(const std::vector<uint8_t> &deck)
 		if (r.bad) break;
 		v.push_back(x);
 	}
-	for (size_t i = 0; i < v.size(); ++i) {
-		const uint32_t cnt = v[i];
-		if (cnt < 30 || cnt > 80 || i + 2 * cnt >= v.size()) continue;
-		bool ok = true;
-		std::vector<uint32_t> cards;
-		for (uint32_t j = 0; j < cnt && ok; ++j) {
-			const uint32_t c = v[i + 1 + 2 * j];
-			const uint32_t z = v[i + 2 + 2 * j];
-			if (c < 99000000 || z != 0) ok = false;
-			cards.push_back(c);
+
+	// Is there a run of cnt (card, 0) pairs at i?
+	auto pairs_at = [&v](size_t i, uint32_t cnt) -> bool {
+		if (cnt == 0 || cnt > 80 || i + 2 * cnt >= v.size()) return false;
+		for (uint32_t j = 0; j < cnt; ++j) {
+			if (v[i + 1 + 2 * j] < 99000000 || v[i + 2 + 2 * j] != 0) return false;
 		}
-		if (ok) return cards;
+		return true;
+	};
+
+	// A card group at i -- a count and its pairs (a one-card avatar in the v8 decks) or a
+	// single bare (card, 0) pair (the tagged avatar object in v9/v10). Returns the index just
+	// past it, or 0 when there is no group here.
+	auto group_at = [&v, &pairs_at](size_t i, std::vector<uint32_t> *out) -> size_t {
+		if (i >= v.size()) return 0;
+		const uint32_t c = v[i];
+		if (c >= 1 && c <= 10 && pairs_at(i, c)) {
+			if (out) for (uint32_t j = 0; j < c; ++j) out->push_back(v[i + 1 + 2 * j]);
+			return i + 1 + 2 * c;
+		}
+		if (c >= 99000000 && i + 1 < v.size() && v[i + 1] == 0) {
+			if (out) out->push_back(c);
+			return i + 2;
+		}
+		return 0;
+	};
+
+	// The draw deck first (50 cards, 55 in the tournament decks): the first 30-80 card run.
+	std::vector<uint32_t> cards;
+	size_t at    = 0;
+	bool   found = false;
+	for (size_t i = 0; i < v.size() && !found; ++i) {
+		const uint32_t cnt = v[i];
+		if (cnt < 30 || cnt > 80 || !pairs_at(i, cnt)) continue;
+		for (uint32_t j = 0; j < cnt; ++j) cards.push_back(v[i + 1 + 2 * j]);
+		at    = i + 1 + 2 * cnt;
+		found = true;
 	}
-	return {};
+	if (!found) return {};
+
+	// Then the avatar and the quest pile (1 and 4 cards in every shipped deck).
+	for (int extra = 0; extra < 2; ++extra) {
+		size_t i = at, next = 0;
+		while (i < v.size() && (next = group_at(i, nullptr)) == 0) ++i;
+		if (next == 0) break;
+		group_at(i, &cards);
+		at = next;
+	}
+	return cards;
 }
 
 std::string DeckName(const std::vector<uint8_t> &deck, std::string *id = nullptr)
@@ -621,6 +660,19 @@ bool LoadData(const std::string &root)
 			if (set == 1) g_data.first_starters.push_back(product);
 		}
 	}
+	// The Oathbound starter decks the Bazaar card dealer sells. A deck file that does not
+	// parse leaves OpenProduct() empty, so the product the dealer granted cannot be opened:
+	// say so once at startup instead of failing a purchase in silence. The card count is the
+	// whole deck (draw deck + avatar + 4 quests): 55, or 60 for a 55-card draw deck. A 50 here
+	// means only the draw deck was read -- the bug behind "You do not own the following cards".
+	auto deck_size = [](uint32_t product) -> size_t {
+		auto it = g_data.product_cards.find(product);
+		return it == g_data.product_cards.end() ? 0 : it->second.size();
+	};
+	LogInfo("[LoN] starter decks: [{}] parsed -- Oathbound Fighter [1900002] {} [{} cards], Priest [1900004] {} [{} cards]",
+		g_data.product_cards.size(),
+		g_data.product_cards.count(1900002) ? "ok" : "MISSING", deck_size(1900002),
+		g_data.product_cards.count(1900004) ? "ok" : "MISSING", deck_size(1900004));
 
 	// Scenarios and their rewards (campaign.dat: count, then Campaign objects 0x1C5 v4
 	// holding CampaignScenario objects 0x1C6 v7 -- research/eqlib_LoN/LoN_campaigns.txt).
@@ -1421,6 +1473,20 @@ void HandleGameplayAchievement(Session &s, Reader &r)
 }
 
 // Skips one ValueData value of a type the preference sets use; false = a type we do not store.
+bool SkipValue(Reader &r, uint32_t type);
+
+// One embedded ValueData object: the 0x16 class header, version, TypeID, owning-reference
+// flag, then the payload. The campaign state the client syncs (preference 0x1054) nests
+// these inside a map<int, object*> ValueData, so skipping one recurses through here.
+bool SkipValueData(Reader &r)
+{
+	if (r.U() != 0x16) return false;   // not a ValueData object -- the stream would be misaligned
+	r.U();                             // version
+	const uint32_t type = r.U();
+	r.U();                             // owning reference
+	return SkipValue(r, type);
+}
+
 bool SkipValue(Reader &r, uint32_t type)
 {
 	switch (type) {
@@ -1429,6 +1495,20 @@ bool SkipValue(Reader &r, uint32_t type)
 		case 6: { const uint32_t n = r.U(); for (uint32_t i = 0; i < n && !r.bad && i < 4096; ++i) r.U(); break; }
 		case 7: { const uint32_t n = r.U(); for (uint32_t i = 0; i < n && !r.bad && i < 4096; ++i) r.S(); break; }
 		case 13: { const uint32_t n = r.U(); for (uint32_t i = 0; i < n && !r.bad && i < 4096; ++i) { r.U(); r.U(); } break; }
+		case 8: {   // vector<object*>: count, then that many embedded ValueData objects
+			const uint32_t n = r.U();
+			for (uint32_t i = 0; i < n && !r.bad && i < 4096; ++i)
+				if (!SkipValueData(r)) return false;
+			break;
+		}
+		case 14: {  // map<int, object*>: count, then { int key, embedded ValueData } per entry
+			const uint32_t n = r.U();
+			for (uint32_t i = 0; i < n && !r.bad && i < 4096; ++i) {
+				r.U();
+				if (!SkipValueData(r)) return false;
+			}
+			break;
+		}
 		default: return false;
 	}
 	return !r.bad;
@@ -1456,7 +1536,7 @@ void HandleSetPreferences(Session &s, Reader &r)
 		if ((key >= kPropLoreLevel && key <= kPropLoreNextXp) || key == kPropAccountFlags || key == kPropWinLoss ||
 			key == kPropRatingOverall || key == kPropRatingConstructed) continue;   // ours, not the client's
 		const std::vector<uint8_t> v(r.d + start, r.d + r.p);
-		if (v.size() > 4096) continue;
+		if (v.size() > 65535) continue;   // the campaign status map (0x1054) alone can be tens of KB
 		database.QueryDatabase(fmt::format(
 			"REPLACE INTO lon_account_pref (account_id, prop_key, value) VALUES ({}, {}, UNHEX('{}'))",
 			s.account_id, key, Hex(v)));
@@ -1466,13 +1546,22 @@ void HandleSetPreferences(Session &s, Reader &r)
 }
 
 // New account: one random first-set starter deck. Every account: the monthly packs, and
-// anything bought elsewhere that is still waiting.
+// anything bought elsewhere still waiting. Free starter decks and buys are the card dealer's
+// job now (quests/bazaar/12000152.pl queues them in lon_delivery); nothing is handed out on
+// login beyond the new-player deck and the monthly packs.
 void GrantOnLogin(Session &s)
 {
 	database.QueryDatabase(fmt::format("INSERT IGNORE INTO lon_account (account_id) VALUES ({})", s.account_id));
 	auto r = database.QueryDatabase(fmt::format(
 		"SELECT starter_granted, last_monthly FROM lon_account WHERE account_id = {}", s.account_id));
-	if (!r.Success() || r.RowCount() == 0) return;
+	if (!r.Success()) {
+		// A schema gap here silently withholds EVERY gift below (new-player deck, monthly
+		// packs, deliveries). 2026-11-05: live peq was missing a column this SELECT named,
+		// the query failed and every login returned here without a word -- say so instead.
+		LogError("[LoN] [{}] cannot read lon_account (account [{}]) -- no gifts this login; is the DB schema current?", s.name, s.account_id);
+		return;
+	}
+	if (r.RowCount() == 0) return;
 	auto row = r.begin();
 	const bool starter = ToU(row[0]) != 0;
 	const uint32_t last_monthly = ToU(row[1]);
@@ -5401,6 +5490,12 @@ void HandleCampaignStatus(Session &s, Reader &r, uint32_t version)
 	if (r.bad) return;
 	s.difficulty = std::max(s.difficulty, difficulty);
 	if (custom) s.archetype = custom;
+	// The campaign map is server-side state in the live game -- the client keeps no
+	// local save, so a status that only lived in the Session reset every logout.
+	database.QueryDatabase(fmt::format(
+		"REPLACE INTO lon_campaign_status (account_id, campaign_id, difficulty, status, archetype, extra) "
+		"VALUES ({}, {}, {}, {}, {}, '{}')",
+		s.account_id, campaign, difficulty, status, custom, Strings::Escape(extra)));
 	LogInfo("[LoN] [{}] campaign status: campaign [{}] status [{}] difficulty [{}] archetype [{}] [{}]",
 		s.name, campaign, status, difficulty, custom, extra);
 }

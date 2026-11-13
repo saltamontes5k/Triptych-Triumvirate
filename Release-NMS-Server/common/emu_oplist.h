@@ -659,6 +659,18 @@ N(OP_CharacterSetCreateRequest),
 N(OP_CharacterSetMoveRequest),
 N(OP_CharacterSetUnlockRequest),
 N(OP_SuppressBuffNameInfo),
+// /nmsloot personal loot offers. OP_NmsLootOffer/Decision carry the module's dinput8 window
+// protocol on OUR dll's numbers (0x140C/D - the module ships them on 0x140A/B, which this
+// server's OP_NMSWindowData/Event own). The OP_PersonalLoot* family is Hailstone's add-on
+// protocol and keeps ITS wire numbers (hailstone-nms nms_packets.h); 0x140E stays unused.
+N(OP_NmsLootOffer),
+N(OP_NmsLootDecision),
+N(OP_ClientReport),
+N(OP_PersonalLootList),
+N(OP_PersonalLootFilters),
+N(OP_PersonalLootAction),
+N(OP_PersonalLootSettings),
+N(OP_PersonalLootHistory),
 // shroud opcodes: native RoF2 client opcodes (see utils/scripts/opcode_scripts/opcodelist.txt)
 N(OP_Shroud),
 N(OP_ShroudSelectionWindow),
@@ -758,4 +770,6 @@ N(OP_RealEstateItemQuery),           // 0x050c client asks for an estate's item 
 N(OP_RealEstateItemList),            // 0x1cef estate item list (S2C)
 N(OP_RealEstatePlacementCommit),     // 0x711a placement commit (C2S, 96 bytes)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
+N(OP_NMSWindowData),               // 0x140a script-drawn NMS window state: open/close/widgets/canvas frames (S2C)
+N(OP_NMSWindowEvent),              // 0x140b NMS window capability hello + button/key/input/grid/canvas events (C2S)
 // mail and chat opcodes located in ../mail_oplist.h

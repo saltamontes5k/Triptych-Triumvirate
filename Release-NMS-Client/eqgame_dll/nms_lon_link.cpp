@@ -792,9 +792,59 @@ namespace {
 		PvPLog(!w, w ? "P8 (link buttons) installed in LegendsOfNorrath.dll at %p" : "P8 install FAILED at %p (VirtualProtect)", lon);
 	}
 
+	// ---- single-player game teardown (skirmish / scenario / tutorial) --------------
+	// The soundtrack must not outlive the game. Quitting a game mid-play sends no
+	// AccountCommand_RecordSinglePlayerGame end report, so nothing would tell the music
+	// layer the playmat loop is over and it kept playing in the lobby. The single-player
+	// game is an EQMainController (a plain EQGame is the PvP host and is not touched): a
+	// multi-base object whose Game subobject sits at +8 -- its ctor writes vtable
+	// 0x10647D24 there -- and `delete` on a Game* goes through that vtable's slot 0
+	// (0x102C2E60: `sub ecx,8; jmp 0x102C2E80`, the scalar deleting destructor). Wrapping
+	// the slot reports "the game object is gone" for every ending, reported or not; the
+	// wrapper calls the original, so the game itself behaves exactly as before.
+	const DWORD kSpSlotDtor = 0x647D24;   // EQMainController game vtable +0x00 (scalar deleting dtor)
+	const DWORD kSpDtorOrig = 0x2C2E60;
+
+	BYTE *g_spLon    = nullptr;   // the LoN copy the hook is in
+	BYTE *g_spFailed = nullptr;   // a copy whose check failed (not retried)
+
+	void *__fastcall SpDtorWrapper(BYTE *game, void *, int flags)
+	{
+		NMSLoN::GameMusicAborted();
+		return ((void *(__thiscall *)(BYTE *, int)) (g_spLon + kSpDtorOrig))(game, flags);
+	}
+
+	void SpPulse(BYTE *lon)
+	{
+		if (!lon) {
+			g_spLon = g_spFailed = nullptr;
+			return;
+		}
+		if (lon == g_spFailed) return;
+		if (lon == g_spLon && *(DWORD *) (lon + kSpSlotDtor) == (DWORD) &SpDtorWrapper) return;   // in place
+		g_spLon = nullptr;
+		const IMAGE_DOS_HEADER *dos = (const IMAGE_DOS_HEADER *) lon;
+		const IMAGE_NT_HEADERS32 *nt = (const IMAGE_NT_HEADERS32 *) (lon + dos->e_lfanew);
+		const DWORD size = nt->OptionalHeader.SizeOfImage;
+		static const BYTE kDtorBytes[] = {0x83, 0xE9, 0x08, 0xE9};   // sub ecx,8; jmp <real dtor>
+		if (!PvPSlotOk(lon, size, kSpSlotDtor, kSpDtorOrig, kDtorBytes, sizeof(kDtorBytes))) {
+			g_spFailed = lon;
+			PvPLog(true, "EQMainController dtor check failed at %p -- an unknown LoN build: game music will not follow a quit", lon);
+			return;
+		}
+		g_spLon = lon;   // before the slot: the wrapper calls through it
+		const bool w = PvPWriteSlot(lon, kSpSlotDtor, (const void *) &SpDtorWrapper);
+		PvPLog(!w, w ? "single-player game teardown hooked at %p" : "single-player teardown install FAILED at %p (VirtualProtect)", lon);
+	}
+
 } // namespace
 
 namespace NMSLoN {
+
+	void GamePulse(void *module)
+	{
+		SpPulse((BYTE *) module);
+	}
 
 	void PvPHostPulse(void *module)
 	{

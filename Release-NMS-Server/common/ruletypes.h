@@ -257,6 +257,8 @@ RULE_BOOL(Mercs, AllowMercSuspendInCombat, true, "Allow merc suspend in combat")
 RULE_BOOL(Mercs, MercsIgnoreLevelBasedHasteCaps, false, "Ignores hard coded level based haste caps.")
 RULE_INT(Mercs, MercsHasteCap, 100, "Haste cap for non-v3(over haste) haste")
 RULE_INT(Mercs, MercsHastev3Cap, 25, "Haste cap for v3(over haste) haste")
+RULE_INT(Mercs, BaseMercenaries, 3, "Owned mercenary contract slots granted before purchases (RoF2 only).")
+RULE_INT(Mercs, MaxMercenaries, 11, "Maximum owned mercenary contracts per character after purchases (RoF2 only; clamped to compiled roster capacity). One active at a time.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Guild)
@@ -1208,9 +1210,11 @@ RULE_CATEGORY_END()
 RULE_CATEGORY(Custom)
 // Multiclassing Engine
 RULE_BOOL(Custom, 	ServerAuthStats, 						true, "Enable this rule in order to send explicit client updates. Requires client dll.")
+RULE_BOOL(Custom, 	BazaarExileUnauthedClients, 			true, "Clients that fail the dinput8 auth handshake (ServerAuthStats) are warned ~1 minute, then exiled to the Bazaar and nagged if they linger there. false = keep the handshake, but only a harmless once-per-zone-in warning; the client keeps playing wherever it is.")
 RULE_BOOL(Custom, 	MulticlassingEnabled, 					true, "Enable this to enable all multiclass-related tweaks. Requires ServerAuthStats and UseDynamicAATimers for full functionality.")
 RULE_BOOL(Custom, 	UseDynamicAATimers, 					true, "Enable using dynamic AA timers. Required to deconflict multiclass AA timers")
 RULE_BOOL(Custom, 	DedupeAALines, 							true, "Collapse duplicate AA lines that share a name, showing and granting only the strongest line per name.")
+RULE_INT(Custom, 	MaxPlayerClasses, 						3,		"Highest number of classes a character may hold. Read by #multiclass, Client::AddExtraClass, NMS_multiclass_utils.pl and the class trainers; #multiclass forceadd can exceed it.")
 
 // Fellowships (native RoF2; see docs/rof2-fellowship.md)
 RULE_BOOL(Custom, 	Fellowships, 						false, 	"Enable the RoF2 fellowship system: membership, roster window, /fsay chat, campsites and vitality.")
@@ -1219,10 +1223,24 @@ RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP
 RULE_INT(Custom, 	FellowshipCampMembers, 				2, 		"Living fellowship members, including the camper, that must be within 100 units and out of combat to create a campsite. Clamped to 1-12; the native client may still gate its Camp button on its own threshold.")
 RULE_INT(Custom, 	FellowshipRosterClass, 				0, 		"Which class the native fellowship roster shows for a multiclass character (the row has room for one). 0 = earliest class in the game's order, 1 = latest, 2 = the character's base class, 3 = the class bitmask encoded for the NMS client (id 1000+mask), which renders every class.")
 
+// NMS windows / arcade (script-drawn client windows; see zone/nms_window.h)
+RULE_BOOL(Custom, 	NMSWindowEnabled, 					true, 	"Enable the NMSWindow script API (client:NMSWindowOpen etc). Clients without the patched dinput8.dll automatically get the plain-text chat fallback. Requires client dll for real windows.")
+RULE_INT(Custom, 	NMSWindowMaxWindows, 				8, 		"Maximum NMS windows a single player may have open at once. NMSWindowOpen refuses beyond this.")
+RULE_INT(Custom, 	NMSWindowMaxTickers, 				20, 	"Maximum ticker (fast-updating) NMS windows per zone process. NMSWindowOpen with the ticker flag refuses beyond this.")
+RULE_INT(Custom, 	NMSWindowMaxEventsPerSec, 			30, 	"Window input events (buttons/keys/inputs) handled per player per second; excess events are dropped.")
+RULE_INT(Custom, 	NMSWindowMaxPacketsPerSec, 			60, 	"Window data packets sent per player per second; NMSWindowSend returns false while queued past this so scripts can retry next tick.")
+RULE_INT(Custom, 	NMSWindowCanvasPieces, 				290, 	"Maximum canvas draw pieces per game frame; the arcade library enforces this budget and the client renderer caps at the same count.")
+RULE_BOOL(Custom, 	NMSVaultScriptPanel, 				false, 	"Render the Nautilus Vault as the NMSWindow script panel (live-NMS style boxes). false = the classic native list window fed by VAULTDATA lines. Needs NMSWindowEnabled as well when true.")
+
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
 RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")
 RULE_INT(Custom, 	ShroudMonsterPointScale, 				100, "Percent multiplier applied to the monster-point grant for a shroud form (100 = the live guide's baseline ladder: a 10-point starter below level 20, then 32/36/40/45/50/55 at levels 20-45, 78 at 50, 84 at 55, 91 at 60, 97 at 65, 104 at 70). 0 grants no monster points at all (the guide's strict values, where a low-level form's basics are free); the guide's per-form totals otherwise vary by up to about 40 percent, so raise this if the baseline feels stingy.")
+// Native RoF2 Spirit Shroud protocol (ported from the nightstalker6669 e7cb5dc
+// reconstruction). Sits beside the quest-path rules above; both paths share the
+// client surface but never run simultaneously for one character.
+RULE_BOOL(Custom, 	EnableSpiritShrouds, 					false, "Enable the native RoF2 Spirit Shroud window protocol (16-message May 2013 client set) and its spirit_shroud_* catalog/progression storage. Requires the v388 migrations; entry then rides the shroud snapshot path. Legacy quest shrouds (Custom:ShroudsEnabled) are unaffected.")
+RULE_BOOL(Custom, 	AllowTestSpiritShrouds, 				true, "Offer test_only Spirit Shroud templates (starter catalog) while the verified live catalog is incomplete. Nested under Custom:EnableSpiritShrouds.")
 
 // NMS Options
 RULE_BOOL(Custom, 	SuspendGroupBuffs, 						true, 	"Enable this to cause self buffs and group's buffs to not tick down")
@@ -1267,6 +1285,18 @@ RULE_INT(Custom, 	PowerSourceTickMs, 					6000, "Tick interval, in milliseconds,
 RULE_BOOL(Custom, 	NautilusVault,						true, "Enable the Nautilus Vault (#vault_*) storage, Proc Locker, clicky autoload, vault bank/merchant, and the Nautilus Vault inventory key. Off = no vault commands, grant, or combat hooks.")
 RULE_BOOL(Custom, 	ProcLockerStacks,					true, "When true, the Nautilus Vault Proc Locker procs independently of the held weapon and its augs (all can proc in one swing). When false, the locker item replaces the held weapon's proc and suppresses its aug procs (reference behavior).")
 RULE_BOOL(Custom, 	ProcLockerModSlots,					true, "When true, Nautilus Vault slots 84-87 (the Foci/Skill Mod placeholders on the Proc Locker page) lend their item's skill mods, instrument mods, and focus effects - never stats or procs. Free-form: any non-container item can be parked, which is how a bard parks a second instrument.")
+
+// /nmsloot personal loot offers (mukluk4/Modular-Options loot-offers). Needs the table from
+// migration v375 and a loot window client (our dinput8 window or the Hailstone add-on); a
+// client without either sees nothing, so keep NmsLootOffers off until the dll has shipped.
+// Corpse emptying follows this server's copy rule: with 2+ recipients (and solo when
+// NmsLootEmptySoloCorpse is on) the corpse's loot-table items are removed and every
+// recipient gets a copy of exactly what was removed; quest-added items stay (lootdrop_id 0).
+// With an emptying rule off, the older independent per-player roll remains.
+RULE_BOOL(Custom, 	NmsLootOffers,						false, "/nmsloot: on an NPC's death, create personal loot offers for the killer and each group or raid member in the zone. When a corpse-empty rule is on, each recipient gets a copy of exactly the loot-table items removed from the corpse; otherwise the loot is rolled independently per player. Keep/Sell/Tribute/Bank/Vault/Destroy/Pass from anywhere in the zone; expired offers are delivered to bags when possible. Off = corpse loot only")
+RULE_INT(Custom, 	NmsLootOfferExpireSeconds,			300, "Seconds before an unclaimed /nmsloot offer expires (the client countdown)")
+RULE_BOOL(Custom, 	NmsLootEmptyGroupCorpse,			true, "With /nmsloot offers going to 2 or more players, remove the corpse's loot-table items, give every recipient a copy of exactly the items removed (quest-added items stay) and let the emptied corpse decay at once. On by default")
+RULE_BOOL(Custom, 	NmsLootEmptySoloCorpse,				true, "With /nmsloot offers going to a lone player, do the same: remove the corpse's loot-table items, give the player a copy of exactly the items removed, so only one loot source remains (quest-added items stay). On here; upstream defaults it off")
 RULE_REAL(Custom, 	PowerSourceDrainMultiplier, 		1.0000000000000, "Global multiplier applied to Power Source drain rate (set below 1.0 to slow drain).")
 
 // Level-based zone version routing
@@ -1366,6 +1396,7 @@ RULE_BOOL(Custom,   EnableGlobalLoot,                       true,    "Enable or 
 RULE_BOOL(Custom,   PermanentServerBuffsEnabled,            false,   "Enable or disable permanent server buffs (spells 43002, 43005, 36856, 17779)")
 RULE_BOOL(Custom,   GuideAudit,                             true,    "Enable command auditing for guides/GMs of status 80 or higher.")
 RULE_INT(Custom,    FabledDefaultChance,                    50,      "Percent chance used by #fabled on when no chance is given. Read only at command time, never per spawn.")
+RULE_BOOL(Custom,   RaidTradeskillRewards,                  true,    "Master switch for raid-kill tradeskill skill-ups (quests/plugins/NMS_tradeskill_utils.pl, hooked by global_npc.pl EVENT_KILLED_MERIT). Toggle live: #rules setdb Custom:RaidTradeskillRewards false + #reload rules.")
 RULE_BOOL(Custom,   AllowAllClassesClickItems,              false,   "Allow all classes to click all items regardless of class restrictions on click effects.")
 
 // Legends of Norrath card game (world/lon_service.cpp). The server owns every card; the client's
@@ -1404,6 +1435,13 @@ RULE_STRING(Custom, LoNWebsiteUrl,                          "",      "Legends of
 RULE_STRING(Custom, LoNMOTD,                                "Welcome to Legends of Norrath! Learn the game in Tutorials, build your decks, trade with other players, and good luck at the table.", "Legends of Norrath: the home screen's Message of the Day, sent at card-game login. Plain text (HTML is shown as text). Empty = the box stays blank.")
 RULE_BOOL(Custom,   SoDMercTiers,                           true,    "Seeds of Destruction: theme progression raises the mercenary tier cap (the v89 OG=T2..Rathe=T5 design). Tier 1 is open to everyone; each completed SoD theme (Oceangreen, Kithicor, Kunark/Field of Scale, Rathe) adds one tier, capped at 5. The cap is read from the '<accountid>-sod-merc-tier' data bucket that plugins/NMS_sod_utils.pl keeps current (on every SoD chain-flag change and on zone-in); a missing bucket = Tier 1 only. GMs bypass. Set false for the old global behavior.")
 RULE_BOOL(Custom,   MercBotBrain,                           false,   "Master and Legendary mercenaries (proficiency 3+) think like bots instead of using the stock merc brain: priority-ordered cast dispatch, hate-drop Concussive nukes when aggro looms, roots on fleeing targets, stun-rider nukes, and healer mercs interrupt enemy casts once nobody needs healing. Apprentice/Journeyman keep the stock merc brain regardless. The new spell behaviors also need the v296 merc spell list rows; a tier whose lists lack them simply behaves stock. Fail-closed: false = stock behavior everywhere.")
+RULE_BOOL(Custom,   CurioTraps,                             true,    "The Hoard Remembers: curio click-traps on the veeshan treasure piles/statues/bookcases (doors 601-612) and poair floating crystals/bookcases (doors 601-611). Rolls DTS (Veeshan/Xegony flavor), guardian adds, buff wipe, Color Cloud AOE paralyze, the Drunken Stupor brew spell, port-to-poair, or the bookcase port-to-PoK. Per-char 120s cooldown, GMs exempt. Handlers: quests veeshan/player.pl + poair/player.pl. false = doors click inert.")
+RULE_BOOL(Custom,   StarvationDeath,                        false,   "Nethack-style starvation hunger clock: once hunger_level OR thirst_level hits 0 the clock runs - a massive stat+snare debuff (spell 44036) lands after Custom:StarvationDebuffEQMinutes, the starvation death touch kills after Custom:StarvationDeathEQMinutes, then each resurrect buys Custom:StarvationResGraceEQMinutes before it kills again, up to Custom:StarvationMaxGraceDeaths deaths. REQUIRES Character:EnableFoodRequirement AND Character:EnableHungerPenalties to be true: without them the IsStarved anchor (and the regen stop) never fires and this rule is inert - the zone logs a warning. Eating AND drinking resets everything. GMs, the Bazaar, and characters below Custom:StarvationDeathMinLevel are exempt. Offline time never counts. State persists per character in the NMSStarvation data bucket. false = inert.")
+RULE_INT(Custom,    StarvationDebuffEQMinutes,              2880,    "Starvation clock: EQ-minutes of hunger/thirst at 0 before the Starving stat+snare debuff lands. 2880 = 2 EQ game days (1 EQ day = 1440 EQ minutes = 72 real minutes).")
+RULE_INT(Custom,    StarvationDeathEQMinutes,               4320,    "Starvation clock: EQ-minutes of hunger/thirst at 0 before the starvation death touch. 4320 = 3 EQ game days. Should exceed StarvationDebuffEQMinutes.")
+RULE_INT(Custom,    StarvationResGraceEQMinutes,            1440,    "Starvation clock: EQ-minutes of grace after each starvation death before the death touch fires again. 1440 = 1 EQ game day.")
+RULE_INT(Custom,    StarvationMaxGraceDeaths,               3,       "Starvation clock: total starvation deaths before the loop suspends (the debuff stays, no more deaths) until the character eats AND drinks. 0 = no cap.")
+RULE_INT(Custom,    StarvationDeathMinLevel,                1,       "Starvation clock: characters below this level never accrue it (tutorial protection). 1 = everyone.")
 
 RULE_CATEGORY_END()
 

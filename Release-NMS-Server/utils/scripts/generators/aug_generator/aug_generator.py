@@ -787,6 +787,10 @@ def generate_batch(columns, base_template, aug_type, level_distribution, id_star
         item["reqlevel"] = max(1, level - 9)
         item["icon"]     = random.choice(VALID_ICONS)
         item["idfile"]   = IDFILE
+        # v368: force every wear slot (bits 0-20) so generated augs fit
+        # Primary/Secondary as well. base_aug.txt shipped 2072575 (no weapon
+        # bits); this override survives a future template re-export.
+        item["slots"] = 2097151
 
         focuseffect_id = 0
         worneffect_id  = 0

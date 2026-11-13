@@ -6,6 +6,10 @@ AggroMeter::AggroMeter() : lock_id(0), target_id(0), secondary_id(0), lock_chang
 		data[i].type = i;
 		data[i].pct = 0;
 	}
+
+	for (int i = 0; i < MAX_XTARGET_SLOTS; ++i) {
+		xtarget_id[i] = 0;
+	}
 }
 
 

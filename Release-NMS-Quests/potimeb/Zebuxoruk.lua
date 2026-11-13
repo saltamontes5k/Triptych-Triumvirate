@@ -32,18 +32,36 @@ end
 function event_say(e)
 	if (e.message:findi("hail")) then
 		local qglobals = eq.get_qglobals();
-		if (qglobals.xebuxoruk_cooldown ~= nil) then
-			e.self:Say("The one who wears my face has been struck down -- for now. Time must gather itself before his malice can pool again. Return in three days' turn.");
-		elseif (qglobals.xebuxoruk_unlock == "1") then
-			e.self:Say("So you have felt it too -- the ripple in the hours. Something wearing my face festers in the outer wastes of this plane, twisted by the moment of my intended death. I cannot face it; my hands are too recently freed. But yours... Are you ready for me to [" .. eq.say_link("send you") .. "] to it?");
+		if (qglobals.xebuxoruk_unlock == "1") then
+			-- The 72h defeat cooldown lives on the player's expedition
+			-- lockout now (xebuxoruk_clone.lua), not on a world qglobal.
+			-- Literals must match XEB_EXPEDITION / XEB_LOCKOUT_EVENT in
+			-- potimea/player.lua.
+			if (e.other:HasExpeditionLockout("The Forsaken Hourglass", "Xebuxoruk the Forsaken")) then
+				e.self:Say("You have already unmade the one who wears my face -- for now. Time must gather itself before his malice can pool again. Return in three days' turn.");
+			else
+				e.self:Say("So you have felt it too -- the ripple in the hours. The gods chained me in Time's own heart, and when the moment of my intended execution came, Druzzil turned the hourglass rather than let it fall. But the ages you and yours had already pried open would not close cleanly -- the hourglass cracked, and in some timelines the execution still found me. That severed moment festers still, in the outer wastes of this plane: a reflection cut from my face, stranded on the wrong side of the glass, blooming with every seed of destruction your meddling planted. I cannot face it; my hands are too recently freed. But yours... Are you ready for me to [" .. eq.say_link("send you") .. "] to it?");
+			end
 		else
 			e.self:Say("I am myself again, thanks to Druzzil and to you. But the hours still feel... wrong. As if something is missing from its proper place.");
 		end
 	elseif (e.message:findi("send you")) then
 		local qglobals = eq.get_qglobals();
-		if (qglobals.xebuxoruk_unlock == "1" and qglobals.xebuxoruk_cooldown == nil) then
-			e.self:Say("Stand fast. The way is not kind, and neither is what waits at the end of it.");
-			e.other:MovePC(219, 125, -12, 182, 0);
+		if (qglobals.xebuxoruk_unlock == "1") then
+			-- The fight lives in a potimea version-9 expedition now, and a
+			-- character can hold only one expedition at a time: release the
+			-- Time B claim first. RemoveAllMembers is the only script-side
+			-- way out of an expedition, so this ejects the whole expedition
+			-- to its courtyard safe return -- where the clocktower door
+			-- waits (potimea/player.lua owns the door).
+			local expedition = e.other:GetExpedition();
+			if (expedition.valid) then
+				e.self:Say("Stand fast. The way is not kind, and neither is what waits at the end of it. I cannot hold your claim on this place and turn the hourglass both -- I release it. Seek the sundial in the garden; it will carry you to him.");
+				expedition:RemoveAllMembers();
+			else
+				e.self:Say("Stand fast. The way is not kind, and neither is what waits at the end of it. Take the road Druzzil opens, then seek the sundial in the garden; it will carry you to him.");
+				e.other:MovePC(219, 298, 919, 8, 0);
+			end
 		else
 			e.self:Say("The path has already closed. Time keeps its own counsel.");
 		end

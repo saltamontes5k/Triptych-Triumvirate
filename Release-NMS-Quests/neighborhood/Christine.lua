@@ -1,16 +1,20 @@
 --[[
 	Christine (npc 712000) - Sunrise Hills (neighborhood, zone 712)
 
-	Took over the housing duties previously handled by the Sunrise Hills
-	Realtor. Grants each character one free house chosen from the list of
-	player house interiors (the "phinterior" family plus a couple of extras),
-	issues replacement keys for 25,000 platinum, and offers a trip back to the
-	Plane of Knowledge.
+	The neighbourhood realtor. One free home per ACCOUNT: the house itself, the lot it stands
+	on, a lot deed and the front door key. Once that grant is used, replacement keys and deeds
+	cost platinum - the free home does not come back, and alts on the same account cannot claim
+	a second one.
+
+	The lot is assigned server-side (eq.house_realtor_claim) and recorded per account in
+	nms_housing_realtor; the deed (9015400) is the physical proof the player carries.
 ]]
 
 local KEY_ITEM_ID    = 9015300
+local DEED_ITEM_ID   = 9015400
 local HOUSE_DURATION = 315360000 -- 10 years, in seconds
 local KEY_COST       = 25000000  -- 25,000 platinum, in copper
+local DEED_COST      = 10000000  -- 10,000 platinum, in copper
 
 local POK_RETURN = { zone = 202, x = 1398.0, y = -306.0, z = -124.0, h = 328.0 }
 
@@ -47,57 +51,70 @@ local function offer_house_list(e)
 	for _, h in ipairs(HOUSES) do
 		links[#links + 1] = eq.say_link(h.name, false, h.key)
 	end
-	e.self:Say("Of course! Which of our fine residences would you like? " .. table.concat(links, ", ") .. ". Each resident may claim one home, free of charge.")
+	e.self:Say("Of course! Which of our fine residences would you like? " .. table.concat(links, ", ") ..
+		". The home and the lot it stands on are yours, free of charge - once per account.")
 end
 
 local function claim_house(e, c, house)
-	local existing = eq.house_get_instance_for_char(c:CharacterID())
-	if existing ~= 0 then
-		e.self:Say("But " .. c:GetCleanName() .. ", you already own a home. Use your key to travel there whenever you wish!")
+	local door = eq.house_realtor_claim(c:CharacterID(), c:AccountID(), "neighborhood")
+
+	if door == 0 then
+		e.self:Say("I am sorry, " .. c:GetCleanName() .. ", the ledger shows this account has already " ..
+			"claimed its one free home, or there is no vacant lot left. I can still issue a " ..
+			"[" .. eq.say_link("replacement") .. "] key or deed for a fee.")
 		return
 	end
 
 	local instance_id = eq.create_instance(house.zone, 0, HOUSE_DURATION)
 	if instance_id == 0 then
-		e.self:Say("I am terribly sorry, the paperwork office appears to be closed. Please try again shortly.")
+		e.self:Say("I am terribly sorry, the paperwork office appears to be closed. Your lot is " ..
+			"recorded; please say claim again shortly so I can sign the house over.")
 		return
 	end
 
 	local house_id = eq.house_create(c:CharacterID(), instance_id, house.zone)
 	if house_id == 0 then
-		e.self:Say("My ledger seems to be missing a page... please try once more.")
+		e.self:Say("My ledger seems to be missing a page... your lot is recorded, please try once more.")
 		return
 	end
 
 	eq.assign_to_instance_by_char_id(instance_id, c:CharacterID())
+
+	-- Stand the house on the lot: without this the plot has no building, no exterior model and
+	-- no interior link, so the player would still have to place a deed themselves.
+	if not eq.house_realtor_link_plot(c:CharacterID(), door) then
+		e.self:Say("Your lot and keys are recorded, " .. c:GetCleanName() .. ", but the house has " ..
+			"not been raised yet. Speak to me again and I will have the builders finish it.")
+	end
+
 	c:SummonItem(KEY_ITEM_ID, -1)
-	e.self:Say(
-		"Congratulations, " .. c:GetCleanName() .. "! The deed is signed - " .. house.name ..
-		" is yours for as long as you keep it. Here is your house key; click it whenever you wish to travel home."
-	)
+	c:SummonItem(DEED_ITEM_ID, -1)
+
+	e.self:Say("Congratulations, " .. c:GetCleanName() .. "! Lot " .. door .. " is yours, the deed is " ..
+		"signed, and " .. house.name .. " now stands on it. Here are your lot deed and house key - " ..
+		"click the key whenever you wish to travel home. Guard them well; replacements cost coin.")
 end
 
 function event_say(e)
 	local c = e.other
 	if not c or not c:IsClient() then return end
 
-	local name = c:GetCleanName()
+	local name    = c:GetCleanName()
+	local account = c:AccountID()
 
 	if e.message:findi("hail") then
-		if eq.house_get_instance_for_char(c:CharacterID()) == 0 then
-			e.self:Say(
-				"Welcome to Sunrise Hills, " .. name .. "! I look after the neighborhood's residences now. " ..
-				"Every resident is entitled to one free home. " ..
-				"Say the word [" .. eq.say_link("claim") .. "] and I shall show you the choices. " ..
-				"Should you lose your key, I can issue a [" .. eq.say_link("replacement") .. "] for 25,000 platinum. " ..
-				"I can also [" .. eq.say_link("return you to the Plane of Knowledge") .. "] when you are finished here."
-			)
+		if eq.house_realtor_door(account) ~= 0 then
+			e.self:Say("Ah, " .. name .. ", welcome back! Your account has already claimed its free " ..
+				"home. If you have lost your house [" .. eq.say_link("key") .. "] or your " ..
+				"[" .. eq.say_link("deed") .. "], I can replace them for a fee. " ..
+				"I can also [" .. eq.say_link("return you to the Plane of Knowledge") .. "].")
 		else
-			e.self:Say(
-				"Ah, " .. name .. ", welcome back! If you have lost your house key, I can issue a " ..
-				"[" .. eq.say_link("replacement") .. "] for 25,000 platinum. " ..
-				"Or I can [" .. eq.say_link("return you to the Plane of Knowledge") .. "]."
-			)
+			e.self:Say("Welcome to Sunrise Hills, " .. name .. "! I look after the neighborhood's " ..
+				"residences. Every account is entitled to one free home, the lot it stands on, " ..
+				"and the deed and key that go with it. Say the word [" .. eq.say_link("claim") .. "] " ..
+				"and I shall show you the choices. Lost a key or deed later? I can issue a " ..
+				"[" .. eq.say_link("replacement") .. "]. I can also " ..
+				"[" .. eq.say_link("return you to the Plane of Knowledge") .. "] when you are finished here.")
 		end
 		return
 	end
@@ -105,6 +122,11 @@ function event_say(e)
 	if e.message:findi("claim") then
 		if eq.house_get_instance_for_char(c:CharacterID()) ~= 0 then
 			e.self:Say("But " .. name .. ", you already own a home here! Use your key to travel home whenever you like.")
+			return
+		end
+		if eq.house_realtor_door(account) ~= 0 then
+			e.self:Say("Your account has already claimed its one free home, " .. name .. ". " ..
+				"Only the character who took the grant can live there - but I can replace a lost key or deed.")
 			return
 		end
 		offer_house_list(e)
@@ -119,7 +141,25 @@ function event_say(e)
 		end
 	end
 
-	if e.message:findi("replacement") or e.message:findi("lost my key") then
+	if e.message:findi("deed") then
+		if eq.house_realtor_door(account) == 0 then
+			e.self:Say("You have no deed on record here, " .. name .. ". Say [" .. eq.say_link("claim") .. "] first.")
+			return
+		end
+		if c:CountItem(DEED_ITEM_ID) > 0 then
+			e.self:Say("You still carry your lot deed, " .. name .. ". Check your bags before you spend your coin!")
+			return
+		end
+		if not c:TakeMoneyFromPP(DEED_COST, true) then
+			e.self:Say("A replacement deed costs 10,000 platinum, " .. name .. ". Come back when your purse is heavier.")
+			return
+		end
+		c:SummonItem(DEED_ITEM_ID, -1)
+		e.self:Say("Here is your replacement deed, " .. name .. ". I have noted the reissue in the ledger.")
+		return
+	end
+
+	if e.message:findi("key") or e.message:findi("replacement") or e.message:findi("lost") then
 		local instance_id = eq.house_get_instance_for_char(c:CharacterID())
 		if instance_id == 0 then
 			e.self:Say("You do not own a home in Sunrise Hills yet. Say [" .. eq.say_link("claim") .. "] and we shall fix that at once.")

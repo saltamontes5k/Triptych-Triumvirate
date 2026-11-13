@@ -357,6 +357,26 @@ void NPC::AddLootDropFixed(
 		return;
 	}
 
+	// RollIndependentLoot: collect the roll for /nmsloot instead of adding it to this NPC
+	if (m_loot_item_sink) {
+		auto item = new LootItem{};
+		item->item_id           = item2->ID;
+		item->charges           = loot_drop.item_charges;
+		item->aug_1             = augment_one;
+		item->aug_2             = augment_two;
+		item->aug_3             = augment_three;
+		item->aug_4             = augment_four;
+		item->aug_5             = augment_five;
+		item->aug_6             = augment_six;
+		item->attuned           = false;
+		item->equip_slot        = EQ::invslot::SLOT_INVALID;
+		item->lootdrop_id       = loot_drop.lootdrop_id;
+		item->trivial_min_level = loot_drop.trivial_min_level;
+		item->trivial_max_level = loot_drop.trivial_max_level;
+		m_loot_item_sink->push_back(item);
+		return;
+	}
+
 	auto item = new LootItem;
 
 	if (EQEmuLogSys::Instance()->log_settings[Logs::Loot].is_category_enabled == 1) {
@@ -767,6 +787,33 @@ void NPC::CheckGlobalLootTables()
 	for (const auto &e: l) {
 		AddLootTable(e, true);
 	}
+}
+
+// /nmsloot: roll this NPC's loot tables into out without touching its own loot. The sink in
+// AddLootDropTable diverts every roll while it is set; coin is saved and restored so the
+// real corpse keeps its money split.
+void NPC::RollIndependentLoot(LootItems &out)
+{
+	if (!npctype_id || !zone) {
+		return;
+	}
+
+	m_loot_item_sink = &out;
+	const uint32 copper = m_loot_copper;
+	const uint32 silver = m_loot_silver;
+	const uint32 gold   = m_loot_gold;
+	const uint32 plat   = m_loot_platinum;
+
+	AddLootTable(m_loottable_id, false);
+	if (DropsGlobalLoot()) {
+		CheckGlobalLootTables();
+	}
+
+	m_loot_copper   = copper;
+	m_loot_silver   = silver;
+	m_loot_gold     = gold;
+	m_loot_platinum = plat;
+	m_loot_item_sink = nullptr;
 }
 
 void ZoneDatabase::LoadGlobalLoot()

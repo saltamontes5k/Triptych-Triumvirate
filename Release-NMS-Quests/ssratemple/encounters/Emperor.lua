@@ -73,7 +73,11 @@ end
 function process_spawn(npc_id, npc)
 	if npc_id == blood_id then
 		set_state(STATE_START);
-		eq.unique_spawn(empfake_id, 0, 0, 990, -325, 415, 384);
+		-- the real Emperor is already standing once the Blood is dead; a fake one would just be a
+		-- second copy of the encounter on the throne
+		if not eq.get_entity_list():GetNPCByNPCTypeID(empreal_id).valid then
+			eq.unique_spawn(empfake_id, 0, 0, 990, -325, 415, 384);
+		end
 	end
 
 	if npc_id == wraith_id then

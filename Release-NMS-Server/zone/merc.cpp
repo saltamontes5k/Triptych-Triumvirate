@@ -2272,9 +2272,6 @@ int64 Merc::GetFocusEffect(focusType type, uint16 spell_id, bool from_buff_tic) 
 
 		if(UsedItem && rand_effectiveness && focus_max_real != 0)
 			realTotal = CalcFocusEffect(type, UsedFocusID, spell_id);
-
-		if (realTotal != 0 && UsedItem)
-			MessageString(Chat::FocusEffect, BEGINS_TO_GLOW, UsedItem->Name);
 	}
 
 	//Check if spell focus effect exists for the client.
@@ -5025,14 +5022,9 @@ bool Client::CheckCanHireMerc(Mob* merchant, uint32 template_id) {
 
 	MercTemplate* mercTemplate = zone->GetMercTemplate(template_id);
 
-	//check for suspended merc
-	if(GetMercInfo().mercid != 0 && GetMercInfo().IsSuspended) {
-		SendMercResponsePackets(6);
-		return false;
-	}
-
-	// Check if max number of mercs is already reached
-	if(GetNumberOfMercenaries() >= MAXMERCS) {
+	// Refuse only when every owned-contract slot is occupied. A suspended
+	// contract is a normal roster member, not a reason to reject a hire.
+	if (GetFirstFreeMercSlot() < 0) {
 		SendMercResponsePackets(6);
 		return false;
 	}
@@ -5211,7 +5203,13 @@ void Client::SuspendMercCommand() {
 			}
 
 			// Get merc, assign it to client & spawn
-			Merc* merc = Merc::LoadMercenary(this, &zone->merc_templates[GetMercInfo().MercTemplateID], 0, true);
+			auto template_it = zone->merc_templates.find(GetMercInfo().MercTemplateID);
+			if (template_it == zone->merc_templates.end()) {
+				SendMercResponsePackets(3);
+				Log(Logs::General, Logs::Mercenaries, "SuspendMercCommand Invalid template for %s.", GetName());
+				return;
+			}
+			Merc* merc = Merc::LoadMercenary(this, &template_it->second, 0, true);
 			if(merc)
 			{
 				SpawnMerc(merc, false);
@@ -5288,45 +5286,60 @@ void Client::SpawnMercOnZone() {
 	if (GetMerc())
 		return;
 
-	if(database.LoadMercenaryInfo(this))
+	if(!database.LoadMercenaryInfo(this))
 	{
-		if(!GetMercInfo().IsSuspended)
-		{
-			GetMercInfo().SuspendedTime = 0;
-			// Get merc, assign it to client & spawn
-			Merc* merc = Merc::LoadMercenary(this, &zone->merc_templates[GetMercInfo().MercTemplateID], 0, true);
-			if(merc)
-			{
+		Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone No merc info in database for %s.", GetName());
+		return;
+	}
+
+	// Pick the contract that was active when the player left, else the first
+	// owned contract (shown suspended until the player switches to it).
+	int active_slot = -1;
+	int first_owned_slot = -1;
+	const int capacity = GetMercenaryCapacity();
+	for (int slot = 0; slot < capacity; slot++) {
+		if (GetMercInfo(slot).mercid == 0) {
+			continue;
+		}
+		if (first_owned_slot < 0) {
+			first_owned_slot = slot;
+		}
+		if (!GetMercInfo(slot).IsSuspended) {
+			active_slot = slot;
+			break;
+		}
+	}
+
+	if (active_slot >= 0) {
+		SetMercSlot(static_cast<uint8>(active_slot));
+		GetMercInfo().SuspendedTime = 0;
+		auto template_it = zone->merc_templates.find(GetMercInfo().MercTemplateID);
+		if (template_it != zone->merc_templates.end()) {
+			Merc* merc = Merc::LoadMercenary(this, &template_it->second, 0, true);
+			if (merc) {
 				SpawnMerc(merc, false);
 			}
-			Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone Normal Merc for %s.", GetName());
 		}
-		else
-		{
-			int32 TimeDiff = GetMercInfo().SuspendedTime - time(nullptr);
-			if (TimeDiff > 0)
-			{
-				if (!GetPTimers().Enabled(pTimerMercSuspend))
-				{
-					// Start the timer to send the packet that refreshes the Unsuspend Button
-					GetPTimers().Start(pTimerMercSuspend, TimeDiff);
-				}
+		Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone Normal Merc (slot %i) for %s.", active_slot, GetName());
+	} else if (first_owned_slot >= 0) {
+		SetMercSlot(static_cast<uint8>(first_owned_slot));
+		int32 TimeDiff = GetMercInfo().SuspendedTime - time(nullptr);
+		if (TimeDiff > 0) {
+			if (!GetPTimers().Enabled(pTimerMercSuspend)) {
+				// Start the timer to send the packet that refreshes the Unsuspend Button
+				GetPTimers().Start(pTimerMercSuspend, TimeDiff);
 			}
-			// Send Mercenary Status/Timer packet
-			SendMercTimer(GetMerc());
-
-			Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone Suspended Merc for %s.", GetName());
 		}
+		// Send Mercenary Status/Timer packet
+		SendMercTimer(GetMerc());
+		Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone Suspended Merc (slot %i) for %s.", first_owned_slot, GetName());
 	}
-	else
-	{
-		// No Merc Hired
-		// RoF+ displays a message from the following packet, which seems useless
-		//SendClearMercInfo();
-		Log(Logs::General, Logs::Mercenaries, "SpawnMercOnZone Failed to load Merc Info from the Database for %s.", GetName());
+
+	// Populate the Manage tab's owned-contract list.
+	if (GetNumberOfMercenaries() > 0) {
+		SendMercPersonalInfo();
 	}
 }
-
 void Client::SendMercTimer(Merc* merc) {
 
 	if (GetMercInfo().mercid == 0)
@@ -5494,8 +5507,15 @@ bool Client::DismissMerc(uint32 MercID) {
 		GetMerc()->Depop();
 	}
 
-	SendClearMercInfo();
+	// Free the dismissed contract's storage slot before refreshing the roster.
+	memset(&GetMercInfo(), 0, sizeof(MercInfo));
 	SetMerc(nullptr);
+
+	if (GetNumberOfMercenaries() > 0) {
+		SendMercPersonalInfo();
+	} else {
+		SendClearMercInfo();
+	}
 
 	return Dismissed;
 }
@@ -5740,8 +5760,9 @@ Merc* Client::GetMerc() {
 uint8 Client::GetNumberOfMercenaries()
 {
 	uint8 count = 0;
+	const int capacity = GetMercenaryCapacity();
 
-	for (int slot_id = 0; slot_id < MAXMERCS; slot_id++) {
+	for (int slot_id = 0; slot_id < capacity; slot_id++) {
 		if (m_mercinfo[slot_id].mercid != 0) {
 			count++;
 		}
@@ -6025,6 +6046,27 @@ std::list<MercData> NPC::GetMercenariesList(uint32 clientVersion) {
 	return result;
 }
 
+// Fee schedule by proficiency: Apprentice pays a quarter of the reference
+// rate, Journeyman is the reference, Master pays double and Legendary
+// quadruple. Runs on the pre-division figure (always a multiple of 4, so the
+// Apprentice quarter stays exact) so fractional quarters keep copper
+// granularity before the /100 into gold.
+static uint32 ScaleMercCostByProficiency(uint32 cost, uint8 proficiency_id)
+{
+	switch (proficiency_id) {
+	case 1: // Apprentice
+		return cost / 4;
+	case 2: // Journeyman
+		return cost;
+	case 3: // Master
+		return cost * 2;
+	case 4: // Legendary
+		return cost * 4;
+	default:
+		return cost;
+	}
+}
+
 uint32 Merc::CalcPurchaseCost(uint32 templateID , uint8 level, uint8 currency_type) {
 
 	uint32 cost = 0;
@@ -6043,6 +6085,7 @@ uint32 Merc::CalcPurchaseCost(uint32 templateID , uint8 level, uint8 currency_ty
 				levels_above_cutoff = level > 10 ? (level - 10) : 0;
 				cost = levels_above_cutoff * 300;
 				cost += level >= 10 ? 100 : 0;
+				cost = ScaleMercCostByProficiency(cost, mercData->ProficiencyID);
 				cost /= 100;
 				break;
 			default:
@@ -6077,6 +6120,7 @@ uint32 Merc::CalcUpkeepCost(uint32 templateID , uint8 level, uint8 currency_type
 				levels_above_cutoff = level > 10 ? (level - 10) : 0;
 				cost = levels_above_cutoff * 300;
 				cost += level >= 10 ? 100 : 0;
+				cost = ScaleMercCostByProficiency(cost, mercData->ProficiencyID);
 				cost /= 100;
 				break;
 			default:

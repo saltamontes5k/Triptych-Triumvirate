@@ -24,6 +24,7 @@ GNU General Public License for more details.
 #include "pet_window.h"
 #include "waypoint_window.h"
 #include "vault_window.h"
+#include "nms_window.h"
 
 extern FloatingTextManager* g_pFtm;
 BOOL TurnNotDone=FALSE;
@@ -643,21 +644,44 @@ bool addedTestText = false;
 extern IDirect3DDevice9* g_pDevice;
 
 // -----------------------------------------------------------------------
-// NMS: MacroQuest coexistence -- drain leaked gCXStrAccess recursion levels.
+// NMS: MacroQuest coexistence -- gCXStrAccess observation (read-only).
 //
 // MQ 3.x (eqlib) aliases the client's CXStr critical section:
 //     gCXStrMutex = (CMutexSync*)CXStr__gCXStrAccess   // eqgame + 0x15D35E4
-// This DLL embeds its own MQ2 core and can leave that same critical section
-// locked (leaked recursion levels). When a separately-injected MacroQuest is
-// present it then faults inside CXMLDataManager::GetXMLData while walking
-// CXStr-backed data. At each pulse, if we own the section, release the leaked
-// levels. Mirrors the closed-source build's "gCXStrAccess drain".
+// This DLL embeds its own MQ2 core and a separately-injected MacroQuest uses the
+// same section, so a stuck recursion level there takes down CXStr-backed data in
+// both -- which is why three earlier iterations of this code *released* the
+// levels ("gCXStrAccess drain").
+//
+// That was unsound. A CRITICAL_SECTION is re-entrant, so from the outside a
+// live level and a leaked one are identical; leaving a live level lets its
+// owner's own Leave underflow the section, which hands CXStr to two threads at
+// once. That is the shape of the crashes this file has been chasing: a 1.28 GB
+// operator new() from a 167,772,150-entry array count, dying in the client's
+// own OOM trap at eqgame+0x40DF45, and 0.9-2 GB CRT copy loops at
+// eqgame+0x4DB2D7.
+//
+// Field measurements (two clients, 2026-11-12):
+//   * the section is already non-canonical on the very first frame we look at
+//     (LockCount -2 with RecursionCount 1), before this DLL touches anything;
+//   * with the reclaim disabled from that first frame, the clients ran for
+//     hours without a crash.
+//
+// So the reclaim is retired: this only samples the section and records what it
+// finds. If the CXStr faults come back, the log now says whether the section
+// was left locked (leak) or was underflowed by its owner, which is the
+// information a real fix needs -- and a fix must go to the leaking wrapper, not
+// to the lock.
 // -----------------------------------------------------------------------
 #define NMS_CXSTR_GXSTRACCESS_REL (0x15D35E4 - 0x400000)
 
 static bool s_mqDetected = false;
-static bool s_mqDrainLogged = false;
-static int  s_mqDrainLogCount = 0;
+static bool s_cxstrBannerLogged = false;
+static int  s_cxstrAnomalyLogCount = 0;
+
+// Observation state for gCXStrAccess (see the block comment above).
+static bool s_cxstrStateLogged = false;      // first sample has been recorded
+static LONG s_cxstrLockCountFloor = -1;      // deepest LockCount seen so far
 
 static bool NMS_IsMacroQuestLoaded()
 {
@@ -674,9 +698,10 @@ static bool NMS_IsMacroQuestLoaded()
 	return false;
 }
 
-static void NMS_LockDiagLog(const char* text)
+// Absolute path of the shared diagnostic log, next to eqgame.exe (the process
+// CWD can change). Heap-free on purpose: the out-of-memory path uses it too.
+static const char* NMS_DiagPath()
 {
-	// Use an absolute path next to eqgame.exe: the process CWD can change.
 	static char s_path[MAX_PATH] = {0};
 	if (s_path[0] == 0)
 	{
@@ -690,10 +715,17 @@ static void NMS_LockDiagLog(const char* text)
 
 		sprintf_s(s_path, sizeof(s_path), "%sNMS_lockdiag.log", exePath);
 	}
+	return s_path;
+}
 
+static void NMS_LockDiagLog(const char* text)
+{
 	FILE* f = nullptr;
-	if (fopen_s(&f, s_path, "a") == 0 && f)
+	if (fopen_s(&f, NMS_DiagPath(), "a") == 0 && f)
 	{
+		// Two clients share this file; tag every line so the lines of one
+		// process stay attributable.
+		fprintf(f, "[%lu] ", GetCurrentProcessId());
 		fputs(text, f);
 		fclose(f);
 	}
@@ -748,7 +780,46 @@ static void NMS_TryHookMacroQuestWho()
 	NMS_LockDiagLog("MacroQuest SuperWho detour installed -> /who routed to client who\n");
 }
 
-void NMS_DrainCXStrAccess()
+// Depth of gCXStrAccess owned by the calling thread (0 when it is not ours).
+// A leaked level is invisible to everyone else; only the owner can see it.
+static int NMS_CXStrOwnedDepth(CRITICAL_SECTION* pCS)
+{
+	if (pCS->OwningThread != (HANDLE)(ULONG_PTR)GetCurrentThreadId())
+		return 0;
+
+	LONG depth = pCS->RecursionCount;
+	return depth > 0 ? (int)depth : 0;
+}
+
+// Same sample, without needing the caller to hold the section pointer.
+int NMS_CXStrDepthNow()
+{
+	CRITICAL_SECTION* pCS = (CRITICAL_SECTION*)(baseAddress + NMS_CXSTR_GXSTRACCESS_REL);
+	if (IsBadReadPtr(pCS, sizeof(CRITICAL_SECTION)))
+		return 0;
+	return NMS_CXStrOwnedDepth(pCS);
+}
+
+// Diagnostics only (never touches the lock): the depth at the boundary is only a
+// leak if the client does NOT release it while running its own frame. This line
+// answers that for any session in NMS_lockdiag.log.
+void NMS_LogFrameDepth(int atEntry, int afterPulse, int afterClientFrame)
+{
+	static int s_logged = 0;
+	if (!s_mqDetected || s_logged >= 12)
+		return;
+	if (afterPulse == atEntry && afterClientFrame == afterPulse)
+		return;
+
+	++s_logged;
+	char b[192];
+	sprintf_s(b, sizeof(b),
+		"frame CXStr depth: entry %d, after our pulse %d, after client frame %d\n",
+		atEntry, afterPulse, afterClientFrame);
+	NMS_LockDiagLog(b);
+}
+
+void NMS_ObserveCXStrAccess()
 {
 	// Diagnostic: prove the pulse runs and report what MacroQuest modules are
 	// visible on the very first call. Harmless if the file cannot be opened.
@@ -758,7 +829,7 @@ void NMS_DrainCXStrAccess()
 		s_firstCallLogged = true;
 		char b[256];
 		sprintf_s(b, sizeof(b),
-			"NMS drain first call: MQ=%d MQ2Main=%p eqlib=%p MacroQuest=%p MQ2Mainx86=%p tray=%p\n",
+			"NMS pulse first call: MQ=%d MQ2Main=%p eqlib=%p MacroQuest=%p MQ2Mainx86=%p tray=%p\n",
 			NMS_IsMacroQuestLoaded() ? 1 : 0,
 			GetModuleHandleA("MQ2Main.dll"), GetModuleHandleA("eqlib.dll"),
 			GetModuleHandleA("MacroQuest.dll"), GetModuleHandleA("MQ2Mainx86.dll"),
@@ -776,37 +847,110 @@ void NMS_DrainCXStrAccess()
 
 	NMS_TryHookMacroQuestWho();
 
-	if (!s_mqDrainLogged)
+	if (!s_cxstrBannerLogged)
 	{
-		s_mqDrainLogged = true;
-		NMS_LockDiagLog("MacroQuest detected - gCXStrAccess drain ENABLED for this session\n");
+		s_cxstrBannerLogged = true;
+		NMS_LockDiagLog("MacroQuest detected - gCXStrAccess observation ENABLED (read-only)\n");
 	}
 
 	CRITICAL_SECTION* pCS = (CRITICAL_SECTION*)(baseAddress + NMS_CXSTR_GXSTRACCESS_REL);
 	if (IsBadReadPtr(pCS, sizeof(CRITICAL_SECTION)))
 		return;
 
-	DWORD tid = GetCurrentThreadId();
-	if (pCS->OwningThread != (HANDLE)(ULONG_PTR)tid)
+	int depth = NMS_CXStrOwnedDepth(pCS);
+
+	// Record the section's real state once. Nothing below calls Enter/Leave: the
+	// section belongs to the client, and this DLL only watches it.
+	if (!s_cxstrStateLogged)
+	{
+		s_cxstrStateLogged = true;
+		s_cxstrLockCountFloor = pCS->LockCount;
+
+		const char* owner = "none";
+		if (pCS->OwningThread != 0)
+			owner = (pCS->OwningThread == (HANDLE)(ULONG_PTR)GetCurrentThreadId())
+				? "this thread" : "another thread";
+
+		char b[224];
+		sprintf_s(b, sizeof(b),
+			"gCXStrAccess state: LockCount %ld, RecursionCount %ld, owner %s (depth %d, thread %lu)\n",
+			pCS->LockCount, pCS->RecursionCount, owner, depth, GetCurrentThreadId());
+		NMS_LockDiagLog(b);
 		return;
-
-	int drained = 0;
-	while (pCS->RecursionCount > 0
-		&& pCS->OwningThread == (HANDLE)(ULONG_PTR)tid
-		&& drained < 512)
-	{
-		LeaveCriticalSection(pCS);
-		++drained;
 	}
 
-	if (drained > 0 && s_mqDrainLogCount < 5)
+	// A canonical unlocked section has LockCount == -1. Anything below that was
+	// left underflowed by a Leave from a thread that did not own it -- the
+	// client's wrappers or MacroQuest, never this DLL. Report each new low once.
+	if (pCS->LockCount < -1 && pCS->LockCount < s_cxstrLockCountFloor
+		&& s_cxstrAnomalyLogCount < 8)
 	{
-		++s_mqDrainLogCount;
-		char szBuf[160];
-		sprintf_s(szBuf, sizeof(szBuf),
-			"DRAINED %d leaked gCXStrAccess level(s) at pulse entry\n", drained);
-		NMS_LockDiagLog(szBuf);
+		++s_cxstrAnomalyLogCount;
+		s_cxstrLockCountFloor = pCS->LockCount;
+
+		char b[224];
+		sprintf_s(b, sizeof(b),
+			"gCXStrAccess underflowed: LockCount %ld, RecursionCount %ld, depth %d (thread %lu)\n",
+			pCS->LockCount, pCS->RecursionCount, depth, GetCurrentThreadId());
+		NMS_LockDiagLog(b);
 	}
+}
+
+// -----------------------------------------------------------------------
+// NMS: the client's own out-of-memory trap.
+//
+// eqgame+0x40DF30 is the client's new_handler: it stores the failed size and a
+// state code, then writes to NULL on purpose so the crash handler reports it
+// (the "Location: ...+0040DF45" dialog). By the time it runs the heap is gone,
+// so the breadcrumb cannot use the CRT -- it is formatted with wsprintfA into a
+// stack buffer and written with WriteFile. The return-address scan is what says
+// whether the bogus size came from /who, the UI, or MQ-supplied data.
+// -----------------------------------------------------------------------
+#define NMS_CLIENT_OOM_HANDLER_REL (0x40DF30 - 0x400000)
+
+static void NMS_LogClientOom(size_t size)
+{
+	char line[512];
+	char* p = line;
+	p += wsprintfA(p, "[%lu] client OOM trap: requested 0x%X (%u bytes), eqgame callers:",
+		GetCurrentProcessId(), (unsigned)size, (unsigned)size);
+
+	// Raw stack scan: no unwind information needed and nothing touches the heap.
+	DWORD stackTop = 0;
+	__asm { mov stackTop, esp }
+
+	int found = 0;
+	for (DWORD off = 0; off < 0x600 && found < 8; off += 4)
+	{
+		DWORD v = *(DWORD*)(stackTop + off);
+		if (v > baseAddress + 0x1000 && v < baseAddress + 0x2000000)
+		{
+			p += wsprintfA(p, " +0x%X", v - baseAddress);
+			++found;
+		}
+	}
+	if (found == 0)
+		p += wsprintfA(p, " (none found on the stack)");
+	p += wsprintfA(p, "\n");
+
+	HANDLE h = CreateFileA(NMS_DiagPath(), FILE_APPEND_DATA,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (h != INVALID_HANDLE_VALUE)
+	{
+		DWORD written = 0;
+		WriteFile(h, line, (DWORD)(p - line), &written, nullptr);
+		CloseHandle(h);
+	}
+}
+
+typedef void (__cdecl* NMS_ClientOomHandler_t)(size_t);
+DETOUR_TRAMPOLINE_EMPTY(void __cdecl NMS_ClientOomHandler_Trampoline(size_t));
+
+static void __cdecl NMS_ClientOomHandler_Detour(size_t size)
+{
+	NMS_LogClientOom(size);
+	NMS_ClientOomHandler_Trampoline(size);
 }
 
 #ifndef ISXEQ_LEGACY
@@ -817,7 +961,9 @@ void NMS_DrainCXStrAccess()
 BOOL Trampoline_ProcessGameEvents(VOID); 
 BOOL Detour_ProcessGameEvents(VOID) 
 { 
-	NMS_DrainCXStrAccess();
+	int depthAtEntry = NMS_CXStrDepthNow();
+	NMS_ObserveCXStrAccess();
+	int depthAfterPulse = NMS_CXStrDepthNow();
 
 	if(!isFtmPluginInit)
 		InitializeFloatingTextPlugin();
@@ -827,7 +973,12 @@ BOOL Detour_ProcessGameEvents(VOID)
     if (!pISInterface->ScriptEngineActive()) 
         pISInterface->LavishScriptPulse();
 #endif
-    return Trampoline_ProcessGameEvents();
+    BOOL result = Trampoline_ProcessGameEvents();
+
+	// If the client released the levels while running its own frame, they were a
+	// live lock, not a leak -- that is what this line reports.
+	NMS_LogFrameDepth(depthAtEntry, depthAfterPulse, NMS_CXStrDepthNow());
+    return result;
 }
 
 DETOUR_TRAMPOLINE_EMPTY(BOOL Trampoline_ProcessGameEvents(VOID)); 
@@ -856,6 +1007,7 @@ public:
             ww->OnSetGameState((int)GameState);
         if (VaultWnd* vw = VaultWnd::GetInstance())
             vw->OnSetGameState((int)GameState);
+        NMSWin::Manager::Get().OnGameState(GameState);
         SetGameState_Trampoline(GameState);
     }
 };
@@ -887,6 +1039,26 @@ void CmdAutoSkill(PSPAWNINFO pChar, PCHAR szLine)
 void InitializeMQ2Pulse()
 {
     EzDetour(ProcessGameEvents,Detour_ProcessGameEvents,Trampoline_ProcessGameEvents);
+    // RESTORED after checking the database, not just the bytes.
+    //
+    // eqgame+0x40DF30 is the client's new_handler, and its only caller proves it: IDA
+    // (tmp/eqgame_crash.i64) calls it sub_80DF30 and the single xref is sub_80DFB0, the
+    // CRT init that runs
+    //     _set_new_handler(sub_80DF30)
+    // beside set_terminate(sub_80DF70) and set_unexpected(sub_80DF90).
+    //
+    // A 2026-11-13 note here claimed 0x40DF2F held "EB 30 / jmp +0x30" and that 0xDF30 was
+    // a displacement byte inside a switch. Neither the file nor the database agrees:
+    // 0x40DF2B..0x40DF2F are ret + four int3 padding bytes, and 0x40DF30 is a plain
+    // prologue (push ebp / mov ebp,esp / mov eax,[ebp+8]). Patching a function entry is
+    // exactly what EzDetour is for.
+    //
+    // The handler stores the failed size at 0x15D3664, sets the state at 0x15D3660 to 1,
+    // then writes NULL on purpose so the client faults where the dialog can name it
+    // (+0x40DF45). Keep the breadcrumb: without it an OOM fault and a genuine fault look
+    // identical, and the "Location: ...+0040DF45" dumps stay unexplained.
+    EzDetour(baseAddress + NMS_CLIENT_OOM_HANDLER_REL,
+        NMS_ClientOomHandler_Detour, NMS_ClientOomHandler_Trampoline);
     EzDetour(CEverQuest__EnterZone,&CEverQuestHook::EnterZone_Detour,&CEverQuestHook::EnterZone_Trampoline);
     EzDetour(CEverQuest__SetGameState,&CEverQuestHook::SetGameState_Detour,&CEverQuestHook::SetGameState_Trampoline);
     AddCommand("/autoskill", CmdAutoSkill);

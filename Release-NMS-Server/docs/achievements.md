@@ -779,6 +779,17 @@ used by the runtime implementation;
 - Non-shared task-completion criteria require
   `TaskSystem:RecordCompletedTasks`, because the durable history row is the
   replay and reward-safety boundary.
+- **Slayer line (2026-11-03)**: the Live Slayer achievements (11000000-band;
+  142 of 180 enabled via entries 317-330) run side-by-side with the NMS
+  slayer-title system — `NMS_slayer_utils.pl` and its title_sets 10001-11095
+  stay untouched and keep granting the Hunter/Slayer/Destroyer/Executioner/
+  Annihilator ladder from the account kill counters. The achievements read the
+  same counters: `Reconcile()` seeds each slayer component from the matching
+  kill counter on login, and live kills flow through the native
+  `NpcRaceKill` event, so the two systems always agree. Slayer reward sets
+  (9508300+) grant AA + Triunes + a 302000-band suffix title; they never
+  reference NMS title_sets. The 38 deferred defs and 6 over-length titles are
+  registered in [slayer_bridge_deferred.csv](slayer_bridge_deferred.csv).
 - `#reload achievements` reloads achievement content in the current zone
   process. `#reload achievements global` reloads every zone process, including
   sleeping processes that may boot a zone later.

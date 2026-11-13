@@ -121,6 +121,7 @@ function evt_xeru_spawn(e)
 	eq.set_next_hp_event(first_event_hp);
 	eq.set_timer("xeru_despawn", xeru_despawn_ms);
 	e.self:ApplySpellBuff(spell_rune_iii);
+	e.self:Shout("Seru fell and the Inquisition did not. I am its verdict -- kneel, heretics, and be absolved in ash.");
 end
 
 function evt_seru_death_complete(e)

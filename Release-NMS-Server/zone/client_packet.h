@@ -234,6 +234,9 @@
 	void Handle_OP_MercenaryDismiss(const EQApplicationPacket *app);
 	void Handle_OP_MercenaryHire(const EQApplicationPacket *app);
 	void Handle_OP_MercenarySuspendRequest(const EQApplicationPacket *app);
+	void Handle_OP_MercenarySwitch(const EQApplicationPacket *app);
+	void Handle_OP_MercenaryTransferRequest(const EQApplicationPacket *app);
+	void Handle_OP_MercenaryTransferResponse(const EQApplicationPacket *app);
 	void Handle_OP_MercenaryTimerRequest(const EQApplicationPacket *app);
 	void Handle_OP_MoveCoin(const EQApplicationPacket *app);
 	void Handle_OP_MoveItem(const EQApplicationPacket *app);
@@ -270,6 +273,7 @@
 	void Handle_OP_RandomReq(const EQApplicationPacket* app);
 	void Handle_OP_RealEstateAction5Request(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateEscrow(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateExit(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateGo(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateHouseSwap(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateInspect(const EQApplicationPacket *app);
@@ -322,6 +326,12 @@
 	void Handle_OP_ShroudSelect(const EQApplicationPacket *app);
 	void Handle_OP_ShroudSelectCancel(const EQApplicationPacket *app);
 	void Handle_OP_ShroudRequestStats(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudRequest(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudSelect(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudCancel(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudPreview(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudComplete(const EQApplicationPacket *app);
+	void Handle_OP_SpiritShroudBank(const EQApplicationPacket *app);
 	void Handle_OP_ShopEnd(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerSell(const EQApplicationPacket *app);
@@ -370,6 +380,9 @@
 	void Handle_OP_MovementHistoryList(const EQApplicationPacket* app);
 	void Handle_OP_UnderWorld(const EQApplicationPacket* app);
 	void Handle_OP_WaypointRequest(const EQApplicationPacket *app);
+	void Handle_OP_NmsLootDecision(const EQApplicationPacket *app);
+	void Handle_OP_PersonalLootAction(const EQApplicationPacket *app);
+	void Handle_OP_ClientReport(const EQApplicationPacket *app); // hailstone-nms 0x140f: ack only, see nms_loot_offers.h
 
 	// shared tasks
 	void Handle_OP_SharedTaskRemovePlayer(const EQApplicationPacket *app);

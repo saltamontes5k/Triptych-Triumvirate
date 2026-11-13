@@ -38,6 +38,13 @@ namespace NMSLoN {
 	// The token to put in --sessionID=, or nullptr before the server has sent one.
 	const char *Token();
 
+	// Every frame, with the same module handle as PvPHostPulse. Hooks the single-player
+	// game object's scalar deleting destructor (EQMainController: skirmish, scenario,
+	// tutorial) so the soundtrack learns a game ended even when the client never reported
+	// it -- quitting mid-play sends no RecordSinglePlayerGame. Independent of the PvP
+	// patches: a failed check here does not affect them, or the other way round.
+	void GamePulse(void *lon);
+
 	// Every frame, with GetModuleHandleA("LegendsOfNorrath.dll") (nullptr when it is not loaded):
 	// puts the casual PvP host patches into each new copy of the card game (vtable slots of EQGame
 	// and its SetupGame command; research/lon_pvp_build_spec.md 1.3). They do nothing

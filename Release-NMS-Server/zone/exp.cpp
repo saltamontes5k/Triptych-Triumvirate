@@ -20,6 +20,7 @@
 #include "../common/features.h"
 #include "../common/rulesys.h"
 #include "../common/strings.h"
+#include "../common/shroud/experience.h"
 
 #include <cmath>
 
@@ -108,6 +109,35 @@ static uint64 ScaleAAXPBasedOnCurrentAATotal(int earnedAA, uint64 add_aaxp, Clie
 	client->Message(Chat::Experience, fmt::format("You gain bonus AA experience! ({}/{})", earnedAA, aaLimit).c_str());
 	return totalWithExpMod;
 }
+
+void Client::CalculateSpiritShroudExperience(uint64_t amount, uint8 conlevel,
+	uint32_t percent_to_aa, uint64_t earned_aa, uint64_t &normal, uint64_t &aa, uint64_t &progression)
+{
+	// Encounter eligibility/group splitting already occurred before AddEXP.
+	// The form's con/rate/zone modifiers apply; the reward lands in the
+	// original-profile ledger. Leadership diversion is deliberately excluded.
+	uint64_t full = 0;
+	uint64_t aa_award = 0;
+	CalculateExp(amount, full, aa_award, conlevel, false);
+	normal = full;
+	aa = aa_award;
+	if (RuleB(AA, NormalizedAAEnabled)) {
+		CalculateNormalizedAAExp(aa_award, conlevel, false);
+	} else {
+		CalculateStandardAAExp(aa_award, conlevel, false);
+	}
+	if (RuleB(AA, ModernAAScalingEnabled) && aa_award) {
+		aa_award = ScaleAAXPBasedOnCurrentAATotal(
+			int(std::min<uint64_t>(INT32_MAX, earned_aa)), aa_award, this);
+	}
+	if (RuleI(AA, MaxAAEXPPerKill) >= 0) {
+		aa_award = std::min<uint64_t>(aa_award, uint64_t(RuleI(AA, MaxAAEXPPerKill)));
+	}
+	aa = aa_award;
+	progression = SpiritShroud::SaturatingAdd(normal, aa);
+	(void)percent_to_aa; // our CalculateExp already applies the server's split
+}
+
 
 static uint32 MaxBankedGroupLeadershipPoints(int Level)
 {
@@ -1230,6 +1260,14 @@ void Client::AddEXP(ExpSource exp_source, uint64 in_add_exp, uint8 conlevel, boo
 	if (!IsEXPEnabled()) {
 		return;
 	}
+	// Native Spirit Shroud forms bank their rewards into the original-profile
+	// ledger; resurrection XP keeps its own path.
+	if (IsSpiritShrouded()) {
+		if (!resexp) {
+			AwardSpiritShroudExperience(exp_source, in_add_exp, conlevel);
+		}
+		return;
+	}
 
 	if (exp_source == ExpSource::Quest)
 	{
@@ -1329,6 +1367,16 @@ void Client::AddEXP(ExpSource exp_source, uint64 in_add_exp, uint8 conlevel, boo
 }
 
 void Client::SetEXP(ExpSource exp_source, uint64 set_exp, uint64 set_aaxp, bool isrezzexp, NPC* npc) {
+	// Native Spirit Shroud forms route absolute XP sets into the original-
+	// profile ledger as deltas; resurrection keeps its own path.
+	if (IsSpiritShrouded()) {
+		if (!isrezzexp && IsEXPEnabled() && (set_exp > m_pp.exp || set_aaxp > m_pp.expAA)) {
+			AwardSpiritShroudExperience(exp_source,
+				set_exp > m_pp.exp ? set_exp - m_pp.exp : 0, 0xFF, true,
+				set_aaxp > m_pp.expAA ? set_aaxp - m_pp.expAA : 0);
+		}
+		return;
+	}
 	uint64 current_exp = GetEXP();
 	uint64 current_aa_exp = GetAAXP();
 	uint64 total_current_exp = current_exp + current_aa_exp;

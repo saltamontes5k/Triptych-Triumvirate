@@ -19,9 +19,11 @@ SET(common_sources
     database/database_dump_service.cpp
     database.cpp
     database_instances.cpp
-    database/database_update_manifest.cpp
-    database/database_update_manifest_custom.cpp
-    database/database_update_manifest_bots.cpp
+    # The three database_update_manifest*.cpp files are include-units:
+    # database_update.cpp #includes each one, so compiling them standalone
+    # duplicates their manifest vectors, and the linker keeps the frozen
+    # copy from database_update.obj (LNK4006) -- new migration entries then
+    # never reach the binary. Never list them as compiled sources.
     database/database_update.cpp
     dbcore.cpp
     deity.cpp

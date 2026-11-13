@@ -14,10 +14,12 @@
 #include "client.h"
 #include "entity.h"
 #include "npc.h"
+#include "nms_window.h"
 #include "zonedb.h"
 #include "string_ids.h"
 
 #include <fmt/format.h>
+#include <ctime>
 #include <unordered_map>
 #include <vector>
 
@@ -43,6 +45,8 @@ namespace {
 		uint32 ranged = 0;
 		uint32 ranged_aug[6] = {0, 0, 0, 0, 0, 0};
 		LockerModItem mods[4];
+		std::vector<uint32> clicky_items;
+		time_t next_clicky_check = 0;
 	};
 
 	std::unordered_map<uint32, LockerCache> locker_cache;
@@ -215,12 +219,16 @@ namespace {
 			if (!out.empty()) {
 				out.append("~");
 			}
+			// "item:qty:icon:bag slot:name", the bag slot 0-based (the dinput8's FUN_1019bed0, per hailstone-nms
+			// nms_vault.h); the old "item:name:charges:icon" left every vaulted bag looking empty. The dll's
+			// parser is dual-format (4 vs 5 fields), so clients on the previous build keep rendering until they update.
 			out.append(fmt::format(
-				"{}:{}:{}:{}",
+				"{}:{}:{}:{}:{}",
 				row.item_id,
-				SanitizeField(item->Name),
 				row.charges,
-				item->Icon
+				item->Icon,
+				row.bag_slot - 1,
+				SanitizeField(item->Name)
 			));
 		}
 		return out;
@@ -266,6 +274,52 @@ namespace {
 			return false;
 		}
 		return true;
+	}
+
+	// Beneficial buffs stay up for as long as the item is in the vault. Everything else keeps
+	// the old one-shot on zone-in: an instant spell has no buff to hold, and re-applying
+	// invisibility or Divine Aura every minute would interrupt the player.
+	bool IsPermanentVaultClicky(uint16 spell_id)
+	{
+		return IsBuffSpell(spell_id)
+			&& IsBeneficialSpell(spell_id)
+			&& !IsDisciplineBuff(spell_id)
+			&& !IsInvisibleSpell(spell_id)
+			&& !IsEffectInSpell(spell_id, SE_DivineAura);
+	}
+
+	void KeepVaultClickyBuff(Client *c, uint16 spell_id)
+	{
+		auto *buffs = c->GetBuffs();
+		const int buff_count = c->GetMaxTotalSlots();
+		for (int slot = 0; slot < buff_count; ++slot) {
+			if (buffs[slot].spellid != spell_id) {
+				continue;
+			}
+			if (buffs[slot].ticsremaining != PERMANENT_BUFF_DURATION) {
+				buffs[slot].ticsremaining = PERMANENT_BUFF_DURATION;
+				c->SendBuffDurationPacket(buffs[slot], slot);
+			}
+			return;
+		}
+		// Blocked by a stronger buff or no free slot: try again on a later check, without the
+		// "did not take hold" message AddBuff would send each time.
+		if (c->CanBuffStack(spell_id, c->GetCasterLevel(spell_id)) >= 0) {
+			c->ApplySpellBuff(spell_id, PERMANENT_BUFF_DURATION);
+		}
+	}
+
+	void ApplyVaultClicky(Client *c, const EQ::ItemData *item)
+	{
+		if (!CanUseVaultClicky(c, item)) {
+			return;
+		}
+		const auto spell_id = static_cast<uint16>(item->Click.Effect);
+		if (IsPermanentVaultClicky(spell_id)) {
+			KeepVaultClickyBuff(c, spell_id);
+		} else {
+			c->SpellOnTarget(spell_id, c);
+		}
 	}
 
 	void CollectClickySpells(const std::vector<NmsVaultItem> &items, int slot, std::vector<uint16> &out)
@@ -825,6 +879,11 @@ void NmsVaultRefreshCache(Client *c)
 			cache.secondary_is_shield = item->ItemType == EQ::item::ItemTypeShield;
 		}
 	}
+	for (const auto &row : items) {
+		if (row.slot >= NMS_VAULT_CLICKY_BEGIN && row.slot <= NMS_VAULT_CLICKY_END) {
+			cache.clicky_items.push_back(row.item_id);
+		}
+	}
 	locker_cache[c->CharacterID()] = cache;
 }
 
@@ -982,6 +1041,218 @@ bool NmsVaultDeleteItem(uint32 character_id, int slot, int bag_slot)
 	return results.Success() && results.RowsAffected() > 0;
 }
 
+// ---- script-window panel (live-NMS style boxes; nms_window framework) ----
+
+static int VaultWindowPageBase(int page)
+{
+	if (page >= 1 && page <= 6) {
+		return (page - 1) * 10 + 1;
+	}
+	if (page == 7) {
+		return NMS_VAULT_CLICKY_BEGIN;
+	}
+	if (page == 8) {
+		return 71;
+	}
+	return NMS_VAULT_PROC_PRIMARY;
+}
+
+static int VaultWindowPageSlots(int page)
+{
+	return page == 9 ? 7 : 10;
+}
+
+static std::string VaultWindowPageLabel(int page)
+{
+	if (page >= 1 && page <= 6) {
+		return fmt::format("Bag {}", page);
+	}
+	if (page == 7) {
+		return "Clicky 1";
+	}
+	if (page == 8) {
+		return "Clicky 2";
+	}
+	return "Proc Locker";
+}
+
+// Builds (or rebuilds) the vault panel for the client's current page. Returns
+// false when the script panel is off (Custom:NMSVaultScriptPanel, default off —
+// the vault ships as the classic native list) or the client cannot render
+// script windows, so the caller falls back to the classic VAULTDATA chat lines.
+static bool NmsVaultRefreshWindowPanel(Client *c, int open_page, const std::vector<NmsVaultItem> &items)
+{
+	auto &wins = EQ::NMS::GetWindows(c);
+	if (!RuleB(Custom, NMSVaultScriptPanel) || !wins.Capable() || !RuleB(Custom, NMSWindowEnabled)) {
+		return false;
+	}
+
+	const std::string key = fmt::format("vault_{}", c->CharacterID());
+	// The live NMS vault is a wide window: nine page tabs share one row and the
+	// slot boxes stay square. At 400px the tabs wrapped to three rows and the
+	// grid read as a single dark slab, so size for the row, not for a dialog.
+	const int wid = wins.Open(key, "Nautilus Vault", 680, 420, EQ::NMS::WFNoResize);
+	if (!wid) {
+		return false;
+	}
+
+	wins.SetStyle(wid, "#101018", "#3E4A6E", 4, 1);
+	wins.Clear(wid);
+
+	// bank / merchant row (default grey face; solid gold reads as a progress bar)
+	wins.AddButton(wid, "Bank", 900, "");
+	wins.AddSameLine(wid);
+	wins.AddButton(wid, "Merchant", 901, "");
+
+	// page tabs: nine in one row, selected one lit the live-NMS blue
+	for (int page = 1; page <= 9; ++page) {
+		if (page > 1) {
+			wins.AddSameLine(wid);
+		}
+		wins.AddButton(wid, VaultWindowPageLabel(page), page,
+			page == open_page ? "#5AA9E6" : "");
+	}
+
+	// hint line sits between the tabs and the boxes, as on the live server
+	int used = 0;
+	for (int i = 0; i < VaultWindowPageSlots(open_page); ++i) {
+		if (NmsVaultFind(items, VaultWindowPageBase(open_page) + i, 0)) {
+			used++;
+		}
+	}
+	const char *hint = "Put an item on your cursor and click an empty box to deposit it. Click an item to withdraw it.";
+	if (open_page == 9) {
+		hint = "Boxes 1-3 override your proc/shield. Boxes 4-7 (Foci/Skill Mod) lend skill mods, instrument mods and focus effects.";
+	} else if (open_page == 7 || open_page == 8) {
+		hint = "Clicky buffs parked in these boxes re-apply automatically on zone-in.";
+	}
+	wins.AddText(wid, fmt::format("{}: {}/{} slots used. {}", VaultWindowPageLabel(open_page), used,
+		VaultWindowPageSlots(open_page), hint), "#D9A641", true);
+
+	// slot row: the live vault lays every box out in ONE row of numbered cells,
+	// not a wrapped grid, so the page reads the same shape on every tab
+	const int cols = VaultWindowPageSlots(open_page);
+	const int count = cols;
+	const int rows = 1;
+	const int base = VaultWindowPageBase(open_page);
+	const int cell = 38;   // matches the live box size at this font
+	const int gx = 8;
+	const int gy = 8;
+
+	int canvas = wins.AddCanvas(wid, gx * 2 + cols * cell + 2, gy * 2 + rows * cell + 2);
+	if (canvas >= 0) {
+		wins.BeginCanvasFrame(wid, canvas);
+
+		const uint32_t occupied_argb = 0xFF44527A;
+		const uint32_t empty_argb    = 0xFF1E2230;
+
+		// cell fills first (grid piece renders all cells), then per-box icon
+		// pieces on top
+		std::string colors;
+		for (int i = 0; i < cols * rows; ++i) {
+			const NmsVaultItem *row = NmsVaultFind(items, base + i, 0);
+			if (!colors.empty()) {
+				colors.push_back('\x1F');
+			}
+			colors += fmt::format("{},{}", i, row ? occupied_argb : empty_argb);
+		}
+		wins.AddCanvasGrid(wid, canvas, gx, gy, cols, rows, cell, cell, 100 + open_page, colors);
+
+		// box numbers in the top-left corner, as the live client draws them
+		for (int i = 0; i < cols; ++i) {
+			wins.AddCanvasPiece(wid, canvas, EQ::NMS::PieceText,
+				gx + i * cell + 3, gy + 1, 0, 0, 0xFF8E97AD, 10, 0, 0,
+				fmt::format("{}", i + 1));
+		}
+
+		for (int i = 0; i < cols * rows; ++i) {
+			const NmsVaultItem *row = NmsVaultFind(items, base + i, 0);
+			if (!row) {
+				continue;
+			}
+
+			// item icon (client art from ItemIcons\<id>.png); the short name
+			// rides along as the no-art fallback label
+			std::string label;
+			uint32 icon_id = 0;
+			if (const auto *itm = database.GetItem(row->item_id)) {
+				icon_id = itm->Icon;
+				label = itm->Name;
+				size_t space = label.find(' ');
+				if (space != std::string::npos) {
+					label.resize(space);
+				}
+				if (label.size() > 7) {
+					label.resize(7);
+				}
+			}
+			if (label.empty()) {
+				label = fmt::format("#{}", row->item_id);
+			}
+			wins.AddCanvasPiece(wid, canvas, EQ::NMS::PieceIcon,
+				gx + (i % cols) * cell + 3, gy + (i / cols) * cell + 3,
+				cell - 6, cell - 6, 0, icon_id, 0, 0, label);
+		}
+	}
+
+	wins.Send(wid);
+	return true;
+}
+
+// Window events for panels keyed "vault_*" (routed from nms_window.cpp).
+// Buttons: 1-9 page tabs, 900 Bank, 901 Merchant. Grid: action 100+page with
+// the cell index in value - occupied box withdraws, empty box deposits from
+// the cursor.
+void NmsVaultOnWindowEvent(Client *c, uint8 kind, uint16 action, uint32 value, uint32 window_id)
+{
+	if (!c || !NmsVaultEnabled()) {
+		return;
+	}
+
+	if (kind == EQ::NMS::EventButton) {
+		if (action >= 1 && action <= 9) {
+			NmsVaultHandlePage(c, action);
+			return;
+		}
+		if (action == 900) {
+			NmsVaultHandleBank(c);
+			EQ::NMS::GetWindows(c).SendLocalAction(static_cast<int>(window_id), 1);
+			return;
+		}
+		if (action == 901) {
+			NmsVaultHandleMerchant(c);
+			return;
+		}
+		return;
+	}
+
+	if (kind == EQ::NMS::EventGrid && action >= 101 && action <= 109) {
+		const int page = action - 100;
+		const int cell = static_cast<int>(value);
+		if (cell < 0 || cell >= VaultWindowPageSlots(page)) {
+			return;
+		}
+		const int slot = VaultWindowPageBase(page) + cell;
+
+		std::vector<NmsVaultItem> items;
+		if (!NmsVaultLoad(c->CharacterID(), items)) {
+			return;
+		}
+
+		if (NmsVaultFind(items, slot, 0)) {
+			NmsVaultHandleWithdraw(c, slot, 0);
+			return;
+		}
+
+		if (c->GetInv().GetItem(EQ::invslot::slotCursor)) {
+			NmsVaultHandleDeposit(c, slot);
+			return;
+		}
+
+		c->Message(Chat::White, "[NMS] Put an item on your cursor and click an empty box to deposit it.");
+	}
+}
+
 void NmsVaultSendRefresh(Client *c, int open_page)
 {
 	if (!c || !NmsVaultEnabled() || !EnsureTables()) {
@@ -990,6 +1261,13 @@ void NmsVaultSendRefresh(Client *c, int open_page)
 
 	std::vector<NmsVaultItem> items;
 	if (!NmsVaultLoad(c->CharacterID(), items)) {
+		return;
+	}
+
+	// Patched clients get the script-window panel (live-NMS style boxes) only
+	// when Custom:NMSVaultScriptPanel is on (default off); everyone else keeps
+	// the classic SIDL listbox fed by VAULTDATA lines.
+	if (NmsVaultRefreshWindowPanel(c, open_page, items)) {
 		return;
 	}
 
@@ -1402,12 +1680,19 @@ void NmsVaultHandleMerchant(Client *c)
 		c->SetNmsVaultMerchant(false);
 	}
 
-	// The server's spell loremaster (the "AA spell banker"): reuse its template so the
-	// vault merchant shows the same stock and look. Fall back to the generic pick if the
-	// NPC is ever renamed or removed.
+	// Dedicated vault merchant template (v402): invisible, immune to every damage
+	// source, unhateable, untargetable, and stocked from Dorinan's merchantlist so
+	// the shop and Recover/Parcels tabs are unchanged. Fall back to the loremaster
+	// and then the generic pick if the row is ever renamed or removed (both
+	// fallbacks are the unprotected legacy behavior).
 	auto pick = content_db.QueryDatabase(
-		"SELECT id FROM npc_types WHERE name = 'Loremaster_Dorinan' AND merchant_id > 0 LIMIT 1"
+		"SELECT id FROM npc_types WHERE name = 'Vault Merchant' AND merchant_id > 0 LIMIT 1"
 	);
+	if (!pick.Success() || pick.RowCount() == 0) {
+		pick = content_db.QueryDatabase(
+			"SELECT id FROM npc_types WHERE name = 'Loremaster_Dorinan' AND merchant_id > 0 LIMIT 1"
+		);
+	}
 	if (!pick.Success() || pick.RowCount() == 0) {
 		pick = content_db.QueryDatabase(
 			"SELECT id FROM npc_types WHERE `class` = 41 AND merchant_id > 0 "
@@ -1526,18 +1811,37 @@ void NmsVaultApplyClickies(Client *c)
 			|| row.slot > NMS_VAULT_CLICKY_END) {
 			continue;
 		}
-		const auto *item = database.GetItem(row.item_id);
-		if (CanUseVaultClicky(c, item)) {
-			c->SpellOnTarget(item->Click.Effect, c);
-		}
+		ApplyVaultClicky(c, database.GetItem(row.item_id));
 		for (const auto &inner : items) {
 			if (inner.slot != row.slot || inner.bag_slot <= 0) {
 				continue;
 			}
-			const auto *bag_item = database.GetItem(inner.item_id);
-			if (CanUseVaultClicky(c, bag_item)) {
-				c->SpellOnTarget(bag_item->Click.Effect, c);
-			}
+			ApplyVaultClicky(c, database.GetItem(inner.item_id));
+		}
+	}
+}
+
+// Runs on the client's buff tic. Brings back vault clicky buffs lost to a dispel or death, and
+// picks up an item as soon as it is deposited, since depositing rebuilds the cache.
+void NmsVaultKeepClickies(Client *c)
+{
+	if (!c) {
+		return;
+	}
+	auto cached = locker_cache.find(c->CharacterID());
+	if (cached == locker_cache.end() || cached->second.clicky_items.empty()) {
+		return;
+	}
+	const time_t now = time(nullptr);
+	if (now < cached->second.next_clicky_check) {
+		return;
+	}
+	cached->second.next_clicky_check = now + 60;
+
+	for (const auto item_id : cached->second.clicky_items) {
+		const auto *item = database.GetItem(item_id);
+		if (CanUseVaultClicky(c, item) && IsPermanentVaultClicky(static_cast<uint16>(item->Click.Effect))) {
+			KeepVaultClickyBuff(c, static_cast<uint16>(item->Click.Effect));
 		}
 	}
 }

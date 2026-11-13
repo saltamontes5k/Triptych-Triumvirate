@@ -111,6 +111,14 @@ size instead of parsing best-effort.
   housepet_filename (<=31), interactive, trophy_benefit_id, disable_rotation,
   disable_free_placement, socket subclasses`. `IsNpcItem` = housepet filename present and not
   interactive.
+  **Do not graft this tail onto EQS's RoF2 item body (measured 2026-11-12).** The reference
+  replaces the quaternary struct's last bytes with it (96 + 72 = 168); this client's item record
+  is the full `ItemQuaternaryBodyStruct` (171 bytes under `#pragma pack(1)`, `Placeable` at +96),
+  and the stream is walked by position. Appending the tail instead of replacing anything put +72
+  on every record, so `OP_CharInventory` rendered only its first item for every character. The
+  working zone-in size for Judy was 41934 bytes; the tail build sent 45030 = 41934 + 43×72.
+  `zone/nms_housing.cpp` placement actors and `SendRealEstateItemList` do not need it either —
+  `patches/rof2.cpp` `SerializeItem` is the only place that touches the item body.
 - `item_list_wire.h` — full list plus per-item deltas; the comment warns against truncating to
   a prototype's 32 items.
 

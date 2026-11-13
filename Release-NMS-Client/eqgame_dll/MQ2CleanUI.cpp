@@ -21,10 +21,11 @@ GNU General Public License for more details.
 //#define DEBUG_TRY 1
 #include "MQ2Main.h"
 #include "waypoint_window.h"
+#include "loot_window.h"
 #include "vault_window.h"
 #include "pet_window.h"
 
-extern void NMS_DrainCXStrAccess();
+extern void NMS_ObserveCXStrAccess();
 
 char *OurCaption = "Edge is loading...";
 
@@ -54,6 +55,7 @@ char *OurCaption = "Edge is loading...";
 static void NMS_DestroyCustomWindows()
 {
     WaypointsWnd::Shutdown();
+    LootWnd::Shutdown();
     VaultWnd::Shutdown();
 
     if (PetWindow* pw = PetWindow::GetInstance()) {
@@ -67,7 +69,7 @@ public:
     VOID CleanUI_Trampoline(VOID);
     VOID CleanUI_Detour(VOID)
     {
-        NMS_DrainCXStrAccess();
+        NMS_ObserveCXStrAccess();
         NMS_DestroyCustomWindows();
         DebugTry(CleanUI_Trampoline());
     }
@@ -75,7 +77,7 @@ public:
     VOID ReloadUI_Trampoline(BOOL);
     VOID ReloadUI_Detour(BOOL UseINI)
     {
-        NMS_DrainCXStrAccess();
+        NMS_ObserveCXStrAccess();
         NMS_DestroyCustomWindows();
         DebugTry(ReloadUI_Trampoline(UseINI));
     }

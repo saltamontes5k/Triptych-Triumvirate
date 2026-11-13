@@ -46,6 +46,16 @@
 #define DATABASE_DUMP_PATH "backups/"
 
 /**
+ * mysqldump error lines. The MariaDB 12.3 Windows client prints
+ * "mysqldump.exe: Got error: ...", which does not contain the classic Unix
+ * "mysqldump:" prefix, so match both.
+ */
+static bool IsDumpErrorLine(const std::string &line)
+{
+	return Strings::Contains(line, "mysqldump:") || Strings::Contains(line, "mysqldump.exe:");
+}
+
+/**
  * @return bool
  */
 bool DatabaseDumpService::IsMySQLInstalled()
@@ -284,6 +294,8 @@ void DatabaseDumpService::DatabaseDump()
 	 * If we are dumping to stdout then we don't generate a file
 	 */
 	std::string pipe_file;
+	int         dump_status      = 0;
+	std::string execution_result;
 	if (!IsDumpOutputToConsole()) {
 		pipe_file = fmt::format(" > {}.sql", GetDumpFileNameWithPath());
 	}
@@ -319,7 +331,7 @@ void DatabaseDumpService::DatabaseDump()
 		LogInfo("LOADING... PLEASE WAIT...");
 
 		BuildCredentialsFile();
-		std::string execution_result = Process::execute(execute_command);
+		dump_status = Process::execute_status(execute_command, &execution_result);
 		if (!execution_result.empty() && IsDumpOutputToConsole()) {
 			std::cout << execution_result;
 		}
@@ -338,20 +350,48 @@ void DatabaseDumpService::DatabaseDump()
 		}
 	}
 
+	/**
+	 * Fail-closed dump verification. The child's exit status is the primary
+	 * gate; the mysqldump error-line scan (both "mysqldump:" and the Windows
+	 * client's "mysqldump.exe:" prefix) stays as a belt against clients that
+	 * exit 0 despite erroring, and the file itself must be readable and
+	 * non-empty. Every failure takes the same FailDump exit(1) path.
+	 */
+	if (dump_status != 0) {
+		std::string output_source = execution_result;
+		if (!pipe_file.empty()) {
+			output_source = File::GetContents(fmt::format("{}.sql", GetDumpFileNameWithPath())).contents;
+		}
+
+		std::string cause;
+		for (auto &line: Strings::Split(output_source, "\n")) {
+			if (IsDumpErrorLine(line)) {
+				cause = Strings::Trim(line);
+				break;
+			}
+		}
+
+		if (!cause.empty()) {
+			LogError("{}", cause);
+		}
+		FailDump(fmt::format("mysqldump exited with status [{}]", dump_status));
+	}
+
 	if (!pipe_file.empty()) {
 		std::string file = fmt::format("{}.sql", GetDumpFileNameWithPath());
 		auto        r    = File::GetContents(file);
 		if (!r.error.empty()) {
-			LogError("{}", r.error);
+			FailDump(fmt::format("Could not read dump file [{}]: {}", file, r.error));
+		}
+
+		if (Strings::Trim(r.contents).empty()) {
+			FailDump(fmt::format("Dump file [{}] is empty", file));
 		}
 
 		for (auto &line: Strings::Split(r.contents, "\n")) {
-			if (Strings::Contains(line, "mysqldump:")) {
+			if (IsDumpErrorLine(line)) {
 				LogError("{}", line);
-				LogError("Database dump failed. Correct the error before continuing or trying again");
-				LogError("This is to prevent data loss on behalf of the server operator");
-				RemoveSqlBackup();
-				std::exit(1);
+				FailDump("Dump output contains an error line");
 			}
 		}
 	}
@@ -365,28 +405,51 @@ void DatabaseDumpService::DatabaseDump()
 		if (HasCompressionBinary()) {
 			LogInfo("Compression requested. Compressing dump [{}.sql]", GetDumpFileNameWithPath());
 
+			std::string archive_name;
+			std::string compression_command;
+
 			if (IsTarAvailable()) {
-				Process::execute(
-					fmt::format(
-						"tar -zcvf {}.tar.gz -C {} {}.sql",
-						GetDumpFileNameWithPath(),
-						GetSetDumpPath(),
-						GetDumpFileName()
-					)
+				archive_name        = fmt::format("{}.tar.gz", GetDumpFileNameWithPath());
+				compression_command = fmt::format(
+					"tar -zcvf {} -C {} {}.sql",
+					archive_name,
+					GetSetDumpPath(),
+					GetDumpFileName()
 				);
-				LogInfo("Compressed dump created at [{}.tar.gz]", GetDumpFileNameWithPath());
-				RemoveSqlBackup();
 			}
 			else if (Is7ZipAvailable()) {
-				Process::execute(
-					fmt::format(
-						"7z a -t7z {}.zip {}.sql",
-						GetDumpFileNameWithPath(),
-						GetDumpFileNameWithPath()
-					)
+				archive_name        = fmt::format("{}.zip", GetDumpFileNameWithPath());
+				compression_command = fmt::format(
+					"7z a -t7z {} {}.sql",
+					archive_name,
+					GetDumpFileNameWithPath()
 				);
-				LogInfo("Compressed dump created at [{}.zip]", GetDumpFileNameWithPath());
-				RemoveSqlBackup();
+			}
+
+			if (!archive_name.empty()) {
+				int compression_status = Process::execute_status(compression_command, nullptr);
+
+				std::error_code fs_error;
+				bool            compressed = compression_status == 0
+					&& std::filesystem::exists(archive_name, fs_error)
+					&& !fs_error
+					&& std::filesystem::file_size(archive_name, fs_error) > 0
+					&& !fs_error;
+
+				if (!compressed) {
+					// A failed compression must not destroy the only copy of the
+					// backup: drop any partial archive and keep the verified .sql.
+					std::filesystem::remove(archive_name, fs_error);
+					LogError(
+						"Compression failed (status [{}]) for dump [{}.sql] -- keeping the uncompressed dump",
+						compression_status,
+						GetDumpFileNameWithPath()
+					);
+				}
+				else {
+					LogInfo("Compressed dump created at [{}]", archive_name);
+					RemoveSqlBackup();
+				}
 			}
 			else {
 				LogInfo("Compression requested, but no available compression binary was found");
@@ -579,6 +642,20 @@ void DatabaseDumpService::RemoveSqlBackup()
 	RemoveCredentialsFile();
 }
 
+/**
+ * Fail-closed exit for a dump that failed verification: removes the unusable
+ * backup and kills the process. World boot applies migrations after this call,
+ * and a boot must never run migrations on top of a missing or partial backup.
+ */
+void DatabaseDumpService::FailDump(const std::string &reason)
+{
+	LogError("Database dump failed: {}", reason);
+	LogError("Correct the error before continuing or trying again");
+	LogError("This is to prevent data loss on behalf of the server operator");
+	RemoveSqlBackup();
+	std::exit(1);
+}
+
 void DatabaseDumpService::BuildCredentialsFile()
 {
 	auto          config = EQEmuConfig::get();
@@ -600,6 +677,11 @@ void DatabaseDumpService::BuildCredentialsFile()
 			out << "port=" << config->DatabasePort << std::endl;
 			out << "default-character-set=utf8" << std::endl;
 		}
+		// A client new enough to negotiate TLS by default (MariaDB 11.4+/12.x) fails
+		// against a server without certificates -- "TLS/SSL error: no credentials.
+		// Error 0x8009030E(SEC_E_NO_CREDENTIALS)" -- and the pre-migration backup
+		// aborts world startup. The dump is a local admin read; keep it off TLS.
+		out << "ssl=0" << std::endl;
 		out.close();
 	}
 	else {

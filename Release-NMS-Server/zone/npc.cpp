@@ -2745,6 +2745,14 @@ void NPC::DoPetCommandAssistOnTarget(Mob* target) {
 	if (!target) { return; }
 	if (target->GetOwnerOrSelf()->IsClient()) { return; }
 
+	// Assist is an implicit order, so it must lose to every explicit "do not
+	// initiate" pet state: /pet ghold, /pet hold, /pet stop and /pet regroup.
+	// The AddToHateList calls below pass pet_command = true, which skips the
+	// GHold/Hold gate in Mob::AddToHateList (attack.cpp), so without this
+	// guard an assisting pet ignores ghold and attacks the owner's target
+	// anyway -- which is exactly what makes /pet ghold look broken.
+	if (IsGHeld() || IsHeld() || IsPetStop() || IsPetRegroup()) { return; }
+
 	Client* owner = DoPetCommandChecks(PET_ATTACK);
 	if (!owner && GetSwarmOwner()) {
 		owner = entity_list.GetClientByID(GetSwarmOwner());

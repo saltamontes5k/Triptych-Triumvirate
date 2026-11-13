@@ -30,6 +30,7 @@
 #include "../misc_functions.h"
 #include "../strings.h"
 #include "../inventory_profile.h"
+#include "../housing_placeable.h"
 #include "rof2_structs.h"
 #include "../reward_selection.h"
 #include "../rulesys.h"
@@ -44,6 +45,10 @@
 #include <cassert>
 #include <cinttypes>
 #include <memory>
+#include <optional>
+#include <set>
+#include <cstring>
+#include <vector>
 
 
 namespace RoF2
@@ -2375,15 +2380,20 @@ namespace RoF2
 		// There are 2 different sized versions of this packet depending if a merc is hired or not
 		if (emu->MercStatus >= 0)
 		{
-			PacketSize += sizeof(structs::MercenaryDataUpdate_Struct) + (sizeof(structs::MercenaryData_Struct) - sizeof(structs::MercenaryStance_Struct)) * emu->MercCount;
+			// Per-row size: the client row prefix plus the variable name and
+			// stance pairs. MercUnk05 is NOT part of a row - RoF2 carries the
+			// available-slot capacity ONCE after the complete counted array.
+			PacketSize += sizeof(structs::MercenaryDataUpdate_Struct);
 
 			uint32 r;
 			uint32 k;
 			for (r = 0; r < emu->MercCount; r++)
 			{
+				PacketSize += sizeof(structs::MercenaryData_Struct) - sizeof(structs::MercenaryStance_Struct) - sizeof(uint32); // subtract Stances[1] and MercUnk05
 				PacketSize += sizeof(structs::MercenaryStance_Struct) * emu->MercData[r].StanceCount;
 				PacketSize += strlen(emu->MercData[r].MercName);	// Null Terminator size already accounted for in the struct
 			}
+			PacketSize += sizeof(uint32); // MercUnk05 - one trailing capacity word after all rows
 
 			outapp = new EQApplicationPacket(OP_MercenaryDataUpdate, PacketSize);
 			Buffer = (char *)outapp->pBuffer;
@@ -2416,8 +2426,8 @@ namespace RoF2
 					VARSTRUCT_ENCODE_TYPE(uint32, Buffer, emu->MercData[r].Stances[k].StanceIndex);
 					VARSTRUCT_ENCODE_TYPE(uint32, Buffer, emu->MercData[r].Stances[k].Stance);
 				}
-				VARSTRUCT_ENCODE_TYPE(uint32, Buffer, 1);	// MercUnk05
 			}
+			VARSTRUCT_ENCODE_TYPE(uint32, Buffer, emu->MercData[0].MercUnk05);	// available-slot capacity, once after all rows
 		}
 		else
 		{
@@ -5102,6 +5112,121 @@ namespace RoF2
 	}
 
 	// ---------------------------------------------------------------------
+	// Native Spirit Shroud serializers (RoF2 May 2013 protocol): run the
+	// ordinary struct strategy for one packet and capture its encoded bytes.
+	// ---------------------------------------------------------------------
+	namespace {
+		class ShroudEncodingSink final : public EQStreamInterface {
+		public:
+			std::vector<std::vector<uint8_t>> packets;
+			void QueuePacket(const EQApplicationPacket *p, bool = true) override {
+				if (p) packets.emplace_back(p->pBuffer, p->pBuffer + p->size);
+			}
+			void FastQueuePacket(EQApplicationPacket **p, bool ack = true) override {
+				if (p && *p) { QueuePacket(*p, ack); delete *p; *p = nullptr; }
+			}
+			EQApplicationPacket *PopPacket() override { return nullptr; }
+			void Close() override {}
+			void ReleaseFromUse() override {}
+			void RemoveData() override {}
+			std::string GetRemoteAddr() const override { return {}; }
+			uint32 GetRemoteIP() const override { return 0; }
+			uint16 GetRemotePort() const override { return 0; }
+			bool CheckState(EQStreamState) override { return false; }
+			std::string Describe() const override { return "RoF2 prepared encoding"; }
+			EQStreamState GetState() override { return CLOSED; }
+			void SetOpcodeManager(OpcodeManager **) override {}
+			OpcodeManager *GetOpcodeManager() const override { return nullptr; }
+			Stats GetStats() const override { return Stats{}; }
+			void ResetStats() override {}
+			EQStreamManagerInterface *GetManager() const override { return nullptr; }
+		};
+
+		std::optional<std::vector<uint8_t>> ShroudEncode(EmuOpcode opcode, const void *data, size_t size)
+		{
+			if (!data || !size || size > 16 * 1024 * 1024) return std::nullopt;
+			auto sink = std::make_shared<ShroudEncodingSink>();
+			auto *packet = new EQApplicationPacket(opcode, size);
+			std::memcpy(packet->pBuffer, data, size);
+			struct_strategy.Encode(&packet, sink, false);
+			delete packet;
+			if (sink->packets.size() != 1 || sink->packets.front().empty()) return std::nullopt;
+			return std::move(sink->packets.front());
+		}
+	}
+
+	std::optional<std::vector<uint8_t>> SerializeShroudSpawn(const Spawn_Struct &spawn)
+	{
+		return ShroudEncode(OP_ZoneSpawns, &spawn, sizeof(spawn));
+	}
+
+	std::optional<std::vector<uint8_t>> SerializeShroudNormalProfile(const PlayerProfile_Struct &profile)
+	{
+		return ShroudEncode(OP_PlayerProfile, &profile, sizeof(profile));
+	}
+
+	std::optional<std::vector<uint8_t>> SerializeShroudInventory(const std::vector<std::pair<int16_t, const EQ::ItemInstance*>> &roots)
+	{
+		if (roots.size() > 4096) return std::nullopt;
+		EQ::OutBuffer out;
+		uint32_t count = static_cast<uint32_t>(roots.size());
+		out.write(reinterpret_cast<const char*>(&count), sizeof(count));
+		size_t nodes = 0;
+		std::set<int16_t> slots;
+		const auto valid_tree = [&](const auto &self, const EQ::ItemInstance &item, size_t depth) -> bool {
+			if (depth > 8 || ++nodes > 4096 || !item.GetUnscaledItem() || item.GetMerchantSlot()) return false;
+			for (uint8_t slot = EQ::invbag::SLOT_BEGIN; slot <= EQ::invbag::SLOT_END; ++slot)
+				if (const auto *child = item.GetItem(slot); child && !self(self, *child, depth + 1)) return false;
+			return true;
+		};
+		for (const auto &root : roots) {
+			if (!root.second || !slots.insert(root.first).second || !valid_tree(valid_tree, *root.second, 0)) return std::nullopt;
+			const auto previous = out.tellp();
+			SerializeItem(out, root.second, root.first, 0, ItemPacketCharInventory);
+			if (out.tellp() <= previous || out.size() > 16 * 1024 * 1024) return std::nullopt;
+		}
+		const auto size = out.size();
+		auto *bytes = out.detach();
+		std::vector<uint8_t> result(bytes, bytes + size);
+		delete[] bytes;
+		return result;
+	}
+
+	std::optional<std::vector<uint8_t>> SerializeShroudBankItem(const EQ::ItemInstance &item, int16_t slot)
+	{
+		if (slot < EQ::invslot::GENERAL_BEGIN || slot > EQ::invslot::GENERAL_END) return std::nullopt;
+		size_t nodes = 0;
+		const auto valid = [&](const auto &self, const EQ::ItemInstance &value, size_t depth) -> bool {
+			if (depth > 8 || ++nodes > 4096 || !value.GetUnscaledItem() || value.GetMerchantSlot()) return false;
+			for (uint8_t i = EQ::invbag::SLOT_BEGIN; i <= EQ::invbag::SLOT_END; ++i)
+				if (const auto *child = value.GetItem(i); child && !self(self, *child, depth + 1)) return false;
+			return true;
+		};
+		if (!valid(valid, item, 0)) return std::nullopt;
+		const auto serialized = item.Serialize(slot);
+		std::vector<uint8_t> input(4 + serialized.size());
+		const uint32_t type = ItemPacketTrade;
+		std::memcpy(input.data(), &type, 4);
+		std::memcpy(input.data() + 4, serialized.data(), serialized.size());
+		auto bytes = ShroudEncode(OP_ItemPacket, input.data(), input.size());
+		if (!bytes || bytes->size() <= 4 || bytes->size() > 16 * 1024 * 1024) return std::nullopt;
+		return bytes;
+	}
+
+	std::optional<std::vector<uint8_t>> SerializeShroudPreviewItem(const EQ::ItemInstance &instance)
+	{
+		if (!instance.GetUnscaledItem() || instance.GetMerchantSlot()) return std::nullopt;
+		std::unique_ptr<EQ::ItemInstance> root(instance.Clone());
+		if (!root) return std::nullopt;
+		if (root->IsClassBag()) root->Clear();
+		EQ::OutBuffer buffer;
+		SerializeItem(buffer, root.get(), EQ::invslot::slotCursor, 0, ItemPacketViewLink);
+		if (!buffer.good() || !buffer.size() || buffer.size() > 65535) return std::nullopt;
+		const auto bytes = buffer.str();
+		return std::vector<uint8_t>(bytes.begin(), bytes.end());
+	}
+
+	// ---------------------------------------------------------------------
 	// OP_Shroud self profile block.
 	//
 	// The RoF2 client applier (eqgame+0x5789B0) reads a fixed 20472-byte
@@ -7428,7 +7553,12 @@ namespace RoF2
 		//evolve_string; // Some String, but being evolution related is just a guess
 
 		iqbs.Heirloom = 0;
-		iqbs.Placeable = 0;
+		// Reviewed catalog only. A "Misc && BagType == 0" heuristic was tried on 2026-11-12 and
+		// marked trade-skill bags ("Bag of Bread Loaves" and 160 more) placeable, which put them
+		// into placement mode in ordinary zones ("you must place this item in a lot"). Event
+		// furniture the catalogs miss goes in the generated header's extras instead.
+		const bool housing_placeable = HousingPlaceable::Is(item->ID);
+		iqbs.Placeable = housing_placeable ? 1 : 0;
 		iqbs.unknown_RoF_6 = 0;	// 0 New to March 21 2012 client
 		iqbs.unknown28 = -1;
 		iqbs.unknown29 = packet_type == ItemPacketInvalid ? 0xFF : 0;
@@ -7439,6 +7569,22 @@ namespace RoF2
 		iqbs.unknown38 = 0;
 		iqbs.unknown39 = packet_type == ItemPacketInvalid ? 0 : 1;;
 
+		// The quaternary body is the item record's fixed head: the RoF2 client walks an
+		// item stream purely by position (head -> subitem count -> subitems -> next item),
+		// so its length must be exactly sizeof(ItemQuaternaryBodyStruct) -- 171 bytes, with
+		// Placeable at +96.
+		//
+		// DO NOT append a "housing metadata tail" here. A 72-byte block was appended between
+		// this write and the subitem count (2026-11-12, commit a0a64bb0) on the theory that
+		// the housing item reader consumes one. It does not: the client read that block's
+		// leading u32 as the subitem count (0 for ordinary items, 1 for the furniture
+		// catalog), so every record after the first in a stream was parsed 72 bytes early.
+		// In game that showed as gear/banked items existing server-side but rendering as
+		// empty slots -- exactly the first item of OP_CharInventory visible, everything
+		// after it lost. Proof: the same character's zone-in OP_CharInventory went
+		// 41934 -> 45030 bytes the moment that block shipped; 3096 = 43 records x 72.
+		// Placeable still travels in the body's own byte (+96), set from the furniture
+		// catalog below.
 		ob.write((const char*)&iqbs, sizeof(RoF2::structs::ItemQuaternaryBodyStruct));
 
 		EQ::OutBuffer::pos_type count_pos = ob.tellp();

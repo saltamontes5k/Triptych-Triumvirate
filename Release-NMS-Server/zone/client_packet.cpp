@@ -24,8 +24,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <math.h>
 #include <set>
+#include <ctime>
 #include <stdio.h>
 #include <string.h>
 #include <zlib.h>
@@ -67,7 +69,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "gm_commands/object_manipulation.h"
 #include "client.h"
 #include "nms_vault.h"
+#include "nms_loot_offers.h"
 #include "nms_lon_session.h"
+#include "nms_window.h"
 #include "../common/repositories/account_repository.h"
 #include "../common/repositories/character_corpses_repository.h"
 #include "../common/repositories/guild_tributes_repository.h"
@@ -90,6 +94,41 @@ extern WorldServer worldserver;
 extern EntityList entity_list;
 typedef void (Client::*ClientPacketProc)(const EQApplicationPacket *app);
 
+// Native RoF2 mercenary owner-transfer offers. Zone packet dispatch is single
+// threaded, so no lock is needed; entries are keyed by the RECEIVER's character
+// id (one pending invitation per receiver) and expire after 60 seconds.
+struct MercTransferOffer {
+	uint32 source_character_id = 0;
+	uint32 target_character_id = 0;
+	uint32 source_spawn_id     = 0;
+	uint32 target_spawn_id     = 0;
+	uint32 merc_id             = 0;
+	uint32 template_id         = 0;
+	uint32 stance              = 0;
+	int    source_slot         = -1;
+	time_t expires             = 0;
+};
+static std::map<uint32, MercTransferOffer> g_merc_transfer_offers;
+
+static void SendMercTransferResult(Client* to, const MercTransferOffer& offer, uint32 result)
+{
+	if (!to) {
+		return;
+	}
+
+	auto outapp = new EQApplicationPacket(OP_MercenaryTransferResponse, sizeof(MercenaryTransfer_Struct));
+	auto* envelope = reinterpret_cast<MercenaryTransfer_Struct*>(outapp->pBuffer);
+	envelope->SourceSpawnID = offer.source_spawn_id;
+	envelope->TargetSpawnID = offer.target_spawn_id;
+	envelope->Gold          = 0;
+	envelope->Unk12         = 0;
+	envelope->Unk16         = 0;
+	envelope->Unk20         = 0;
+	envelope->Result        = result;
+	to->QueuePacket(outapp);
+	safe_delete(outapp);
+}
+
 //Use a map for connecting opcodes since it dosent get used a lot and is sparse
 std::map<uint32, ClientPacketProc> ConnectingOpcodes;
 //Use a static array for connected, for speed
@@ -105,8 +144,6 @@ struct LogOnlyOpcode {
 // opcode name instead of dropping it as unknown; it grants no behaviour.
 #define NMS_LOG_ONLY(op) { op, #op },
 static const LogOnlyOpcode k_log_only_rof2[] = {
-	NMS_LOG_ONLY(OP_RealEstateItemOperation)
-	NMS_LOG_ONLY(OP_RealEstateHouseSwap)
 	NMS_LOG_ONLY(OP_RealEstateEscrow)
 	NMS_LOG_ONLY(OP_RealEstateTextRequest)
 	NMS_LOG_ONLY(OP_RealEstateLoadLayout)
@@ -122,7 +159,6 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_RealEstatePlacementEnd)
 	NMS_LOG_ONLY(OP_RealEstateOperationResult)
 	NMS_LOG_ONLY(OP_RealEstateCustomInteraction)
-	NMS_LOG_ONLY(OP_RealEstateExit)
 	NMS_LOG_ONLY(OP_RealEstateTrophyOpen)
 	NMS_LOG_ONLY(OP_RealEstateTrophyToggle)
 	NMS_LOG_ONLY(OP_RealEstateTrophy)
@@ -145,9 +181,6 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_GuildTrophyOptIn)
 	NMS_LOG_ONLY(OP_MercenaryAutoAssist)
 	NMS_LOG_ONLY(OP_MercenaryAssist)
-	NMS_LOG_ONLY(OP_MercenarySwitch)
-	NMS_LOG_ONLY(OP_MercenaryTransferRequest)
-	NMS_LOG_ONLY(OP_MercenaryTransferResponse)
 	NMS_LOG_ONLY(OP_MercenaryUnshroud)
 	NMS_LOG_ONLY(OP_MercenaryUnshroudResponse)
 	NMS_LOG_ONLY(OP_MercenaryDead)
@@ -157,10 +190,10 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_MercenaryCostUpdate)
 	NMS_LOG_ONLY(OP_MercenaryCurrencyMessage)
 	NMS_LOG_ONLY(OP_MercenaryTimerUpdate)
-	NMS_LOG_ONLY(OP_SpiritShroudAbilityRequest)
-	NMS_LOG_ONLY(OP_SpiritShroudEquipmentRequest)
-	NMS_LOG_ONLY(OP_SpiritShroudComplete)
-	NMS_LOG_ONLY(OP_SpiritShroudBank)
+	// Spirit Shroud wire notes: AbilityRequest/EquipmentRequest/Complete/Bank
+	// now have real handlers (native path, Custom:EnableSpiritShrouds);
+	// BankItems/BankEmpty are S2C-only in the minimal bank pass and stay
+	// logged until full custody retrieval lands.
 	NMS_LOG_ONLY(OP_SpiritShroudBankItems)
 	NMS_LOG_ONLY(OP_SpiritShroudBankEmpty)
 };
@@ -423,6 +456,9 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_MercenaryDismiss] = &Client::Handle_OP_MercenaryDismiss;
 	ConnectedOpcodes[OP_MercenaryHire] = &Client::Handle_OP_MercenaryHire;
 	ConnectedOpcodes[OP_MercenarySuspendRequest] = &Client::Handle_OP_MercenarySuspendRequest;
+	ConnectedOpcodes[OP_MercenarySwitch] = &Client::Handle_OP_MercenarySwitch;
+	ConnectedOpcodes[OP_MercenaryTransferRequest] = &Client::Handle_OP_MercenaryTransferRequest;
+	ConnectedOpcodes[OP_MercenaryTransferResponse] = &Client::Handle_OP_MercenaryTransferResponse;
 	ConnectedOpcodes[OP_MercenaryTimerRequest] = &Client::Handle_OP_MercenaryTimerRequest;
 	ConnectedOpcodes[OP_MoveCoin] = &Client::Handle_OP_MoveCoin;
 	ConnectedOpcodes[OP_MoveItem] = &Client::Handle_OP_MoveItem;
@@ -460,6 +496,8 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RaidDelegateAbility] = &Client::Handle_OP_RaidDelegateAbility;
 	ConnectedOpcodes[OP_RaidClearNPCMarks] = &Client::Handle_OP_RaidClearNPCMarks;
 	ConnectedOpcodes[OP_RandomReq] = &Client::Handle_OP_RandomReq;
+	ConnectedOpcodes[OP_RealEstateExit] = &Client::Handle_OP_RealEstateExit;
+	ConnectedOpcodes[OP_RealEstateHouseSwap] = &Client::Handle_OP_RealEstateHouseSwap;
 	ConnectedOpcodes[OP_RealEstateGo] = &Client::Handle_OP_RealEstateGo;
 	ConnectedOpcodes[OP_RealEstateItemQuery] = &Client::Handle_OP_RealEstateItemQuery;
 	ConnectedOpcodes[OP_RealEstateNeighborhood] = &Client::Handle_OP_RealEstateNeighborhood;
@@ -467,6 +505,7 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RealEstatePlacementCommit] = &Client::Handle_OP_RealEstatePlacementCommit;
 	ConnectedOpcodes[OP_RealEstatePurchase] = &Client::Handle_OP_RealEstatePurchase;
 	ConnectedOpcodes[OP_RealEstateItemMenu] = &Client::Handle_OP_RealEstateItemMenu;
+	ConnectedOpcodes[OP_RealEstateItemOperation] = &Client::Handle_OP_RealEstateItemOperation;
 	ConnectedOpcodes[OP_RealEstateItemInspect] = &Client::Handle_OP_RealEstateItemInspect;
 	ConnectedOpcodes[OP_RealEstateInspect] = &Client::Handle_OP_RealEstateInspect;
 	ConnectedOpcodes[OP_RealEstateSale] = &Client::Handle_OP_RealEstateSale;
@@ -513,6 +552,12 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_ShroudSelect] = &Client::Handle_OP_ShroudSelect;
 	ConnectedOpcodes[OP_ShroudSelectCancel] = &Client::Handle_OP_ShroudSelectCancel;
 	ConnectedOpcodes[OP_ShroudRequestStats] = &Client::Handle_OP_ShroudRequestStats;
+	// Native RoF2 Spirit Shroud protocol (Custom:EnableSpiritShrouds); the
+	// shared-value handlers route by rule and the native handlers self-gate.
+	ConnectedOpcodes[OP_SpiritShroudAbilityRequest] = &Client::Handle_OP_SpiritShroudPreview;
+	ConnectedOpcodes[OP_SpiritShroudEquipmentRequest] = &Client::Handle_OP_SpiritShroudPreview;
+	ConnectedOpcodes[OP_SpiritShroudComplete] = &Client::Handle_OP_SpiritShroudComplete;
+	ConnectedOpcodes[OP_SpiritShroudBank] = &Client::Handle_OP_SpiritShroudBank;
 	ConnectedOpcodes[OP_ShopEnd] = &Client::Handle_OP_ShopEnd;
 	ConnectedOpcodes[OP_ShopPlayerBuy] = &Client::Handle_OP_ShopPlayerBuy;
 	ConnectedOpcodes[OP_ShopPlayerSell] = &Client::Handle_OP_ShopPlayerSell;
@@ -562,6 +607,10 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_ResetAA] = &Client::Handle_OP_ResetAA;
 	ConnectedOpcodes[OP_UnderWorld] = &Client::Handle_OP_UnderWorld;
 	ConnectedOpcodes[OP_WaypointRequest] = &Client::Handle_OP_WaypointRequest;
+	ConnectedOpcodes[OP_NmsLootDecision] = &Client::Handle_OP_NmsLootDecision;
+	ConnectedOpcodes[OP_PersonalLootAction] = &Client::Handle_OP_PersonalLootAction;
+	ConnectedOpcodes[OP_ClientReport] = &Client::Handle_OP_ClientReport;
+	ConnectedOpcodes[OP_NMSWindowEvent] = &Client::Handle_OP_NMSWindowEvent;
 
 	// shared tasks
 	ConnectedOpcodes[OP_SharedTaskRemovePlayer]   = &Client::Handle_OP_SharedTaskRemovePlayer;
@@ -600,6 +649,65 @@ int Client::HandlePacket(const EQApplicationPacket *app)
 	);
 
 	EmuOpcode opcode = app->GetOpcode();
+	// Native Spirit Shroud fences (Custom:EnableSpiritShrouds path only --
+	// the legacy quest shroud keeps its own behavior). While a native form is
+	// active the character's wallet/economy surfaces stay closed: trading,
+	// bazaar, banker, parcels, ground spawns and crafting all ride ordinary
+	// inventory the form does not own.
+	if (IsSpiritShrouded() && RuleB(Custom, EnableSpiritShrouds)) {
+		if (opcode == OP_Trader || opcode == OP_BazaarSearch || opcode == OP_AltCurrencyMerchantRequest) {
+			return true;
+		}
+		if (opcode == OP_BankerChange || opcode == OP_MoveCoin) {
+			return true;
+		}
+		if (opcode == OP_GroundSpawn || opcode == OP_GuildBank || opcode == OP_TradeSkillCombine ||
+			opcode == OP_RecipeAutoCombine || opcode == OP_AugmentItem || opcode == OP_TributeItem ||
+			opcode == OP_GuildTributeDonateItem || opcode == OP_ShopSendParcel ||
+			opcode == OP_AltCurrencySell || opcode == OP_AltCurrencyReclaim) {
+			return true;
+		}
+		if (opcode == OP_MoveMultipleItems) {
+			// Bulk rearrangement stays in the main-inventory domain; the bank
+			// is inaccessible in a form.
+			if (app->size >= sizeof(MultiMoveItem_Struct)) {
+				auto *moves = reinterpret_cast<const MultiMoveItem_Struct *>(app->pBuffer);
+				if (!moves->count || moves->count > 100 ||
+					app->size != sizeof(MultiMoveItem_Struct) + sizeof(MultiMoveItemSub_Struct) * moves->count) {
+					return true;
+				}
+				for (uint32 i = 0; i < moves->count; ++i) {
+					if (moves->moves[i].from_slot.Slot < EQ::invslot::GENERAL_BEGIN ||
+						moves->moves[i].from_slot.Slot > EQ::invslot::slotCursor ||
+						moves->moves[i].to_slot.Slot < EQ::invslot::GENERAL_BEGIN ||
+						moves->moves[i].to_slot.Slot > EQ::invslot::slotCursor) {
+						return true;
+					}
+				}
+			} else {
+				return true;
+			}
+		}
+		if ((opcode == OP_MoveItem || opcode == OP_DeleteItem || opcode == OP_DeleteCharge) &&
+			app->size == sizeof(MoveItem_Struct)) {
+			auto *move = reinterpret_cast<const MoveItem_Struct *>(app->pBuffer);
+			const auto held_bank = [this](uint32_t slot) {
+				return (slot >= EQ::invslot::SHARED_BANK_BEGIN && slot <= EQ::invslot::SHARED_BANK_END) ||
+					(slot >= EQ::invbag::SHARED_BANK_BAGS_BEGIN && slot <= EQ::invbag::SHARED_BANK_BAGS_END) ||
+					((slot >= EQ::invslot::BANK_BEGIN && slot <= EQ::invslot::BANK_END) ||
+						(slot >= EQ::invbag::BANK_BAGS_BEGIN && slot <= EQ::invbag::BANK_BAGS_END));
+			};
+			if (held_bank(move->from_slot) || held_bank(move->to_slot)) {
+				return true;
+			}
+			const auto external = [](uint32_t slot) {
+				return slot >= EQ::invslot::WORLD_BEGIN && slot <= EQ::invslot::WORLD_END;
+			};
+			if (external(move->from_slot) || external(move->to_slot)) {
+				return true;
+			}
+		}
+	}
 	if (opcode == OP_AckPacket) {
 		return true;
 	}
@@ -766,6 +874,11 @@ void Client::ReapplyBuff(uint32 index, bool from_suppress)
 // Finish client connecting state
 void Client::CompleteConnect()
 {
+	// Native Spirit Shroud state metadata loads first (form definition and
+	// owned-rank set for the protocol path); the persisted shroud re-apply
+	// below then branches on it.
+	LoadSpiritShroudState();
+
 	// If the zone was killed mid-shroud, restore the real profile before any
 	// class/stat logic runs so the character is never stranded as a shroud;
 	// otherwise re-apply a persisted shroud (shrouds survive zoning/relogging).
@@ -966,6 +1079,10 @@ void Client::CompleteConnect()
 	}
 
 	NmsVaultOnZoneIn(this);
+	// Do not send the loot window packet during CompleteConnect: the client UI is not
+	// ready yet and MacroQuest faults on the CXStr-backed window. Process() sends it
+	// after a short settle delay instead.
+	m_nms_loot_restore_timer.Start(3000);
 
 	DeleteEntityVariable(SEE_BUFFS_FLAG);
 
@@ -2209,6 +2326,13 @@ void Client::Handle_OP_AAAction(const EQApplicationPacket *app)
 		return;
 	}
 	AA_Action* action = (AA_Action*)app->pBuffer;
+
+	// Native monster-AA actions (purchase/activate) route through the native
+	// service while a Spirit Shroud form is active; the ordinary AA economy
+	// is frozen for the form.
+	if (IsSpiritShrouded() && TrySpiritShroudAbility(action->action, action->ability)) {
+		return;
+	}
 
 	if (action->action == aaActionActivate) {//AA Hotkey
 		LogAA("Activating AA [{}]", action->ability);
@@ -11253,6 +11377,7 @@ void Client::Handle_OP_LootRequest(const EQApplicationPacket *app)
 		SetLooting(ent->GetID()); //store the entity we are looting
 
 		ent->CastToCorpse()->MakeLootRequestPackets(this, app);
+		NmsLootOfferOnCorpseOpen(this, ent->CastToCorpse());
 		return;
 	}
 	else {
@@ -11434,14 +11559,14 @@ void Client::Handle_OP_MercenaryDataRequest(const EQApplicationPacket *app)
 	if (merchant_id == 0) {
 
 		//send info about your current merc(s)
-		if (GetMercInfo().mercid)
+		if (GetNumberOfMercenaries() > 0)
 		{
 			Log(Logs::General, Logs::Mercenaries, "SendMercPersonalInfo Request for %s.", GetName());
 			SendMercPersonalInfo();
 		}
 		else
 		{
-			Log(Logs::General, Logs::Mercenaries, "SendMercPersonalInfo Not Sent - MercID (%i) for %s.", GetMercInfo().mercid, GetName());
+			Log(Logs::General, Logs::Mercenaries, "SendMercPersonalInfo Not Sent - no mercs owned for %s.", GetName());
 		}
 	}
 
@@ -11625,6 +11750,21 @@ void Client::Handle_OP_MercenaryHire(const EQApplicationPacket *app)
 			return;
 		}
 
+		// Put the active contract to sleep before moving to a free storage slot.
+		Merc* current_merc = GetMerc();
+		if (current_merc) {
+			current_merc->Suspend();
+			current_merc->SetOwnerID(0);
+			SetMercID(0);
+		}
+
+		const int free_slot = GetFirstFreeMercSlot();
+		if (free_slot < 0) {
+			SendMercResponsePackets(6);
+			return;
+		}
+		SetMercSlot(static_cast<uint8>(free_slot));
+
 		// Set time remaining to max on Hire
 		GetMercInfo().MercTimerRemaining = RuleI(Mercs, UpkeepIntervalMS);
 
@@ -11644,6 +11784,10 @@ void Client::Handle_OP_MercenaryHire(const EQApplicationPacket *app)
 
 			// approved hire request
 			SendMercMerchantResponsePacket(0);
+
+			// Refresh the Manage tab's owned-contract list and status timer.
+			SendMercPersonalInfo();
+			SendMercTimer(merc);
 		}
 		else
 		{
@@ -11678,6 +11822,250 @@ void Client::Handle_OP_MercenarySuspendRequest(const EQApplicationPacket *app)
 
 	// Check if the merc is suspended and if so, unsuspend, otherwise suspend it
 	SuspendMercCommand();
+}
+
+void Client::Handle_OP_MercenarySwitch(const EQApplicationPacket *app)
+{
+	if (app->size != sizeof(SwitchMercenary_Struct)) {
+		LogDebug("Size mismatch in OP_MercenarySwitch expected [{}] got [{}]", sizeof(SwitchMercenary_Struct), app->size);
+		DumpPacket(app);
+		return;
+	}
+
+	if (!RuleB(Mercs, AllowMercs)) {
+		return;
+	}
+
+	const uint32 merc_ui_index = reinterpret_cast<const SwitchMercenary_Struct*>(app->pBuffer)->MercIndex;
+	const int capacity = GetMercenaryCapacity();
+
+	// Packed UI index: owned rows in the order SendMercPersonalInfo transmits
+	// them (storage slot ascending, empty slots omitted).
+	int target_slot = -1;
+	uint32 ui_position = 0;
+	for (int slot = 0; slot < capacity; slot++) {
+		if (GetMercInfo(slot).mercid == 0) {
+			continue;
+		}
+		if (ui_position == merc_ui_index) {
+			target_slot = slot;
+			break;
+		}
+		ui_position++;
+	}
+
+	if (target_slot < 0) {
+		Log(Logs::General, Logs::Mercenaries, "Switch request denied - UI index %u has no owned merc for %s.", merc_ui_index, GetName());
+		SendMercResponsePackets(0);
+		return;
+	}
+
+	if (target_slot == GetMercSlot()) {
+		return;
+	}
+
+	// Suspend the current contract while GetMercSlot() still points at it.
+	Merc* current_merc = GetMerc();
+	if (current_merc) {
+		current_merc->Suspend();
+		current_merc->SetOwnerID(0);
+		SetMercID(0);
+	}
+
+	// The suspend cooldown guards rapid suspend/unsuspend of the SAME contract,
+	// not switching between two owned contracts.
+	if (!GetPTimers().Expired(&database, pTimerMercSuspend, false)) {
+		GetPTimers().Clear(&database, pTimerMercSuspend);
+	}
+
+	SetMercSlot(static_cast<uint8>(target_slot));
+	Log(Logs::General, Logs::Mercenaries, "Switched active merc slot to %i (UI index %u) for %s.", target_slot, merc_ui_index, GetName());
+
+	SuspendMercCommand();
+}
+
+void Client::Handle_OP_MercenaryTransferRequest(const EQApplicationPacket *app)
+{
+	if (!RuleB(Mercs, AllowMercs) || ClientVersion() < EQ::versions::ClientVersion::RoF2) {
+		return;
+	}
+
+	if (app->size != sizeof(MercenaryTransfer_Struct)) {
+		LogDebug("Size mismatch in OP_MercenaryTransferRequest expected [{}] got [{}]", sizeof(MercenaryTransfer_Struct), app->size);
+		DumpPacket(app);
+		return;
+	}
+
+	auto* request = reinterpret_cast<const MercenaryTransfer_Struct*>(app->pBuffer);
+
+	if (GetMercInfo().mercid == 0) {
+		return;
+	}
+
+	Client* target = (GetTarget() && GetTarget()->IsClient()) ? GetTarget()->CastToClient() : nullptr;
+	if (!target || target == this) {
+		return;
+	}
+
+	if (request->SourceSpawnID != GetID() || request->TargetSpawnID != target->GetID()) {
+		return;
+	}
+
+	MercTransferOffer offer;
+	offer.source_character_id = CharacterID();
+	offer.target_character_id = target->CharacterID();
+	offer.source_spawn_id     = GetID();
+	offer.target_spawn_id     = target->GetID();
+	offer.merc_id             = GetMercInfo().mercid;
+	offer.template_id         = GetMercInfo().MercTemplateID;
+	offer.source_slot         = GetMercSlot();
+	offer.stance              = GetMercInfo().Stance;
+	offer.expires             = time(nullptr) + 60;
+
+	auto fail = [&](uint32 result) {
+		SendMercTransferResult(this, offer, result);
+		Log(Logs::General, Logs::Mercenaries, "Mercenary transfer request denied (%u) %s -> %s.", result, GetName(), target->GetName());
+	};
+
+	if (IsDead() || target->IsDead() || GetAggroCount() > 0 || target->GetAggroCount() > 0) {
+		fail(7);
+		return;
+	}
+
+	if (Merc* merc = GetMerc(); merc && merc->IsEngaged()) {
+		fail(7);
+		return;
+	}
+
+	if (target->GetFirstFreeMercSlot() < 0) {
+		fail(3);
+		return;
+	}
+
+	for (auto it = g_merc_transfer_offers.begin(); it != g_merc_transfer_offers.end();) {
+		if (it->second.expires <= time(nullptr)) {
+			it = g_merc_transfer_offers.erase(it);
+			continue;
+		}
+		if (it->second.target_character_id == offer.target_character_id ||
+		    it->second.source_character_id == offer.source_character_id) {
+			fail(4);
+			return;
+		}
+		++it;
+	}
+
+	g_merc_transfer_offers[offer.target_character_id] = offer;
+
+	auto outapp = new EQApplicationPacket(OP_MercenaryTransferRequest, sizeof(MercenaryTransfer_Struct));
+	auto* invitation = reinterpret_cast<MercenaryTransfer_Struct*>(outapp->pBuffer);
+	invitation->SourceSpawnID = offer.source_spawn_id;
+	invitation->TargetSpawnID = offer.target_spawn_id;
+	invitation->Gold          = 0;
+	invitation->Unk12         = 0;
+	invitation->Unk16         = 0;
+	invitation->Unk20         = 0;
+	invitation->Result        = 0;
+	target->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	Log(Logs::General, Logs::Mercenaries, "Mercenary transfer invitation sent from %s to %s (merc %u).", GetName(), target->GetName(), offer.merc_id);
+}
+
+void Client::Handle_OP_MercenaryTransferResponse(const EQApplicationPacket *app)
+{
+	if (!RuleB(Mercs, AllowMercs) || ClientVersion() < EQ::versions::ClientVersion::RoF2) {
+		return;
+	}
+
+	if (app->size != sizeof(MercenaryTransfer_Struct)) {
+		return;
+	}
+
+	auto* response = reinterpret_cast<const MercenaryTransfer_Struct*>(app->pBuffer);
+
+	auto it = g_merc_transfer_offers.find(CharacterID());
+	if (it == g_merc_transfer_offers.end()) {
+		return;
+	}
+
+	MercTransferOffer offer = it->second;
+	g_merc_transfer_offers.erase(it);
+
+	if (response->SourceSpawnID != offer.source_spawn_id || response->TargetSpawnID != offer.target_spawn_id) {
+		return;
+	}
+
+	Client* source = entity_list.GetClientByCharID(offer.source_character_id);
+	if (!source) {
+		SendMercTransferResult(this, offer, 8);
+		return;
+	}
+
+	if (response->Result != 0) {
+		SendMercTransferResult(source, offer, 1);
+		SendMercTransferResult(this, offer, 1);
+		Log(Logs::General, Logs::Mercenaries, "Mercenary transfer declined by %s (source %s).", GetName(), source->GetName());
+		return;
+	}
+
+	auto fail = [&](uint32 result) {
+		SendMercTransferResult(source, offer, result);
+		SendMercTransferResult(this, offer, result);
+	};
+
+	// Re-validate against the source's roster at acceptance time.
+	if (offer.source_slot < 0 || offer.source_slot >= MAXMERCS ||
+	    source->GetMercInfo(offer.source_slot).mercid != offer.merc_id ||
+	    source->GetMercInfo(offer.source_slot).MercTemplateID != offer.template_id) {
+		fail(8);
+		return;
+	}
+
+	if (source->GetAggroCount() > 0 || GetAggroCount() > 0) {
+		fail(7);
+		return;
+	}
+
+	const int free_slot = GetFirstFreeMercSlot();
+	if (free_slot < 0) {
+		fail(3);
+		return;
+	}
+
+	const auto update = database.QueryDatabase(fmt::format(
+		"UPDATE mercs SET OwnerCharacterID = {}, Slot = {}, IsSuspended = 1, SuspendedTime = 0 "
+		"WHERE MercID = {} AND OwnerCharacterID = {} AND Slot = {}",
+		CharacterID(), free_slot, offer.merc_id, source->CharacterID(), offer.source_slot));
+
+	if (!update.Success() || update.RowsAffected() != 1) {
+		fail(8);
+		return;
+	}
+
+	MercInfo moved = source->GetMercInfo(offer.source_slot);
+	moved.slot = static_cast<uint8>(free_slot);
+	moved.IsSuspended = true;
+	moved.SuspendedTime = 0;
+	moved.State = MERC_STATE_SUSPENDED;
+	moved.myTemplate = zone->GetMercTemplate(moved.MercTemplateID);
+
+	if (Merc* source_merc = source->GetMerc()) {
+		source_merc->Depop();
+		source_merc->SetOwnerID(0);
+	}
+
+	source->SetMercID(0);
+	source->GetMercInfo(offer.source_slot) = MercInfo();
+	GetMercInfo(free_slot) = moved;
+
+	SendMercTransferResult(source, offer, 0);
+	SendMercTransferResult(this, offer, 0);
+
+	source->SendMercPersonalInfo();
+	SendMercPersonalInfo();
+
+	Log(Logs::General, Logs::Mercenaries, "Mercenary %u transferred from %s to %s (slot %i).", offer.merc_id, source->GetName(), GetName(), free_slot);
 }
 
 void Client::Handle_OP_MercenaryTimerRequest(const EQApplicationPacket *app)
@@ -14015,6 +14403,12 @@ void Client::Handle_OP_RezzAnswer(const EQApplicationPacket *app)
 	OPRezzAnswer(r->action, r->spellid, r->zone_id, r->instance_id, r->x, r->y, r->z);
 
 	if (r->action == ResurrectionActions::Accept) {
+		// A shrouded death's debit lives in the original-profile ledger; only
+		// a recorded shroud corpse may answer a resurrection while in a form.
+		if (IsSpiritShrouded() && !CanAcceptSpiritShroudResurrection(PendingRezzDBID)) {
+			Message(Chat::Yellow, "This resurrection cannot be accepted in your current form.");
+			return;
+		}
 		if (PlayerEventLogs::Instance()->IsEventEnabled(PlayerEvent::REZ_ACCEPTED)) {
 			auto e = PlayerEvent::ResurrectAcceptEvent{
 				.resurrecter_name = r->rezzer_name,
@@ -14578,26 +14972,25 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 
 	EQ::ItemInstance* inst = database.CreateItem(item, charges);
 
-	int single_price = (item->Price * item->SellRate);
+	// compute the price in 64-bit: a high-price item times a large quantity can
+	// overflow 32-bit and wrap the echoed price (which is uint32) into a huge value
+	int64_t single_price = static_cast<int64_t>(item->Price) * static_cast<int64_t>(item->SellRate);
 
 	// Don't use SellCostMod if using UseClassicPriceMod
 	if (!RuleB(Merchant, UseClassicPriceMod)) {
-		single_price *= RuleR(Merchant, SellCostMod);
+		single_price = static_cast<int64_t>(static_cast<double>(single_price) * RuleR(Merchant, SellCostMod));
 	}
 
 	if (RuleB(Merchant, UsePriceMod) && tmp) {
-		single_price *= Client::CalcPriceMod(tmp, false);
+		single_price = static_cast<int64_t>(static_cast<double>(single_price) * Client::CalcPriceMod(tmp, false));
 	}
 
-	single_price = EQ::ClampLower(single_price, 1);
+	single_price = std::max<int64_t>(single_price, 1);
 
-	if (item->MaxCharges > 1) {
-		mpo->price = single_price;
-	} else {
-		mpo->price = single_price * mp->quantity;
-	}
+	int64_t total_price = (item->MaxCharges > 1) ? single_price : (single_price * static_cast<int64_t>(mp->quantity));
 
-	if (mpo->price < 0)	{
+	if (total_price < 1 || total_price > static_cast<int64_t>(0xFFFFFFFFLL)) {
+		// the total cannot be represented as copper in the purchase packet; refuse instead of wrapping
 		MessageString(Chat::White, ALREADY_SOLD);
 		safe_delete(outapp);
 		safe_delete(inst);
@@ -14605,10 +14998,12 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		return;
 	}
 
-	// this area needs some work..two inventory insertion check failure points
-	// below do not return player's money..is this the intended behavior?
+	mpo->price = static_cast<uint32_t>(total_price);
 
-	if (!TakeMoneyFromPP(mpo->price)) {
+	// this area needs some work..two inventory insertion check failure points
+	// below did not return player's money; reimburse on the way out
+
+	if (!TakeMoneyFromPP(static_cast<uint64_t>(total_price))) {
 		auto message = fmt::format(
 			"Vendor Cheat attempted to buy qty [{}] of item_id [{}] item_name[{}] that cost [{}] copper but only has platinum [{}] gold [{}] silver [{}] copper [{}]",
 			mpo->quantity,
@@ -14633,12 +15028,16 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 		freeslotid = m_inv.FindFreeSlot(false, true, item->Size);
 	}
 
-	// shouldn't we be reimbursing if these two fail?
+	// the money is already taken at this point; give it back if nothing was delivered
+	auto refund_failed_purchase = [&]() {
+		AddMoneyToPP(static_cast<uint64_t>(total_price), true);
+	};
 
 	//make sure we are not completely full...
 	if (freeslotid == EQ::invslot::slotCursor) {
 		if (m_inv.GetItem(EQ::invslot::slotCursor) != nullptr) {
 			Message(Chat::Red, "You do not have room for any more items.");
+			refund_failed_purchase();
 			safe_delete(outapp);
 			safe_delete(inst);
 			return;
@@ -14647,6 +15046,7 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 
 	if (!stacked && freeslotid == INVALID_INDEX) {
 		Message(Chat::Red, "You do not have room for any more items.");
+		refund_failed_purchase();
 		safe_delete(outapp);
 		safe_delete(inst);
 		return;
@@ -14734,6 +15134,15 @@ void Client::Handle_OP_ShopPlayerSell(const EQApplicationPacket *app)
 	}
 	RDTSC_Timer t1(true);
 	Merchant_Purchase_Struct* mp = (Merchant_Purchase_Struct*)app->pBuffer;
+
+	// A native Spirit Shroud form's temporary supplies cannot be sold.
+	if (IsSpiritShrouded()) {
+		auto *selling = GetInv().GetItem(static_cast<int16>(mp->itemslot));
+		if (!CanTransferSpiritShroudItemTree(selling)) {
+			Message(Chat::Yellow, "Your shroud's temporary supplies cannot be sold.");
+			return;
+		}
+	}
 
 	Mob* vendor = entity_list.GetMob(mp->npcid);
 
@@ -17872,6 +18281,30 @@ void Client::Handle_OP_EvolveItem(const EQApplicationPacket *app)
 	}
 }
 
+void Client::Handle_OP_NmsLootDecision(const EQApplicationPacket *app)
+{
+	NmsLootOfferHandleDecision(this, app);
+}
+
+void Client::Handle_OP_PersonalLootAction(const EQApplicationPacket *app)
+{
+	NmsLootOfferHandlePersonalLootAction(this, app);
+}
+
+void Client::Handle_OP_ClientReport(const EQApplicationPacket *app)
+{
+	// hailstone-nms 0x140f (ClientReport): the add-on sends a 34-byte report {u16 opcode,
+	// u32 magic 0x5ab3e769, u32 flags, 24 zero bytes} once after the class mask arrives
+	// (hailstone-nms nms_packets.h). Any server reply says this server knows the NMS patch,
+	// which mutes the add-on's "non multiclass server" warning; the add-on swallows the
+	// reply. No state is kept, the payload is not validated beyond the opcode routing.
+	(app);
+	auto outapp = new EQApplicationPacket(OP_ClientReport, 4);
+	memset(outapp->pBuffer, 0, outapp->size);
+	QueuePacket(outapp);
+	safe_delete(outapp);
+}
+
 void Client::Handle_OP_WaypointRequest(const EQApplicationPacket *app)
 {
 	if (app->size != sizeof(WaypointRequest_Struct)) {
@@ -17898,6 +18331,13 @@ void Client::Handle_OP_WaypointRequest(const EQApplicationPacket *app)
 	{
 		TransportToWaypoint(waypoint_request->waypoint_id);
 	}
+}
+
+// Script-drawn NMS windows (hello + player input); the engine lives in
+// nms_window.cpp. See zone/nms_window.h for the wire contract.
+void Client::Handle_OP_NMSWindowEvent(const EQApplicationPacket *app)
+{
+	EQ::NMS::NmsWindowHandlePacket(this, app);
 }
 
 bool Client::IsFilteredAFKPacket(const EQApplicationPacket *p)

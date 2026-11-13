@@ -139,7 +139,46 @@ local p3TrashByWave = {
 	[8] = { 223067, 223068, 223069, 223070, 223071, 223072 }
 }
 
+-- Encounter variables mirrored into expedition data so a zone crash (which
+-- wipes all in-memory zone variables) no longer resets phase and wing
+-- progress. event_spawn restores them before the "spawn" timer runs
+-- do_the_spawn, letting its existing phase branches re-setup correctly.
+local tracked_variables = {
+	'Phase', 'Phase 1 Started', 'Counter',
+	P1AIR, P1EARTH, P1WATER, P1FIRE, P1UNDEAD,
+	P2AIR, P2EARTH, P2WATER, P2FIRE, P2UNDEAD,
+	FEROCIOUSWARBOAR, BLACKHEART, XEROAN, KRAKSMAAL, DEADLYWARBOAR,
+	SKULLSMASH, HERLSOAKIAN, SINRUNAL, NEEDLETUSK, RIANIT,
+	DERSOOL, XERSKEL, SQUADLEADER, DARKKNIGHT, TORMENT,
+	DREAMWARP, AVATAR, SUPGUARDIAN,
+	TERRIS, SARYRN, TALLONZEK, VALLONZEK,
+	BERTOXXULOUOS, CAZICTHULE, INNORUUK, RALLOSZEK,
+	QUARM,
+}
+
+function SaveState()
+	local inst = eq.get_zone_instance_id()
+	for _, name in ipairs(tracked_variables) do
+		local value = eq.get_zone():GetVariable(name)
+		if value ~= nil and value ~= "" then
+			eq.set_data(inst .. "-pz:" .. name, tostring(value), '7d')
+		end
+	end
+end
+
+function RestoreState()
+	local inst = eq.get_zone_instance_id()
+	for _, name in ipairs(tracked_variables) do
+		local value = eq.get_data(inst .. "-pz:" .. name)
+		if value ~= nil and value ~= "" then
+			eq.get_zone():SetVariable(name, value)
+		end
+	end
+end
+
 function event_spawn(e)
+	-- restore persisted encounter variables before do_the_spawn reads them
+	RestoreState()
 	e.self:SetTimer("spawn",1)
 end
 
@@ -207,6 +246,9 @@ function do_the_spawn(e)
 			eq.spawn2(223228, 0, 0, -579, -1119, 60.625, 0)
 		end
 	end
+
+	-- persist phase progress written by this boot's setup
+	SaveState()
 end
 
 function event_signal(e)
@@ -333,6 +375,12 @@ function event_signal(e)
 		eq.get_zone():SetVariable("Current Phase", "Quarm Dead")
 		--eq.stop_timer("event_hb")
 		eq.set_timer("lockout", 50 * 60 * 1000)
+	-- signals 101-105 come from the phase 1 wing triggers when a wing wipes:
+	-- stamp the wipe time (drives the trigger's 1-hour re-arm cooldown) and
+	-- hand the raid back the hour the cooldown can cost
+	elseif e.signal >= 101 and e.signal <= 105 then
+		eq.set_data(instance_id .. "-wing-" .. (e.signal - 100) .. "-reset_at", tostring(os.time()), '7d')
+		UpdateFailTimer(60)
 	-- signal 8 comes from Druzzil_Ro
 	elseif e.signal == 8 then
 		-- update the zone status
@@ -346,6 +394,9 @@ function event_signal(e)
 		end
 		ControllerDepop()
 	end
+
+	-- persist whatever this signal wrote so a crash can't undo it
+	SaveState()
 end
 
 function ResetVariables()

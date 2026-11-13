@@ -256,6 +256,11 @@ Block or allow illusions landing on you from other players/bots.
 ### #lootsim — GMImpossible
 Benchmark simulator over the real loot logic for an NPC type / loottable id / iterations; reports global-loot and drop data without spawning.
 
+### #nmsloot_decide — GMAdmin
+Apply a personal loot offer decision exactly as a window click would: `#nmsloot_decide <offer_id> <action> [pass_to]`. Actions (module numbering): 1 Keep, 2 Sell, 3 Tribute, 4 Bank, 5 Vault, 6 Destroy, 7 Pass (needs pass_to), 9 return a passed item. GM test path for `/nmsloot` (rule `Custom:NmsLootOffers`, migration v375); the Hailstone window uses its own action numbering (Keep=1, Sell=3) and is mapped server-side.
+
+Note: the vault bag-item commands (`#vault_deposit_bagitem_specific`, `#vault_withdraw_bagitem`) now take the bag slot **0-based** (the add-ons count bag slots from 0; the vault maps +1 server-side). Our dll window never sends them — they are the Hailstone add-on's bag-window buttons.
+
 ### #soulmark — GMAdmin
 Add/remove the account CheaterFlag with a reason (#soulmark Add/Remove [Character] [Reason]).
 

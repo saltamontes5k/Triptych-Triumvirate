@@ -618,7 +618,11 @@ void Client::MovePC(float x, float y, float z, float heading, uint8 ignorerestri
 }
 
 void Client::MovePC(uint32 zoneID, float x, float y, float z, float heading, uint8 ignorerestrictions, ZoneMode zm) {
-	ProcessMovePC(zoneID, 0, x, y, z, heading, ignorerestrictions, zm);
+	// Same-zone script teleports (quest::movepc / eq.movepc into the zone we are already in) must
+	// keep the current instance, otherwise the client is dropped into the base zone (instance 0)
+	// and the encounter it was pulled out of cannot be finished. Mirrors Client::MovePC(const char*).
+	const uint32 instance_id = (zoneID == zone->GetZoneID()) ? zone->GetInstanceID() : 0;
+	ProcessMovePC(zoneID, instance_id, x, y, z, heading, ignorerestrictions, zm);
 }
 
 void Client::MovePC(uint32 zoneID, uint32 instanceID, float x, float y, float z, float heading, uint8 ignorerestrictions, ZoneMode zm){

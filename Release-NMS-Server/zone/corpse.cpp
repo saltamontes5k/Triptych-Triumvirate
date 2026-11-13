@@ -34,8 +34,41 @@
 #include <iostream>
 #include "queryserv.h"
 #include "../common/json/json.hpp"
+#include "nms_loot_offers.h"
+
+#include <chrono>
+#include <random>
+#ifdef _WINDOWS
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 
 using json = nlohmann::json;
+
+namespace {
+	// /nmsloot: unique per corpse for the life of the zone process; offers key on it so a
+	// recycled entity id never matches a newer corpse.
+	uint64 NextNmsLootSerial()
+	{
+		static uint64 next = []() {
+			const uint64 ticks = static_cast<uint64>(
+				std::chrono::high_resolution_clock::now().time_since_epoch().count()
+			);
+#ifdef _WINDOWS
+			const uint64 pid = static_cast<uint64>(_getpid());
+#else
+			const uint64 pid = static_cast<uint64>(getpid());
+#endif
+			std::random_device rd;
+			const uint64 rnd = (static_cast<uint64>(rd()) << 32) ^ static_cast<uint64>(rd());
+			uint64 seed = ticks ^ (pid << 32) ^ rnd;
+			return seed ? seed : 0x9e3779b97f4a7c15ULL;
+		}();
+		const uint64 value = next++;
+		return value ? value : next++;
+	}
+}
 
 extern EntityList           entity_list;
 extern Zone                *zone;
@@ -184,6 +217,7 @@ Corpse::Corpse(
 	UpdateActiveLight();
 
 	m_loot_request_type = LootRequestType::Forbidden;
+	m_nms_loot_serial = NextNmsLootSerial();
 }
 
 Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
@@ -269,7 +303,12 @@ Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
 	m_consented_guild_id = c->AutoConsentGuildEnabled() ? c->GuildID() : 0;
 
 	m_is_corpse_changed         = true;
-	m_rezzed_experience         = rez_exp;
+	// A native Spirit Shroud death debits the original-profile ledger (the
+	// record is written once the corpse row exists below); the corpse itself
+	// carries no rez XP and keeps nothing -- the form's items never leave the
+	// player's live inventory, so restoration custody is trivially safe.
+	const bool shroud_death = c->IsSpiritShrouded();
+	m_rezzed_experience         = shroud_death ? 0 : rez_exp;
 	m_is_player_corpse          = true;
 	m_is_locked                 = false;
 	m_being_looted_by_entity_id = 0xFFFFFFFF;
@@ -351,14 +390,16 @@ Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
 		// ..then regress and process invslot::EQUIPMENT_BEGIN through invslot::EQUIPMENT_END...
 		// without additional work to database loading of player corpses, this order is not
 		// currently preserved and a re-work of this processing loop is not warranted.
-		for (int i = EQ::invslot::POSSESSIONS_BEGIN; i <= EQ::invslot::POSSESSIONS_END; ++i) {
-			item = c->GetInv().GetItem(i);
-			if (!item) {
-				continue;
-			}
+		if (!shroud_death) {
+			for (int i = EQ::invslot::POSSESSIONS_BEGIN; i <= EQ::invslot::POSSESSIONS_END; ++i) {
+				item = c->GetInv().GetItem(i);
+				if (!item) {
+					continue;
+				}
 
-			if (!c->IsBecomeNPC() || (c->IsBecomeNPC() && !item->GetItem()->NoRent)) {
-				MoveItemToCorpse(c, item, i, removed_list);
+				if (!c->IsBecomeNPC() || (c->IsBecomeNPC() && !item->GetItem()->NoRent)) {
+					MoveItemToCorpse(c, item, i, removed_list);
+				}
 			}
 		}
 
@@ -409,6 +450,7 @@ Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
 		UpdateEquipmentLight();
 		UpdateActiveLight();
 
+		RecordShroudDeath(c, rez_exp);
 		return;
 	}
 
@@ -416,9 +458,27 @@ Corpse::Corpse(Client *c, int32 rez_exp, KilledByTypes in_killed_by) : Mob(
 	UpdateActiveLight();
 
 	m_loot_request_type = LootRequestType::Forbidden;
+	m_nms_loot_serial = NextNmsLootSerial();
 
 	IsRezzed(false);
 	Save();
+
+	RecordShroudDeath(c, rez_exp);
+}
+
+void Corpse::RecordShroudDeath(Client *c, uint32 requested_loss)
+{
+	if (!c || !c->IsSpiritShrouded() || !m_corpse_db_id || !requested_loss) {
+		return;
+	}
+	uint64_t applied_loss = 0;
+	if (!c->RecordSpiritShroudDeath(m_corpse_db_id, requested_loss, applied_loss)) {
+		LogError("Shroud death ledger record failed for character [{}], corpse [{}]",
+			c->GetCleanName(), m_corpse_db_id);
+	} else {
+		LogCorpses("Shroud death recorded: character [{}] corpse [{}] applied loss [{}]",
+			c->GetCleanName(), m_corpse_db_id, applied_loss);
+	}
 }
 
 void Corpse::MoveItemToCorpse(Client *client, EQ::ItemInstance *inst, int16 equipSlot, std::list<uint32> &removedList)
@@ -610,6 +670,7 @@ Corpse::Corpse(
 	UpdateActiveLight();
 
 	m_loot_request_type = LootRequestType::Forbidden;
+	m_nms_loot_serial = NextNmsLootSerial();
 }
 
 Corpse::~Corpse()
@@ -912,13 +973,25 @@ void Corpse::RemoveItem(uint16 lootslot)
 	}
 }
 
-void Corpse::RemoveItem(LootItem *item_data)
+void Corpse::RemoveItem(LootItem *item_data, bool forget_offers)
 {
 	for (auto iter = m_item_list.begin(); iter != m_item_list.end(); ++iter) {
 		auto sitem = *iter;
 		if (sitem != item_data) { continue; }
 
 		m_is_corpse_changed = true;
+		if (forget_offers) {
+			// /nmsloot: this exact item just left the corpse by native means (a player looted
+			// it, a quest script took it), so any offer rolled for it must go too. The corpse
+			// emptying path passes false - removing items there is what creates the offers.
+			uint32 looter_id = 0;
+			if (auto *looter = entity_list.GetClientByID(m_being_looted_by_entity_id)) {
+				looter_id = looter->CharacterID();
+			}
+			if (looter_id) {
+				NmsLootOfferForgetCorpseItem(looter_id, GetID(), GetNmsLootSerial(), sitem);
+			}
+		}
 		m_item_list.erase(iter);
 
 		uint8 material = EQ::InventoryProfile::CalcMaterialFromSlot(sitem->equip_slot); // autos to unsigned char

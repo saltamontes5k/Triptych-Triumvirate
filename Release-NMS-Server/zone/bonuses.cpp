@@ -286,7 +286,10 @@ void Mob::AddItemBonuses(const EQ::ItemInstance* inst, StatBonuses* b, bool is_a
 	}
 
 	if (IsClient() && !is_tribute && !inst->IsEquipable(GetBaseRace(), CastToClient()->GetClassesBits())) {
-		if (item->ItemType != EQ::item::ItemTypeFood && item->ItemType != EQ::item::ItemTypeDrink) {
+		// A native Spirit Shroud form's starter supplies stay functional even
+		// though the form's race/class cannot normally use them.
+		if (!CastToClient()->IsSpiritShroudStarterItem(inst) &&
+			item->ItemType != EQ::item::ItemTypeFood && item->ItemType != EQ::item::ItemTypeDrink) {
 			return;
 		}
 	}
@@ -546,7 +549,8 @@ void Mob::AdditiveWornBonuses(const EQ::ItemInstance* inst, StatBonuses* b, bool
 	const auto* item = inst->GetItem();
 
 	if (IsClient()) {
-		if (!inst->IsEquipable(GetBaseRace(), CastToClient()->GetClassesBits())) {
+		if (!inst->IsEquipable(GetBaseRace(), CastToClient()->GetClassesBits()) &&
+			!CastToClient()->IsSpiritShroudStarterItem(inst)) {
 			return;
 		}
 	}
@@ -722,6 +726,15 @@ void Mob::ApplyAABonuses(const AA::Rank &rank, StatBonuses *newbon)
 			newbon->movementspeed += base_value; // should we let these stack?
 			/*if (base1 > newbon->movementspeed)	//or should we use a total value?
 				newbon->movementspeed = base1;*/
+			break;
+		case SE_AllStats:
+			newbon->STR += base_value;
+			newbon->STA += base_value;
+			newbon->DEX += base_value;
+			newbon->AGI += base_value;
+			newbon->INT += base_value;
+			newbon->WIS += base_value;
+			newbon->CHA += base_value;
 			break;
 		case SE_STR:
 			newbon->STR += base_value;
@@ -1172,6 +1185,9 @@ void Mob::ApplyAABonuses(const AA::Rank &rank, StatBonuses *newbon)
 			break;
 		}
 
+		case SE_TwoHandBluntBlock:
+			newbon->TwoHandBluntBlock += base_value;
+			break;
 		case SE_CriticalHitChance: {
 			// Bad data or unsupported new skill
 			if (limit_value > EQ::skills::HIGHEST_SKILL)

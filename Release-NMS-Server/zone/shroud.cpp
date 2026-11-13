@@ -69,11 +69,15 @@ static void ShroudDiag(const char *fmt, ...) {
 #define ShroudDiag(...) ((void)0)
 #endif
 
+} // namespace (file-local diag helpers above)
+
 // Builds and queues the OP_Shroud self-transform (spawn block + profile block).
 // The spawn block is stamped with the target identity because FillSpawnStruct
 // copies the mob's class_/size, which are stale for the frame in which a
 // transform is applied -- that mismatch is what leaves the client's self-model
 // lying in a broken pose and hides its gear/UI.
+// External linkage: the native Spirit Shroud service (client_spirit_shroud.cpp)
+// reuses this builder unchanged.
 void SendShroudTransform(Client *client, const PlayerProfile_Struct &profile, float size)
 {
 	NewSpawn_Struct ns{};
@@ -104,6 +108,8 @@ void SendShroudTransform(Client *client, const PlayerProfile_Struct &profile, fl
 	client->FillShroudTransformExtras(shroud);
 	client->QueuePacket(app);
 }
+
+namespace { // resume file-local helpers
 
 // A single shroud form as authored in the `shrouds` table.
 struct ShroudDefinition {
@@ -483,6 +489,13 @@ static void SendShroudPointsPackets(Client *client, uint32 shroud_id)
 
 bool Client::OpenShroudWindow(Mob* npc)
 {
+	// The native RoF2 window replaces the quest-built one when the native
+	// protocol is enabled; the quest path below stays authoritative otherwise.
+	if (RuleB(Custom, EnableSpiritShrouds) && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+		OpenSpiritShrouds();
+		return true;
+	}
+
 	if (!RuleB(Custom, ShroudsEnabled)) {
 		Message(Chat::Yellow, "Shrouds are not enabled on this server.");
 		return false;
@@ -521,6 +534,13 @@ static uint32 ShroudMonsterPointsForLevel(uint32 level);
 
 void Client::ApplyShroud(uint32 shroud_id)
 {
+	// Native Spirit Shroud forms own the shroud machinery exclusively while
+	// active; remove the native form first (Select 0 at the keeper).
+	if (IsSpiritShrouded()) {
+		Message(Chat::Red, "Remove your Spirit Shroud form before using the quest shrouds.");
+		return;
+	}
+
 	ShroudDefinition def;
 	if (!LoadShroud(shroud_id, def)) {
 		Message(Chat::Red, "That shroud (%u) could not be found.", shroud_id);
@@ -752,7 +772,7 @@ void Client::RemoveShroud(bool send_updates)
 	Message(Chat::Yellow, "You return to your natural form.");
 }
 
-void Client::SaveShroudSnapshot(uint32 shroud_id)
+void Client::SaveShroudSnapshot(uint32 shroud_id, bool native_template)
 {
 	if (!m_shroud_saved_valid) {
 		return;
@@ -761,8 +781,8 @@ void Client::SaveShroudSnapshot(uint32 shroud_id)
 	const PlayerProfile_Struct& p = m_shroud_saved_pp;
 	const std::string query = fmt::format(
 		"REPLACE INTO `character_shroud_snapshot` "
-		"(`character_id`,`shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size`) "
-		"VALUES ({},{},{},{},{},{},{},{},{})",
+		"(`character_id`,`shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size`,`native_template`) "
+		"VALUES ({},{},{},{},{},{},{},{},{},{})",
 		CharacterID(),
 		shroud_id,
 		p.race,
@@ -771,7 +791,8 @@ void Client::SaveShroudSnapshot(uint32 shroud_id)
 		p.level,
 		m_shroud_saved_texture,
 		m_shroud_saved_helmtexture,
-		m_shroud_saved_size
+		m_shroud_saved_size,
+		native_template ? 1 : 0
 	);
 
 	database.QueryDatabase(query);
@@ -1153,8 +1174,14 @@ void Client::FillShroudTransformExtras(ShroudSelf_Struct *shroud)
 	// otherwise keep the client's spellbook/AA swap or inventory hidden after
 	// the form is removed.
 	shroud->live_mode = m_shrouded ? static_cast<uint32>(RuleI(Custom, ShroudLiveMode)) : 0;
-	shroud->monster_points       = m_shroud_points;
-	shroud->monster_points_spent = m_shroud_points_spent;
+	// Native forms always carry the full shroud stamping: their compact
+	// profile expects the shroud flags set and the monster-point fields fed
+	// from the real AA pool, regardless of the legacy ShroudLiveMode bitmask.
+	if (m_spirit_shroud_template) {
+		shroud->live_mode = 15;
+	}
+	shroud->monster_points       = m_spirit_shroud_template ? m_pp.aapoints : m_shroud_points;
+	shroud->monster_points_spent = m_spirit_shroud_template ? m_pp.aapoints_spent : m_shroud_points_spent;
 
 	shroud->shroud_aa_count = 0;
 	if (!(shroud->live_mode & 4) || !zone) {
@@ -1191,10 +1218,12 @@ void Client::FillShroudTransformExtras(ShroudSelf_Struct *shroud)
 // Called once on zone-in. If the character has a persisted shroud, re-apply it:
 // shrouds survive zoning/relogging and are only removed at the Shroudkeeper. A
 // legacy row with shroud_id 0 (written before persistence existed) is cleared.
+// Rows flagged native_template re-apply through the native Spirit Shroud
+// protocol path (spirit_shroud_templates) instead of the quest catalog.
 void Client::LoadAndApplyShroudState()
 {
 	const std::string query = fmt::format(
-		"SELECT `shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size` "
+		"SELECT `shroud_id`,`race`,`gender`,`class`,`level`,`texture`,`helmet_texture`,`size`,`native_template` "
 		"FROM `character_shroud_snapshot` WHERE `character_id` = {} LIMIT 1",
 		CharacterID()
 	);
@@ -1206,6 +1235,7 @@ void Client::LoadAndApplyShroudState()
 
 	auto row = results.begin();
 	const uint32 shroud_id = Strings::ToUnsignedInt(row[0]);
+	const bool native_template = results.ColumnCount() > 8 && Strings::ToInt(row[8], 0) != 0;
 
 	// m_pp still holds the real character here; the Save() guard writes this
 	// while shrouded, so capture it before the form is applied.
@@ -1219,6 +1249,11 @@ void Client::LoadAndApplyShroudState()
 		// Legacy repair row: the profile is already real, nothing to re-apply.
 		m_shroud_saved_valid = false;
 		ClearShroudSnapshot();
+		return;
+	}
+
+	if (native_template) {
+		ReapplyNativeShroud(shroud_id);
 		return;
 	}
 
@@ -1294,6 +1329,35 @@ void Client::ResendShroudState()
 {
 	m_shroud_zonein_pending = false;
 
+	// Native forms re-send through the native protocol path (their metadata
+	// and AA set live in m_spirit_shroud_definition, not the quest catalog).
+	if (IsSpiritShrouded()) {
+		m_pp.cur_hp    = GetHP();
+		m_pp.mana      = current_mana;
+		m_pp.endurance = current_endurance;
+
+		SendShroudTransform(this, m_pp, SpiritShroudModelSize() > 0.0f ? SpiritShroudModelSize() : size);
+		SendHPUpdate();
+
+		AppearanceStruct appearance{};
+		appearance.race_id        = race;
+		appearance.gender_id      = gender;
+		appearance.texture        = texture;
+		appearance.helmet_texture = helmtexture;
+		appearance.size           = size;
+		appearance.send_effects   = true;
+		SendIllusionPacket(appearance);
+
+		SendAlternateAdvancementTable();
+		SendAlternateAdvancementPoints();
+		SendAlternateAdvancementStats();
+		SendSpiritShroudProgress();
+
+		LogInfo("Client [{}] re-applied native Spirit Shroud form [{}] after zone settle",
+			GetCleanName(), m_spirit_shroud_template);
+		return;
+	}
+
 	// Live-like mode: re-mirror the session's purchases BEFORE the transform
 	// so the profile block's AA array (written at transform time) carries the
 	// owned shroud ranks. The connect sequence ran ClearAAs + the real-AA
@@ -1357,6 +1421,13 @@ void Client::Handle_OP_Shroud(const EQApplicationPacket* app)
 
 void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 {
+	// Native protocol owns this wire value when enabled; the quest path keeps
+	// it otherwise.
+	if (RuleB(Custom, EnableSpiritShrouds) && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+		Handle_OP_SpiritShroudSelect(app);
+		return;
+	}
+
 	if (app->size < sizeof(uint32)) {
 		LogError(
 			"OP_ShroudSelect from [{}] too small (size [{}])",
@@ -1394,12 +1465,24 @@ void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 
 void Client::Handle_OP_ShroudSelectCancel(const EQApplicationPacket* app)
 {
+	// Native protocol owns this wire value when enabled.
+	if (RuleB(Custom, EnableSpiritShrouds) && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+		Handle_OP_SpiritShroudCancel(app);
+		return;
+	}
+
 	LogInfo("Client [{}] OP_ShroudSelectCancel (size [{}])", GetCleanName(), app->size);
 	RemoveShroud();
 }
 
 void Client::Handle_OP_ShroudRequestStats(const EQApplicationPacket* app)
 {
+	// Native protocol owns this wire value when enabled.
+	if (RuleB(Custom, EnableSpiritShrouds) && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+		Handle_OP_SpiritShroudRequest(app);
+		return;
+	}
+
 	if (!RuleB(Custom, ShroudsEnabled)) {
 		return;
 	}

@@ -1516,8 +1516,14 @@ void Mob::TuneCommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraA
 				hit.damage_done = ass;
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && HasClass(Class::Berserker) && GetLevel() > 50) {
-		extra_mincap = 4 * GetLevel() / 5;
+	else if (hit.skill == EQ::skills::SkillFrenzy && HasClass(Class::Berserker)) {
+		int decap = TryDecapitation(defender, hit.skill);
+		if (decap > 0) {
+			hit.damage_done = decap;
+		}
+		else if (GetLevel() > 50) {
+			extra_mincap = 4 * GetLevel() / 5;
+		}
 	}
 
 	// this has some weird ordering

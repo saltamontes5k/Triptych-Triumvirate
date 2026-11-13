@@ -247,7 +247,9 @@ void VaultWnd::UpdateDescription() {
 			const VaultItemData* item = FindSlot((int)m_pVaultList->GetItemData(sel));
 			if (item) {
 				if (item->bag_slots > 0 && !item->bag_contents.empty()) {
-					// Server field format: groups of item_id:name:charges:icon joined by ~.
+					// Dual format, decided by field count per '~' group: the current server
+					// sends "item:qty:icon:bag slot:name" (4 colons, bag slot 0-based); a
+					// pre-v375 server sent "item:name:charges:icon" (3 colons).
 					std::string desc = "Contains: ";
 					size_t pos = 0;
 					bool first_group = true;
@@ -255,11 +257,23 @@ void VaultWnd::UpdateDescription() {
 						size_t tilde = item->bag_contents.find('~', pos);
 						std::string group = item->bag_contents.substr(pos,
 							(tilde == std::string::npos) ? std::string::npos : (tilde - pos));
-						size_t c1 = group.find(':');
-						size_t c2 = (c1 == std::string::npos) ? std::string::npos : group.find(':', c1 + 1);
-						if (c1 != std::string::npos && c2 != std::string::npos) {
-							std::string gname = group.substr(c1 + 1, c2 - c1 - 1);
-							int gcharges = atoi(group.c_str() + c2 + 1);
+						size_t colon[5];
+						int ncols = 0;
+						for (size_t sc = group.find(':'); sc != std::string::npos && ncols < 5; sc = group.find(':', sc + 1)) {
+							colon[ncols++] = sc;
+						}
+						std::string gname;
+						int gcharges = 0;
+						if (ncols >= 4) {
+							// new: item:qty:icon:bagslot:name
+							gname = group.substr(colon[3] + 1);
+							gcharges = atoi(group.substr(colon[0] + 1, colon[1] - colon[0] - 1).c_str());
+						} else if (ncols == 3) {
+							// old: item:name:charges:icon
+							gname = group.substr(colon[0] + 1, colon[1] - colon[0] - 1);
+							gcharges = atoi(group.c_str() + colon[2] + 1);
+						}
+						if (!gname.empty()) {
 							if (!first_group) {
 								desc += ", ";
 							}

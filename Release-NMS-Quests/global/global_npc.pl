@@ -3,7 +3,13 @@ sub EVENT_SAY {
     if (plugin::CustomEventSayEntry()) {
         return;
     }
-    
+
+    # Every mercenary liaison (class 71) sells additional owned-contract slots
+    # for Triune of Fate. The plugin no-ops on a binary without the 362 API.
+    if ($npc->GetClass() == 71 && plugin::MercSlotVendorSay($client, $text)) {
+        return;
+    }
+
     if (plugin::MultiClassingEnabled() && $npc->GetClass() >= 20 && $npc->GetClass() <= 35) {
         my $classes = $client->GetClassesBitmask();
         my $player_class_id = $npc->GetClass() - 19;
@@ -31,7 +37,7 @@ sub EVENT_SAY {
             );
             
             my $greeting = $class_greetings{$player_class_id} // "Greetings, traveler. Are you seeking guidance or knowledge?";
-            if (!($classes & plugin::GetClassBitmask($player_class_id)) && plugin::GetClassesCount($client) < 3) {
+            if (!($classes & plugin::GetClassBitmask($player_class_id)) && plugin::GetClassesCount($client) < plugin::GetMaxClasses()) {
                 plugin::NPCTell($greeting);
             }
         }        
@@ -80,7 +86,7 @@ sub EVENT_SAY {
         }
 
         if ($text eq "class_confirm") {
-            if (plugin::GetClassesCount($client) < 3) {
+            if (plugin::GetClassesCount($client) < plugin::GetMaxClasses()) {
                 plugin::AddClass($player_class_id);
                 plugin::NPCTell("Welcome, $class_name, and be known!");
             }
@@ -181,8 +187,8 @@ sub EVENT_SPAWN {
     }
 
     
-    if ($instanceversion > 0) {        
-        if ($npc->GetName() =~ /Herald_of_the_Triumvirate/) {
+    if ($instanceversion > 0) {
+        if ($npc->GetName() =~ /A_Little_Bird/) {
             $npc->Depop(0);
         }
     }

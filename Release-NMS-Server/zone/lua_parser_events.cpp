@@ -874,6 +874,59 @@ void handle_player_popup_response(
 	lua_setfield(L, -2, "popup_id");
 }
 
+// data protocol from nms_window.cpp: "window_id|kind|action|value|text"
+// (text may contain '|')
+void nms_window_push_fields(lua_State* L, const std::string& data)
+{
+	size_t p1 = data.find('|');
+	size_t p2 = (p1 == std::string::npos) ? std::string::npos : data.find('|', p1 + 1);
+	size_t p3 = (p2 == std::string::npos) ? std::string::npos : data.find('|', p2 + 1);
+	size_t p4 = (p3 == std::string::npos) ? std::string::npos : data.find('|', p3 + 1);
+
+	if (p4 == std::string::npos) {
+		return;
+	}
+
+	lua_pushinteger(L, Strings::ToInt(data.substr(0, p1)));
+	lua_setfield(L, -2, "window_id");
+	lua_pushinteger(L, Strings::ToInt(data.substr(p1 + 1, p2 - p1 - 1)));
+	lua_setfield(L, -2, "kind");
+	lua_pushinteger(L, Strings::ToInt(data.substr(p2 + 1, p3 - p2 - 1)));
+	lua_setfield(L, -2, "action");
+	lua_pushinteger(L, Strings::ToInt(data.substr(p3 + 1, p4 - p3 - 1)));
+	lua_setfield(L, -2, "value");
+	lua_pushstring(L, data.substr(p4 + 1).c_str());
+	lua_setfield(L, -2, "text");
+}
+
+void handle_player_nms_window(
+	QuestInterface *parse,
+	lua_State* L,
+	Client* client,
+	std::string data,
+	uint32 extra_data,
+	std::vector<std::any> *extra_pointers
+) {
+	nms_window_push_fields(L, data);
+}
+
+void handle_npc_nms_window(
+	QuestInterface *parse,
+	lua_State* L,
+	NPC* npc,
+	Mob *init,
+	std::string data,
+	uint32 extra_data,
+	std::vector<std::any> *extra_pointers
+) {
+	Lua_Client l_client(reinterpret_cast<Client*>(init));
+	luabind::adl::object l_client_o = luabind::adl::object(L, l_client);
+	l_client_o.push(L);
+	lua_setfield(L, -2, "other");
+
+	nms_window_push_fields(L, data);
+}
+
 void handle_player_pick_up(
 	QuestInterface *parse,
 	lua_State* L,

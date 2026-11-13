@@ -20,6 +20,7 @@
 2,0,TFFFE,gatesequip,Loading Character Equipment Files
 3,0,TFFFC,sca_chr,Loading Scarecrow
 3,0,TFFFC,wof_v2_chr,Loading New Chokidai
+3,0,TFFFC,sir_chr,Loading Siren
 3,0,TFFFC,hohonorb_chr,Loading Characters
 3,0,TFFFC,poair_chr,Loading Characters
 3,0,TFFFC,rap_chr,Loading Characters
@@ -90,3 +91,5 @@
 3,0,TFFFC,mpu.eqg,Loading Mounts
 4,0,TFFFC,Global2_chr,Loading Global Items and Equipment
 4,0,TFFFC,Global3_chr,Loading Global Items and Equipment
+3,0,TFFFC,zeb_chr,Loading Zebuxoruk
+3,0,TFFFC,avk.eqg,Loading Aviak

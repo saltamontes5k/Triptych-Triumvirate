@@ -17,7 +17,7 @@ namespace EQ
 	struct ItemData;
 }
 
-#define MAXMERCS 1
+constexpr int MAXMERCS = 11; // compiled roster capacity; Mercs:MaxMercenaries clamps the live value
 #define TANK 1
 #define HEALER 2
 #define MELEEDPS 9

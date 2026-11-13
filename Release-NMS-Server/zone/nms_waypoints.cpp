@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "../common/repositories/nms_waypoints_repository.h"
 #include "../common/repositories/nms_waypoints_categories_repository.h"
 #include "../common/repositories/nms_waypoints_default_repository.h"
@@ -188,10 +190,40 @@ bool Client::UnlockWaypoint(int32 waypoint_id)
 	return added;
 }
 
+bool Client::ForgetWaypoint(int32 waypoint_id)
+{
+	bool removed = false;
+
+	if (AllowAccountWaypoints())
+	{
+		removed = NmsWaypointsAccountRepository::RemoveWaypoint(database, AccountID(), waypoint_id);
+	}
+	else
+	{
+		removed = NmsWaypointsCharacterRepository::RemoveWaypoint(database, CharacterID(), waypoint_id);
+	}
+
+	if (removed)
+	{
+		LogWaypointsDetail("Removing waypoint [{}] for [{}]", waypoint_id, GetCleanName());
+		m_unlocked_waypoints.clear();
+	}
+
+	return removed;
+}
+
 void Client::SendWaypointList(bool force)
 {
-	auto &all_waypoints = zone->GetAllWaypoints();
+	auto &zone_waypoints = zone->GetAllWaypoints();
 	auto &unlocked_waypoints = GetUnlockedWaypoints();
+
+	// the client renders entries in packet order, so sort a copy alphabetically
+	// for the list; the zone cache itself keeps its DB order
+	std::vector<NmsWaypointsRepository::NmsWaypoints> all_waypoints = zone_waypoints;
+	std::sort(all_waypoints.begin(), all_waypoints.end(),
+			  [](const NmsWaypointsRepository::NmsWaypoints &a, const NmsWaypointsRepository::NmsWaypoints &b) {
+				  return Strings::ToLower(a.long_name) < Strings::ToLower(b.long_name);
+			  });
 
 	std::set<int32> unlocked_ids;
 	for (const auto &wp : unlocked_waypoints)

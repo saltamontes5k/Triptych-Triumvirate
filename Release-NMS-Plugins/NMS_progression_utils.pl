@@ -599,9 +599,9 @@ sub SetSubflag {
                 $client->UnlockWaypoint("iceclad");
             }
 
-            if ($stage eq 'PoP') {     
-                $client->KeyRingAdd(22198);
-            }
+            # PoP no longer grants keyring 22198 (The Scepter of Shadows):
+            # Vex Thal entry is the scepter quest chain / keyed umbral door.
+            # Existing keyring rows were kept (grandfathered).
 
             UpdateCharMaxLevel($client);
             UpdateRaceClassLocks($client);
@@ -1351,5 +1351,83 @@ sub SetProgressFlag {
     } else {
         # Set the regular progress flag
         quest::set_data($client->AccountID() . "-progress-flag-$stage", $flag_value);
+    }
+}
+
+# Case-insensitive stage-name lookup over @STAGES
+sub ResolveStageName {
+    my $wanted = lc(shift // '');
+
+    foreach my $stage (@STAGES) {
+        return $stage if lc($stage) eq $wanted;
+    }
+
+    return undef;
+}
+
+# GM support tool: view, force-complete or clear a single stage of account progression.
+# Adapted from upstream NMS-Release PR #12 to our stage-name model. It grants no waypoints
+# or keys itself: CommonCharacterUpdate picks stage flags up for waypoints, and key rewards
+# stay hand-granted per our progression policy (no 22198 auto-grants).
+sub ProgressionCommand {
+    my ($client, $args) = @_;
+    $args //= '';
+    $args =~ s/^\s+//;
+    $args =~ s/\s+$//;
+
+    # Acts on the targeted player, or the GM if no client is targeted
+    my $target = $client;
+    if ((my $tar = $client->GetTarget()) && $tar->IsClient()) {
+        $target = $tar->CastToClient();
+    }
+
+    my ($action, $stage_arg) = $args =~ /^(\S*)\s*(.*)$/;
+    $action = lc($action // '');
+
+    if ($action eq 'set' || $action eq 'clear') {
+        my $stage = ResolveStageName($stage_arg);
+        unless ($stage) {
+            $client->Message(13, "Unknown stage '$stage_arg'. Stages: " . join(', ', @STAGES));
+            return;
+        }
+
+        if ($action eq 'set') {
+            unless (exists $STAGE_PREREQUISITES{$stage} && @{$STAGE_PREREQUISITES{$stage}}) {
+                $client->Message(13, "Stage $stage has no objectives to complete.");
+                return;
+            }
+
+            # Complete every prerequisite objective, keeping any extra flags already present
+            my %flags = plugin::DeserializeHash(GetProgressFlag($target, $stage) // '');
+            foreach my $objective (@{$STAGE_PREREQUISITES{$stage}}) {
+                $flags{$objective} = 1;
+            }
+            SetProgressFlag($target, $stage, plugin::SerializeHash(%flags));
+
+            $client->Message(15, "Progression: $stage set complete for " . $target->GetCleanName() . ".");
+            plugin::CommonCharacterUpdate($target);
+        } else {
+            SetProgressFlag($target, $stage, '');
+            $client->Message(15, "Progression: $stage cleared for " . $target->GetCleanName() . ".");
+        }
+
+        if ($target != $client) {
+            $target->Message(15, "Your $stage progression was " . ($action eq 'set' ? 'completed' : 'cleared') . " by a GM.");
+        }
+        return;
+    }
+
+    if ($action ne '' && $action ne 'list') {
+        $client->Message(13, "Usage: #progression [list|set <stage>|clear <stage>]");
+        return;
+    }
+
+    # No args or list: show every stage with saylinks for set/clear
+    $client->Message(15, "Progression of " . $target->GetCleanName() . " (target or yourself):");
+    foreach my $stage (@STAGES) {
+        my $done = is_stage_complete_2($target, $stage) ? "X" : " ";
+        $client->Message(15, "[$done] $stage  "
+            . quest::saylink("#progression set $stage", 1, "[set]")
+            . " " . quest::saylink("#progression clear $stage", 1, "[clear]"));
     }
 }

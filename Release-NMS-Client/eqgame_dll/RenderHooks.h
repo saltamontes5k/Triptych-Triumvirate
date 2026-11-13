@@ -2,6 +2,7 @@
 #include <d3d9.h>
 #include "FloatingTextManager.h"
 #include "MQ2Main.h"
+#include "nms_window.h"
 
 extern FloatingTextManager* g_pFtm;
  // the global direct3d device that we are "borrowing"
@@ -15,9 +16,14 @@ extern HMODULE g_d3d9Module;
 // Address of the Reset() function
 extern DWORD g_resetDeviceAddress;
 
-// NMS: MacroQuest coexistence -- drains leaked gCXStrAccess recursion levels.
-// Runs every rendered frame (all game states, including character select).
-extern void NMS_DrainCXStrAccess();
+// NMS: MacroQuest coexistence -- read-only gCXStrAccess observation.
+//
+// Called from frame boundaries (CEverQuest::ProcessGameEvents entry and right
+// before the client tears the UI down), never from a d3d hook: EndScene / Reset
+// can run re-entrantly from inside client code that still holds the CXStr lock.
+// It never enters or leaves the lock -- the reclaim that used to live here could
+// not tell a leaked level from a live one and underflowed the section.
+extern void NMS_ObserveCXStrAccess();
 
 template <typename T>
 void InstallDetour(DWORD address, const T& detour, const T& trampoline, PCHAR name);
@@ -63,6 +69,7 @@ public:
 	HRESULT WINAPI Reset_Detour(D3DPRESENT_PARAMETERS* pPresentationParameters)
 	{
 		g_pFtm->Cleanup();
+		NMSWin::Manager::Get().OnDeviceReset();
 
 		if (g_pDevice != GetThisDevice())
 		{
@@ -84,10 +91,10 @@ public:
 	HRESULT WINAPI EndScene_Trampoline();
 	HRESULT WINAPI EndScene_Detour()
 	{
-		// Drain leaked gCXStrAccess locks every frame so a separately-injected
-		// MacroQuest cannot fault inside CXMLDataManager::GetXMLData.
-		NMS_DrainCXStrAccess();
-
+		// No CXStr work here: this hook can fire from inside client code that
+		// still owns gCXStrAccess (e.g. MQ plugin init reached through a window
+		// message). Sampling runs from the frame boundary in
+		// Detour_ProcessGameEvents instead.
 		if (GetThisDevice() != g_pDevice)
 		{
 			return EndScene_Trampoline();
@@ -118,6 +125,7 @@ public:
 			if (SUCCEEDED(g_pDevice->CreateStateBlock(D3DSBT_ALL, &stateBlock)) && stateBlock)
 			{
 				g_pFtm->Render();
+				NMSWin::Manager::Get().Render();
 
 				stateBlock->Apply();
 				stateBlock->Release();

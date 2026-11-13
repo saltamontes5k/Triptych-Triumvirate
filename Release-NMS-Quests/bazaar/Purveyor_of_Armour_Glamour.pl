@@ -64,6 +64,7 @@ sub EVENT_SAY {
     my $link_custom_work      = "[".quest::saylink("link_custom_work", 1, "custom enchantments")."]";
     my $link_triune_of_fate   = "[".quest::saylink("link_triune_of_fate", 1, "Triune of Fate")."]";
     my $link_random_glamour   = "[".quest::saylink("link_random_glamour", 1, "random glamour")."]";
+    my $link_pay_triune       = "[".quest::saylink("link_random_glamour", 1, "pay with two Triunes")."]";
 
     if($text=~/hail/i) {
         if (!$client->GetBucket("ArmourGlamour")) {
@@ -76,14 +77,16 @@ sub EVENT_SAY {
     }
 
     elsif ($text eq "link_services") {
-        $response = "I offer a simple service: for a fee of 5000 platinum coins, I will enchant a random Hero Forge armour ornament for you.
+        $response = "I offer a simple service: for a fee of 5000 platinum coins - or, if you would rather pay in fate, two Triune of Fate - I will enchant a random Hero Forge armour ornament for you.
                     You can then augment that ornament into any piece of armour to change its visual appearance.
+                    Coin not your style? You may also $link_pay_triune.
                     I also offer $link_custom_work for those seeking something a little different.";
         $client->SetBucket("ArmourGlamour", 1);
     }
 
     elsif ($text eq "link_glamour") {
         $response = "Simply hand me 5000 platinum coins and I will produce a random Hero Forge armour ornament for you. No other materials needed!
+                    Coin not your style? You may also $link_pay_triune.
                     You can then augment that ornament into any piece of armour to change its visual appearance.
                     If you already have a glamour ornament you no longer want, hand it back to me and I'll trade it for a different random one!";
     }

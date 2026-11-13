@@ -9,6 +9,7 @@
 #include "dynamic_zone.h"
 #include "titles.h"
 #include "dialogue_window.h"
+#include "nms_window.h"
 
 void Perl_Client_SendSound(Client* self) // @categories Script Utility
 {
@@ -64,6 +65,130 @@ bool Perl_Client_UnlockWaypoint(Client* self, std::string waypoint_shortname)
 	}
 
 	return false;
+}
+
+// ---------------------------------------------------------------------------
+// NMS script windows (arcade); engine lives in nms_window.h
+// ---------------------------------------------------------------------------
+int Perl_Client_NMSWindowOpen(Client* self, std::string key, std::string title, int w, int h, int flags)
+{
+	if (!self) { return 0; }
+	return EQ::NMS::GetWindows(self).Open(key, title, w, h, flags);
+}
+
+bool Perl_Client_NMSWindowClose(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).Close(window_id) : false;
+}
+
+bool Perl_Client_NMSWindowClear(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).Clear(window_id) : false;
+}
+
+bool Perl_Client_NMSWindowIsOpen(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).IsOpen(window_id) : false;
+}
+
+bool Perl_Client_NMSWindowIsSupported(Client* self)
+{
+	return self ? EQ::NMS::GetWindows(self).IsSupported() : false;
+}
+
+bool Perl_Client_NMSWindowSend(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).Send(window_id) : false;
+}
+
+int Perl_Client_NMSWindowAddHeader(Client* self, int window_id, std::string text, std::string color)
+{
+	return self ? EQ::NMS::GetWindows(self).AddHeader(window_id, text, color) : -1;
+}
+
+int Perl_Client_NMSWindowAddText(Client* self, int window_id, std::string text, std::string color, bool wrap)
+{
+	return self ? EQ::NMS::GetWindows(self).AddText(window_id, text, color, wrap) : -1;
+}
+
+int Perl_Client_NMSWindowAddSeparator(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).AddSeparator(window_id) : -1;
+}
+
+int Perl_Client_NMSWindowAddSameLine(Client* self, int window_id)
+{
+	return self ? EQ::NMS::GetWindows(self).AddSameLine(window_id) : -1;
+}
+
+int Perl_Client_NMSWindowAddButton(Client* self, int window_id, std::string label, int action, std::string color)
+{
+	return self ? EQ::NMS::GetWindows(self).AddButton(window_id, label, action, color) : -1;
+}
+
+bool Perl_Client_NMSWindowSetButton(Client* self, int window_id, int widget, std::string label, std::string color, bool disabled)
+{
+	return self ? EQ::NMS::GetWindows(self).SetButton(window_id, widget, label, color, disabled) : false;
+}
+
+int Perl_Client_NMSWindowAddTable(Client* self, int window_id, int cols, std::string packed_cells)
+{
+	return self ? EQ::NMS::GetWindows(self).AddTablePacked(window_id, cols, packed_cells) : -1;
+}
+
+int Perl_Client_NMSWindowAddProgress(Client* self, int window_id, double fraction, std::string color, std::string overlay)
+{
+	return self ? EQ::NMS::GetWindows(self).AddProgress(window_id, fraction, color, overlay) : -1;
+}
+
+bool Perl_Client_NMSWindowSetProgress(Client* self, int window_id, int widget, double fraction, std::string overlay)
+{
+	return self ? EQ::NMS::GetWindows(self).SetProgress(window_id, widget, fraction, overlay) : false;
+}
+
+int Perl_Client_NMSWindowAddInput(Client* self, int window_id, int action, int maxlen, std::string text)
+{
+	return self ? EQ::NMS::GetWindows(self).AddInput(window_id, action, maxlen, text) : -1;
+}
+
+bool Perl_Client_NMSWindowSetText(Client* self, int window_id, int widget, std::string text)
+{
+	return self ? EQ::NMS::GetWindows(self).SetText(window_id, widget, text) : false;
+}
+
+int Perl_Client_NMSWindowAddIcon(Client* self, int window_id, int icon_id, int size)
+{
+	return self ? EQ::NMS::GetWindows(self).AddIcon(window_id, icon_id, size) : -1;
+}
+
+int Perl_Client_NMSWindowAddItemLink(Client* self, int window_id, int item_id)
+{
+	return self ? EQ::NMS::GetWindows(self).AddItemLink(window_id, item_id) : -1;
+}
+
+bool Perl_Client_NMSWindowSetStyle(Client* self, int window_id, std::string bg, std::string border, int rounding, int border_px)
+{
+	return self ? EQ::NMS::GetWindows(self).SetStyle(window_id, bg, border, rounding, border_px) : false;
+}
+
+int Perl_Client_NMSWindowAddCanvas(Client* self, int window_id, int cw, int ch)
+{
+	return self ? EQ::NMS::GetWindows(self).AddCanvas(window_id, cw, ch) : -1;
+}
+
+bool Perl_Client_NMSWindowCanvasBegin(Client* self, int window_id, int widget)
+{
+	return self ? EQ::NMS::GetWindows(self).BeginCanvasFrame(window_id, widget) : false;
+}
+
+bool Perl_Client_NMSWindowCanvasPiece(Client* self, int window_id, int widget, std::string spec)
+{
+	return self ? EQ::NMS::GetWindows(self).AddCanvasPieceCSV(window_id, widget, spec) : false;
+}
+
+bool Perl_Client_NMSWindowCanvasGrid(Client* self, int window_id, int widget, std::string spec, std::string packed_colors)
+{
+	return self ? EQ::NMS::GetWindows(self).AddCanvasGridCSV(window_id, widget, spec, packed_colors) : false;
 }
 
 bool Perl_Client_IsWaypointUnlocked(Client* self, std::string waypoint_shortname)
@@ -1832,6 +1957,16 @@ uint32 Perl_Client_GetAlternateCurrencyValue(Client* self, uint32_t currency_id)
 void Perl_Client_SendWebLink(Client* self, const char* url) // @categories Script Utility
 {
 	self->SendWebLink(url);
+}
+
+uint32 Perl_Client_GetMercenaryCapacity(Client* self) // @categories Mercenaries
+{
+	return self->GetMercenaryCapacity();
+}
+
+void Perl_Client_SendMercenaryInfo(Client* self) // @categories Mercenaries
+{
+	self->SendMercPersonalInfo();
 }
 
 int Perl_Client_GetInstanceID(Client* self) // @categories Adventures and Expeditions
@@ -3910,6 +4045,7 @@ void perl_register_client()
 	package.add("GetAggroCount", &Perl_Client_GetAggroCount);
 	package.add("GetAllMoney", &Perl_Client_GetAllMoney);
 	package.add("GetAlternateCurrencyValue", &Perl_Client_GetAlternateCurrencyValue);
+	package.add("GetMercenaryCapacity", &Perl_Client_GetMercenaryCapacity);
 	package.add("GetAnon", &Perl_Client_GetAnon);
 	package.add("GetAugmentAt", &Perl_Client_GetAugmentAt);
 	package.add("GetAugmentIDAt", &Perl_Client_GetAugmentIDAt);
@@ -4230,6 +4366,7 @@ void perl_register_client()
 	package.add("SendToGuildHall", &Perl_Client_SendToGuildHall);
 	package.add("SendToInstance", &Perl_Client_SendToInstance);
 	package.add("SendWebLink", &Perl_Client_SendWebLink);
+	package.add("SendMercenaryInfo", &Perl_Client_SendMercenaryInfo);
 	package.add("SendZoneFlagInfo", &Perl_Client_SendZoneFlagInfo);
 	package.add("SetAAEXPModifier", (void(*)(Client*, float))&Perl_Client_SetAAEXPModifier);
 	package.add("SetAAEXPModifier", (void(*)(Client*, uint32, float))&Perl_Client_SetAAEXPModifier);
@@ -4417,6 +4554,30 @@ void perl_register_client()
 	package.add("IsWaypointUnlocked", (bool(*)(Client*, std::string))&Perl_Client_IsWaypointUnlocked);
 	package.add("CheckWaypointGroupFeature", (bool(*)(Client*))&Perl_Client_CheckWaypointGroupFeature);
 	package.add("EnableWaypointGroupFeature", (void(*)(Client*))&Perl_Client_EnableWaypointGroupFeature);
+	package.add("NMSWindowOpen", (int(*)(Client*, std::string, std::string, int, int, int))&Perl_Client_NMSWindowOpen);
+	package.add("NMSWindowClose", (bool(*)(Client*, int))&Perl_Client_NMSWindowClose);
+	package.add("NMSWindowClear", (bool(*)(Client*, int))&Perl_Client_NMSWindowClear);
+	package.add("NMSWindowIsOpen", (bool(*)(Client*, int))&Perl_Client_NMSWindowIsOpen);
+	package.add("NMSWindowIsSupported", (bool(*)(Client*))&Perl_Client_NMSWindowIsSupported);
+	package.add("NMSWindowSend", (bool(*)(Client*, int))&Perl_Client_NMSWindowSend);
+	package.add("NMSWindowAddHeader", (int(*)(Client*, int, std::string, std::string))&Perl_Client_NMSWindowAddHeader);
+	package.add("NMSWindowAddText", (int(*)(Client*, int, std::string, std::string, bool))&Perl_Client_NMSWindowAddText);
+	package.add("NMSWindowAddSeparator", (int(*)(Client*, int))&Perl_Client_NMSWindowAddSeparator);
+	package.add("NMSWindowAddSameLine", (int(*)(Client*, int))&Perl_Client_NMSWindowAddSameLine);
+	package.add("NMSWindowAddButton", (int(*)(Client*, int, std::string, int, std::string))&Perl_Client_NMSWindowAddButton);
+	package.add("NMSWindowSetButton", (bool(*)(Client*, int, int, std::string, std::string, bool))&Perl_Client_NMSWindowSetButton);
+	package.add("NMSWindowAddTable", (int(*)(Client*, int, int, std::string))&Perl_Client_NMSWindowAddTable);
+	package.add("NMSWindowAddProgress", (int(*)(Client*, int, double, std::string, std::string))&Perl_Client_NMSWindowAddProgress);
+	package.add("NMSWindowSetProgress", (bool(*)(Client*, int, int, double, std::string))&Perl_Client_NMSWindowSetProgress);
+	package.add("NMSWindowAddInput", (int(*)(Client*, int, int, int, std::string))&Perl_Client_NMSWindowAddInput);
+	package.add("NMSWindowSetText", (bool(*)(Client*, int, int, std::string))&Perl_Client_NMSWindowSetText);
+	package.add("NMSWindowAddIcon", (int(*)(Client*, int, int, int))&Perl_Client_NMSWindowAddIcon);
+	package.add("NMSWindowAddItemLink", (int(*)(Client*, int, int))&Perl_Client_NMSWindowAddItemLink);
+	package.add("NMSWindowSetStyle", (bool(*)(Client*, int, std::string, std::string, int, int))&Perl_Client_NMSWindowSetStyle);
+	package.add("NMSWindowAddCanvas", (int(*)(Client*, int, int, int))&Perl_Client_NMSWindowAddCanvas);
+	package.add("NMSWindowCanvasBegin", (bool(*)(Client*, int, int))&Perl_Client_NMSWindowCanvasBegin);
+	package.add("NMSWindowCanvasPiece", (bool(*)(Client*, int, int, std::string))&Perl_Client_NMSWindowCanvasPiece);
+	package.add("NMSWindowCanvasGrid", (bool(*)(Client*, int, int, std::string, std::string))&Perl_Client_NMSWindowCanvasGrid);
 	package.add("WorldKick", &Perl_Client_WorldKick);
 	package.add("IsSeasonal", (int(*)(Client*))&Perl_Client_IsSeasonal);
 	package.add("IsHardcore", (int(*)(Client*))&Perl_Client_IsHardcore);

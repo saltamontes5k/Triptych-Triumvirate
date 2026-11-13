@@ -9,7 +9,9 @@
 #include "pet_window.h"
 #include "xorstr.h"
 #include "waypoint_window.h"
+#include "loot_window.h"
 #include "who_multiclass.h"
+#include "nms_window.h"
 #include "core_log.h"
 
 
@@ -1305,9 +1307,56 @@ void __fastcall LoNLoginResult_Detour(void *dialog, void *edx, void *event) {
   }
 }
 
+static bool NMS_StartsWithTCG(const char *s) {
+  return s && (s[0] == 'T' || s[0] == 't') && (s[1] == 'C' || s[1] == 'c') &&
+         (s[2] == 'G' || s[2] == 'g');
+}
+
+// 1 = a card-game window is on screen, 0 = none is, -1 = the UI is not up yet or could not
+// be read (the caller must not judge the card game by it then).
+//
+// eqgame hosts Legends of Norrath without giving it a window of its own: the game draws
+// into offscreen surfaces that eqgame blits into the UI screen "TCGWnd" (research/
+// eqlib_LoN/LoN.h 55.1). A shown TCG screen is therefore the card game being on screen,
+// and no TCG screen is the card game having closed -- the second close signal the
+// soundtrack needs, because a close after a skirmish can leave LegendsOfNorrath.dll
+// mapped. Read-only, and throttled to four scans a second: it runs from the frame pulse.
+static int NMS_TCGWindowShown() {
+  static int   s_shown = -1;
+  static DWORD s_nextScan = 0;
+  const DWORD now = GetTickCount();
+  if (s_nextScan && (int)(now - s_nextScan) < 0) return s_shown;
+  s_nextScan = now + 250;
+
+  s_shown = -1;
+  if (!ppWndMgr || !*ppWndMgr) return s_shown;
+  PCXWNDMGR mgr = (PCXWNDMGR)*ppWndMgr;
+  if (!mgr->pWindows || mgr->Count == 0 || mgr->Count > 4096) return s_shown;
+
+  __try {
+    for (DWORD i = 0; i < mgr->Count; ++i) {
+      PCSIDLWND wnd = (PCSIDLWND)mgr->pWindows[i];
+      if (!wnd) break;
+      CXMLData *xml = ((CXWnd *)wnd)->GetXMLData();
+      if (!xml || xml->Type != UI_Screen) continue;
+      char id[64] = {0}, name[64] = {0};
+      if (xml->ScreenID.Ptr) GetCXStr(xml->ScreenID.Ptr, id, sizeof(id));
+      if (xml->Name.Ptr)     GetCXStr(xml->Name.Ptr, name, sizeof(name));
+      if (!NMS_StartsWithTCG(id) && !NMS_StartsWithTCG(name)) continue;
+      if (wnd->dShow) { s_shown = 1; return s_shown; }
+    }
+  } __except (EXCEPTION_EXECUTE_HANDLER) {
+    s_shown = -1;   // the UI was mid-rebuild; the next scan will tell
+    return s_shown;
+  }
+  s_shown = 0;
+  return s_shown;
+}
+
 // Called every frame (MQ2Pulse.cpp). LegendsOfNorrath.dll only loads when the
-// player opens the card game, and closing it UNLOADS it (Qt too); the next open
-// loads a fresh copy, usually at another address. So the hook goes in on every
+// player opens the card game, and closing it normally UNLOADS it (Qt too); the
+// next open loads a fresh copy, usually at another address. (A close after a
+// skirmish has been seen to leave the DLL mapped.) So the hook goes in on every
 // load -- hooking only the first one left the box stuck on every later open until
 // EQ was restarted. Only if the handler's first bytes are the
 // build this was written against.
@@ -1321,8 +1370,11 @@ void NMSLoNPulse() {
   // Casual PvP host patches: checked every frame, so a copy reloaded at the
   // same address is patched again too.
   NMSLoN::PvPHostPulse(lon);
+  // Single-player game teardown: tells the soundtrack a skirmish / scenario / tutorial
+  // ended even when the client sent no end report (a quit mid-play).
+  NMSLoN::GamePulse(lon);
   // Soundtrack: the 2013 embedded build has no audio of its own (nms_lon_link.cpp).
-  NMSLoN::MusicPulse(lon);
+  NMSLoN::MusicPulse(lon, NMS_TCGWindowShown());
   if (lon == seen) {
     return;
   }
@@ -1500,8 +1552,16 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
       HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
       return 1;
   }
+  case 0x140A: // OP_NMSWindowData -- script windows (arcade)
+      NMSWin::Manager::Get().OnPacket(buf, size);
+      return 1; // Suppress from native client
+      break;
   case 0x1402: // OP_WaypointList
       WaypointsWnd::OnIncomingPacket(opcode, buf, size);
+      return 1; // Suppress from native client
+      break;
+  case 0x140C: // OP_NmsLootOffer -- /nmsloot personal loot offers (our window's protocol)
+      LootWnd::OnIncomingPacket(opcode, buf, size);
       return 1; // Suppress from native client
       break;
   case 0x141C: // OP_NMSLoNSession -- the card game's login token + where to relay it
@@ -1685,6 +1745,10 @@ void FireCAuthHandshake()
 
     UdpSend_Trampoline((DWORD*)g_zone_udp_con, 0, 0, pkt, sizeof(pkt));
     g_cauth_sent = true;
+
+    // Announce window support to the server right after the auth handshake
+    // (the server gates real windows on this hello; old DLLs get chat fallback)
+    NMSWin::Manager::Get().SendHello();
 }
 
 

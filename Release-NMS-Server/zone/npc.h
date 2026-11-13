@@ -242,6 +242,7 @@ public:
 	uint32 CountLoot();
 	inline uint32 GetLoottableID() const { return m_loottable_id; }
 	inline bool DropsGlobalLoot() const { return !m_skip_global_loot && RuleB(Custom, EnableGlobalLoot); }
+	void RollIndependentLoot(LootItems &out); // /nmsloot: roll this NPC's tables into out without touching its own loot
 	inline uint32 GetCopper() const { return m_loot_copper; }
 	inline uint32 GetSilver() const { return m_loot_silver; }
 	inline uint32 GetGold() const { return m_loot_gold; }
@@ -742,6 +743,7 @@ protected:
 	uint32    m_loot_gold;
 	uint32    m_loot_platinum;
 	LootItems m_loot_items;
+	LootItems *m_loot_item_sink = nullptr; // /nmsloot: set only during RollIndependentLoot
 
 	// zone state
 	bool m_resumed_from_zone_suspend = false;

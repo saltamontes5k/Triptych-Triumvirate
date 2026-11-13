@@ -72,6 +72,7 @@ void NmsVaultOnMerchantEnd(Client *c);
 void NmsVaultOnClientDestroy(Client *c);
 void NmsVaultRefreshCache(Client *c);
 void NmsVaultApplyClickies(Client *c);
+void NmsVaultKeepClickies(Client *c);
 const EQ::ItemData *NmsVaultProcItem(Client *c, uint16 hand);
 int NmsVaultProcAugs(Client *c, uint16 hand, const EQ::ItemData **out_augs, int max_augs);
 void NmsVaultApplyLockerBonuses(Client *c, StatBonuses *b);
@@ -79,6 +80,8 @@ bool NmsVaultBankAccess(Client *c);
 bool NmsVaultIsMerchant(Client *c, uint16 entity_id);
 void NmsVaultApplyModBonuses(Client *c, StatBonuses *b);
 int NmsVaultLockerFocusList(Client *c, const EQ::ItemData **out, int max);
+// nms_window panel events for windows keyed "vault_*" (called from nms_window.cpp)
+void NmsVaultOnWindowEvent(Client *c, uint8 kind, uint16 action, uint32 value, uint32 window_id);
 int NmsVaultTryDepositInstance(Client *c, EQ::ItemInstance *inst);
 
 #endif

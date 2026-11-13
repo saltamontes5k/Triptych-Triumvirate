@@ -81,6 +81,7 @@ private:
 	bool IsMySQLInstalled();
 	std::string GetMySQLVersion();
 	std::string GetBaseMySQLDumpCommand();
+	void FailDump(const std::string &reason);
 	std::string GetPlayerTablesList();
 	std::string GetBotTablesList();
 	std::string GetMercTablesList();

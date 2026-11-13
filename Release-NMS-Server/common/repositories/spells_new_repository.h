@@ -44,15 +44,26 @@ public:
      */
 
 	// Custom extended repository methods here
+
+	// The RoF2 client's fixed spell array holds TOTAL_SPELL_COUNT (0xAFC9 =
+	// 45,001) entries and rejects higher ids; spell ids at or above this
+	// limit inside the client's spells_us.txt stop spell animations entirely
+	// (client guard: Release-NMS-Client/eqgame_dll/EQData.h). Server-side
+	// worn effects, procs and focuses don't need client spell data, so spells
+	// here and above stay server-only.
+	static constexpr int CLIENT_SPELL_ID_LIMIT = 45001;
+
 	static std::vector<std::string> GetSpellFileLines(Database& db)
 	{
 		std::vector<std::string> lines;
 
 		auto results = db.QueryDatabase(
 			fmt::format(
-				"SELECT CONCAT_WS('^', {}) FROM {} ORDER BY {} ASC",
+				"SELECT CONCAT_WS('^', {}) FROM {} WHERE {} < {} ORDER BY {} ASC",
 				ColumnsRaw(),
 				TableName(),
+				PrimaryKey(),
+				CLIENT_SPELL_ID_LIMIT,
 				PrimaryKey()
 			)
 		);
@@ -96,9 +107,11 @@ public:
 
 		auto results = db.QueryDatabase(
 			fmt::format(
-				"SELECT CONCAT_WS('^', {}) FROM {} ORDER BY {} ASC",
+				"SELECT CONCAT_WS('^', {}) FROM {} WHERE {} < {} ORDER BY {} ASC",
 				ColumnsRaw(),
 				TableName(),
+				PrimaryKey(),
+				CLIENT_SPELL_ID_LIMIT,
 				PrimaryKey()
 			)
 		);

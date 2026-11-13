@@ -182,3 +182,19 @@ SELECT 'v95 vault key contract (expect 1)' AS what, COUNT(*) AS value
 -- ---- v96: NautilusVault rule on ----------------------------------------------------------
 SELECT 'v96 Custom:NautilusVault rule (expect 1)' AS what, COUNT(*) AS value
   FROM rule_values WHERE rule_name = 'Custom:NautilusVault' AND rule_value IN ('true', '1');
+
+-- ---- v402: dedicated Vault Merchant template -----------------------------------------------
+-- The vault merchant clone (zone/nms_vault.cpp) picks this row by name; it must exist,
+-- be merchant-stocked from Dorinan's list, parcel-capable, and born protected
+-- (8-ability immunity string + untargetable). The real Loremaster_Dorinan (115015)
+-- must stay untouched: the live Thurgadina spell banker keeps no immunities.
+SELECT 'v402 vault merchant template (expect 1)' AS what, COUNT(*) AS value
+  FROM npc_types WHERE id = 1120002610 AND name = 'Vault Merchant'
+    AND merchant_id = 115015 AND is_parcel_merchant = 1 AND untargetable = 1;
+SELECT 'v402 vault merchant immunity string (expect 1)' AS what, COUNT(*) AS value
+  FROM npc_types WHERE id = 1120002610
+    AND special_abilities = '19,1^20,1^24,1^25,1^35,1^47,1^48,1^57,1';
+SELECT 'v402 Dorinan still unprotected (expect 1)' AS what, COUNT(*) AS value
+  FROM npc_types WHERE id = 115015 AND name = 'Loremaster_Dorinan'
+    AND merchant_id = 115015 AND untargetable = 0
+    AND (special_abilities = '' OR special_abilities IS NULL);

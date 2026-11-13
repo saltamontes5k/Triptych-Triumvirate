@@ -83,6 +83,14 @@ bool isAAEnabledAtLvl1 = true;
 // Change the value in Hooks.cpp - Search for SCRIBE_DURATION_MS
 bool isToggleSpellBookOnScribeEnabled = true;
 
+// isBardCastBardHookEnabled if set to true keeps the EQ_Character::BardCastBard detour active:
+// non-bard spells return early so multiclass bards don't get song toggling / casting interruption.
+// Skipping the original for non-songs also suppresses the caster's own cast animation for every
+// non-song spell (the source of the "casting animations are broken" report 2026-11-06). While the
+// surgical fix is pending this is disabled and the detour passes every cast to the original.
+// Change the value in Hooks.cpp - Search for isBardCastBardHookEnabled
+
+
 
 // **** ITEM *******
 

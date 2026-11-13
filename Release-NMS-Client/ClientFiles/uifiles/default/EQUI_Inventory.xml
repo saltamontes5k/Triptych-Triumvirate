@@ -9705,6 +9705,7 @@
 		<Pieces>Screen:IWS_ColdScreen</Pieces>
 		<Pieces>Screen:IWS_DiseaseScreen</Pieces>
 		<Pieces>Screen:IWS_PoisonScreen</Pieces>
+		<Pieces>Screen:IWS_CorruptionScreen</Pieces>
 <!--
 		<Pieces>Screen:IWS_SkillDamageModSpacerScreen</Pieces>
 		<Pieces>Screen:IWS_SkillDamageModLabelScreen</Pieces>

@@ -26,6 +26,7 @@ SET(zone_sources
     client_mods.cpp
     client_packet.cpp
     client_process.cpp
+    client_spirit_shroud.cpp
     combat_record.cpp
     corpse.cpp
     ../common/data_bucket.cpp
@@ -115,8 +116,11 @@ SET(zone_sources
     titles.cpp
     nms_waypoints.cpp
     nms_vault.cpp
+    nms_loot_offers.cpp
+    nms_starvation.cpp
     nms_lon_session.cpp
     nms_housing.cpp
+    nms_window.cpp
     tradeskills.cpp
     trading.cpp
     trap.cpp
@@ -408,12 +412,14 @@ set(gm_command_sources
     gm_commands/lootsim.cpp
     gm_commands/loc.cpp
     gm_commands/logs.cpp
+    gm_commands/map.cpp
     gm_commands/makepet.cpp
     gm_commands/memspell.cpp
     gm_commands/merchantshop.cpp
     gm_commands/modifynpcstat.cpp
     gm_commands/movechar.cpp
     gm_commands/movement.cpp
+    gm_commands/multiclass.cpp
     gm_commands/myskills.cpp
     gm_commands/mysql.cpp
     gm_commands/mystats.cpp
@@ -484,6 +490,7 @@ set(gm_command_sources
     gm_commands/untraindisc.cpp
     gm_commands/untraindiscs.cpp
     gm_commands/vault.cpp
+    gm_commands/nmsloot.cpp
     gm_commands/wc.cpp
     gm_commands/worldshutdown.cpp
     gm_commands/worldwide.cpp

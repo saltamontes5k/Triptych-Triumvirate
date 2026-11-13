@@ -1,4 +1,5 @@
 #include <string>
+#include <chrono>
 #include <cereal/archives/json.hpp>
 #include <cereal/types/map.hpp>
 #include "npc.h"
@@ -470,6 +471,14 @@ bool Zone::LoadZoneState(
 	}
 
 	// spawn2
+	// Instrumentation: the resume loop runs on the zone's main thread during boot, so every
+	// millisecond spent here is a millisecond the zone serves no clients (freeze watchdog /
+	// client disconnect on zone-in). Report the total plus anything pathological.
+	const auto resume_started      = std::chrono::steady_clock::now();
+	uint32     resume_spawn_count  = 0;
+	int64      resume_spawn_max_ms = 0;
+	uint32     resume_spawn_max_id = 0;
+
 	for (auto &s: spawn_states) {
 		if (s.spawngroup_id == 0 || s.is_corpse || s.is_zone) {
 			continue;
@@ -531,12 +540,48 @@ bool Zone::LoadZoneState(
 		}
 
 		spawn2_list.Insert(new_spawn);
+
+		const auto resume_spawn_started = std::chrono::steady_clock::now();
+
 		new_spawn->Process();
 		auto n = new_spawn->GetNPC();
 		if (n) {
 			LoadNPCState(zone, n, s);
 		}
+
+		const auto resume_spawn_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - resume_spawn_started
+		).count();
+
+		++resume_spawn_count;
+		if (resume_spawn_ms > resume_spawn_max_ms) {
+			resume_spawn_max_ms = resume_spawn_ms;
+			resume_spawn_max_id = s.spawn2_id;
+		}
+
+		if (resume_spawn_ms >= 25) {
+			LogZoneState(
+				"Zone state resume: spawn2 [{}] spawngroup [{}] npc [{}] took [{}] ms",
+				s.spawn2_id,
+				s.spawngroup_id,
+				s.npc_id,
+				resume_spawn_ms
+			);
+		}
 	}
+
+	const auto resume_total_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+		std::chrono::steady_clock::now() - resume_started
+	).count();
+
+	LogZoneState(
+		"Zone state resume: [{}] spawns in [{}] ms (avg [{}] ms, slowest spawn2 [{}] at [{}] ms)",
+		resume_spawn_count,
+		resume_total_ms,
+		resume_spawn_count ? resume_total_ms / static_cast<int64>(resume_spawn_count) : 0,
+		resume_spawn_max_id,
+		resume_spawn_max_ms
+	);
 
 	// compare state spawns to spawn2 list, if there are any missing, we need to add them
 	// this is to cover the rare case where a spawn2 is created in the database but not in the zone state

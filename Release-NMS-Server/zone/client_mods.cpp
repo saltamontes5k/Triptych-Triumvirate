@@ -21,6 +21,8 @@
 
 #include "../common/rulesys.h"
 #include "../common/spdat.h"
+#include "../common/shroud/native_stats.h"
+#include "../common/shroud/resource_baseline.h"
 
 #include "client.h"
 #include "mob.h"
@@ -239,7 +241,9 @@ int64 Client::CalcHPRegen(bool bCombat)
 	int64 base = 0;
 	auto base_data = zone->GetBaseData(GetLevel(), GetClass());
 	if (base_data.level == GetLevel()) {
-		base = static_cast<int>(base_data.hp_regen);
+		base = m_pp.shroud_native_stats_valid
+			? int64(m_pp.shroud_native_stats[SpiritShroud::HPRegen])
+			: static_cast<int>(base_data.hp_regen);
 	}
 
 	auto level = GetLevel();
@@ -320,7 +324,22 @@ int64 Client::CalcMaxHP()
 	double hp_ratio = (old_max_hp > 0) ? ((double)current_hp / old_max_hp) : 1.0;
 
 	float nd = 10000;
-	max_hp = (CalcBaseHP() + itembonuses.HP);
+	// Native Spirit Shroud forms carry a captured HP baseline; the stamina
+	// factor keeps the form's class/level curve. The +5 mirrors the client's
+	// own alternate-profile max-HP rounding.
+	int64 base_hp = 0;
+	if (m_pp.shroud_native_resources_valid) {
+		auto form_base = zone->GetBaseData(GetLevel(), GetClass());
+		int stats = GetSTA();
+		if (stats > 255) {
+			stats = (stats - 255) / 2 + 255;
+		}
+		base_hp = int64(m_pp.shroud_native_stats[SpiritShroud::HP]) +
+			int64(SpiritShroud::HPStaminaContribution(stats, form_base.hp_fac));
+	} else {
+		base_hp = CalcBaseHP();
+	}
+	max_hp = (base_hp + itembonuses.HP);
 	//The AA desc clearly says it only applies to base hp..
 	//but the actual effect sent on live causes the client
 	//to apply it to (basehp + itemhp).. I will oblige to the client's whims over
@@ -329,6 +348,10 @@ int64 Client::CalcMaxHP()
 	nd += aabonuses.PercentMaxHPChange + spellbonuses.PercentMaxHPChange + itembonuses.PercentMaxHPChange;	//Natural Durability, Physical Enhancement, Planar Durability
 	max_hp = (float)max_hp * (float)nd / (float)10000; //this is to fix the HP-above-495k issue
 	max_hp += spellbonuses.FlatMaxHPChange + aabonuses.FlatMaxHPChange + itembonuses.FlatMaxHPChange;
+
+	if (m_pp.shroud_native_resources_valid) {
+		max_hp += 5;
+	}
 
 	max_hp += GroupLeadershipAAHealthEnhancement();
 
@@ -556,8 +579,12 @@ int32 Client::GetRawItemAC()
 int64 Client::CalcMaxMana()
 {
 	if (IsIntelligenceCasterClass() || IsWisdomCasterClass()) {
+		// Native Spirit Shroud forms carry a captured mana baseline.
+		int64 base_mana = m_pp.shroud_native_resources_valid
+			? int64(m_pp.shroud_native_stats[SpiritShroud::Mana])
+			: CalcBaseMana();
 		max_mana = (
-			CalcBaseMana() +
+			base_mana +
 			itembonuses.Mana +
 			spellbonuses.Mana +
 			aabonuses.Mana +

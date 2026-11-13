@@ -1,4 +1,4 @@
-43
+47
 imp,gtd_chr
 fdr,fdr_chr
 liz,liz_chr
@@ -41,3 +41,7 @@ sbu,sbu_chr
 mcr,mcr_chr
 bkd,bkd
 gbm,gbm
+spe,highpasshold_chr
+sir,sir_chr
+zeb,zeb_chr
+avk,avk

@@ -8,7 +8,10 @@ function event_spawn(e)
 end
 
 function event_signal(e)
-	if (e.signal == 1) and (emote_phase == 0) then
+	-- signal 1 = phase 1 started; signals 2-6 = phase completions.
+	-- (The old guard tested an undefined emote_phase global, which is nil in
+	-- Lua, so the phase-1 hourglass emote could never play.)
+	if (e.signal == 1) then
 		-- beginning of phase 1
 		eq.get_zone():SetVariable("Emote", "1")
 		eq.zone_emote(MT.LightGray,"In the distance, an hourglass appears, the grains of sand falling methodically into place. As quickly as the image was formed, it dissipates. You have one hour left.");
@@ -28,7 +31,9 @@ end
 
 function PhaseEmotes()	
 	local emote_variable = tonumber(eq.get_zone():GetVariable("Emote")) or 0
-	eq.GM_Message(MT.Green,string.format("[Phase %i Dialogue]  Port Raid? [%s]",emote_phase,tostring(port_raid)));	--debug
+	-- The old debug line formatted the undefined emote_phase global with %i,
+	-- which threw and killed the thread before the first emote ever printed.
+	eq.GM_Message(MT.Green,string.format("[Phase %i Dialogue]  Port Raid? [%s]",emote_variable,tostring(port_raid)));	--debug
 	if (emote_variable == 2) then
 		-- After completing Phase One:
 		ThreadManager:Wait(4);

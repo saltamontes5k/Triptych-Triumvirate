@@ -228,4 +228,11 @@ function mpg_helper.Display_Raid_Trials_Completed(client)
     end
   end
 end
+-- Compatibility aliases: the chambersa-f trial encounter scripts call the
+-- *Flag* names while the implementations live under the *Lockout* names.
+-- Without these, every trial win aborts on a nil call before any trial bit,
+-- the resistance AA, the seal, or the oow_mpg_raids_complete qglobal is set.
+mpg_helper.UpdateGroupTrialFlag = mpg_helper.UpdateGroupTrialLockout;
+mpg_helper.UpdateRaidTrialFlag = mpg_helper.UpdateRaidTrialLockout;
+
 return mpg_helper;

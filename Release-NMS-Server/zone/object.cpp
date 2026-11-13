@@ -584,6 +584,12 @@ void Object::RandomSpawn(bool send_packet) {
 
 bool Object::HandleClick(Client* sender, const ClickObject_Struct* click_object)
 {
+	// NMS: curio triggers are click-only. Do not open a world-container/tradeskill
+	// window; Handle_OP_ClickObject still raises EVENT_CLICK_OBJECT afterwards.
+	if (m_type == ObjectTypes::CurioTrigger) {
+		return true;
+	}
+
 	if (m_ground_spawn) {//This is a Cool Groundspawn
 		respawn_timer.Start();
 	}

@@ -2338,8 +2338,6 @@ bool IsInstrumentModifierAppliedToSpellEffect(uint16 spell_id, int effect_id)
 		case SE_ResistMagic:
 		case SE_ResistAll:
 		case SE_ResistCorruption:
-		case SE_Rune:
-		case SE_AbsorbMagicAtt:
 		case SE_DamageShield:
 		case SE_MitigateDamageShield:
 		case SE_Amplification: //On live Amplification is modified by singing mods, including itself.
@@ -2360,6 +2358,12 @@ bool IsInstrumentModifierAppliedToSpellEffect(uint16 spell_id, int effect_id)
 			Following are confirmed NOT modifiable by instrument/singing mods.
 			Focus Effects, Proc Effects, Spell Triggers are not modified but handled elsewhere, not neccessary to checked here.
 		*/
+
+		//Runes do not scale with instrument/singing mods; scaled runes let rune songs absorb
+		//every hit up to the instrument-scaled amount, leaving groups unhittable by small damage.
+		case SE_Rune:
+		case SE_AbsorbMagicAtt:
+			return false;
 
 		case SE_AttackSpeed: //(Haste AND Slow not modifiable)
 		case SE_AttackSpeed2:

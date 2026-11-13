@@ -2757,6 +2757,50 @@ int Mob::TryAssassinate(Mob *defender, EQ::skills::SkillType skillInUse)
 	return 0;
 }
 
+int Mob::TryDecapitation(Mob *defender, EQ::skills::SkillType skillInUse)
+{
+	// Berserker Decapitation (AA 133): works like Headshot on Frenzy. The level cap
+	// and damage come from the rank in code, not aa_rank_effects — the aa_ranks rows
+	// only exist so GetAA() can count the purchased rank.
+	static const uint32 decap_ranks[][2] = {
+		{60, 55400}, {62, 60280}, {64, 65440}, {66, 70880}, {68, 76600}, {70, 82600}
+	};
+
+	if (
+		defender &&
+		!defender->IsOfClientBot() &&
+		skillInUse == EQ::skills::SkillFrenzy &&
+		HasClass(Class::Berserker) &&
+		GetTarget() == defender &&
+		(defender->GetBodyType() == BodyType::Humanoid || !RuleB(Combat, HeadshotOnlyHumanoids)) &&
+		!defender->GetSpecialAbility(SpecialAbility::HeadshotImmunity)
+	) {
+		uint32 rank = GetAA(aaDecapitation);
+		if (rank) {
+			uint32 index = std::min<uint32>(rank, sizeof(decap_ranks) / sizeof(decap_ranks[0])) - 1;
+			uint32 Decap_Dmg = decap_ranks[index][1];
+			uint8 Decap_Level = static_cast<uint8>(decap_ranks[index][0]);
+
+			if (defender->GetLevel() <= Decap_Level) {
+				int chance = GetDEX();
+				chance = 100 * chance / (chance + 3500);
+				if (IsOfClientBot()) {
+					chance += GetHeroicDEX() / 25;
+				}
+				chance *= 10;
+				if (zone->random.Int(1, 1000) <= chance) {
+					entity_list.MessageClose(
+						this, false, 200, Chat::MeleeCrit,
+						"%s decapitates %s!", GetName(), defender->GetName());
+					return Decap_Dmg;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 void Mob::DoMeleeSkillAttackDmg(Mob *other, int32 weapon_damage, EQ::skills::SkillType skillinuse, int16 chance_mod,
 				int16 focus, bool can_riposte, int ReuseTime)
 {

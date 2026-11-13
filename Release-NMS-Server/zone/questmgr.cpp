@@ -1497,13 +1497,17 @@ void QuestManager::movegrp(int zoneid, float x, float y, float z) {
 		return;
 	}
 
+	// Same-zone group teleports must keep the current instance, or the whole group is
+	// dropped into the base zone mid-encounter (see Client::MovePC(uint32, ...)).
+	const uint16 instance_id = (zoneid == zone->GetZoneID()) ? static_cast<uint16>(zone->GetInstanceID()) : 0;
+
 	if (Group *g = entity_list.GetGroupByClient(initiator)) {
-		g->TeleportGroup(owner, zoneid, 0, x, y, z, 0.0f);
+		g->TeleportGroup(owner, zoneid, instance_id, x, y, z, 0.0f);
 	} else {
 		if (Raid *r = entity_list.GetRaidByClient(initiator)) {
 			const auto group_id = r->GetGroup(initiator);
 			if (EQ::ValueWithin(group_id, 0, MAX_RAID_GROUPS)) {
-				r->TeleportGroup(owner, zoneid, 0, x, y, z, 0.0f, group_id);
+				r->TeleportGroup(owner, zoneid, instance_id, x, y, z, 0.0f, group_id);
 			} else {
 				initiator->MovePC(zoneid, x, y, z, 0.0f);
 			}

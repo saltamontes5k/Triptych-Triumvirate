@@ -171,6 +171,8 @@
     <ClCompile Include="nms_vorbis.c">
       <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
+    <ClCompile Include="nms_window.cpp" />
+    <ClCompile Include="loot_window.cpp" />
     <ClCompile Include="vault_window.cpp" />
     <ClCompile Include="waypoint_window.cpp" />
     <ClCompile Include="who_multiclass.cpp" />
@@ -222,7 +224,9 @@
     <ClInclude Include="nms_lon_audio.h" />
     <ClInclude Include="nms_lon_link.h" />
     <ClInclude Include="nms_vorbis.h" />
+    <ClInclude Include="loot_window.h" />
     <ClInclude Include="vault_window.h" />
+    <ClInclude Include="nms_window.h" />
     <ClInclude Include="waypoint_window.h" />
     <ClInclude Include="who_multiclass.h" />
     <ClInclude Include="weapons.h" />

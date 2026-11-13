@@ -173,12 +173,14 @@ int command_init(void)
 		command_add("housing", "Inspect and manage player housing plots", AccountStatus::GMAdmin, command_housing) ||
 		command_add("leaverealestate", "Leave a house interior and return to the neighborhood", AccountStatus::Player, command_leaverealestate) ||
 		command_add("logs", "Manage anything to do with logs", AccountStatus::GMImpossible, command_logs) ||
+		command_add("map", "[add|remove] [Zone Short Name|Expansion|all] - Unlock or remove waypoints for you or your target", AccountStatus::GMAdmin, command_map) ||
 		command_add("makepet", "[Pet Name] - Make a pet", AccountStatus::Guide, command_makepet) ||
 		command_add("memspell", "[Spell ID] [Spell Gem] - Memorize a Spell by ID to the specified Spell Gem for you or your target", AccountStatus::Guide, command_memspell) ||
 		command_add("merchantshop", "Closes or opens your target merchant's shop", AccountStatus::GMAdmin, command_merchantshop) ||
 		command_add("modifynpcstat", "[Stat] [Value] - Modifies an NPC's stats temporarily.", AccountStatus::GMLeadAdmin, command_modifynpcstat) ||
 		command_add("movechar", "[Character ID|Character Name] [Zone ID|Zone Short Name] - Move an offline character to the specified zone", AccountStatus::Guide, command_movechar) ||
 		command_add("movement", "Various movement commands", AccountStatus::GMMgmt, command_movement) ||
+		command_add("multiclass", "[list|add|forceadd|remove] [Class ID|Name|Abbreviation] - List, add or remove classes of your target (or yourself); forceadd ignores the class limit", AccountStatus::GMAdmin, command_multiclass) ||
 		command_add("myskills", "Show details about your current skill levels", AccountStatus::Player, command_myskills) ||
 		command_add("mysql", "[Help|Query] [SQL Query] - Mysql CLI, see 'Help' for options.", AccountStatus::GMImpossible, command_mysql) ||
 		command_add("mystats", "Show details about you or your pet", AccountStatus::Guide, command_mystats) ||
@@ -213,7 +215,7 @@ int command_init(void)
 		command_add("removeitem", "[Item ID] [Amount] - Removes the specified Item ID by Amount from you or your player target's inventory (Amount defaults to 1 if not used)", AccountStatus::GMAdmin, command_removeitem) ||
 		command_add("repop", "[Force] - Repop the zone with optional force repop", AccountStatus::GMAdmin, command_repop) ||
 		command_add("resetaa", "[aa|leadership] - Resets a player's AAs or Leadership AAs and refunds spent AAs (not Leadership AAs) to unspent, may disconnect player.", AccountStatus::GMMgmt, command_resetaa) ||
-		command_add("resetaa_timer", "[All|Timer ID] - Command to reset AA cooldown timers for you or your player target.", AccountStatus::GMMgmt, command_resetaa_timer) ||
+		command_add("resetaa_timer", "[All|AA ID] - Command to reset AA cooldown timers for you or your player target.", AccountStatus::GMMgmt, command_resetaa_timer) ||
 		command_add("resetdisc_timer", "[All|Timer ID] - Command to reset discipline timers.", AccountStatus::GMMgmt, command_resetdisc_timer) ||
 		command_add("revoke", "[Character Name] [0|1] - Revokes or unrevokes a player's ability to talk in OOC by name (0 = Unrevoke, 1 = Revoke)", AccountStatus::GMMgmt, command_revoke) ||
 		command_add("roambox", "[Remove|Set] [Box Size] [Delay (Milliseconds)] - Remove or set an NPC's roambox size and delay", AccountStatus::GMMgmt, command_roambox) ||
@@ -250,6 +252,7 @@ int command_init(void)
 		command_add("vault_merchant", "Open a merchant from the Nautilus Vault", AccountStatus::Player, command_vault_merchant) ||
 		command_add("vault_deposit_bagitem_specific", "Deposit the cursor item into a vault bag slot", AccountStatus::Player, command_vault_deposit_bagitem_specific) ||
 		command_add("vault_withdraw_bagitem", "Withdraw an item from a vault bag slot", AccountStatus::Player, command_vault_withdraw_bagitem) ||
+		command_add("nmsloot_decide", "Apply a /nmsloot decision (offer_id action [pass_to])", AccountStatus::GMAdmin, command_nmsloot_decide) ||
 		command_add("undye", "Remove dye from all of your or your target's armor slots", AccountStatus::GMAdmin, command_undye) ||
 		command_add("unmemspell", "[Spell ID] - Unmemorize a Spell by ID for you or your target", AccountStatus::Guide, command_unmemspell) ||
 		command_add("unmemspells", " Unmemorize all spells for you or your target", AccountStatus::Guide, command_unmemspells) ||

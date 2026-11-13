@@ -1,0 +1,179 @@
+achievement_id,name,category
+12007,Ak'Anon Quests - Tinmizer's Fabulous Compactor,Quests
+12009,Ak'Anon Quests - Exterminate the Vermin for VIII,Quests
+12010,Cabilis Quests - Exterminate the Vermin for Sahizz,Quests
+12013,Cabilis Quests - Blood Ink,Quests
+12014,Cabilis Quests - Illweed Parchment,Quests
+12016,Cabilis Quests - The Restraining Order,Quests
+12018,Cabilis Quests - Shestar's Scaled Coif,Quests
+12019,Cabilis Quests - Exterminate the Vermin for Jaliss,Quests
+12022,Erudin Quests - Vasty Deep Water,Quests
+12030,Felwithe Quests - Exterminate the Vermin for Valern,Quests
+12037,Freeport Quests - Exterminate the Vermin for Larkey,Quests
+12038,Freeport Quests - Exterminate the Vermin for Qalantir,Quests
+12046,Grobb Quests - Grobb Oven Mittens,Quests
+12047,Grobb Quests - Exterminate the Vermin for Filrog,Quests
+12048,Grobb Quests - Fungus Dung Pie,Quests
+12062,Kaladim Quests - Exterminate the Vermin for Vin,Quests
+12081,Neriak Quests - Exterminate the Vermin,Quests
+12091,Oggok Quests - Exterminate the Vermin for Glurg,Quests
+12108,Qeynos Quests - Exterminate the Vermin for Wintloag,Quests
+12112,Qeynos Quests - Exterminate the Vermin for Rasmon,Quests
+12120,Rivervale Quests - Exterminate the Vermin,Quests
+12129,Shar Vahl Quests - Pyjek's Poison Cure,Quests
+90040,Dreadspire Keep Visitor,Keys
+90042,Dreadspire Library Card,Keys
+90043,Dreadspire Tower Key,Keys
+90044,Demi-Plane of Blood Guest,Keys
+90045,Tunare's Shrine Key,Keys
+90046,Key to Deathknell,Keys
+90048,Prismatic Scale Charm,Keys
+90049,Configured Clockwork Key,Keys
+90050,Majestic Mansion Milestone and Meeting Schedule,Keys
+90051,Discord Tower Key,Keys
+1108200,Hunter of Corathus Lair,Hunts
+1308057,Hunter of Frostcrypt: Icefloe,Hunts
+1443100,The Open Sea Traveler,Exploration
+1508000,"Hunter of Crystallos, Lair of the Awakened",Hunts
+1544205,Eron's Jewelry,Quests
+1600010,The Hitchhiker's Guide to the Past (Group),Progression
+1600030,The Tavern at the End of Norrath (Raid),Progression
+1600040,"Zebuxoruk, The Void, and Everything (Raid)",Progression
+1645200,Field of Scale Traveler,Exploration
+1645210,Partisan of Field of Scale,Quests
+1645220,Grand Illusion of Field of Scale,Quests
+1645240,Conqueror of Field of Scale,Raids
+1645330,Hero of Kaesora,Missions
+1645340,Conqueror of Kaesora,Raids
+1645360,Hunter of the Kaesora Library,Hunts
+1645460,Hunter of the Kaesora Hatchery,Hunts
+1645530,Hero of Kurn's Tower,Missions
+1645540,Conqueror of Kurn's Tower,Raids
+1645630,Hero of Bloody Kithicor,Missions
+1645640,Conqueror of Bloody Kithicor,Raids
+1646630,Hero of Oceangreen Hills,Missions
+1646830,Hero of Blackburrow,Missions
+1646840,Conqueror of Blackburrow,Raids
+1646930,Hero of the Temple of Bertoxxulous,Missions
+1646940,Conqueror of the Temple of Bertoxxulous,Raids
+1646960,Hunter of the Temple of Bertoxxulous,Hunts
+1647030,"Hero of Korafax, Home of the Riders",Missions
+1647040,"Conqueror of Korafax, Home of the Riders",Raids
+1647140,Conqueror of the Citadel of the Worldslayer,Raids
+1647230,Hero of Old Bloodfields,Missions
+1647460,Hunter of Old City of Dranik,Hunts
+1647530,Hero of Toskirakk,Missions
+1647540,Conqueror of Toskirakk,Raids
+1647630,Hero of the Korascian Warrens,Missions
+1647640,Conqueror of the Korascian Warrens,Raids
+1647660,Hunter of the Korascian Warrens,Hunts
+1647740,Conqueror of the Rathe Council Chamber,Raids
+1647760,Hunter of the Rathe Council Chamber,Hunts
+1700001,Paragon of the Underfoot,General
+1700002,Conqueror of the Underfoot,General
+1700006,Underfoot Adept,Progression
+1700007,Underfoot Veteran,Progression
+1700008,Appease The Gatekeeper (Mission),Missions
+1700009,Appease The Gatekeeper (Raid),Raids
+1700010,Unlock The Mystery (Mission),Missions
+1700011,Unlock The Mystery (Raid),Raids
+1700012,Coin of Brell,Progression
+1700013,Emblem of Brell,Progression
+1708900,"Hunter of Kernagir, the Shining City",Hunts
+1748001,Mercenary of Brell's Rest,Quests
+1748002,Partisan of Brell's Rest,Quests
+1748003,Hero of Brell's Rest,Missions
+1748004,Conqueror of Brell's Rest,Raids
+1748013,Don't Fear The Destroyer Time Trial,Conquests
+1748023,Don't Fear The Destroyer Challenge of Toughness,Conquests
+1748033,No Mez for You!,Conquests
+1748101,Mercenary of Fungal Forest,Quests
+1748102,Partisan of Fungal Forest,Quests
+1748104,Conqueror of Fungal Forest,Raids
+1748113,Fungal Bloom Time Trial,Conquests
+1748123,Fungal Bloom Challenge of Toughness,Conquests
+1748133,Dependable Ally,Conquests
+1748201,Mercenary of The Underquarry,Quests
+1748202,Partisan of The Underquarry,Quests
+1748204,Conqueror of The Underquarry,Raids
+1748213,Scent of a Woman Time Trial,Conquests
+1748223,Scent of a Woman Challenge of Toughness,Conquests
+1748233,Clockwork Apocalypse,Conquests
+1748301,Mercenary of The Cooling Chamber,Quests
+1748302,Partisan of The Cooling Chamber,Quests
+1748303,Hero of The Cooling Chamber,Missions
+1748304,Conqueror of The Cooling Chamber,Raids
+1748313,Tasnise Underbelly Time Trial,Conquests
+1748323,Tasnise Underbelly Challenge of Toughness,Conquests
+1748333,Alphabet Goop,Conquests
+1748401,Mercenary of Kernagir,Quests
+1748402,Partisan of Kernagir,Quests
+1748403,Hero of Kernagir,Missions
+1748413,The Silent Schism Time Trial,Conquests
+1748423,The Silent Schism Challenge of Toughness,Conquests
+1748433,Burn The Heretics,Conquests
+1748501,Mercenary of Arthicrex,Quests
+1748502,Partisan of Arthicrex,Quests
+1748504,Conqueror of Arthicrex,Raids
+1748513,To Serve Sporali Time Trial,Conquests
+1748523,To Serve Sporali Challenge of Toughness,Conquests
+1748533,Tilling the Soil,Conquests
+1748601,Mercenary of The Foundation,Quests
+1748602,Partisan of The Foundation,Quests
+1748604,Conqueror of The Foundation,Raids
+1748613,The Search for Saunk Time Trial,Conquests
+1748623,The Search for Saunk Challenge of Toughness,Conquests
+1748633,Shades of Extremism,Conquests
+1748701,Mercenary of Lichen Creep,Quests
+1748702,Partisan of Lichen Creep,Quests
+1748704,Conqueror of Lichen Creep,Raids
+1748713,Bonfire of The Adherents Time Trial,Conquests
+1748723,Bonfire of The Adherents Challenge of Toughness,Conquests
+1748733,Celebrity Roast,Conquests
+1748801,Mercenary of Pellucid Grotto,Quests
+1748802,Partisan of Pellucid Grotto,Quests
+1748803,Hero of Pellucid Grotto,Missions
+1748804,Conqueror of Pellucid Grotto,Raids
+1748813,Seeding Frenzy Time Trial,Conquests
+1748823,Seeding Frenzy Challenge of Toughness,Conquests
+1748833,Gem Collector,Conquests
+1748901,Mercenary of Volska's Husk,Quests
+1748902,Partisan of Volska's Husk,Quests
+1748903,Hero of Volska's Husk,Missions
+1748913,Kill The Hatchlings Time Trial,Conquests
+1748923,Kill The Hatchlings Challenge of Toughness,Conquests
+1748933,Golem Hooky,Conquests
+1749001,Mercenary of Brell's Temple,Quests
+1749002,Partisan of Brell's Temple,Quests
+1749003,Hero of Brell's Temple,Missions
+1749004,Conqueror of Brell's Temple,Raids
+1749013,Fire in The Hole Time Trial,Conquests
+1749023,Fire in The Hole Challenge of Toughness,Conquests
+1749033,Slaughter is as Slaughter Does,Conquests
+1749101,Mercenary of Convorteum,Quests
+1749102,Partisan of Convorteum,Quests
+1749103,Hero of Convorteum,Missions
+1749104,Conqueror of Convorteum,Raids
+1749113,The First Corruption Time Trial,Conquests
+1749123,The First Corruption Challenge of Toughness,Conquests
+1749133,We Interrupt the Following Spellcast,Conquests
+1749150,I Am The Keymaster!,Raids
+1749151,Price of Perfection,Raids
+1749152,Army of One,Raids
+1749153,Army of Two,Raids
+1749154,You and Whose Army?,Raids
+1749155,Resistance,Raids
+1749156,Suppression,Raids
+1749157,Crowd Control,Raids
+1749158,Lockdown,Raids
+1749159,Gatekeeper,Raids
+1749160,One Must Stand,Raids
+1749161,Two's A Party,Raids
+1749162,A Little Help From My Friends,Raids
+1749163,Make Them Watch,Raids
+1749164,Half Sisters,Raids
+1749165,Slumber Party,Raids
+1749166,Take It To The Bridge,Raids
+1749167,A Bridge Two Far,Raids
+1749168,Fire Under The Bridge,Raids
+1749169,Grand Slam,Raids

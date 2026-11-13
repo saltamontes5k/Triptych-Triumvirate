@@ -1190,6 +1190,12 @@ struct PlayerProfile_Struct
 			uint32				classes;			// bitfield for multiclass data
 /*19568*/	uint32				char_id;			// Found as part of bazaar revamp (5/15/2024)
 
+	// Server-only alternate-profile metadata for the native Spirit Shroud
+	// protocol; patch encoders select its wire fields. Never persisted.
+	bool shroud_native_stats_valid{};
+	bool shroud_native_resources_valid{};
+	uint32 shroud_native_stats[18]{};
+
 	// All player profile packets are translated and this overhead is ignored in out-bound packets
 	PlayerProfile_Struct() : m_player_profile_version(EQ::versions::MobVersion::Unknown) { }
 
@@ -1601,6 +1607,101 @@ struct WaypointRequest_Struct
     bool    group_selected;
     bool    autoconfirm_selected;
 };
+
+// /nmsloot personal loot offers. Layouts match the installed 3.5 MB dinput8.dll (Rockin-Vik/NMS-Release);
+// on this server OP_NmsLootOffer/Decision ride 0x140C/0x140D and the only reader is the dinput8.dll we
+// build and ship ourselves (Release-NMS-Client) -- the layouts are kept identical to the module's so its
+// serializer code ports 1:1, not so a foreign dll can connect.
+#pragma pack(push, 1)
+struct NmsLootOfferHeader_Struct
+{
+	uint16 unknown_u16;
+	char   title[64];
+	uint32 corpse_id;
+	uint32 expire_seconds;
+	uint32 unknown_u32_a;
+	uint32 unknown_u32_b;
+	uint32 count;
+};
+
+// The add-on saves the first field as the ItemID of its sell/keep rules and matches new drops on it,
+// so it must be the item id; the offer id rides at entry+12 and comes back in the decision
+struct NmsLootOfferEntry_Struct
+{
+	uint32 item_id;
+	uint32 icon;
+	int32  charges;
+	uint32 offer_id;
+	uint8  bonus;
+	uint8  unknown_17[5];
+	char   name[64];
+	char   name2[64];
+};
+
+struct NmsLootDecision_Struct
+{
+	uint16 unknown_u16;
+	uint32 offer_id; // echo of entry+12
+	uint32 item_id;  // echo of entry+0
+	uint8  action;
+	char   name[64];
+};
+#pragma pack(pop)
+
+static_assert(sizeof(NmsLootOfferHeader_Struct) == 86, "NmsLootOfferHeader_Struct must match the installed add-on header");
+static_assert(sizeof(NmsLootOfferEntry_Struct) == 150, "NmsLootOfferEntry_Struct must match the installed add-on entry");
+static_assert(sizeof(NmsLootDecision_Struct) == 75, "NmsLootDecision_Struct must match the installed add-on decision payload");
+
+// The same offers for Hailstone's NMS add-on (projecthailstone/hailstone-nms nms_packets.h), whose Personal Loot
+// window speaks the original NMS server's protocol. A client that sends the Hello (action 20) gets these instead
+// of OP_NmsLootOffer. OP_PersonalLootList: header, then count rows; count 0 clears the window.
+#pragma pack(push, 1)
+struct PersonalLootListHeader_Struct
+{
+	uint32 flags; // 1: show the window
+	uint32 count;
+};
+
+struct PersonalLootRow_Struct
+{
+	uint32 pending_id; // the offer id, echoed in OP_PersonalLootAction
+	uint32 item_id;
+	uint32 icon;
+	uint32 quantity;
+	uint32 charges;
+	uint32 sell_value;   // copper the Sell button pays; 0 makes it a Destroy button
+	uint32 seconds_left; // until the offer expires
+	uint8  rule;
+	uint8  lore;
+	uint8  no_drop;
+	uint8  augmented;
+	char   item_name[64];
+	char   npc_name[64];
+};
+
+struct PersonalLootAction_Struct
+{
+	uint32 action;
+	uint32 pending_id;
+	uint32 item_id;
+	uint32 value;
+};
+
+struct PersonalLootSettings_Struct
+{
+	uint32 flags; // 1: personal loot is on
+	uint32 sell_under;
+	uint32 timeout_seconds;
+	uint8  defer_in_combat;
+	uint8  report_enabled;
+	uint8  padding[2];
+};
+#pragma pack(pop)
+
+static_assert(sizeof(PersonalLootListHeader_Struct) == 8, "PersonalLootListHeader_Struct must match the Hailstone NMS add-on list header");
+static_assert(sizeof(PersonalLootRow_Struct) == 160, "PersonalLootRow_Struct must match the Hailstone NMS add-on row");
+static_assert(sizeof(PersonalLootAction_Struct) == 16, "PersonalLootAction_Struct must match the Hailstone NMS add-on action");
+static_assert(sizeof(PersonalLootSettings_Struct) == 16, "PersonalLootSettings_Struct must match the Hailstone NMS add-on settings");
 
 // Server -> client (OP_NMSLoNSession): the Legends of Norrath card game's one-time login
 // token and where the DLL relays the card game to (world's card service, Custom:LoNPort).
@@ -6597,6 +6698,30 @@ struct MercenaryCommand_Struct {
 struct SuspendMercenary_Struct {
 /*0000*/	uint8	SuspendMerc;	// Seen 30 (48) for suspending or unsuspending
 /*0001*/
+};
+
+// [OPCode: 0x1b37 (RoF2)] [Client->Server] [Size: 4]
+// Native Manage window "Switch" button. The value is a packed UI index into
+// the owned-merc vector in the order the server transmitted it, not a DB slot.
+struct SwitchMercenary_Struct {
+/*0000*/	uint32	MercIndex;
+/*0004*/
+};
+
+// [OPCode: 0x5df8/0x4333 (RoF2)] [Both directions] [Size: 28]
+// Native mercenary owner-transfer invitation and result envelope.
+// Request (client->server): source/target runtime spawn IDs identify the two
+// players; the server recomputes everything else. Response: Result 0 = accept,
+// 1 = decline, 2/3/5/7/8 = server rejection reasons.
+struct MercenaryTransfer_Struct {
+/*0000*/	uint32	SourceSpawnID;
+/*0004*/	uint32	TargetSpawnID;
+/*0008*/	uint32	Gold;
+/*0012*/	uint32	Unk12;
+/*0016*/	uint32	Unk16;
+/*0020*/	uint32	Unk20;
+/*0024*/	uint32	Result;
+/*0028*/
 };
 
 // [OPCode: 0x2528] On Live as of April 2 2012 [Server->Client] [Size: 4]

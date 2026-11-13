@@ -21,6 +21,7 @@ GNU General Public License for more details.
 
 
 #include "MQ2Main.h"
+#include "loot_window.h"
 
 CRITICAL_SECTION gCommandCS;
 
@@ -608,6 +609,7 @@ void InitializeMQ2Commands()
         {"/who",        SuperWho,1,1},
         {"/fov",        CmdFov,  1,1},
         {"/camera",     CmdFov,  1,1},
+        {"/nmsloot",    CmdNmsLoot, 1,1},
        {NULL, NULL, 0, 1},
     };
 

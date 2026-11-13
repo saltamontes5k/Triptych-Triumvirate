@@ -1,12 +1,19 @@
 --[[
 	Xebuxoruk, The Forsaken (1120001288) -- an evil time-manipulated clone of
-	Zebuxoruk. Activates in potimea at (125, 3, 182) once Quarm has fallen and
-	the post-Quarm Druzzil Ro dialogue completes (world qglobal
-	"xebuxoruk_unlock", set by potimeb/Druzzil_Ro.lua). His spawn point
-	(respawntime 600s) always spawns him; while locked or on cooldown he depops
-	himself here on every tick, so activation lands within ~10 minutes of the
-	unlock and repop follows the same cadence once the 72h defeat cooldown
-	("xebuxoruk_cooldown", set below on death) expires.
+	Zebuxoruk. He spawns only in potimea version-9 instances (the "Forsaken
+	Hourglass" expeditions created by the clocktower doors in potimea/player.lua
+	or by Zebuxoruk's [send you] hail in potimeb/Zebuxoruk.lua) at (125, 3, 182).
+	His spawn point (respawntime 600s) always spawns him: getting into a
+	version-9 instance is itself the gate (the entry dials check
+	xebuxoruk_unlock or the Quarm flag), so the encounter no longer depops
+	itself pending the world-wide unlock. Hailing him runs his monologue once,
+	then he turns on whoever hailed him.
+
+	Defeat applies a 72h expedition lockout ("Xebuxoruk the Forsaken" -- the
+	literals in potimea/player.lua and potimeb/Zebuxoruk.lua must match) to the
+	killing expedition's members, replacing the retired world-shared
+	"xebuxoruk_cooldown" qglobal: instances are per-raid, so each raid fights
+	its own Xeb and wipes cost nothing.
 
 	Phase 1 (100-70%): every 5% an echo of a classic-era raid boss tears loose
 	and joins the fight (stats overridden to level 75 / 1M hp).
@@ -102,12 +109,12 @@ local ARENA_RADIUS = 60
 local ZONE_EMOTE_COLOR = 15
 
 local WIPE_LINES = {
-	"Xebuxoruk's presence fades as time steadies. Your time is over.",
+	"Xebuxoruk's presence fades as time steadies. Time to end your illusions.",
 }
 
 local KILL_LINES = {
-	"Xebuxoruk falls to his knees as the fabric of time ripples and shakes one last time before stabilizing.",
-	"Xebuxoruk almost seems to smirk as he gasps. 'Time... is an illusion... hero.'",
+	"Xebuxoruk smirks arrogantly as he gasps, 'In other timelines I am well, and you were never even born. So gloat while you can -- this victory exists in exactly one of them.",
+	"Xebuxoruk smirks arrogantly as he gasps 'Not saved -- merged. You have killed the answer to your own question, and the question will devour you by default.'",
 }
 
 local xeb_state
@@ -121,12 +128,8 @@ local function new_state()
 		waves = {},
 		adds = {},
 		ended = false,
+		monologued = false,
 	}
-end
-
-local function is_unlocked()
-	local qglobals = eq.get_qglobals();
-	return qglobals.xebuxoruk_unlock == "1" and qglobals.xebuxoruk_cooldown == nil
 end
 
 local function find_add(add)
@@ -211,9 +214,10 @@ local function spawn_near(self, npc_type_id, min_dist, max_dist)
 end
 
 function evt_xeb_spawn(e)
-	if not is_unlocked() then
-		-- Still locked, or the 72h defeat cooldown is running: go back to
-		-- sleep until the next respawn tick.
+	-- Belt and suspenders: his spawn row is version 9 only, so he should
+	-- never exist in the shared zone -- but if a future data change puts him
+	-- back there, refuse to wake up outside an instance.
+	if eq.get_zone_instance_id() == 0 then
 		e.self:Depop()
 		return
 	end
@@ -224,9 +228,31 @@ function evt_xeb_spawn(e)
 end
 
 function evt_xeb_say(e)
-	if e.message:findi("hail") then
-		e.self:Say("A reflection... an afterthought... a mote of dust clinging to the hourglass. You dare address ME? I am what he was always meant to be. Come. Let time unmake you.");
+	if not e.message:findi("hail") then
+		return
 	end
+
+	-- The monologue is a once-per-engage moment; afterwards the fight has
+	-- his whole attention.
+	if xeb_state and xeb_state.monologued then
+		e.self:Emote("ignores your hail -- the fight has his whole attention.")
+		return
+	end
+
+	e.self:Say("Hail? HAIL? You kick open the doors of the ages for trinkets and titles, rewind rivers of hours when they inconvenience you -- and you wonder why Time cracked?");
+	e.self:Say("Veeshan is dead. The Wyrm-Mother, who dreamed this world onto the wheel with one breath, gone -- and you clapped your little hands and called it triumph and asked for a suit of her scale in a dead world.");
+	e.self:Say("History is Spirit — Geist — unfolding itself through your greed, the cunning of reason! You thought you farmed the loot, slew evil. The loot farmed YOU, and you murder hobos are very the HAND of all EVIL! Mayong would not be a god without your meddling! Every evil you slay you strengthen!");
+	e.self:Say("And the legends? You pressed them flat. Shuffled the brave Fippy, the Chardok King, the Warlords of ages into cards; dealt the heroes of ten ages out at smoky tables for coin, loot, and boast -- until no one came to play anymore, and the decks were left to molder in a drawer.");
+	e.self:Say("When one Norrath bored you, you shattered it and raised a second, a third — mirror worlds, marching on without their original.");
+	e.self:Say("My brother demanded you understand, and the gods caged him for it. Time is aufgehoben — cancelled, preserved, lifted up — into ME!");
+
+	-- Done hamming it up: the Forsaken turns on whoever hailed him (the
+	-- combat-join handler then sets up phase 1).
+	if xeb_state then
+		xeb_state.monologued = true
+	end
+	e.self:Emote("smirks as the last word leaves him. 'Enough. Your time ends HERE.'")
+	e.self:AddToHateList(e.other, 5000, 0)
 end
 
 function evt_xeb_combat(e)
@@ -397,9 +423,15 @@ function evt_xeb_death_complete(e)
 	despawn_adds()
 	show_end_line(KILL_LINES)
 
-	-- World-shared 72h defeat cooldown; qglobal expires on its own, so his
-	-- next spawn tick after expiry (600s respawn) reactivates him.
-	eq.target_global("xebuxoruk_cooldown", "1", "H72", 0, 0, 0)
+	-- 72h defeat lockout on the killing expedition's members. Literals must
+	-- match XEB_EXPEDITION / XEB_LOCKOUT_EVENT in potimea/player.lua (the
+	-- door and Zebuxoruk's hail check it before creating a fresh
+	-- expedition). Each raid runs its own instance, so the lockout is
+	-- per-raid -- no world-shared cooldown anymore.
+	local expedition = eq.get_expedition()
+	if expedition.valid then
+		expedition:AddLockout("Xebuxoruk the Forsaken", 72 * 60 * 60)
+	end
 end
 
 function event_encounter_load(e)

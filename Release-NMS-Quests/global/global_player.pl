@@ -729,7 +729,10 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
     # because client_packet requires Click.Effect > 0.
     #   True Karanite Rod of Rainfall (976211, label 44031 "Karanite
     #     Rainfall"): starts real rain via quest::rain(1) -- there is no
-    #     weather SPA in this spell set.
+    #     weather SPA in this spell set. The Favor of Karana task (700154)
+    #     is credited HERE, not in global/spells/44031.pl: the click branch
+    #     always cancels the cast, so the spell script's
+    #     EVENT_SPELL_EFFECT_CLIENT never fires on a rod click.
     #   Innoruuk's Needle of Hatred (976214, label 44035 "Instill Hatred"):
     #     stokes hate like Innoruuk's blessing bundle {hate=>200} does --
     #     there is no usable hate-add spell effect.
@@ -738,6 +741,12 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
         # The old legend, kept: this is a Stop Rain stick. The first cast stops
         # the rain; a second Stop Rain cast on the caster's own stillness brings
         # it back. A click on a dry sky ALWAYS brings rain, legend or not.
+        my %rain_steps = (30  => 2,   # Everfrost
+                          279 => 3,   # Abysmal Sea
+                          224 => 4,   # Gunthak
+                          68  => 5,   # Butcherblock
+                          175 => 6,   # Scarlet Desert
+                          202 => 7);  # Plane of Knowledge
         if ($zone->IsRaining()) {
             quest::rain(0);
             $client->SetBucket("karanite-rain-stilled", 1);
@@ -750,6 +759,11 @@ sub EVENT_ITEM_CLICK_CAST_CLIENT {
                 $client->Message(15, "Twice-stilled, the sky remembers how to rain: rain begins to fall across the land.");
             } else {
                 $client->Message(15, "The Rod calls the clouds: rain begins to fall across the land.");
+            }
+            my $zone_id = $client->GetZoneID();
+            if ($client->IsTaskActive(700154) && exists $rain_steps{$zone_id}) {
+                $client->UpdateTaskActivity(700154, $rain_steps{$zone_id}, 1);
+                $client->Message(4, "Rain begins to fall. Karana's blessing spreads across the land.");
             }
         }
         return 1;
@@ -870,6 +884,10 @@ sub EVENT_SAY {
             } else {
                 $client->Message(13, "Invalid number. Please provide a number between 0 and 9.");
             }
+        } elsif ($text=~/^#progression\b\s*(.*)$/i) {
+            # GM progression support tool (NMS_progression_utils)
+            $client->Message(13, "Disregard the command not recognized error.");
+            plugin::ProgressionCommand($client, $1);
         } elsif ($text=~/#setpopflag\s+(\S+)(?:\s+(\d))?/i) {
             my ($flag, $number) = ($1, $2 // 1);  # Default $number to 1 if not provided
 

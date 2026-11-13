@@ -1,4 +1,12 @@
---Fabled Lord Nagafen (223201)
+--Fabled Lord Nagafen (1120001072, soldungb expedition version 2)
+--Tuned to the FRoK stat block in reference/Fabled-Loot-Design.xlsx:
+--L67, 400k HP, 250-1000 hit, AC 520 (Boss Tuning sheet). On top of the
+--original phase fight this adds the Balance guards from the same sheet:
+--group-size HP scaling HP x (0.5 + 0.083 x members) at first aggro,
+--telegraphed magma waves (emote 2.5s ahead of the cast), and a soft
+--enrage (+10% damage per minute after 15 minutes, no hard enrage).
+
+local memory = require("nms_memory");
 
 local phase = 1;
 local current_target = nil;
@@ -6,18 +14,81 @@ local ignore_reengage = false;
 local ignore_disengage = false;
 local hate_to_add = 3000;
 
+local function e_self_var_set(e, name)
+	local v = e.self:GetEntityVariable(name);
+	return v ~= nil and v ~= "";
+end
+
+--Group-size HP scaling (Boss Tuning sheet): 1 member = 58%, 3 = 75%,
+--6 = ~100%. HP only -- damage never scales. Applied once per spawn;
+--also captures the base hit range here so the soft enrage always ramps
+--from the npc_types values (ModifyNPCStat persists across combat).
+local function scale_hp_to_group(e)
+	if (e_self_var_set(e, "fabled_hp_scaled")) then
+		return;
+	end
+	e.self:SetEntityVariable("fabled_hp_scaled", "1");
+	e.self:SetEntityVariable("original_max_hp", e.self:GetMaxHP());
+	e.self:SetEntityVariable("original_min_hit", e.self:GetNPCStat("min_hit"));
+	e.self:SetEntityVariable("original_max_hit", e.self:GetNPCStat("max_hit"));
+
+	local members = 6;
+	local target = e.self:GetTarget();
+	if (target) then
+		local dz = target:GetExpedition();
+		if (dz and dz.valid) then
+			members = dz:GetMemberCount();
+		end
+	end
+	if (members < 1) then members = 1; end
+	if (members > 6) then members = 6; end
+
+	local new_max = math.ceil(e.self:GetMaxHP() * (0.5 + 0.083 * members));
+	e.self:ModifyNPCStat("max_hp", tostring(new_max));
+	e.self:SetHP(e.self:GetMaxHP());
+end
+
+--Soft enrage: +10% damage per minute after 15 minutes of combat (no
+--hard enrage). Ramps are cumulative from the base hit range.
+local function soft_enrage_tick(e)
+	local minutes = tonumber(e.self:GetEntityVariable("enrage_minutes") or "0") + 1;
+	e.self:SetEntityVariable("enrage_minutes", tostring(minutes));
+	if (minutes <= 15) then
+		return;
+	end
+
+	local ramps = minutes - 15;
+	local omin = tonumber(e.self:GetEntityVariable("original_min_hit") or "250");
+	local omax = tonumber(e.self:GetEntityVariable("original_max_hit") or "1000");
+	local mult = 1.1 ^ ramps;
+	e.self:ModifyNPCStat("min_hit", tostring(math.ceil(omin * mult)));
+	e.self:ModifyNPCStat("max_hit", tostring(math.ceil(omax * mult)));
+	eq.zone_emote(MT.Emote, "Lord Nagafen's fury grows beyond all containment!");
+end
+
+local function reset_enrage(e)
+	e.self:SetEntityVariable("enrage_minutes", "0");
+	--undo any soft-enrage ramp so the next attempt starts from base
+	local omin = e.self:GetEntityVariable("original_min_hit");
+	local omax = e.self:GetEntityVariable("original_max_hit");
+	if (omin ~= nil and omin ~= "" and omax ~= nil and omax ~= "") then
+		e.self:ModifyNPCStat("min_hit", tostring(math.floor(tonumber(omin))));
+		e.self:ModifyNPCStat("max_hit", tostring(math.floor(tonumber(omax))));
+	end
+end
+
 --we have spawned! lets roar!
 function event_spawn(e)
 	phase = 1;
 	e.self:Emote(" ROARS!");
 	e.self:Shout("The terror of lavastorm has arrived!");
 	eq.set_next_hp_event(90);
-	
+
 end
 
 --when someone is trying to send us a message... ignore for now
 function event_signal(e)
-	
+
 end
 
 --we are rooted, dun care :p
@@ -27,8 +98,8 @@ end
 
 -- when combat starts/ends.  Joins = starts, else = ends
 function event_combat(e)
-	
-	
+
+
 	if (e.joined) then
 		--check to see if we purposefully wiped the hate list, if so ignore this
 		if(ignore_reengage) then
@@ -41,8 +112,12 @@ function event_combat(e)
 		--lets get some pressure on the tank, and anyone who is stupid enough
 		--be in front of the mob :)
 		eq.set_timer("TankAEDMG", math.random(1000,3000));
+		--design Balance guards: group-scaled HP + soft enrage clock
+		scale_hp_to_group(e);
+		reset_enrage(e);
+		eq.set_timer("Enrage", 60000);
 		eq.stop_timer("reset");
-		
+
 	else
 		--check to see if we purposefully wiped the hate list, if so ignore this
 		if(ignore_disengage) then
@@ -52,6 +127,8 @@ function event_combat(e)
 		--check to see if we purposefully wiped the hate list, if so ignore this
 		eq.stop_timer("TankAEDMG");
 		eq.stop_timer("AE");
+		eq.stop_timer("AEFire");
+		eq.stop_timer("Enrage");
 		eq.set_timer("reset",10000);
 	end
 end
@@ -65,11 +142,18 @@ function event_timer(e)
 		--Fire beam, 6k -250 FR resist. 300 resist diff is about 40% partial resist and 60% full
 		--AOE dmg around the tank
 		e.self:CastSpell(42231,e.self:GetTarget():GetID());
-	
+
 	elseif (e.timer == "AE") then
 
 		eq.stop_timer(e.timer);
-		--big bada boom time, once every 60 sec
+		--telegraph the magma wave 2.5s ahead (Boss Tuning Balance guards)
+		eq.zone_emote(MT.Emote, "Magma bubbles up around the dragon... take cover!");
+		eq.set_timer("AEFire", 2500);
+
+	elseif (e.timer == "AEFire") then
+
+		eq.stop_timer(e.timer);
+		--big bada boom time, once every 30 sec (15 under 25%)
 		--magama wave, 5k -800 FR damage, 300 range
 		eq.zone_emote(MT.Emote, "The dragon thrashes about causing magma to go everywhere!");
 		e.self:CameraEffect(1000,5);
@@ -85,7 +169,11 @@ function event_timer(e)
 			--if above 25% every 30 sec
 			eq.set_timer("AE", 30000);
 		end
-		
+
+	elseif (e.timer == "Enrage") then
+
+		eq.set_timer("Enrage", 60000);
+		soft_enrage_tick(e);
 
 	elseif (e.timer == "SpawnGiants") then
 
@@ -96,6 +184,7 @@ function event_timer(e)
 		eq.stop_timer(e.timer);
 		e.self:SetHP(e.self:GetMaxHP())
 		phase = 1;
+		reset_enrage(e);
 		eq.set_next_hp_event(90);
 		--depop all fire giants and Rokyl
 		DepopAdds(e);
@@ -111,7 +200,7 @@ function SpawnGiants(e)
 	eq.depop_all(1120001080);
 		eq.zone_emote(MT.Emote,"Fire giants show up to protect their lord!");
 	-- spawn randomly around Nagafen.
-	
+
 	eq.spawn2(1120001080,0,0,xloc + math.random(-50,50),yloc + math.random(-50,50),zloc,heading);
 	eq.spawn2(1120001080,0,0,xloc + math.random(-50,50),yloc + math.random(-50,50),zloc,heading);
 	eq.spawn2(1120001080,0,0,xloc + math.random(-50,50),yloc + math.random(-50,50),zloc,heading);
@@ -123,7 +212,7 @@ function SpawnGiants(e)
 	--eq.spawn2(1120001080,0,0,xloc + math.random(-50,50),yloc + math.random(-50,50),zloc,heading);
 	--eq.spawn2(1120001080,0,0,xloc + math.random(-50,50),yloc + math.random(-50,50),zloc,heading);
 end
-	
+
 function SpawnRokyl(e)
 
 	local xloc = e.self:GetX();
@@ -134,21 +223,10 @@ function SpawnRokyl(e)
 	eq.depop_all(1120001078);
 	-- spawn randomly around Nagafen.
 	eq.spawn2(1120001078,0,0,xloc +75,yloc + 25,zloc,heading);
-	
+
 
 end
-function SpawnFabledIksar(e)
 
-	local xloc = e.self:GetX();
-	local yloc = e.self:GetY();
-	local zloc = e.self:GetZ();
-	local heading = e.self:GetHeading();
-	
-	-- spawn randomly around Nagafen.
-	eq.spawn2(1120001086,0,0,xloc,yloc,zloc,heading);
-	
-
-end
 function DepopAdds(e)
 
 	eq.depop_all(1120001078); --rokyl
@@ -171,9 +249,9 @@ function event_hp(e)
 		e.self:WipeHateList();
 		--add 3k new threat to the random target
 		--e.self:AddToHateList(current_target,2000);
-		
+
 		eq.set_next_hp_event(85);
-	
+
 	elseif (e.hp_event <= 85 and phase == 2) then
 		phase = 3;
 		e.self:Shout("'I THOUGHT YOU WEREN'T AFRAID OF ME ANYMORE!");
@@ -230,9 +308,13 @@ function event_death_complete(e)
 
 	e.self:Shout("So then... my fate is sealed... until we meet again.");
 	DepopAdds(e);
-	SpawnFabledIksar(e);
 	eq.stop_timer("AE");
+	eq.stop_timer("AEFire");
+	eq.stop_timer("Enrage");
 	eq.stop_timer("TankAEDMG");
+	--the Fabled kill flag: A Faded Memory (26000) spawns and grants
+	--SetSubflag('FNagafen','fabled_nagafen') on hail (user decision 2026-11-07)
+	memory.spawn(e, "FNagafen", "fabled_nagafen");
 	eq.world_emote(15, "The Fabled Nagafen memory has faded....for now.");
 
 end

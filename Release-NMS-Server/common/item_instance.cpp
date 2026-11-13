@@ -1142,7 +1142,10 @@ void EQ::ItemInstance::ScaleItem() {
 	// check these..some may not need to be modified (really need to check all stats/bonuses)
 	//m_scaledItem->SkillModValue = (int32)((float)m_item->SkillModValue*Mult);
 	//m_scaledItem->BaneDmgAmt = (int8)((float)m_item->BaneDmgAmt*Mult);	// watch (10 entries with charmfileid)
-	m_scaledItem->BardValue = (int32)((float)m_item->BardValue*Mult);		// watch (no entries with charmfileid)
+	// Instrument mods are deliberately not scaled (Fabled-Loot-Design.xlsx:
+	// "instrument mod = regular x 1.3 (NOT scaled)") - the base row already
+	// carries the final value, e.g. Fabled Selo`s Drums of the March (900108).
+	m_scaledItem->BardValue = m_item->BardValue;
 	m_scaledItem->ElemDmgAmt = (uint8)((float)m_item->ElemDmgAmt*Mult);		// watch (no entries with charmfileid)
 	m_scaledItem->Damage = (uint32)((float)m_item->Damage*Mult);			// watch
 

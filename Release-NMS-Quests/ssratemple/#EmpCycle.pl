@@ -15,7 +15,11 @@ sub EVENT_TIMER {
     if (!defined($qglobals{Emperor}) && !defined($qglobals{BloodCoolDown})) { #Emperor is ready to spawn
       quest::setglobal("Emperor",1,0,"F"); #Normal Cycle Start
     }
-    if (($qglobals{Emperor} == 1) && !$entity_list->GetNPCByNPCTypeID(162065)) {
+    # The Lua Emperor encounter (encounters/Emperor.lua) depops the fake Emperor and spawns the
+    # real one the instant the Blood dies, but this cycle only flips Emperor to 2 when $EmpPrep
+    # fires 150s later. Without these guards the branch below re-spawned a fresh Blood every 10
+    # seconds for that whole window -- a room full of Bloods, each spawning its own Ssraezsha wave.
+    if (($qglobals{Emperor} == 1) && !$entity_list->GetNPCByNPCTypeID(162065) && !$entity_list->GetNPCByNPCTypeID(162227) && !$entity_list->GetNPCByNPCTypeID(162189)) {
       quest::unique_spawn(162189,0,0,877.0,-325.0,400.5,384); ##Blood_of_Ssraeshza
       quest::unique_spawn(162065,0,0,990.0,-325.0,415.0,384); ##Emperor_Ssraeshza (No Target)
     }

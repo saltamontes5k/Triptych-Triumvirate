@@ -52,3 +52,35 @@ function event_timer(e)
 		check_pools(e)
 	end
 end
+
+
+-- rof2b composition (2026-11-05): the reconstruction's task-completion and
+-- Solotus banner hooks appended below, chained after this zone's pool-golem
+-- handlers.
+local dragonscale_mod = require('achievement_quest_dragonscale')
+local ds_previous_task_complete = event_task_complete
+function event_task_complete(e)
+	if ds_previous_task_complete then
+		local r = ds_previous_task_complete(e)
+		if r and r ~= 0 then return r end
+	end
+	return dragonscale_mod.complete(e)
+end
+
+local ds_previous_before_update = event_task_before_update
+function event_task_before_update(e)
+	if ds_previous_before_update then
+		local r = ds_previous_before_update(e)
+		if r and r ~= 0 then return r end
+	end
+	return dragonscale_mod.before_update(e)
+end
+
+local ds_previous_cast = event_cast
+function event_cast(e)
+	if ds_previous_cast then
+		local r = ds_previous_cast(e)
+		if r and r ~= 0 then return r end
+	end
+	return dragonscale_mod.banner(e)
+end

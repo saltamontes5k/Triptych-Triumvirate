@@ -1,5 +1,6 @@
 #include <dinput.h>
 #include "IDirectInputDevice8Hook.h"
+#include "nms_window.h"
 
 static bool mSpaceKeyState = false;
 static bool mLastSpaceKeyState = false;
@@ -77,6 +78,31 @@ HRESULT STDMETHODCALLTYPE IDirectInputDevice8Hook::GetDeviceData(DWORD p0, LPDID
 {
 	// Forward call
 	HRESULT hResult = m_pDIDevice->GetDeviceData(p0, p1, p2, p3);
+
+	// NMS script windows: while a key-capture window is open, feed the
+	// keyboard entries to it and drop the ones it consumes so the game never
+	// sees them (arrows/letters go to Snake, typing goes to input boxes, ...)
+	// KEYBOARD DEVICE ONLY: mouse DIMOFS offsets (X=0, Y=4, Z=8) overlap the
+	// low keyboard scan codes, so filtering the mouse device here used to eat
+	// the mouse's Y-axis data as fake digit keypresses -- cursor hit-testing
+	// broke and every click landed nowhere while a capture window was open.
+	if (SUCCEEDED(hResult) && p1 && p2 && *p2 > 0 && NMSWin::Manager::Get().KeyCaptureActive()) {
+		static const GUID s_sysKeyboard = GUID_SysKeyboard;
+		if (m_GUID != s_sysKeyboard) {
+			return hResult;
+		}
+
+		DWORD kept = 0;
+		for (DWORD i = 0; i < *p2; i++) {
+			bool down = (p1[i].dwData & 0x80) != 0;
+			if (NMSWin::Manager::Get().FeedKey(p1[i].dwOfs, down)) {
+				continue; // consumed: do not forward to the game
+			}
+			p1[kept++] = p1[i];
+		}
+		*p2 = kept;
+	}
+
 	// Return result
 	return hResult;
 }

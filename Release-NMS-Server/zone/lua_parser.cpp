@@ -192,6 +192,7 @@ const char *LuaEvents[_LargestEventID] = {
 	"event_pet_command",
 	"event_charm_start",
 	"event_charm_end",
+	"event_nms_window",
 	// These must stay in sync with the tail of QuestEventID in event_codes.h.
 	// The array is sized _LargestEventID; any missing initializer is a nullptr that
 	// gets dereferenced when the event dispatches.
@@ -250,6 +251,7 @@ LuaParser::LuaParser() {
 	NPCArgumentDispatch[EVENT_COMBAT]                 = handle_npc_hate;
 	NPCArgumentDispatch[EVENT_SIGNAL]                 = handle_npc_signal;
 	NPCArgumentDispatch[EVENT_TIMER]                  = handle_npc_timer;
+	NPCArgumentDispatch[EVENT_NMS_WINDOW]             = handle_npc_nms_window;
 	NPCArgumentDispatch[EVENT_DEATH]                  = handle_npc_death;
 	NPCArgumentDispatch[EVENT_DEATH_COMPLETE]         = handle_npc_death;
 	NPCArgumentDispatch[EVENT_DEATH_ZONE]             = handle_npc_death;
@@ -288,6 +290,7 @@ LuaParser::LuaParser() {
 	PlayerArgumentDispatch[EVENT_CLICK_DOOR]                 = handle_player_click_door;
 	PlayerArgumentDispatch[EVENT_SIGNAL]                     = handle_player_signal;
 	PlayerArgumentDispatch[EVENT_POPUP_RESPONSE]             = handle_player_popup_response;
+	PlayerArgumentDispatch[EVENT_NMS_WINDOW]                 = handle_player_nms_window;
 	PlayerArgumentDispatch[EVENT_PLAYER_PICKUP]              = handle_player_pick_up;
 	PlayerArgumentDispatch[EVENT_CAST]                       = handle_player_cast;
 	PlayerArgumentDispatch[EVENT_CAST_BEGIN]                 = handle_player_cast;

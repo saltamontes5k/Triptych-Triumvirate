@@ -160,14 +160,43 @@ pass rather than a denylist:
 
 ## Reconciliation with the NMS Slayer system
 
-Slayer is not expansion-scoped: `--enable-slayer` selects the complete validated
-top-level Slayer hierarchy (180 definitions, 1,825 points, IDs `11000000+`). The
-chosen direction is the **bridge** option: the custom `NMS_slayer_utils.pl`
+Slayer is not expansion-scoped: `--enable-slayer` selects the complete
+top-level Slayer hierarchy (180 definitions, 1,825 points, IDs `11000000+`;
+the strict race vocabulary maps 142 of them, see below). The chosen direction
+is the **bridge** option: the custom `NMS_slayer_utils.pl`
 race-kill counters and titles stay, the Live Slayer/Hunter achievements drive
 progress from the same credited kills, and overlapping buckets (for example the
 custom `god` bucket versus `11000026 Your God Has Found You Lacking`, whose
 reward is the “Godslayer” title) are mapped rather than duplicated. Hunter is
 bridged the same way. See the plan for the open mapping work.
+
+**SHIPPED 2026-11-03 (manifest entries 317-330, uncommitted)**: the Live Slayer
+achievements are now live **side-by-side** with the NMS titles — both systems
+read the same credited kills and neither was retired (user decision; the
+retirement option was assessed and declined). What shipped:
+
+- 142 of 180 Slayer defs enabled with 806 native `NpcRaceKill` criteria
+  (event 3, per-race alternatives under one component, live-EQ required counts
+  from the snapshot counts file — e.g. Amphibicide 1,000, Orc Stomp! 5,000).
+  The engine fires `ProcessEvent(NpcRaceKill, base_race)` on every credited
+  kill, so no quest or plugin change was needed.
+- `ClientAchievementState::Reconcile()` now seeds slayer progress from the
+  account kill counters on login (`SetProgress`, absolute and idempotent), so
+  veterans' existing hunting counts (the same counters the NMS titles tier on)
+  light up the achievement line instead of starting at zero.
+- Claimable reward sets 9508300-9508441 (AA + 5 Triunes of Fate per the
+  standing convention) plus 125 suffix titles in the fresh 302000+ band —
+  no NMS-band title_set is referenced, so the two title systems never
+  interfere. `11000026` uses `, Godslayer` per its documented live reward.
+- Deferred, strictly: 38 defs (34 with unmapped broad family terms such as
+  "Birds", "Dinosaurs", "Creatures of Luclin" in the importer's
+  reject-don't-guess race vocabulary + 4 General metas cascading on their
+  rejected children) and 6 title rewards dropped because the achievement name
+  exceeds `titles.suffix` varchar(32). Register:
+  [slayer_bridge_deferred.csv](slayer_bridge_deferred.csv). Re-authoring the
+  family-term mappings lights the 4 metas up by re-running the driver.
+- Twins: `utils/sql/20261103_slayer_bridge.sql` (+ `_rollback`). Canaries in
+  entry 330 fail closed (PK-colliding assertion rows) on any violation.
 
 ## Quest hook and reconciliation contract
 

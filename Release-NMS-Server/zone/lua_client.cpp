@@ -6,6 +6,7 @@
 #include <limits>
 
 #include "client.h"
+#include "nms_window.h"
 #include "dynamic_zone.h"
 #include "expedition_request.h"
 #include "lua_client.h"
@@ -71,6 +72,129 @@ void Lua_Client::SendWaypointList() {
 bool Lua_Client::UnlockWaypoint(std::string waypoint_shortname) {
 	Lua_Safe_Call_Bool();
 	return self->UnlockWaypoint(waypoint_shortname);
+}
+
+// ---------------------------------------------------------------------------
+// NMS script windows (arcade); engine lives in nms_window.cpp
+// ---------------------------------------------------------------------------
+int Lua_Client::NMSWindowOpen(std::string key, std::string title, int w, int h, int flags) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).Open(key, title, w, h, flags);
+}
+
+bool Lua_Client::NMSWindowClose(int window_id) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).Close(window_id);
+}
+
+bool Lua_Client::NMSWindowClear(int window_id) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).Clear(window_id);
+}
+
+bool Lua_Client::NMSWindowIsOpen(int window_id) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).IsOpen(window_id);
+}
+
+bool Lua_Client::NMSWindowIsSupported() {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).IsSupported();
+}
+
+bool Lua_Client::NMSWindowSend(int window_id) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).Send(window_id);
+}
+
+int Lua_Client::NMSWindowAddHeader(int window_id, std::string text, std::string color) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddHeader(window_id, text, color);
+}
+
+int Lua_Client::NMSWindowAddText(int window_id, std::string text, std::string color, bool wrap) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddText(window_id, text, color, wrap);
+}
+
+int Lua_Client::NMSWindowAddSeparator(int window_id) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddSeparator(window_id);
+}
+
+int Lua_Client::NMSWindowAddSameLine(int window_id) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddSameLine(window_id);
+}
+
+int Lua_Client::NMSWindowAddButton(int window_id, std::string label, int action, std::string color) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddButton(window_id, label, action, color);
+}
+
+bool Lua_Client::NMSWindowSetButton(int window_id, int widget, std::string label, std::string color, bool disabled) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).SetButton(window_id, widget, label, color, disabled);
+}
+
+int Lua_Client::NMSWindowAddTablePacked(int window_id, int cols, std::string packed_cells) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddTablePacked(window_id, cols, packed_cells);
+}
+
+int Lua_Client::NMSWindowAddProgress(int window_id, double fraction, std::string color, std::string overlay) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddProgress(window_id, fraction, color, overlay);
+}
+
+bool Lua_Client::NMSWindowSetProgress(int window_id, int widget, double fraction, std::string overlay) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).SetProgress(window_id, widget, fraction, overlay);
+}
+
+int Lua_Client::NMSWindowAddInput(int window_id, int action, int maxlen, std::string text) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddInput(window_id, action, maxlen, text);
+}
+
+bool Lua_Client::NMSWindowSetText(int window_id, int widget, std::string text) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).SetText(window_id, widget, text);
+}
+
+int Lua_Client::NMSWindowAddIcon(int window_id, int icon_id, int size) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddIcon(window_id, icon_id, size);
+}
+
+int Lua_Client::NMSWindowAddItemLink(int window_id, int item_id) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddItemLink(window_id, item_id);
+}
+
+bool Lua_Client::NMSWindowSetStyle(int window_id, std::string bg, std::string border, int rounding, int border_px) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).SetStyle(window_id, bg, border, rounding, border_px);
+}
+
+int Lua_Client::NMSWindowAddCanvas(int window_id, int cw, int ch) {
+	Lua_Safe_Call_Int();
+	return EQ::NMS::GetWindows(self).AddCanvas(window_id, cw, ch);
+}
+
+bool Lua_Client::NMSWindowCanvasBegin(int window_id, int widget) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).BeginCanvasFrame(window_id, widget);
+}
+
+bool Lua_Client::NMSWindowCanvasPiece(int window_id, int widget, std::string spec) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).AddCanvasPieceCSV(window_id, widget, spec);
+}
+
+bool Lua_Client::NMSWindowCanvasGrid(int window_id, int widget, std::string spec, std::string packed_colors) {
+	Lua_Safe_Call_Bool();
+	return EQ::NMS::GetWindows(self).AddCanvasGridCSV(window_id, widget, spec, packed_colors);
 }
 
 bool Lua_Client::IsWaypointUnlocked(std::string waypoint_shortname) {
@@ -4347,6 +4471,30 @@ luabind::scope lua_register_client() {
 	.def("LeaveGroup", (void(Lua_Client::*)(void))&Lua_Client::LeaveGroup)
 	.def("LoadPEQZoneFlags", (void(Lua_Client::*)(void))&Lua_Client::LoadPEQZoneFlags)
 	.def("LoadZoneFlags", (void(Lua_Client::*)(void))&Lua_Client::LoadZoneFlags)
+	.def("NMSWindowOpen", (int(Lua_Client::*)(std::string,std::string,int,int,int))&Lua_Client::NMSWindowOpen)
+	.def("NMSWindowClose", (bool(Lua_Client::*)(int))&Lua_Client::NMSWindowClose)
+	.def("NMSWindowClear", (bool(Lua_Client::*)(int))&Lua_Client::NMSWindowClear)
+	.def("NMSWindowIsOpen", (bool(Lua_Client::*)(int))&Lua_Client::NMSWindowIsOpen)
+	.def("NMSWindowIsSupported", (bool(Lua_Client::*)(void))&Lua_Client::NMSWindowIsSupported)
+	.def("NMSWindowSend", (bool(Lua_Client::*)(int))&Lua_Client::NMSWindowSend)
+	.def("NMSWindowAddHeader", (int(Lua_Client::*)(int,std::string,std::string))&Lua_Client::NMSWindowAddHeader)
+	.def("NMSWindowAddText", (int(Lua_Client::*)(int,std::string,std::string,bool))&Lua_Client::NMSWindowAddText)
+	.def("NMSWindowAddSeparator", (int(Lua_Client::*)(int))&Lua_Client::NMSWindowAddSeparator)
+	.def("NMSWindowAddSameLine", (int(Lua_Client::*)(int))&Lua_Client::NMSWindowAddSameLine)
+	.def("NMSWindowAddButton", (int(Lua_Client::*)(int,std::string,int,std::string))&Lua_Client::NMSWindowAddButton)
+	.def("NMSWindowSetButton", (bool(Lua_Client::*)(int,int,std::string,std::string,bool))&Lua_Client::NMSWindowSetButton)
+	.def("NMSWindowAddTable", (int(Lua_Client::*)(int,int,std::string))&Lua_Client::NMSWindowAddTablePacked)
+	.def("NMSWindowAddProgress", (int(Lua_Client::*)(int,double,std::string,std::string))&Lua_Client::NMSWindowAddProgress)
+	.def("NMSWindowSetProgress", (bool(Lua_Client::*)(int,int,double,std::string))&Lua_Client::NMSWindowSetProgress)
+	.def("NMSWindowAddInput", (int(Lua_Client::*)(int,int,int,std::string))&Lua_Client::NMSWindowAddInput)
+	.def("NMSWindowSetText", (bool(Lua_Client::*)(int,int,std::string))&Lua_Client::NMSWindowSetText)
+	.def("NMSWindowAddIcon", (int(Lua_Client::*)(int,int,int))&Lua_Client::NMSWindowAddIcon)
+	.def("NMSWindowAddItemLink", (int(Lua_Client::*)(int,int))&Lua_Client::NMSWindowAddItemLink)
+	.def("NMSWindowSetStyle", (bool(Lua_Client::*)(int,std::string,std::string,int,int))&Lua_Client::NMSWindowSetStyle)
+	.def("NMSWindowAddCanvas", (int(Lua_Client::*)(int,int,int))&Lua_Client::NMSWindowAddCanvas)
+	.def("NMSWindowCanvasBegin", (bool(Lua_Client::*)(int,int))&Lua_Client::NMSWindowCanvasBegin)
+	.def("NMSWindowCanvasPiece", (bool(Lua_Client::*)(int,int,std::string))&Lua_Client::NMSWindowCanvasPiece)
+	.def("NMSWindowCanvasGrid", (bool(Lua_Client::*)(int,int,std::string,std::string))&Lua_Client::NMSWindowCanvasGrid)
 	.def("LockSharedTask", &Lua_Client::LockSharedTask)
 	.def("MarkSingleCompassLoc", (void(Lua_Client::*)(float,float,float))&Lua_Client::MarkSingleCompassLoc)
 	.def("MarkSingleCompassLoc", (void(Lua_Client::*)(float,float,float,int))&Lua_Client::MarkSingleCompassLoc)

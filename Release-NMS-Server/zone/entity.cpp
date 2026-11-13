@@ -1619,7 +1619,23 @@ void EntityList::RefreshAutoXTargets(Client *c)
 
 		if ((m->CheckAggro(c) || m->IsOnFeignMemory(c)) && !c->IsXTarget(m)) {
 			c->AddAutoXTarget(m, false); // we only call this before a bulk, so lets not send right away
-			break;
+
+			// Stop only when every Auto slot is filled -- NOT after the first mob.
+			// This rebuilds the client's personal auto-hater manager (group/raid
+			// leave) and backs the empty-slot refill in ProcessXTargetAutoHaters();
+			// breaking on the first adoption is what left a client with exactly one
+			// extended target while a whole group's worth of mobs was on them.
+			bool has_empty_auto_slot = false;
+			for (int i = 0; i < c->GetMaxXTargets(); ++i) {
+				if (c->XTargets[i].Type == Auto && c->XTargets[i].ID == 0) {
+					has_empty_auto_slot = true;
+					break;
+				}
+			}
+
+			if (!has_empty_auto_slot) {
+				break;
+			}
 		}
 
 	}

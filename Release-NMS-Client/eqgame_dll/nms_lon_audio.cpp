@@ -15,8 +15,14 @@
 //   single-player game begins (0x1E7 / 1) -> startup/lobby stop, a random playmat theme loops
 //   game ends (0x1E7 / 2)                 -> playmat stops; victory/defeat one-shot, or
 //                                            straight back to the lobby on any other result
+//   game object destroyed, no report      -> playmat stops, lobby loop (a quit mid-play)
 //   the one-shot finishes                 -> lobby loop
 //   card game closes                      -> everything stops
+//
+// A close does not always unload LegendsOfNorrath.dll (seen after a skirmish), so the
+// module going away is not the only close signal: the client's own card-game window is.
+// eqgame hides or destroys TCGWnd when the card game closes, and shows it again on the
+// next Play, so a session that has seen that window ends when it is gone for a moment.
 //
 // THREADING: MusicPulse() runs every frame on eqgame's render thread, while the frame
 // sniffer that reports game begin/end runs on the relay's worker thread (nms_lon_link.cpp
@@ -395,9 +401,21 @@ namespace {
 	bool                    g_jingleActive = false;   // the one-shot hands back to the lobby
 	bool                    g_inGame = false;
 
+	// Session lifetime. g_active says the card game has a soundtrack up; g_windowSeen says
+	// its host window was on screen during this session, which is what lets a missing
+	// window end the session (and never a client where the window was not found at all).
+	bool                    g_active = false;
+	bool                    g_windowSeen = false;
+	bool                    g_windowWarned = false;
+	DWORD                   g_windowGoneAt = 0;
+	DWORD                   g_sessionStart = 0;
+	const DWORD             kWindowGoneMs = 1000;
+	const DWORD             kWindowWarnMs = 5000;
+
 	// cross-thread requests (relay worker -> render thread)
 	volatile LONG           g_reqBegin = 0;
 	volatile LONG           g_reqEnd = 0;        // result + 1; 0 = none
+	volatile LONG           g_reqAbort = 0;      // the single-player game object was destroyed
 	std::vector<std::string> g_sfxPending;       // under SfxLock
 
 	CRITICAL_SECTION *SfxLock()
@@ -478,6 +496,39 @@ namespace {
 		else                  PlayMusic(kLobby, true, kMusicVolume);
 	}
 
+	// The card game is up: startup theme, then the lobby loop.
+	void StartSession(int hostWindowShown)
+	{
+		if (g_active) return;
+		g_active = true;
+		g_windowSeen = false;
+		g_windowWarned = false;
+		g_windowGoneAt = 0;
+		g_sessionStart = GetTickCount();
+		LogInfo("card game opened (host window %d)", hostWindowShown);
+		OpenCardGame();
+	}
+
+	// The card game is gone (unloaded, or still mapped with its window closed): silence
+	// everything and forget the game state, so nothing from it outlives it.
+	void EndSession()
+	{
+		g_active = false;
+		g_windowSeen = false;
+		g_windowWarned = false;
+		g_windowGoneAt = 0;
+		g_inGame = false;
+		if (g_jingle) { g_jingle->Close(); g_jingle.reset(); }
+		g_jingleActive = false;
+		StopMusic();
+		for (size_t i = 0; i < g_sfx.size(); ++i) g_sfx[i]->Close();
+		g_sfx.clear();
+		CRITICAL_SECTION *cs = SfxLock();
+		EnterCriticalSection(cs);
+		g_sfxPending.clear();   // effects queued for a game that is gone
+		LeaveCriticalSection(cs);
+	}
+
 	void StartSfx(const char *name)
 	{
 		if (g_sfx.size() >= kMaxSfx) return;   // drop rather than pile up
@@ -503,17 +554,69 @@ namespace {
 
 namespace NMSLoN {
 
-	void MusicPulse(void *lonModule)
+	void MusicPulse(void *lonModule, int hostWindowShown)
 	{
 		HMODULE lon = (HMODULE) lonModule;
+		const DWORD now = GetTickCount();
+
+		// When the card game opens and closes. The module edge is the normal one: the
+		// client frees the card game when its window closes, and the next open loads a
+		// fresh copy. A close after a skirmish has been seen to leave the DLL mapped,
+		// though, and then that edge never comes -- the music played on over the zone
+		// until EQ quit. So a session also ends when the card game's window is gone: the
+		// game draws into offscreen surfaces that eqgame blits into TCGWnd, and eqgame
+		// hides or destroys that window when the game closes and shows it again on Play.
+		// Only a session that has SEEN the window ends this way; on a client where it is
+		// never found, the module edge stays the only signal, exactly as before.
+		if (lon != g_cardGame) {
+			g_cardGame = lon;
+			if (lon) StartSession(hostWindowShown);
+			else     EndSession();
+		} else if (lon && !g_active && hostWindowShown == 1) {
+			StartSession(hostWindowShown);   // reopened while the module stayed mapped
+		}
+
+		if (g_active) {
+			if (hostWindowShown == 1) {
+				if (!g_windowSeen) LogInfo("card game host window on screen");
+				g_windowSeen = true;
+				g_windowGoneAt = 0;
+			} else if (hostWindowShown == 0) {
+				if (g_windowSeen) {
+					if (!g_windowGoneAt) g_windowGoneAt = now;
+					else if (now - g_windowGoneAt >= kWindowGoneMs) {
+						LogWarn("card game window gone; soundtrack stopped");
+						EndSession();
+					}
+				}
+			} else {
+				g_windowGoneAt = 0;   // no usable UI state: do not judge the session by it
+			}
+			// If the window is never found, the close falls back to the module edge --
+			// and a close that leaves the DLL mapped would then leak the music again.
+			// Say so once, in the log, instead of leaving it invisible.
+			if (g_active && !g_windowSeen && !g_windowWarned && now - g_sessionStart >= kWindowWarnMs) {
+				g_windowWarned = true;
+				LogWarn("card game host window (TCGWnd) not found; close still waits for the module to unload");
+			}
+		}
 
 		// Requests came from the relay thread; everything below runs on the render thread.
-		const bool begin = InterlockedExchange(&g_reqBegin, 0) != 0;
-		const LONG endReq = InterlockedExchange(&g_reqEnd, 0);
-		if (begin) DoGameBegin();
-		if (endReq) DoGameEnd((unsigned) (endReq - 1));
+		// A report that arrives with no session up (a late frame after the close) is
+		// dropped rather than starting music over the zone.
+		const bool begin   = InterlockedExchange(&g_reqBegin, 0) != 0;
+		const LONG endReq  = InterlockedExchange(&g_reqEnd, 0);
+		const bool aborted = InterlockedExchange(&g_reqAbort, 0) != 0;
+		if (g_active) {
+			if (begin) DoGameBegin();
+			if (endReq) DoGameEnd((unsigned) (endReq - 1));
+			// The game object is gone but no end report named a result: a quit mid-game.
+			// If a report did arrive (win / lose / anything), g_inGame is already false and
+			// its one-shot keeps playing.
+			else if (aborted && g_inGame) DoGameEnd(0);
+		}
 
-		DrainSfx();
+		if (g_active) DrainSfx();
 
 		// A finished startup/victory/defeat one-shot hands the music back to the lobby.
 		if (g_jingle) {
@@ -538,19 +641,6 @@ namespace NMSLoN {
 			if (g_sfx[i]->Finished()) { g_sfx[i]->Close(); g_sfx.erase(g_sfx.begin() + i); }
 			else ++i;
 		}
-
-		if (lon == g_cardGame) return;
-		g_cardGame = lon;
-		if (lon) {
-			OpenCardGame();
-		} else {
-			g_inGame = false;
-			if (g_jingle) { g_jingle->Close(); g_jingle.reset(); }
-			g_jingleActive = false;
-			StopMusic();
-			for (size_t i = 0; i < g_sfx.size(); ++i) g_sfx[i]->Close();
-			g_sfx.clear();
-		}
 	}
 
 	// Called from the relay's worker thread: post, do not touch the engine.
@@ -562,6 +652,11 @@ namespace NMSLoN {
 	void GameMusicEnd(unsigned result)
 	{
 		InterlockedExchange(&g_reqEnd, (LONG) result + 1);
+	}
+
+	void GameMusicAborted()
+	{
+		InterlockedExchange(&g_reqAbort, 1);
 	}
 
 	void SfxPlay(const char *rccName)

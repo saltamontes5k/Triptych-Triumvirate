@@ -255,6 +255,7 @@ public:
 	virtual bool TryFinishingBlow(Mob *defender, int64 &damage);
 	int TryHeadShot(Mob* defender, EQ::skills::SkillType skillInUse);
 	int TryAssassinate(Mob* defender, EQ::skills::SkillType skillInUse);
+	int TryDecapitation(Mob* defender, EQ::skills::SkillType skillInUse);
 	virtual void DoRiposte(Mob* defender);
 	void ApplyMeleeDamageMods(uint16 skill, int64 &damage, Mob * defender = nullptr, ExtraAttackOptions *opts = nullptr);
 	int ACSum(bool skip_caps = false);

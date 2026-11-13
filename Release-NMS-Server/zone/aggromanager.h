@@ -40,12 +40,19 @@ public:
 	};
 
 private:
+	// Must match XTARGET_HARDCAP (client.h) and the AT_XTarget1..AT_XTarget20 range.
+	static constexpr int MAX_XTARGET_SLOTS = 20;
+
 	struct AggroData {
 		int16 type;
 		int16 pct;
 	};
 
 	AggroData data[AT_Max];
+	// Which spawn the cached AT_XTarget percentage belongs to. The meter only ships a
+	// percentage when it changed, so without this a row that gets a different target
+	// (fill, prune reorder, respawn) keeps displaying the previous occupant's number.
+	int xtarget_id[MAX_XTARGET_SLOTS];
 	int lock_id;			// we set this
 	int target_id;			// current target or if PC targeted, their Target
 	// so secondary depends on if we have aggro or not
@@ -65,6 +72,10 @@ public:
 	inline void set_secondary_id(int in) { secondary_id = in; }
 	// returns true when changed
 	inline bool set_pct(AggroTypes t, int pct) { assert(t >= AT_Player && t < AT_Max); if (data[t].pct == pct) return false; data[t].pct = pct; return true; }
+	// Mark a cached percentage stale so the next set_pct() is always sent.
+	inline void force_pct(AggroTypes t) { assert(t >= AT_Player && t < AT_Max); data[t].pct = -1; }
+	// returns true when the slot now points at a different spawn
+	inline bool set_xtarget_id(int slot, int id) { if (slot < 0 || slot >= MAX_XTARGET_SLOTS || xtarget_id[slot] == id) return false; xtarget_id[slot] = id; return true; }
 
 	inline int get_lock_id() const { return lock_id; }
 	inline int get_target_id() const { return target_id; }

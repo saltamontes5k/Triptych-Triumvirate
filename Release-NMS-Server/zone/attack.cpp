@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../common/misc_functions.h"
 #include "../common/events/player_event_logs.h"
 #include "../common/repositories/account_kill_counts_repository.h"
+#include "../common/shroud/native_stats.h"
 #include "queryserv.h"
 #include "dynamic_zone.h"
 #include "quest_parser_collection.h"
@@ -40,6 +41,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "mob.h"
 #include "npc.h"
 #include "nms_vault.h"
+#include "nms_loot_offers.h"
 
 #include "bot.h"
 
@@ -911,7 +913,11 @@ int Mob::GetClassRaceACBonus() {
 //SYNC WITH: tune.cpp, mob.h TuneACSum
 int Mob::ACSum(bool skip_caps)
 {
-	int ac = 0; // this should be base AC whenever shrouds come around
+	// Native Spirit Shroud forms bring their own captured AC baseline; the
+	// item AC still applies on top of it (worn gear is hidden in a form).
+	int ac = IsClient() && CastToClient()->GetPP().shroud_native_stats_valid
+		? int(CastToClient()->GetPP().shroud_native_stats[SpiritShroud::AC])
+		: 0; // this should be base AC whenever shrouds come around
 	ac += itembonuses.AC; // items + food + tribute
 	int shield_ac = 0;
 	if (HasShieldEquipped() && IsOfClientBot()) {
@@ -2687,6 +2693,12 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 		LogAttackDetail("{} Mob{} currently aggroed.", zone->MobsAggroCount(), zone->MobsAggroCount() != 1 ? "s" : "");
 	}
 
+	// stop any in-flight cast: a corpse that completes its spell after death keeps
+	// "casting" from the grave (e.g. an Infectious Cloud ticking off a corpse)
+	if (IsCasting()) {
+		InterruptSpell();
+	}
+
 	ShieldAbilityClearVariables();
 
 	SetHP(0);
@@ -2978,6 +2990,19 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 		entity_list.RemoveFromAutoXTargets(this);
 
 
+		// /nmsloot: personal loot rolls for the credited client and their group/raid in this zone
+		Client *nms_loot_credit = nullptr;
+		if (killer && killer->IsClient()) {
+			nms_loot_credit = killer->CastToClient();
+		} else if (killer_mob) {
+			Mob *ultimate_owner = killer_mob->GetUltimateOwner();
+			if (ultimate_owner && ultimate_owner->IsClient()) {
+				nms_loot_credit = ultimate_owner->CastToClient();
+			}
+		}
+
+		// The corpse's loot-table items are copied to the personal offers now, so upgrade
+		// them once here; the copies carry the same tier to every recipient.
 		if (database.LootBuffEnabled()) {
 			for (LootItem* item : m_loot_items) {
 				if (item != nullptr) {
@@ -3234,6 +3259,8 @@ bool NPC::Death(Mob* killer_mob, int64 damage, uint16 spell, EQ::skills::SkillTy
 				corpse->AllowPlayerLoot(ultimate_owner, 0);
 			}
 		}
+
+		NmsLootOfferOnCorpseCreated(corpse, nms_loot_credit, this);
 
 		if (zone && zone->adv_data) {
 			auto sr = (ServerZoneAdventureDataReply_Struct *) zone->adv_data;
@@ -3844,6 +3871,10 @@ int Mob::GetWeaponDamageBonus(const EQ::ItemData *weapon, bool offhand)
 
 int Mob::GetHandToHandDamage(void)
 {
+	if (IsClient() && CastToClient()->GetPP().shroud_native_stats_valid &&
+		CastToClient()->GetPP().shroud_native_stats[SpiritShroud::UnarmedDamage]) {
+		return int(CastToClient()->GetPP().shroud_native_stats[SpiritShroud::UnarmedDamage]);
+	}
 	if (RuleB(Combat, UseRevampHandToHand)) {
 		// everyone uses this in the revamp!
 		int skill = GetSkill(EQ::skills::SkillHandtoHand);
@@ -3886,6 +3917,10 @@ int Mob::GetHandToHandDamage(void)
 
 int Mob::GetHandToHandDelay(void)
 {
+	if (IsClient() && CastToClient()->GetPP().shroud_native_stats_valid &&
+		CastToClient()->GetPP().shroud_native_stats[SpiritShroud::UnarmedDelay]) {
+		return int(CastToClient()->GetPP().shroud_native_stats[SpiritShroud::UnarmedDelay]);
+	}
 	if (RuleB(Combat, UseRevampHandToHand)) {
 		// everyone uses this in the revamp!
 		int skill = GetSkill(EQ::skills::SkillHandtoHand);
@@ -7073,8 +7108,14 @@ void Mob::CommonOutgoingHitSuccess(Mob* defender, DamageHitInfo &hit, ExtraAttac
 			}
 		}
 	}
-	else if (hit.skill == EQ::skills::SkillFrenzy && (HasClass(Class::Berserker)) && GetLevel() > 50) {
-		extra_mincap = 4 * GetLevel() / 5;
+	else if (hit.skill == EQ::skills::SkillFrenzy && (HasClass(Class::Berserker))) {
+		int decap = TryDecapitation(defender, hit.skill);
+		if (decap > 0) {
+			hit.damage_done = decap;
+		}
+		else if (GetLevel() > 50) {
+			extra_mincap = 4 * GetLevel() / 5;
+		}
 	}
 
 	// this has some weird ordering

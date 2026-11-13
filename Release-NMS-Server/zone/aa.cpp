@@ -25,6 +25,7 @@ Copyright (C) 2001-2016 EQEMu Development Team (http://eqemulator.net)
 #include "../common/strings.h"
 #include "../common/events/player_event_logs.h"
 #include "aa.h"
+#include "../common/shroud/aa_preview.h"
 #include "client.h"
 #include "corpse.h"
 #include "groups.h"
@@ -113,6 +114,31 @@ void Mob::TemporaryPets(uint16 spell_id, Mob *targ, const char *name_override, u
 		memcpy(made_npc, npc_type, sizeof(NPCType));
 		strcpy(made_npc->name, name_override);
 		npc_type = made_npc;
+	}
+
+	// Warder swarms (pets.petnaming == 2, e.g. Attack of the Warders) take their
+	// appearance from the beastlord warder chart for the caster's race, same as the
+	// permanent warder in MakePet.
+	if (record.petnaming == 2) {
+		auto warder = content_db.GetBeastlordPetData(GetBaseRace());
+		// chart miss returns the Wolf default; only restyle when we actually matched
+		if (warder.race_id != Race::Wolf || GetBaseRace() == Race::Wolf) {
+			if (made_npc == nullptr) {
+				made_npc = new NPCType;
+				memcpy(made_npc, npc_type, sizeof(NPCType));
+				npc_type = made_npc;
+			}
+
+			made_npc->race        = warder.race_id;
+			made_npc->texture     = warder.texture;
+			made_npc->helmtexture = warder.helm_texture;
+			made_npc->gender      = warder.gender;
+			made_npc->luclinface  = warder.face;
+			// permanent warder templates are race-0 shells at size 6 whose whole
+			// look comes from this chart; size the swarm warders off that same
+			// base instead of the template the chart is overriding
+			made_npc->size        = 6.0f * warder.size_modifier;
+		}
 	}
 
 	int summon_count = 0;
@@ -547,6 +573,11 @@ void Mob::WakeTheDead(uint16 spell_id, Corpse *corpse_to_use, Mob *tar, uint32 d
 
 void Client::ResetAA()
 {
+	// A native Spirit Shroud form's AA set is session-scoped; nothing to reset.
+	if (IsSpiritShrouded()) {
+		return;
+	}
+
 	SendClearPlayerAA();
 	RefundAA();
 
@@ -877,6 +908,11 @@ void Client::InspectBuffs(Client* Inspector, int Rank)
 }
 
 void Client::RefundAA() {
+	// A native Spirit Shroud form owns no refundable ordinary ranks.
+	if (IsSpiritShrouded()) {
+		return;
+	}
+
 	int refunded = 0;
 
 	auto rank_value = aa_ranks.begin();
@@ -1174,7 +1210,32 @@ void Client::SendAlternateAdvancementTable() {
 	GetDynamicAATimers();
 	GetAllToggleAAStatus();
 
-	const bool shroud_usable = IsShrouded() && RuleI(Custom, ShroudLiveMode) != 0;
+	// RoF2 only: omitting a definition does not remove a previously cached
+	// Monster AA. Refresh its class mask to zero when it is unavailable to
+	// this profile (a regular same-ID definition supersedes its cached
+	// predecessor; omission does not). Hide only Monster definitions, leaving
+	// every ordinary AA untouched.
+	if (ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+		const auto* form = IsSpiritShrouded() ? SpiritShroudDefinition() : nullptr;
+		for (const auto &entry : zone->aa_ranks) {
+			const auto* rank = entry.second.get();
+			if (!SpiritShroud::HideCachedRank(form, rank)) {
+				continue;
+			}
+			const auto* hidden_ability = rank->base_ability;
+			EQApplicationPacket hidden(OP_SendAATable, sizeof(AARankInfo_Struct));
+			auto *definition = reinterpret_cast<AARankInfo_Struct *>(hidden.pBuffer);
+			*definition = {};
+			definition->id       = rank->id;
+			definition->seq      = hidden_ability->id;
+			definition->classes  = 0;
+			definition->category = hidden_ability->category;
+			QueuePacket(&hidden);
+		}
+	}
+
+	const bool shroud_usable = IsShrouded() &&
+		(RuleI(Custom, ShroudLiveMode) != 0 || m_spirit_shroud_template != 0);
 	uint32 ability_count    = 0;
 	uint32 rank_candidates  = 0;
 
@@ -1209,7 +1270,7 @@ void Client::SendAlternateAdvancementTable() {
 		GetName(), ability_count, rank_candidates, Timer::GetCurrentTime() - now_ms);
 }
 
-void Client::SendAlternateAdvancementRank(int aa_id, int level) {
+void Client::SendAlternateAdvancementRank(int aa_id, int level, const SpiritShroud::Template *shroud_preview) {
 	if(!zone)
 		return;
 
@@ -1233,17 +1294,30 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 		}
 	}
 
+	// Both the selection preview and an active form advertise the same bounded
+	// rank chain. A normal character retains the ordinary AA serialization path.
+	const auto* shroud_form = shroud_preview ? shroud_preview :
+		(IsSpiritShrouded() ? SpiritShroudDefinition() : nullptr);
+	auto preview_range = shroud_form ? SpiritShroud::PreviewRange(*shroud_form, rank)
+		: SpiritShroud::PreviewRankRange{};
+	if(shroud_form && (!preview_range.valid || !SpiritShroud::EnumerableRank(rank->id))) {
+		return;
+	}
+
 	int size = sizeof(AARankInfo_Struct) + (sizeof(AARankEffect_Struct) * rank->effects.size()) + (sizeof(AARankPrereq_Struct) * rank->prereqs.size());
 	auto outapp = new EQApplicationPacket(OP_SendAATable, size);
 	AARankInfo_Struct *aai = (AARankInfo_Struct*)outapp->pBuffer;
 
 	// Lie to the client about who can use this AA rank if we are multiclassing
-	if (RuleB(Custom, MulticlassingEnabled)) {
+	if (RuleB(Custom, MulticlassingEnabled) && !shroud_preview) {
 		if ((ability->classes >> 1) & GetClassesBits() || (ability->classes & (1 << GetClass()))) {
 			aai->classes = 0xFFFFFFF;
 		} else {
 			aai->classes = ability->classes;
 		}
+	} else if (shroud_preview) {
+		// The preview advertises the form's own class mask.
+		aai->classes = ability->classes;
 	} else {
 		if(!(ability->classes & (1 << GetClass()))) {
 			safe_delete(outapp);
@@ -1252,7 +1326,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 		aai->classes = ability->classes;
 	}
 
-	if(!CanUseAlternateAdvancementRank(rank)) {
+	if(!shroud_preview && !CanUseAlternateAdvancementRank(rank)) {
 		safe_delete(outapp);
 		return;
 	}
@@ -1280,17 +1354,26 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level) {
 	aai->spell_refresh = rank->recast_time;
 	aai->level_req = rank->level_req;
 	aai->current_level = level;
-	aai->max_level = ability->GetMaxLevel(this);
-	aai->prev_id = rank->prev_id;
+	const auto* captured = shroud_form ? SpiritShroud::CapturedPresentation(*shroud_form, rank) : nullptr;
+	aai->max_level = shroud_form ? preview_range.maximum : ability->GetMaxLevel(this);
+	aai->prev_id = shroud_form ? preview_range.previous : rank->prev_id;
+	if(captured) {
+		aai->current_level = captured->current;
+		aai->max_level     = captured->maximum;
+	}
 	aai->grant_only = ability->grant_only;
 
-	if((rank->next && !CanUseAlternateAdvancementRank(rank->next)) || ability->charges > 0) {
+	if(ability->charges > 0) {
+		aai->next_id = -1;
+	} else if(shroud_form) {
+		aai->next_id = preview_range.next;
+	} else if((rank->next && !CanUseAlternateAdvancementRank(rank->next))) {
 		aai->next_id = -1;
 	} else {
 		aai->next_id = rank->next_id;
 	}
 
-	aai->total_cost = rank->total_cost;
+	aai->total_cost = captured ? captured->total_cost : rank->total_cost;
 	aai->expansion = rank->expansion;
 	aai->category = ability->category;
 	aai->charges = ability->charges;
@@ -1595,16 +1678,42 @@ void Client::ClearDynamicAATimers() {
 
     CharacterDynamicAaTimersRepository::DeleteByCharacterId(database, CharacterID());
 
-    LogDebug("Cleared all dynamic AA timers");
+	LogDebug("Cleared all dynamic AA timers");
 }
 
-
-void Client::ResetAlternateAdvancementTimer(int ability) {
-	AA::Rank *rank = zone->GetAlternateAdvancementRank(casting_spell_aa_id);
-	if(rank) {
-		SendAlternateAdvancementTimer(rank->spell_type, 0, time(0));
-		p_timers.Clear(&database, rank->spell_type + pTimerAAStart);
+// NMS: the timer an AA's cooldown runs on; unlike GetDynamicAATimer it never assigns a new one
+std::optional<int> Client::FindAlternateAdvancementTimer(const AA::Rank *rank)
+{
+	if (!rank || !rank->base_ability) {
+		return std::nullopt;
 	}
+
+	if (!RuleB(Custom, UseDynamicAATimers)) {
+		return rank->spell_type;
+	}
+
+	if (m_aa_timers_cache.empty()) {
+		GetDynamicAATimers();
+	}
+
+	const auto e = m_aa_timers_cache.find(rank->base_ability->id);
+	if (e == m_aa_timers_cache.end()) {
+		return std::nullopt;
+	}
+
+	return e->second;
+}
+
+bool Client::ResetAlternateAdvancementTimer(int rank_id) {
+	// NMS: takes an AA rank ID (#find aa prints it); the old body ignored the argument and read casting_spell_aa_id
+	const auto timer_id = FindAlternateAdvancementTimer(zone->GetAlternateAdvancementRank(rank_id));
+	if (!timer_id) {
+		return false;
+	}
+
+	SendAlternateAdvancementTimer(*timer_id, 0, static_cast<int>(time(nullptr)));
+	p_timers.Clear(&database, *timer_id + pTimerAAStart);
+	return true;
 }
 
 void Client::ResetAlternateAdvancementTimers() {
@@ -1646,9 +1755,12 @@ void Client::ResetOnDeathAlternateAdvancement() {
 		if (!rank)
 			continue;
 
-		// since they're dying, we just need to clear the DB
-		if (ability->reset_on_death)
-			p_timers.Clear(&database, rank->spell_type + pTimerAAStart);
+		// NMS: with dynamic AA timers the cooldown runs on the per-character id; the DB spell_type belongs to another AA
+		if (ability->reset_on_death) {
+			if (const auto timer_id = FindAlternateAdvancementTimer(rank)) {
+				p_timers.Clear(&database, *timer_id + pTimerAAStart);
+			}
+		}
 	}
 }
 
@@ -1659,6 +1771,11 @@ void Client::PurchaseAlternateAdvancementRank(int rank_id) {
 	}
 
 	if(!rank->base_ability) {
+		return;
+	}
+
+	if(!HasRoomForAlternateAdvancementAbility(rank)) {
+		Message(Chat::Red, fmt::format("You cannot learn more than {} different alternate abilities.", MAX_PP_AA_ARRAY).c_str());
 		return;
 	}
 
@@ -2397,6 +2514,11 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 		return false;
 	}
 
+	// NMS: a brand-new ability needs a free slot in the client's AA list
+	if (IsClient() && !CastToClient()->HasRoomForAlternateAdvancementAbility(rank)) {
+		return false;
+	}
+
 	// You cannot purchase grant only AAs they can only be assigned
 	if (a->id == 17786) {
 		check_grant = false; // such a hack lol
@@ -3033,6 +3155,22 @@ bool Client::HasAlreadyPurchasedRank(AA::Rank* rank) {
 	}
 
 	return false;
+}
+
+// NMS: the client profile holds MAX_PP_AA_ARRAY AA entries, one per owned ability. Ranks of an
+// ability the character already owns reuse that ability's entry, so only brand-new abilities
+// need a free slot; without this check purchasing or granting past the limit corrupts the
+// profile and the OP_RespondAA packet.
+bool Client::HasRoomForAlternateAdvancementAbility(AA::Rank* rank) {
+	if (!rank || !rank->base_ability) {
+		return false;
+	}
+
+	if (aa_ranks.find(rank->base_ability->id) != aa_ranks.end()) {
+		return true;
+	}
+
+	return aa_ranks.size() < MAX_PP_AA_ARRAY;
 }
 
 void Client::ListPurchasedAAs(Client *to, std::string search_criteria)

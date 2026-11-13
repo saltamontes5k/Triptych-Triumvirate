@@ -47,7 +47,8 @@ void command_vault_deposit_bagitem_specific(Client *c, const Seperator *sep)
 		c->Message(Chat::White, "Usage: #vault_deposit_bagitem_specific [slot] [bagslot]");
 		return;
 	}
-	NmsVaultHandleDepositBagItem(c, Strings::ToInt(sep->arg[1]), Strings::ToInt(sep->arg[2]));
+	// The add-ons count a bag's slots from 0, the vault from 1
+	NmsVaultHandleDepositBagItem(c, Strings::ToInt(sep->arg[1]), Strings::ToInt(sep->arg[2]) + 1);
 }
 
 void command_vault_withdraw_bagitem(Client *c, const Seperator *sep)
@@ -57,5 +58,6 @@ void command_vault_withdraw_bagitem(Client *c, const Seperator *sep)
 		return;
 	}
 	const int quantity = sep->IsNumber(3) ? Strings::ToInt(sep->arg[3]) : 0;
-	NmsVaultHandleWithdrawBagItem(c, Strings::ToInt(sep->arg[1]), Strings::ToInt(sep->arg[2]), quantity);
+	// The add-ons count a bag's slots from 0, the vault from 1
+	NmsVaultHandleWithdrawBagItem(c, Strings::ToInt(sep->arg[1]), Strings::ToInt(sep->arg[2]) + 1, quantity);
 }

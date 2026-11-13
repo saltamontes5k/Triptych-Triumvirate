@@ -1123,6 +1123,134 @@ bool lua_house_delete_object(uint32 object_row_id) {
 	return results.Success() && results.RowsAffected() > 0;
 }
 
+// ---------- Realtor one-time grant (per account) ----------
+//
+// Christine hands out one free home per ACCOUNT. The grant is recorded here so a second
+// character cannot claim again and a lost deed has a record to reissue against. The lot is
+// assigned directly (the plot tables are server-side); the deed item is the physical proof.
+
+uint32 lua_house_realtor_door(uint32 account_id) {
+	if (!account_id) {
+		return 0;
+	}
+
+	auto r = database.QueryDatabase(fmt::format(
+		"SELECT door_id FROM nms_housing_realtor WHERE account_id = {} LIMIT 1", account_id
+	));
+
+	if (!r.Success() || !r.RowCount() || !r.begin()[0]) {
+		return 0;
+	}
+
+	return Strings::ToUnsignedInt(r.begin()[0]);
+}
+
+// Links a realtor-granted house to its lot: the plot points at the house row and its interior
+// zone, and the exterior building item comes from the house template for that zone, so the lot
+// shows the building without the player having to place a deed on it.
+bool lua_house_realtor_link_plot(uint32 char_id, uint32 door_id) {
+	if (!char_id || !door_id) {
+		return false;
+	}
+
+	auto house = database.QueryDatabase(fmt::format(
+		"SELECT h.`id`, h.`zone` FROM `house` h WHERE h.`char_id` = {} ORDER BY h.`id` LIMIT 1",
+		char_id
+	));
+
+	if (!house.Success() || !house.RowCount()) {
+		return false;
+	}
+
+	const uint32      house_id = Strings::ToUnsignedInt(house.begin()[0]);
+	const std::string zone     = house.begin()[1] ? house.begin()[1] : "";
+
+	if (!house_id || zone.empty()) {
+		return false;
+	}
+
+	auto item = database.QueryDatabase(fmt::format(
+		"SELECT t.`item_id` FROM `nms_house_template` t "
+		"JOIN `zone` z ON z.`zoneidnumber` = t.`zone_id` "
+		"WHERE z.`short_name` = '{}' ORDER BY t.`item_id` LIMIT 1",
+		Strings::Escape(zone)
+	));
+
+	const uint32 item_id = (item.Success() && item.RowCount() && item.begin()[0])
+		? Strings::ToUnsignedInt(item.begin()[0]) : 0;
+
+	std::string set_clause = fmt::format(
+		"`house_id` = {}, `house_zone` = '{}'", house_id, Strings::Escape(zone)
+	);
+
+	if (item_id) {
+		set_clause += fmt::format(", `house_item_id` = {}", item_id);
+	}
+
+	auto upd = database.QueryDatabase(fmt::format(
+		"UPDATE `nms_plot` SET {} WHERE `door_id` = {} AND `owner_char_id` = {}",
+		set_clause, door_id, char_id
+	));
+
+	return upd.Success() && upd.RowsAffected() > 0;
+}
+
+uint32 lua_house_realtor_claim(uint32 char_id, uint32 account_id, std::string zone) {
+	if (!char_id || !account_id) {
+		return 0;
+	}
+
+	// Already granted on this account?
+	if (lua_house_realtor_door(account_id)) {
+		return 0;
+	}
+
+	// Accounts that took a house before the record existed still count as having claimed one.
+	auto legacy = database.QueryDatabase(fmt::format(
+		"SELECT h.`id` FROM `house` h JOIN `character_data` c ON c.`id` = h.`char_id` "
+		"WHERE c.`account_id` = {} LIMIT 1", account_id
+	));
+
+	if (legacy.Success() && legacy.RowCount()) {
+		return 0;
+	}
+
+	// First vacant personal plot in the neighbourhood, by door id.
+	auto plot = database.QueryDatabase(fmt::format(
+		"SELECT p.`id`, p.`door_id` FROM `nms_plot` p "
+		"JOIN `nms_neighborhood` n ON n.`id` = p.`neighborhood_id` "
+		"WHERE n.`zone` = '{}' AND p.`owner_char_id` = 0 AND p.`owner_guild_id` = 0 "
+		"  AND p.`plot_type` = 0 ORDER BY p.`door_id` LIMIT 1",
+		Strings::Escape(zone)
+	));
+
+	if (!plot.Success() || !plot.RowCount()) {
+		return 0;
+	}
+
+	const uint32 plot_id = Strings::ToUnsignedInt(plot.begin()[0]);
+	const uint32 door_id = Strings::ToUnsignedInt(plot.begin()[1]);
+
+	auto upd = database.QueryDatabase(fmt::format(
+		"UPDATE `nms_plot` SET `owner_char_id` = {}, `purchased_at` = NOW(), "
+		"`upkeep_paid_until` = DATE_ADD(NOW(), INTERVAL 10 YEAR) "
+		"WHERE `id` = {} AND `owner_char_id` = 0", char_id, plot_id
+	));
+
+	if (!upd.Success() || !upd.RowsAffected()) {
+		return 0;
+	}
+
+	database.QueryDatabase(fmt::format(
+		"INSERT INTO `nms_housing_realtor` (`account_id`, `char_id`, `door_id`, `granted_at`) "
+		"VALUES ({}, {}, {}, NOW()) ON DUPLICATE KEY UPDATE `char_id` = VALUES(`char_id`), "
+		"`door_id` = VALUES(`door_id`)",
+		account_id, char_id, door_id
+	));
+
+	return door_id;
+}
+
 
 luabind::adl::object lua_get_instance_ids(lua_State* L, std::string zone_name) {
 	luabind::adl::object ret = luabind::newtable(L);
@@ -6217,6 +6345,9 @@ luabind::scope lua_register_general() {
 		luabind::def("house_list_objects", &lua_house_list_objects),
 		luabind::def("house_add_object", &lua_house_add_object),
 		luabind::def("house_delete_object", &lua_house_delete_object),
+	luabind::def("house_realtor_door", &lua_house_realtor_door),
+	luabind::def("house_realtor_claim", &lua_house_realtor_claim),
+	luabind::def("house_realtor_link_plot", &lua_house_realtor_link_plot),
 		luabind::def("flag_instance_by_group_leader", &lua_flag_instance_by_group_leader),
 		luabind::def("flag_instance_by_raid_leader", &lua_flag_instance_by_raid_leader),
 		luabind::def("fly_mode", &lua_fly_mode),
@@ -6997,6 +7128,7 @@ luabind::scope lua_register_events() {
 			luabind::value("aggro_say", static_cast<int>(EVENT_AGGRO_SAY)),
 			luabind::value("player_pickup", static_cast<int>(EVENT_PLAYER_PICKUP)),
 			luabind::value("popup_response", static_cast<int>(EVENT_POPUP_RESPONSE)),
+			luabind::value("nms_window", static_cast<int>(EVENT_NMS_WINDOW)),
 			luabind::value("proximity_say", static_cast<int>(EVENT_PROXIMITY_SAY)),
 			luabind::value("cast", static_cast<int>(EVENT_CAST)),
 			luabind::value("cast_begin", static_cast<int>(EVENT_CAST_BEGIN)),

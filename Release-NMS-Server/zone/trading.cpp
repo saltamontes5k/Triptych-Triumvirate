@@ -323,6 +323,17 @@ void Client::FinishTrade(Mob* tradingWith, bool finalizer, void* event_entry, st
 		return;
 	}
 
+	// A native Spirit Shroud form's temporary supplies cannot leave the
+	// profile; the whole trade is a no-op for the shrouded side.
+	if (IsSpiritShrouded()) {
+		for (int16 slot = EQ::invslot::TRADE_BEGIN; slot <= EQ::invslot::TRADE_END; ++slot) {
+			if (!CanTransferSpiritShroudItemTree(m_inv[slot])) {
+				Message(Chat::Yellow, "Your shroud's temporary supplies cannot be traded.");
+				return;
+			}
+		}
+	}
+
 	if (tradingWith->IsClient()) {
 		Client                * other    = tradingWith->CastToClient();
 

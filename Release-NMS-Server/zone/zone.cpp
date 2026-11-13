@@ -41,6 +41,7 @@
 
 #include "dynamic_zone.h"
 #include "guild_mgr.h"
+#include "nms_loot_offers.h"
 #include "map.h"
 #include "npc.h"
 #include "object.h"
@@ -278,8 +279,15 @@ bool Zone::LoadZoneObjects()
 		position.y = data.y;
 		position.z = data.z;
 
-		if (zone->HasMap()) {
-			data.z = zone->zonemap->FindBestZ(position, nullptr);
+		// NMS: curio triggers must keep the exact WLD placement; FindBestZ would
+		// drop a floating prop to the map floor. Other objects keep their stored z
+		// where the map has no floor under them (BEST_Z_INVALID) — e.g. the Bazaar
+		// bank tradeskill stations, whose map is the newer Bazaar layout.
+		if (zone->HasMap() && e.type != ObjectTypes::CurioTrigger) {
+			const float best_z = zone->zonemap->FindBestZ(position, nullptr);
+			if (best_z != BEST_Z_INVALID) {
+				data.z = best_z;
+			}
 		}
 
 		EQ::ItemInstance *inst = nullptr;
@@ -1133,6 +1141,10 @@ Zone::Zone(uint32 in_zoneid, uint32 in_instanceid, const char* in_short_name)
 	mMovementManager = &MobMovementManager::Get();
 
 	SetQuestHotReloadQueued(false);
+
+	// /nmsloot: reclaim offers that expired while their owner was offline or elsewhere (in-zone
+	// expiry delivers instead of deleting; this boot sweep only catches the undeliverable ones)
+	NmsLootOfferSweepExpired();
 }
 
 Zone::~Zone() {

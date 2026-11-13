@@ -129,6 +129,7 @@ enum ObjectTypes {
 	HalflingForge = 49,
 	EruditeForge = 50,
 	AugmentationPool = 53,
+	CurioTrigger = 100, // NMS: click-only curio trigger; no container UI, no map Z snap
 	StaticUnlocked = 255
 };
 

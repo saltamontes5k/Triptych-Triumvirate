@@ -685,6 +685,33 @@ public:
 	void SendWaypointList();
 	bool UnlockWaypoint(std::string waypoint_shortname);
 	bool IsWaypointUnlocked(std::string waypoint_shortname);
+
+	// NMS script windows (arcade); engine in nms_window.h. See
+	// Release-NMS-Quests/lua_modules/arcade.lua for the friendly wrapper.
+	int NMSWindowOpen(std::string key, std::string title, int w, int h, int flags);
+	bool NMSWindowClose(int window_id);
+	bool NMSWindowClear(int window_id);
+	bool NMSWindowIsOpen(int window_id);
+	bool NMSWindowIsSupported();
+	bool NMSWindowSend(int window_id);
+	int NMSWindowAddHeader(int window_id, std::string text, std::string color);
+	int NMSWindowAddText(int window_id, std::string text, std::string color, bool wrap);
+	int NMSWindowAddSeparator(int window_id);
+	int NMSWindowAddSameLine(int window_id);
+	int NMSWindowAddButton(int window_id, std::string label, int action, std::string color);
+	bool NMSWindowSetButton(int window_id, int widget, std::string label, std::string color, bool disabled);
+	int NMSWindowAddTablePacked(int window_id, int cols, std::string packed_cells);
+	int NMSWindowAddProgress(int window_id, double fraction, std::string color, std::string overlay);
+	bool NMSWindowSetProgress(int window_id, int widget, double fraction, std::string overlay);
+	int NMSWindowAddInput(int window_id, int action, int maxlen, std::string text);
+	bool NMSWindowSetText(int window_id, int widget, std::string text);
+	int NMSWindowAddIcon(int window_id, int icon_id, int size);
+	int NMSWindowAddItemLink(int window_id, int item_id);
+	bool NMSWindowSetStyle(int window_id, std::string bg, std::string border, int rounding, int border_px);
+	int NMSWindowAddCanvas(int window_id, int cw, int ch);
+	bool NMSWindowCanvasBegin(int window_id, int widget);
+	bool NMSWindowCanvasPiece(int window_id, int widget, std::string spec);
+	bool NMSWindowCanvasGrid(int window_id, int widget, std::string spec, std::string packed_colors);
 	bool CheckWaypointGroupFeature();
 	void EnableWaypointGroupFeature();
 

@@ -159,7 +159,9 @@ public:
 	void SetPlayerKillItemID(int32 pk_item_id) { m_player_kill_item = pk_item_id; }
 	int32 GetPlayerKillItem() { return m_player_kill_item; }
 	void RemoveItem(uint16 lootslot);
-	void RemoveItem(LootItem *item_data);
+	void RemoveItem(LootItem *item_data, bool forget_offers = true);
+	inline LootRequestType GetLootRequestType() const { return m_loot_request_type; }
+	inline uint64 GetNmsLootSerial() const { return m_nms_loot_serial; }
 	void RemoveItemByID(uint32 item_id, int quantity = 1);
 	void AddItem(
 		uint32 itemnum,
@@ -241,6 +243,10 @@ public:
 
 	virtual void UpdateEquipmentLight();
 
+	// Native Spirit Shroud deaths: bind the requested XP loss to this corpse
+	// in the original-profile ledger (no-op for ordinary deaths).
+	void RecordShroudDeath(Client *c, uint32 requested_loss);
+
 	/* Custom Seasonal\Hardcore */
 	bool IsHardcore() { return m_hardcore; }
 	bool IsSeasonal() { return m_seasonal; }
@@ -299,6 +305,7 @@ private:
 	bool                     m_is_owner_online;
 	std::vector<std::string> m_consented_player_names;
 	LootRequestType          m_loot_request_type;
+	uint64                   m_nms_loot_serial = 0; // /nmsloot: unique per corpse, so recycled entity ids never match a newer corpse's offers
 	uint32                   m_account_id;
 	bool					 m_seasonal;
 	bool					 m_hardcore;	

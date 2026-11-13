@@ -681,6 +681,27 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					efstr, x, y, z, heading, target_zone ? target_zone : "same zone"
 				);
 #endif
+				// A hostile NPC teleport must not eject a client from an instanced encounter: banish
+				// them to this zone's safe point instead of zoning them out of their expedition.
+				// Trakanon's Touch / Banishing Touch name their home zone (sebilis), which drops the
+				// whole raid when he is spawned as an echo outside Sebilis by custom encounters.
+				if (target_zone && caster && caster->IsNPC() && zone->GetInstanceID() != 0 &&
+					strcmp(target_zone, zone->GetShortName()) != 0 && spell.good_effect == DETRIMENTAL_EFFECT) {
+					glm::vec4 safe_point = zone->GetSafePoint();
+					x                   = safe_point.x;
+					y                   = safe_point.y;
+					z                   = safe_point.z;
+					heading             = safe_point.w;
+					target_zone         = nullptr;
+					LogSpells(
+						"NPC banish spell [{}] retargeted to the safe point of zone [{}] instance [{}] for [{}]",
+						spell_id,
+						zone->GetShortName(),
+						zone->GetInstanceID(),
+						GetName()
+					);
+				}
+
 				if(IsClient())
 				{
 					if(!target_zone)
@@ -849,6 +870,24 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 					}
 
 					SetPetType(petCharmed);
+
+					// NMS: a charmed pet comes up in the owner's saved Hold/GHold state for
+					// its class, which is what a summoned pet already gets from
+					// NPC::ConfigureInitialCommands(). Without this a charm always started
+					// bare while the same player's magician/necromancer pets came up held,
+					// so /pet ghold (and hold) had to be re-issued on every charm. Only the
+					// two hold states transfer; taunt, focus, spellhold and assist stay
+					// per-pet. Silent on purpose -- charming should not narrate orders.
+					if (caster->IsClient()) {
+						Client* charm_owner = caster->CastToClient();
+						const uint8 charm_class = static_cast<uint8>(CastToNPC()->GetPetOriginClass());
+
+						if (charm_owner->GetSavedPetCommand(charm_class, PET_GHOLD)) {
+							SetGHeld(true);
+						} else if (charm_owner->GetSavedPetCommand(charm_class, PET_HOLD)) {
+							SetHeld(true);
+						}
+					}
 
 					// This was done in AddBuff, but we were not a pet yet, so
 					// the target windows didn't get updated.
@@ -1847,17 +1886,27 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				snprintf(effect_desc, _EDLEN, "Model Size: %d%%", effect_value);
 #endif
 				if (effect_value && effect_value != 100) {
-					// Only allow 2 size changes from Base Size
 					float modifyAmount = (static_cast<float>(effect_value) / 100.0f);
-					float maxModAmount = GetBaseSize() * modifyAmount * modifyAmount;
-					LogDebug("SE_ModelSize: modifyAmount: {}, maxModAmount: {}, GetSize: {}, GetBaseSize: {}", modifyAmount, maxModAmount, GetSize(), GetBaseSize());
-					if ((GetSize() <= GetBaseSize() && GetSize() > maxModAmount) ||
-						(GetSize() >= GetBaseSize() && GetSize() < maxModAmount) ||
-						(GetSize() <= GetBaseSize() && maxModAmount > 1.0f) ||
-						(GetSize() >= GetBaseSize() && maxModAmount < 1.0f))
-					{
-						LogDebug("SE_ModelSize: Setting size to {}", GetSize() * modifyAmount);
+					if (IsPet()) {
+						// Live-like repeatable shrink/grow for pets (regular, stable, and charm
+						// pets). The 2-changes-from-base guard below is direction-blind: once
+						// size > base (Grow is sticky and persists on the pet), all four
+						// conditions are false and every shrink silently no-ops.
+						LogDebug("SE_ModelSize: pet target, modifyAmount: {}, GetSize: {}", modifyAmount, GetSize());
 						ChangeSize(GetSize() * modifyAmount);
+					}
+					else {
+						// Only allow 2 size changes from Base Size
+						float maxModAmount = GetBaseSize() * modifyAmount * modifyAmount;
+						LogDebug("SE_ModelSize: modifyAmount: {}, maxModAmount: {}, GetSize: {}, GetBaseSize: {}", modifyAmount, maxModAmount, GetSize(), GetBaseSize());
+						if ((GetSize() <= GetBaseSize() && GetSize() > maxModAmount) ||
+							(GetSize() >= GetBaseSize() && GetSize() < maxModAmount) ||
+							(GetSize() <= GetBaseSize() && maxModAmount > 1.0f) ||
+							(GetSize() >= GetBaseSize() && maxModAmount < 1.0f))
+						{
+							LogDebug("SE_ModelSize: Setting size to {}", GetSize() * modifyAmount);
+							ChangeSize(GetSize() * modifyAmount);
+						}
 					}
 				}
 				//Only applies to SPA 89, max value also likely does something, but unknown.
@@ -2344,40 +2393,58 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 				break;
 			}
 
-			case SE_SummonPC:
-			{
-				if (!caster) {
-					break;
-				}
-
-				if (IsClient()) {
-					if (caster->IsClient()) {
-						if (!entity_list.IsInSameGroupOrRaidGroup(caster->CastToClient(), CastToClient())) {
-							caster->MessageString(Chat::SpellFailure, TARGET_GROUP_MEMBER);
-							break;
-						}
-
-						// clear aggro when summoned in zone and further than aggro clear distance rule.
-						if (RuleR(Spells, CallOfTheHeroAggroClearDist) == 0 || caster->CalculateDistance(GetX(), GetY(), GetZ()) >= RuleR(Spells, CallOfTheHeroAggroClearDist)) {
-							if (RuleB(Spells, EvacClearCharmPet)) {
-								entity_list.ClearAggro(this, true);
-							} else {
-								entity_list.ClearAggro(this);
-							}
-						}
-					} else if (!RuleB(Combat, SummonMeleeRange) && caster->GetZoneID() == GetZoneID() && caster->CombatRange(this)) {
+				case SE_SummonPC:
+				{
+					if (!caster) {
 						break;
 					}
 
-					CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), caster->GetX(),
+					if (IsClient()) {
+						if (caster->IsClient()) {
+							if (!entity_list.IsInSameGroupOrRaidGroup(caster->CastToClient(), CastToClient())) {
+								caster->MessageString(Chat::SpellFailure, TARGET_GROUP_MEMBER);
+								break;
+							}
+
+							// clear aggro when summoned in zone and further than aggro clear distance rule.
+							if (RuleR(Spells, CallOfTheHeroAggroClearDist) == 0 || caster->CalculateDistance(GetX(), GetY(), GetZ()) >= RuleR(Spells, CallOfTheHeroAggroClearDist)) {
+								if (RuleB(Spells, EvacClearCharmPet)) {
+									entity_list.ClearAggro(this, true);
+								} else {
+									entity_list.ClearAggro(this);
+								}
+							}
+
+							CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), caster->GetX(),
 							       caster->GetY(), caster->GetZ(), caster->GetHeading(), 2,
 							       SummonPC);
-					MessageString(Chat::Spells, PLAYER_SUMMONED);
-				} else {
-					caster->Message(Chat::Red, "This spell can only be cast on players.");
+							MessageString(Chat::Spells, PLAYER_SUMMONED);
+						} else {
+							// an NPC summoning a player into its own position can embed the
+							// player in geometry when the NPC is off the floor; snap the
+							// destination to the ground and refuse the summon when the NPC
+							// position is not on a valid floor. Player casts (CoTH) keep the
+							// unrestricted behavior above.
+							float dest_x = caster->GetX();
+							float dest_y = caster->GetY();
+							float dest_z = caster->GetZ();
+							float ground_z = caster->FindGroundZ(dest_x, dest_y);
+
+							if (ground_z == BEST_Z_INVALID || std::fabs(ground_z - dest_z) > 50.0f) {
+								caster->Message(Chat::Red, "Your summon fails; the destination is not safe.");
+								break;
+							}
+
+							CastToClient()->MovePC(zone->GetZoneID(), zone->GetInstanceID(), dest_x,
+							       dest_y, ground_z, caster->GetHeading(), 2,
+							       SummonPC);
+							MessageString(Chat::Spells, PLAYER_SUMMONED);
+						}
+					} else {
+						caster->Message(Chat::Red, "This spell can only be cast on players.");
+					}
+					break;
 				}
-				break;
-			}
 
 			case SE_Silence:
 			{
@@ -4343,7 +4410,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Charm: {
-			if (!caster || !PassCharismaCheck(caster, buff.spellid)) {
+			// NMS: the slot may already have been faded and refilled by an earlier effect
+			// this tic (fade spell, dispel suppression): the charisma check below would read
+			// the wrong spell or SPELL_UNKNOWN (0xFFFF) past the end of spells[]
+			const bool charm_broke = buff.spellid != spell.id;
+
+			if (charm_broke || !caster || !PassCharismaCheck(caster, buff.spellid)) {
 				BuffFadeByEffect(SE_Charm);
 
 				// Remove from hate list of any NPC's hate list and remove all NPCs this hate list
@@ -4357,6 +4429,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Root: {
+			// NMS: the slot may already have been faded by an earlier effect this tic; the
+			// break check reads spells[buff.spellid] and would index SPELL_UNKNOWN (0xFFFF)
+			if (buff.spellid != spell.id) {
+				break;
+			}
+
 			/* Root formula derived from extensive personal live parses - Kayen
 			ROOT has a 70% chance to do a resist check to break.
 			*/
@@ -4375,6 +4453,12 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		}
 
 		case SE_Fear: {
+			// NMS: the slot may already have been faded by an earlier effect this tic; the
+			// break check reads spells[buff.spellid] and would index SPELL_UNKNOWN (0xFFFF)
+			if (buff.spellid != spell.id) {
+				break;
+			}
+
 			if (zone->random.Roll(RuleI(Spells, FearBreakCheckChance))) {
 				float resist_check = ResistSpell(spells[buff.spellid].resist_type, buff.spellid, caster,0,0,true);
 
@@ -4602,6 +4686,11 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses, bool suppress, uint32 su
 
 	for (int i=0; i < EFFECT_COUNT; i++)
 	{
+		// NMS: a suppressed buff faded its effects when it was suppressed, and SPELL_SUPPRESSED
+		// indexes past the end of spells[]: reading it crashes the zone when the suppression expires
+		if(!IsValidSpell(buffs[slot].spellid))
+			break;
+
 		if(IsBlankSpellEffect(buffs[slot].spellid, i))
 			continue;
 
@@ -7354,50 +7443,6 @@ int64 Mob::GetFocusEffect(focusType type, uint16 spell_id, Mob *caster, bool fro
 
 		if (UsedItem && rand_effectiveness && focus_max_real != 0) {
 			realTotal = CalcFocusEffect(type, UsedFocusID, spell_id);
-		}
-
-		if ((rand_effectiveness && UsedItem) || (realTotal != 0 && UsedItem)) {
-			// there are a crap ton more of these, I was able to verify these ones though
-			// the RNG effective ones appear to have a different message for failing to focus
-			uint32 string_id = BEGINS_TO_GLOW; // this is really just clicky message ...
-			switch (type) {
-			case focusSpellHaste:
-				string_id = SHIMMERS_BRIEFLY;
-				break;
-			case focusManaCost: // this might be GROWS_DIM for fail
-				string_id = FLICKERS_PALE_LIGHT;
-				break;
-			case focusSpellDuration:
-				string_id = SPARKLES;
-				break;
-			case focusImprovedDamage:
-			case focusImprovedDamage2:
-				if (realTotal)
-					string_id = ALIVE_WITH_POWER;
-				else
-					string_id = SEEMS_DRAINED;
-				break;
-			case focusRange:
-				string_id = PULSES_WITH_LIGHT;
-				break;
-			case focusSpellHateMod: // GLOWS_RED for increasing hate
-				string_id = GLOWS_BLUE;
-				break;
-			case focusImprovedHeal:
-				if (realTotal)
-					string_id = FEEDS_WITH_POWER;
-				else
-					string_id = POWER_DRAIN_INTO;
-				break;
-			case focusReagentCost: // this might be GROWS_DIM for fail as well ...
-				string_id = BEGINS_TO_SHINE;
-				break;
-			default:
-				break;
-			}
-			if (!from_buff_tic) {
-				MessageString(Chat::FocusEffect, string_id, UsedItem->Name);
-			}
 		}
 	}
 

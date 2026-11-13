@@ -43,6 +43,7 @@
 #include "event_codes.h"
 #include "guild_mgr.h"
 #include "map.h"
+#include "nms_loot_offers.h"
 #include "nms_vault.h"
 #include "petitions.h"
 #include "queryserv.h"
@@ -76,6 +77,12 @@ bool Client::Process() {
 		}
 
 		HousingClientProcess(this);
+
+		// /nmsloot: send pending offers only after the client UI has settled. The old
+		// CompleteConnect send ran before MacroQuest's window tree was ready.
+		if (m_nms_loot_restore_timer.Check()) {
+			NmsLootOfferRestoreOnZoneIn(this);
+		}
 
 		// Coalesced AA table flush: see Client::SendAlternateAdvancementTable.
 		if (m_aa_table_send_pending &&
@@ -136,7 +143,16 @@ bool Client::Process() {
 		// SendHPUpdate calls hpupdate_timer.Start so it can delay this timer, so lets not reset with the check
 		// since the function will anyways
 		if (hpupdate_timer.Check(false)) {
-			SendHPUpdate();
+			// Native Spirit Shroud forms: the client's alternate profile loads
+			// its resources late, so the first few ticks re-send the resource
+			// triple to settle the display.
+			const bool refresh_shroud_resources = IsSpiritShrouded() && m_spirit_shroud_resource_refreshes;
+			SendHPUpdate(refresh_shroud_resources);
+			if (refresh_shroud_resources) {
+				--m_spirit_shroud_resource_refreshes;
+				SendManaUpdate();
+				SendEnduranceUpdate();
+			}
 		}
 
 		// Deferred zone-in shroud re-apply (see LoadAndApplyShroudState).
@@ -693,8 +709,10 @@ bool Client::Process() {
 		}
 
 		// this is independent of the tick timer
-		if (consume_food_timer.Check())
+		if (consume_food_timer.Check()) {
 			DoStaminaHungerUpdate();
+			ProcessStarvation();
+		}
 
 		if (!focused_pet_id || !entity_list.GetNPCByID(focused_pet_id)) {
 			if (GetPet()) {
@@ -724,6 +742,10 @@ bool Client::Process() {
 			DoManaRegen();
 			DoEnduranceRegen();
 			BuffProcess();
+
+			if (!dead) {
+				NmsVaultKeepClickies(this);
+			}
 
 			if (auto_attack) {
 				ResetAFKTimer();
@@ -782,44 +804,50 @@ bool Client::Process() {
 				m_last_seen_wearchange.clear();
 			}
 
-			if (GetPet()) {
-				for(int i = 0; i < petids.size(); i++) {
-					auto pet = entity_list.GetMob(petids[i]);
-					if (pet && !IsXTarget(pet)) {
-						XTargets[19-i].ID = pet->GetID();
-						XTargets[19-i].Type = CurrentTargetNPC;
-						SendXTargetPacket(19-i, pet);
-					}
-				}
-			}
+			// Pets used to be written into XTarget slots 19, 18, 17... here so the
+			// client could draw secondary pet HP bars out of the extended-target label
+			// cache. They are not targets: every pet ate a row of the Extended Target
+			// window (the blue name rows at the bottom), and above 5 slots they
+			// hijacked real auto-hater slots that the window fill owns. The Pet Info
+			// window takes pet HP straight from the spawn now (OP_PetList + spawn
+			// HP), so nothing needs this. Do not reintroduce it -- pets must never
+			// occupy extended-target slots.
 
 			if (RuleB(Custom, ServerAuthStats) && InZone() && !CAuthorized) {
-				if (CUnauth_tics > 1) {
-					if (GetZoneID() != Zones::BAZAAR) {
-						if (CUnauth_tics >= 11) {
-							zone->SendDiscordMessage("admin", fmt::format("Moving [{}] to Bazaar. Unauthorized Client.", GetCleanName()));
-							const auto safe = ZoneStore::Instance()->GetZoneSafeCoordinates(Zones::BAZAAR);
-							auto zone_mode = ZoneSolicited;
+				if (RuleB(Custom, BazaarExileUnauthedClients)) {
+					if (CUnauth_tics > 1) {
+						if (GetZoneID() != Zones::BAZAAR) {
+							if (CUnauth_tics >= 11) {
+								zone->SendDiscordMessage("admin", fmt::format("Moving [{}] to Bazaar. Unauthorized Client.", GetCleanName()));
+								const auto safe = ZoneStore::Instance()->GetZoneSafeCoordinates(Zones::BAZAAR);
+								auto zone_mode = ZoneSolicited;
 
-							MovePC(
-								Zones::BAZAAR,
-								safe.x,
-								safe.y,
-								safe.z,
-								0.0f,
-								0,
-								zone_mode
-							);
+								MovePC(
+									Zones::BAZAAR,
+									safe.x,
+									safe.y,
+									safe.z,
+									0.0f,
+									0,
+									zone_mode
+								);
 
-							return false;
-						}
+								return false;
+							}
 
-						Message(Chat::Shout, "You are not using the latest New Multiclass Server client. Visit https://your-server-website.example/install-help for more information. Moving to the Bazaar in %d seconds.", (11 - CUnauth_tics) * 6);
-					} else {
-						if (CUnauth_tics % 2 == 0) {
-							Message(Chat::Shout, "You are not using the latest New Multiclass Server client. Visit https://your-server-website.example/install-help for more information. You will be disconnected if you leave the Bazaar.");
+							Message(Chat::Shout, "You are not using the latest New Multiclass Server client. Visit https://your-server-website.example/install-help for more information. Moving to the Bazaar in %d seconds.", (11 - CUnauth_tics) * 6);
+						} else {
+							if (CUnauth_tics % 2 == 0) {
+								Message(Chat::Shout, "You are not using the latest New Multiclass Server client. Visit https://your-server-website.example/install-help for more information. You will be disconnected if you leave the Bazaar.");
+							}
 						}
 					}
+				} else if (CUnauth_tics == 2) {
+					// Exile disabled: one harmless note per zone-in, no countdown,
+					// no Bazaar MovePC, no in-Bazaar nag. The counter still runs so
+					// the note fires once per zone process (Client objects are
+					// per-zone-process, CUnauth_tics restarts with each zone-in).
+					Message(Chat::Yellow, "You are not using the latest New Multiclass Server client. Visit https://your-server-website.example/install-help for more information.");
 				}
 				CUnauth_tics++;
 			}
@@ -1371,9 +1399,18 @@ void Client::OPRezzAnswer(uint32 Action, uint32 SpellID, uint16 ZoneID, uint16 I
 
 	if (Action == 1)
 	{
-		// Mark the corpse as rezzed in the database, just in case the corpse has buried, or the zone the
-		// corpse is in has shutdown since the rez spell was cast.
-		database.MarkCorpseAsResurrected(PendingRezzDBID);
+		// A recorded shroud death's XP debit settles through the original-
+		// profile ledger instead of the ordinary corpse XP path; a refused
+		// claim leaves the corpse untouched for a retry.
+		bool shroud_managed = false;
+		if (!SettleSpiritShroudResurrection(PendingRezzDBID, SpellID, PendingRezzXP, shroud_managed)) {
+			return;
+		}
+		if (!shroud_managed) {
+			// Mark the corpse as rezzed in the database, just in case the corpse has buried, or the zone the
+			// corpse is in has shutdown since the rez spell was cast.
+			database.MarkCorpseAsResurrected(PendingRezzDBID);
+		}
 		LogSpells("Player [{}] got a [{}] Rezz spellid [{}] in zone[{}] instance id [{}]",
 				name, (uint16)spells[SpellID].base_value[0],
 				SpellID, ZoneID, InstanceID);
@@ -1439,10 +1476,12 @@ void Client::OPRezzAnswer(uint32 Action, uint32 SpellID, uint16 ZoneID, uint16 I
 			SetEndurance(GetMaxEndurance() / 20);
 		}
 
-		if(spells[SpellID].base_value[0] < 100 && spells[SpellID].base_value[0] > 0 && PendingRezzXP > 0) {
-			SetEXP(ExpSource::Resurrection, ((int)(GetEXP()+((float)((PendingRezzXP / 100) * spells[SpellID].base_value[0])))), GetAAXP(), true);
-		} else if (spells[SpellID].base_value[0] == 100 && PendingRezzXP > 0) {
-			SetEXP(ExpSource::Resurrection, (GetEXP() + PendingRezzXP), GetAAXP(), true);
+		if(!shroud_managed) {
+			if(spells[SpellID].base_value[0] < 100 && spells[SpellID].base_value[0] > 0 && PendingRezzXP > 0) {
+				SetEXP(ExpSource::Resurrection, ((int)(GetEXP()+((float)((PendingRezzXP / 100) * spells[SpellID].base_value[0])))), GetAAXP(), true);
+			} else if (spells[SpellID].base_value[0] == 100 && PendingRezzXP > 0) {
+				SetEXP(ExpSource::Resurrection, (GetEXP() + PendingRezzXP), GetAAXP(), true);
+			}
 		}
 
 		//Was sending the packet back to initiate client zone...
@@ -1900,11 +1939,13 @@ void Client::OPMoveCoin(const EQApplicationPacket* app)
 	// will say 11, but the client will have 1 left on their cursor, so we have
 	// to figure out the conversion ourselves
 
-	amount_to_add = amount_to_take * ((float)CoinTypeCoppers(mc->cointype1) / (float)CoinTypeCoppers(mc->cointype2));
+	// exact integer conversion: doing this in float silently loses coin once an
+	// amount exceeds float precision (~16.7 million)
+	amount_to_add = (amount_to_take * CoinTypeCoppers(mc->cointype1)) / CoinTypeCoppers(mc->cointype2);
 
 	// the amount we're adding could be different than what was requested, so
 	// we have to adjust the amount we take as well
-	amount_to_take = amount_to_add * ((float)CoinTypeCoppers(mc->cointype2) / (float)CoinTypeCoppers(mc->cointype1));
+	amount_to_take = (amount_to_add * CoinTypeCoppers(mc->cointype2)) / CoinTypeCoppers(mc->cointype1);
 
 	// now we should have a from_bucket, a to_bucket, an amount_to_take
 	// and an amount_to_add

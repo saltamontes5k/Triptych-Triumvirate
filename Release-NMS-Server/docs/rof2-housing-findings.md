@@ -773,3 +773,247 @@ sent on burst, after every 0x796c, and in interiors), inspection `estate_type` f
    tips), +352=0x868440, +288=0x8660E0.
 4. The draw-path gate is the open bug: a full-size, visible-flagged, widget-populated
    SIDL window that draws nothing, for the Manage window only. The tips popup masks it.
+
+## 20. Twelfth batch (2026-11-11): exit, item list, and the house template
+
+Three player-visible defects, each traced to a concrete miss.
+
+### 20.1 `/leaverealestate` did nothing
+
+`0x1da9` is C2S with **4 stale bytes**: the client overwrites only the opcode, so the body is
+not an estate id and selects nothing. It was registered log-only, and the zone log has the
+packet arriving inside `phinterior1a1` on 2026-10-31 with "unimplemented". It now runs
+`Handle_OP_RealEstateExit` → `HousingLeave(notify=false)`: resolve the character's house row
+and the lot's door, then `MovePC` to the neighborhood at that door. Outside an interior the
+call is a silent no-op, so the retail command can fire anywhere without a chat line.
+
+### 20.2 The Items window was empty, so its menu had nothing to act on
+
+`0x1cef` was only sent in reply to `0x050c`, and **no `0x050c` appears in any zone log**. Worse,
+the list's ownership query filtered on the *current* zone short name, which inside
+`phinterior*` is not a neighborhood — every row dropped. The list now resolves the lot's
+neighborhood zone, carries **X/Y/Z** in the ItemEntry order (it was Y/X/Z), and is pushed with
+the interior identity and for every housed owned plot at neighborhood zone-in.
+
+The menu body itself was already right (Menu768 matches upstream's `EncodeChairMenu`), with one
+fix: byte 748 nonzero hides the edit actions (2/param 1, 3, 4, 11, 14), so it is only set when no
+record was written.
+
+What the client actually sends here is `0x3424` (a deposit): captured from the lot on
+2026-11-11 with `destination_action 2` (closet) and refused with result 23. Yard storage is the
+shed, interior storage the closet; one row table backs both, so the destination word no longer
+decides acceptance. A 2/3 operation from the player's own property is accepted and the standing
+context names the container.
+
+### 20.3 A lot's interior did not follow the building
+
+`kDefaultHouseZone` was hardcoded to `phinterior1a1`; `AttachHouseToPlot` ran only from a GM
+claim; retail purchase created no house at all; placement commit only stored `house_item_id`.
+New `nms_house_template` (v382, 163 rows, seeded from the reviewed RoF2 registry: item →
+definition/type/interior `zoneidnumber`/model). `AttachHouseToPlot(zone, door, item)` now takes
+the zone from the item, creates the house when there is none, and re-points an existing house row
+(new instance, same house id) when the building changes the type. Called from the claim,
+`#housing place`, the building commit, `0x218c` Go and `#housing enter`, so an old lot heals on
+its next entry. `#housing retemplate <door_id>` forces it.
+
+Live proof of the old behaviour: lot 19 → house 3 → `phinterior1a1`, item 61874. The template
+says 61874 → definition 12 / type 3 / zone **714** = `phinterior3a1`. Guild-hall items 66618–66620
+and 66660 map to zones 345/738/737/751; only 345 (`guildhall`) exists in this content set, so the
+others log a fallback until those zones ship.
+
+### 20.4 Build-system gotchas (both cost a cycle)
+
+- `common/database/database_update.cpp` **#includes** the three manifest `.cpp` files, so the
+  authoritative object is `database_update.obj`. Editing a manifest and relinking does **not**
+  recompile the includer, and the standalone `database_update_manifest_custom.obj` is ignored at
+  link. Delete `Build/common/common.dir/Release/database_update.obj` to force it; the tell is
+  `LNK4006 ... already defined in database_update.obj`.
+- `CUSTOM_BINARY_DATABASE_VERSION` in `common/version.h` was **378** while the database was at
+  **381**, so `world.exe database:updates` reported "binary [378]" and applied nothing. Bumped to
+  382 with v382. The binary version — not the manifest maximum — is what gates application.
+  The automatic pre-migration backup of `peq` takes a few minutes; world boots after it.
+
+## 21. Thirteenth batch (2026-11-11): capacity profiles, real containers, house swap
+
+### 21.1 Per-house capacity (v385)
+
+`nms_house_capacity` carries the reviewed per-definition totals from the public
+`house_variant_capacities.json`: 500 for a three-room personal house, 300 for a one-room, 400
+Hermit, 600 Evantil, 1500/2000 for the large guild halls — 33 definitions. The source's
+`max_non_estate_items` / `max_npc_items` were **null**; they stay 0 here and the server reads 0 as
+"no artificial sub-cap", never as a recovered Live limit. `max_vault` is our policy value for the
+closet slot cap (60 personal / 100 guild hall), matching the retail pattern of a vault smaller
+than the total.
+
+The interior identity now sends the profile's `max_items` / `max_non_estate_items` / `max_npc_items`
+instead of the old hardcoded 300/300/5, so the client's capacity display follows the house.
+
+### 21.2 Containers are rows, not a flag
+
+`nms_house_item.container`: `-1` placed in the world, `0` closet (house), `1` shed (yard), `2`
+crate. `stowed` stays in sync (container >= 0) because the older placement code keys off it.
+
+- Deposits (`0x3424`) route by context: inside the interior → closet, on the owned lot → shed,
+  action 6 → crate. The capacity check runs first: whole-lot total against `max_items`, and the
+  closet against `max_vault`. Refusal is result 9 plus a chat line, not the old result 23.
+- Store All now packs placed furniture into the closet (row kept, world actor retired) instead of
+  handing everything back to the inventory, and stops at the vault cap.
+- `#housing storage [door]` prints totals and per-container counts against the caps;
+  `#housing withdraw <0|1|2> <row|all>` takes rows back out.
+- `0x1cef` marks a row placed from `container`, not from `stowed`, so the window can show stored
+  rows as unplaced in either container.
+
+### 21.3 House swap (0x21ba)
+
+Action 17 / eqstr 5336 ("Swap Houses") is now offered on the building menu, and `0x21ba` is
+implemented: the lot's current building goes back into the pack, the carried replacement is
+consumed, `nms_plot.house_item_id` changes, and the interior is re-derived from the new item's
+template (same 0x21ba layout as the reference: FFFFFFFF@0, zero@4, current estate/item @8/12,
+replacement @16/20).
+
+### 21.4 The container props in the interior zones
+
+The 5-6 bag/box models standing in each `phinterior*` zone are **client-side zone geometry**:
+`ground_spawns`, `object` and `doors` all have **zero** rows for every interior zone. The server
+cannot move or hide them — that needs a zone-file edit, not a DB row.
+
+What the server can do is link them, which is what `nms_house_container_anchor` and
+`#housing anchor <0|1|2> [model]` are for: a GM stands on the prop and records the spot, then
+`#housing anchors` lists them per zone. Seeding all sixteen interior zones is a one-time pass of
+6 commands per zone; the coordinates then let the storage UI point at the physical prop instead of
+an abstract container id.
+
+## 22. Container deposits from the physical bags (2026-11-11)
+
+The bag/box props in the interiors **are clickable** and open a container window client-side; they
+are still client zone geometry (no `ground_spawns`/`object`/`doors` rows, and the `.zon` carries
+only terrain and door objects), but the operation behind them is server-backed.
+
+Live capture, lot 19 in `phinterior1a1` (2026-11-11 12:54:51 and 12:55:00):
+
+```
+OP_RealEstateItemOperation [0x3424] size 48
+payload 744b6243 67323353 50386657 7a646948 00000000 00000000 1c000000 ffff3e01
+        ffffffff ffffffff 00000000 03000000
+```
+
+- Source is the inventory profile (estate/item `FFFFFFFF`), slot in location[0] low (0x1C = 28).
+- The destination word is **3 for both deposits**, inside the house — so it does not mean "shed".
+  Context is what decides: interior → closet, yard → shed, and the word only picks crate/6.
+- Both rows landed (`nms_house_item` 1 = item 17590, 2 = item 4644, container 0, stowed 1), the
+  0x1cef list refreshed, and result 0 closed the loop.
+
+The reverse direction (dragging an item out of the bag) uses the **estate-source profile** of the
+same body: estate/row at 32/36 instead of the FFFFFFFF sentinels. `Handle_OP_RealEstateItemOperation`
+now branches on that: it validates the lot, requires the row to be `container >= 0`, returns the
+item via `ReturnFurnitureRow`, refreshes the list and answers result 0. The old fail-closed result 9
+remains for anything that does not resolve.
+
+## 23. Placeable flag, house pane, and the 948-item furniture catalog (2026-11-11)
+
+### 23.1 Why furniture could not be placed
+
+The client refused every placement with "You have no furniture in your bags to place here"
+**without sending a packet** (no `0x626e` in any zone log). The gate is the RoF2 item stream's
+`Placeable` byte (`rof2_structs.h ItemQuaternaryBodyStruct`), which `patches/rof2.cpp` wrote as
+`0` for every item.
+
+> **Correction 2026-11-12: the 72-byte tail that followed this change was wrong and is removed.**
+> It was appended *after* the full quaternary body instead of replacing the body's tail, adding
+> 72 bytes to every item record on the wire. `OP_CharInventory` is walked by position, so the
+> client parsed the tail's leading u32 as the subitem count and lost every item after the first —
+> every character on the server showed empty gear/bank slots (only the lowest-slot item rendered).
+> Measured on one character: 41934 bytes before the tail, 45030 after = +43×72. Placement was
+> never actually verified with the tail in place; the Placeable byte (+96) is the only item-body
+> field this build's client is known to consume.
+
+It now comes from a compiled catalog: `common/housing_placeable.h` (948 ids, the reviewed original
+furniture source catalog unioned with the ordinary-placeables class registry) and
+`iqbs.Placeable = HousingPlaceable::Is(item->ID) ? 1 : 0`. The same set seeds
+`nms_housing_placeable`, the server/GM gate used by `#housing item place`
+(`utils/sql/20261111_housing_placeable_catalog.sql`, live-seeded 948 rows).
+
+### 23.2 House vs Yard in the Items window
+
+The window buckets rows by estate id: the plot estate is **Yard**, the house-interior estate is
+**House**. We only ever sent the plot list from inside, so every closet deposit appeared as
+"Yard / Stored" and the House counters read N/A.
+
+Inside the interior the identity burst now also carries:
+- a second definition `kHouseInteriorDefBase + door` with type 2 and the house's capacity, and
+- a child estate snapshot (id `kHouseEstateBase + door`, parent = lot) on `0x63fd`, which is what
+  the Items window's House pane binds (`sub_5AFFC0` walks the plot-underfoot's type-2 children).
+
+`SendRealEstateItemList` is now estate-keyed: the plot list carries placed/shed/crate rows, the
+house list carries closet rows, and each entry echoes the estate id it was requested for.
+
+### 23.3 Open: the ItemPtr framing
+
+A live list of one stored row rendered as the wrong item ("Archived Stone Carved Bed", qty 250)
+from a 77-byte packet — the serialized item body was only ~16 bytes, so the client read garbage.
+The list now logs `item list entry: ... body [N] bytes, first [....]` on the first row; the next
+open will say whether `ItemInstance::Serialize(slotCursor)` is producing the full native stream.
+
+## 24. Furniture placement works inside the house (2026-11-12)
+
+After the kind-5 gate fix, the native placement path works inside the interior: the client sends
+the begin/commit pair and the row lands with our `[housing] placed item [61579] in your house
+(row 4)` confirmation. The 72-byte housing tail also fixed the item list rendering: stored rows
+now show their real names (Warded Satchel, Ogre Graveyard Tombstone) instead of the 16-byte stub
+artifact.
+
+Still open: **the Yard pane reads N/A in the neighborhood**, so the yard placement button is
+disabled. The interior's own counters worked when the context carried a definition with capacity
+(the old kind-8 context); in the yard the context definition is the zone id (kind 5) and the plot
+object carries kind 4 for a personal plot. The client appears to bind the Yard pane from the
+standing estate's kind/definition rather than from the plot object registered later.
+
+Two candidate one-line experiments, cheapest first:
+1. Send personal plot definitions as kind 8 instead of 4 (guild rows are already 8). This is the
+   value the window treated as a plot when the interior context used it.
+2. Re-introduce the house child estate for the yard, without touching the definition count (the
+   earlier regression coincided with the second definition, not necessarily the child).
+
+Do not change either without a live retest of placement inside, plot search, and the tip window:
+the last attempt at (2) coincided with the plot-search/tip regressions and was reverted.
+
+## 25. Placeable rule widened; the tail is gone for good (2026-11-12)
+
+The 72-byte "housing metadata tail" was removed from `SerializeItem` (commit a0a64bb0) after it
+broke item streams: the client walks an item stream by position, so the inserted block's leading
+u32 was read as the subitem count and every record after the first parsed 72 bytes early. The
+tell was `OP_CharInventory` growing by exactly 43 x 72 bytes. `Placeable` travels in the
+quaternary body at +96 and needs no tail.
+
+The catalog alone also missed event furniture (the Ogre Graveyard Tombstone, 90637, is not in any
+reviewed furniture catalog). The flag is now:
+
+```
+Placeable = HousingPlaceable::Is(id) || (ItemType == ItemTypeMisc && BagType == 0)
+```
+
+Every house item is ItemTypeMisc; the containers (bags/satchels) carry BagType 5/13, furniture and
+deeds carry 0. That marks the tombstone placeable while keeping bags unplaceable.
+
+Open at this point: taking an item back **out** of storage produces no client packet at all (no
+0x3424, no 0x32ee) in the 11:5x capture, so the withdraw path currently has nothing to answer.
+
+## 26. Realtor: one free home per account, with a lot deed (v399)
+
+Christine (NPC 712000) used to grant a free house **per character** and kept no record, so alts
+could claim again and a lost deed had nothing to reissue against.
+
+- `nms_housing_realtor` (account_id PK, char_id, door_id, granted_at) records the one grant. The
+  migration backfills it from existing `house` rows, so accounts that already took a house (Judy,
+  account 3, door 19) count as used rather than getting a second one.
+- `eq.house_realtor_claim(char_id, account_id, zone)` assigns the first vacant personal plot
+  (10-year upkeep), writes the ledger row and returns the door id; `eq.house_realtor_door(account_id)`
+  reports the recorded lot. Both are new Lua bindings in `zone/lua_general.cpp`.
+- Item **9015400 "Sunrise Hills Lot Deed"** is cloned from the house key row, so it inherits the
+  same lore/no-drop/no-rent treatment; it is the physical proof the player carries.
+- The grant now hands over the house, the lot it stands on, the deed and the key. Replacements
+  cost platinum afterwards: 25,000pp key, 10,000pp deed. A second character on the same account is
+  refused and told only the grant holder can live there.
+
+Script lives at `Release-NMS-Quests/neighborhood/Christine.lua` and is mirrored into
+`Build/bin/Release/quests/neighborhood/` (runtime tree is the live one).
