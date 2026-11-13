@@ -304,7 +304,7 @@ Honest state of the world, so you know what you are getting into:
 
 Blessing of Gods is in, only rank 1 attainable for now. See Blessing of God NPC in bazaar for rank 1. for veeshaan/agnostic think of the one common gem unused for imbueds. Cleric merchant sells new imbued spell for Veeshan** You get these abilities without anything special, just upon question completion trigger automatically in combat. Will need tuning
 
-# Deity Blessings — Proc Effect Chart
+## Deity Blessings — Proc Effect Chart
 
 Source of truth: `deity_blessings.pl` (`%BLESS_PROC`). The "Blessing of the God" system grants each deity a set of proc effects keyed by trigger type:
 
@@ -319,58 +319,61 @@ Source of truth: `deity_blessings.pl` (`%BLESS_PROC`). The "Blessing of the God"
 Proc chart by trigger
 Triggers: melee = landed melee/ranged hit · hostile cast = completed damage spell · reflect = incoming melee hit · beneficial = any heal/buff/utility cast · passive = applied on zone-in. All procs share one roll (Rank I = 1%, Rank II = 3%) with a 2-second internal cooldown; hostile triggers require combat; CC casts never proc; "heal if hurt" only fires below 50% HP.
 
-God	Melee hit	Hostile cast	Reflect	Beneficial cast	Passive
-Bertoxxulous	Disease/Poison nuke (random)	same	Disease	generic self-heal	—
-Brell Serilis	Dyn's Dizzying Draught	Dyn's	—	group heal + 10% if hurt	—
-Cazic-Thule	Fear/Root/Poison (random)	same	Fear + Root + Poison	generic self-heal	—
-Erollisi Marr	lifetap	mana tap	—	10% if hurt	—
-Bristlebane	mischief¹	mischief¹	—	mischief¹	—
-Innoruuk	lifetap	lifetap + mana tap + 200 hate	—	generic self-heal	—
-Karana	weapon twinproc	twincast	—	twincast	—
-Mithaniel Marr	Dyn's	Dyn's	—	group heal + 10% if hurt	—
-Prexus	cold nuke	twincast-cold + cold nuke	—	group heal + 10% if hurt	—
-Quellious	−200 hate + mana tap + rare Dyn's (10% sub-roll)	−200 hate + mana tap + twincast	—	10% self-heal	—
-Rallos Zek	lifetap + 150 hate + flurry	lifetap + twinproc + 150 hate	—	10% if hurt	—
-Rodcet Nife	group heal	group heal	—	group heal	—
-Solusek Ro	fire nuke	twincast-fire + fire nuke	—	twincast	—
-the Tribunal	lifetap-if-hurt-else-nuke	same	—	10% if hurt	—
-Tunare	snare + 4% heal	— (heals only)	—	8% heal	damage shield on zone-in (only passive)
-Veeshan	Fire/Cold/Magic (random)	same	—	10% if hurt	—
-Agnostic (unbound)	mischief¹	mischief¹	—	mischief¹	—
+| God | Melee hit | Hostile cast | Reflect | Beneficial cast | Passive |
+| --- | --- | --- | --- | --- | --- |
+| Bertoxxulous | Disease/Poison nuke (random) | same | Disease | generic self-heal | — |
+| Brell Serilis | Dyn's Dizzying Draught | Dyn's | — | group heal + 10% if hurt | — |
+| Cazic-Thule | Fear/Root/Poison (random) | same | Fear + Root + Poison | generic self-heal | — |
+| Erollisi Marr | lifetap | mana tap | — | 10% if hurt | — |
+| Bristlebane | mischief¹ | mischief¹ | — | mischief¹ | — |
+| Innoruuk | lifetap | lifetap + mana tap + 200 hate | — | generic self-heal | — |
+| Karana | weapon twinproc | twincast | — | twincast | — |
+| Mithaniel Marr | Dyn's | Dyn's | — | group heal + 10% if hurt | — |
+| Prexus | cold nuke | twincast-cold + cold nuke | — | group heal + 10% if hurt | — |
+| Quellious | −200 hate + mana tap + rare Dyn's (10% sub-roll) | −200 hate + mana tap + twincast | — | 10% self-heal | — |
+| Rallos Zek | lifetap + 150 hate + flurry | lifetap + twinproc + 150 hate | — | 10% if hurt | — |
+| Rodcet Nife | group heal | group heal | — | group heal | — |
+| Solusek Ro | fire nuke | twincast-fire + fire nuke | — | twincast | — |
+| the Tribunal | lifetap-if-hurt-else-nuke | same | — | 10% if hurt | — |
+| Tunare | snare + 4% heal | — (heals only) | — | 8% heal | damage shield on zone-in (only passive) |
+| Veeshan | Fire/Cold/Magic (random) | same | — | 10% if hurt | — |
+| Agnostic (unbound) | mischief¹ | mischief¹ | — | mischief¹ | — |
 ¹ Mischief = 40% pickpocket + steal victim's appearance, 60% mimicry (copy a random other god's bundle for that trigger; never copies itself or another mimic tree).
 
-Agnostic causes (bind at the PoT Keeper, before Rank I)
+### Agnostic causes (bind at the PoT Keeper, before Rank I)
 Choosing a cause routes all procs through that god's row above from Rank I onward; the god is never named in game, only the label. Changing cause later severs everything.
 
-Cause label	Hidden god	Cause label	Hidden god
-Legacy	Bertoxxulous	Adventure	Karana
-Wealth	Brell Serilis	Valor	Mithaniel Marr
-Myself	Cazic-Thule	Glory	Prexus
-Love	Erollisi Marr	Peace	Quellious
-Fun and Games	Bristlebane	Battle	Rallos Zek
-Revenge	Innoruuk	People	Rodcet Nife
-Power	Solusek Ro	Justice	the Tribunal
-Nature	Tunare	Knowledge and Reason	Veeshan
-Rank 2 — the Deity Favors
+| Cause label | Hidden god | Cause label | Hidden god |
+| --- | --- | --- | --- |
+| Legacy | Bertoxxulous | Adventure | Karana |
+| Wealth | Brell Serilis | Valor | Mithaniel Marr |
+| Myself | Cazic-Thule | Glory | Prexus |
+| Love | Erollisi Marr | Peace | Quellious |
+| Fun and Games | Bristlebane | Battle | Rallos Zek |
+| Revenge | Innoruuk | People | Rodcet Nife |
+| Power | Solusek Ro | Justice | the Tribunal |
+| Nature | Tunare | Knowledge and Reason | Veeshan |
+### Rank 2 — the Deity Favors
 Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: cause + blank idol at the PoT keeper only). Rank II = that god's favor quest (agnostics must do all 16 — no royal road; progress shows in the devotion window). Reward per favor: that god's Fireworks Focus; Rank II also grants a Potion of Adventure II.
 
-God	Favor quest	Giver — zone
-Bertoxxulous	Culling Fever	Avatar — East Karana gnoll reaver camp
-Brell Serilis	Crafting a Party	Roderik — Butcherblock
-Cazic-Thule	A Taste of Fear	Avatar — Feerrott
-Erollisi Marr	Love, Norrathian Style	Aspect — South Ro coast
-Bristlebane	Party Favor	the Image — Plane of Knowledge
-Innoruuk	The Power of Hatred	evil little imp — Innothule
-Karana	Tears of a God	Avatar — South Karana (Tober in North Karana)
-Mithaniel Marr	Deliver Us from Evil	Avatar — Plane of Tranquility
-Prexus	Fishing for Blessings	Primate — Erud's Crossing
-Quellious	Peace and Understanding	Avatar — Plane of Tranquility
-Rallos Zek	Warrior's Rest	Avatar — Plane of Tranquility (Togg in Lavastorm)
-Rodcet Nife	Healing Touch	Helera Garet — North Qeynos
-Solusek Ro	Bonfires of Vanity	Avatar — North Ro
-the Tribunal	Justice of the Tribunal	Herald — Plane of Tranquility
-Tunare	The Gift of Life	Avatar — Greater Faydark
-Veeshan	Memory in Crystal	crystalline avatar — Plane of Knowledge (5-question trivia)
+| God | Favor quest | Giver — zone |
+| --- | --- | --- |
+| Bertoxxulous | Culling Fever | Avatar — East Karana gnoll reaver camp |
+| Brell Serilis | Crafting a Party | Roderik — Butcherblock |
+| Cazic-Thule | A Taste of Fear | Avatar — Feerrott |
+| Erollisi Marr | Love, Norrathian Style | Aspect — South Ro coast |
+| Bristlebane | Party Favor | the Image — Plane of Knowledge |
+| Innoruuk | The Power of Hatred | evil little imp — Innothule |
+| Karana | Tears of a God | Avatar — South Karana (Tober in North Karana) |
+| Mithaniel Marr | Deliver Us from Evil | Avatar — Plane of Tranquility |
+| Prexus | Fishing for Blessings | Primate — Erud's Crossing |
+| Quellious | Peace and Understanding | Avatar — Plane of Tranquility |
+| Rallos Zek | Warrior's Rest | Avatar — Plane of Tranquility (Togg in Lavastorm) |
+| Rodcet Nife | Healing Touch | Helera Garet — North Qeynos |
+| Solusek Ro | Bonfires of Vanity | Avatar — North Ro |
+| the Tribunal | Justice of the Tribunal | Herald — Plane of Tranquility |
+| Tunare | The Gift of Life | Avatar — Greater Faydark |
+| Veeshan | Memory in Crystal | crystalline avatar — Plane of Knowledge (5-question trivia) |
 
 
 ## Future Plans
