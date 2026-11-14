@@ -21,12 +21,28 @@ sub EVENT_SAY {
 }
 
 sub EVENT_ITEM {
+    # The Forsaken's Feather (9921016, Xebuxoruk in potimea) -- full
+    # Classic -> Plane of Time catch-up plus keys, via
+    # plugin::GrantProgressionThroughPoTime (NMS_progression_utils.pl).
+    # Dry-run first: when nothing is left to grant, refuse and let the
+    # engine auto-return the feather (it is tradeable -- pass it on).
+    if ($itemcount{9921016}) {
+        if (plugin::GrantProgressionThroughPoTime($client, 1)) {
+            if (plugin::check_handin(\%itemcount, 9921016 => 1)) {
+                plugin::GrantProgressionThroughPoTime($client);
+                quest::emote("takes the feather gently in one claw and tucks it beneath its wing");
+                quest::say("A little bird told me you faced the Forsaken one and prevailed! Everything the ages locked away -- the old lands, the moons, the planes, the little doors -- a little bird now remembers all of it for you. Fly far, $name.");
+            }
+        } else {
+            quest::say("A little bird knows you have already seen every corner from the old lands to Time itself, $name. Keep this -- a little bird says someone else needs it more.");
+        }
+    }
     if (plugin::check_handin(\%itemcount, 18471 => 1)) {
       if (!$client->GetBucket('newbieRewardBits')) {
         RewardItems($client);
         quest::givecash(0,6,2,0);
       }
-    } else {
+    } elsif (!$itemcount{9921016}) {
         quest::say("A little bird tells me this is of no use to me, $name. Perhaps you should keep it.");
     }
     # Return items that are not used

@@ -23,7 +23,10 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstring>
+#include <ctime>
+#include <fstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -905,6 +908,7 @@ void AttachHouseToPlot(Client *c, const std::string &zone_name, uint32_t door_id
 			house_id, Strings::Escape(house_zone), door_id
 		));
 	}
+
 }
 // Provisional: until the purchase handshake is confirmed against a live client,
 // acting on a vacant lot claims it for the character and nothing else. The
@@ -998,14 +1002,115 @@ void LogHousingOpcode(Client *c, const EQApplicationPacket *app, const char *nam
 		"[Housing] {} from [{}] size [{}] payload [{}]",
 		name, c->GetName(), app->size, HexDump(app)
 	);
+
+	// Zone file logging is not reaching logs/zone-*.log on this box, so a capture that only
+	// went through LogInfo was invisible. This sink always writes: it is what a player report
+	// about a housing button can be answered from.
+	std::ofstream trace("logs/housing_trace.log", std::ios::app);
+
+	if (trace) {
+		trace << std::time(nullptr) << " " << name << " [" << c->GetName() << "] size ["
+		      << app->size << "] " << HexDump(app) << std::endl;
+	}
 }
 
 } // namespace
 
+// 0x626e suffix, field order from the reference codec (Housing::PlacementWire::Preview):
+// source kind, three source slots, three flags, three words, a region KEY/RESULT map and the
+// final KEY/RESULT pair. The client correlates a preview with the request it just sent, so the
+// two trailing words it echoed come back verbatim, and a new inventory placement raises the
+// third flag (the native placement constructor's screen-ray initialisation). Region keys are
+// the ids published in the 0x49df area manifest: PlotRegionId(door) is the plot definition's
+// area_id, and the door id is carried as a second key because the resolver has been observed
+// indexing either.
+struct PreviewSuffix {
+	uint8_t  source_kind     = 0;
+	int16_t  slots[3]        = {33, -1, -1};
+	uint8_t  flags[3]        = {0, 0, 0};
+	uint32_t words[3]        = {0, 0, 0};
+	uint32_t region_keys[2]  = {0, 0};   // 0 = no second key
+	uint32_t fallback_key    = 0;
+	uint32_t fallback_result = 0;
+};
+
+void WritePreviewSuffix(Writer &w, const PreviewSuffix &s)
+{
+	w.U8(s.source_kind);
+	for (const int16_t slot : s.slots) {
+		w.U16(static_cast<uint16_t>(slot));
+	}
+	w.U8(s.flags[0]); w.U8(s.flags[1]); w.U8(s.flags[2]);
+
+	for (const uint32_t word : s.words) {
+		w.U32(word);
+	}
+
+	uint32_t count = s.region_keys[1] ? 2u : (s.region_keys[0] ? 1u : 0u);
+	w.U32(count);
+
+	for (uint32_t i = 0; i < count; ++i) {
+		w.U32(s.region_keys[i]); w.U32(0);   // RESULT 0 permits
+	}
+
+	w.U32(s.fallback_key); w.U32(s.fallback_result);
+}
+
+// The shape this file sent before the reference codec was adopted: estate source kind, cursor
+// slot, no flags and no words, one region keyed by the door id and a zero fallback result.
+PreviewSuffix LegacyPreviewSuffix(uint32_t door_id, uint32_t neighborhood_id)
+{
+	PreviewSuffix s;
+	s.region_keys[0] = door_id;
+	s.fallback_key   = neighborhood_id;
+	return s;
+}
+
+// A new placement carried in the inventory: the ghost spawns at the player, the source slot
+// rides along, and the third flag selects the screen-ray placement initialisation.
+PreviewSuffix NewPlacementSuffix(uint32_t slot, uint32_t word0, uint32_t word1,
+                                 uint32_t door_id, uint32_t neighborhood_id)
+{
+	PreviewSuffix s;
+	s.source_kind       = 0;
+	s.slots[0]          = static_cast<int16_t>(slot);
+	s.flags[2]          = 1;
+	s.words[0]          = word0;
+	s.words[1]          = word1;
+	s.region_keys[0]    = PlotRegionId(door_id);
+	s.region_keys[1]    = door_id;
+	s.fallback_key      = neighborhood_id;
+	s.fallback_result   = 1;
+	return s;
+}
+
+// Re-placing an estate row: 0xff marks the estate source and there is no inventory slot. A
+// stowed row has no pose yet, so it takes the screen-ray form instead of the {1,1,0} move form.
+PreviewSuffix EstateMoveSuffix(bool stowed, uint32_t word0, uint32_t word1,
+                               uint32_t door_id, uint32_t neighborhood_id)
+{
+	PreviewSuffix s;
+	s.source_kind     = 0xFF;
+	s.slots[0]        = -1;
+	s.slots[1]        = -1;
+	s.slots[2]        = -1;
+	s.flags[0]        = stowed ? 0 : 1;
+	s.flags[1]        = stowed ? 0 : 1;
+	s.flags[2]        = stowed ? 1 : 0;
+	s.words[0]        = word0;
+	s.words[1]        = word1;
+	s.region_keys[0]  = PlotRegionId(door_id);
+	s.region_keys[1]  = door_id;
+	s.fallback_key    = neighborhood_id;
+	s.fallback_result = 1;
+	return s;
+}
+
 // Defined with the other wire encoders below; the placement-begin handler answers with it.
 bool SendPlacementPreview(Client *c, uint32_t door_id, uint32_t item_id, const std::string &model,
                           uint32_t zone_id, uint32_t neighborhood_id,
-                          float x, float y, float z, float heading);
+                          float x, float y, float z, float heading,
+                          const PreviewSuffix *suffix = nullptr);
 
 // Interior furniture (v1), defined with the wire encoders below. The placement Begin/Commit
 // handlers call these, and the identity burst renders the rows.
@@ -1017,7 +1122,7 @@ bool SendRealEstateFurnitureWorldItem(Client *c, uint32_t door_id, uint32_t row_
                                       float x, float y, float z, float heading, float scale);
 bool SendRealEstateFurnitureWorldRemove(Client *c, uint32_t door_id, uint32_t row_id,
                                         uint32_t item_id, uint32_t zone_id);
-void SendRealEstateFurniture(Client *c, uint32_t door_id);
+void SendRealEstateFurniture(Client *c, uint32_t door_id, uint32_t placement_type = 0);
 bool ReturnFurnitureRow(Client *c, uint32_t row_id);
 bool StoreFurnitureRow(Client *c, uint32_t row_id, int container);
 
@@ -1027,8 +1132,27 @@ void SendRealEstateItemList(Client *c, uint32_t estate_id);
 bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
                                     const std::string &model, uint32_t zone_id, uint32_t neighborhood_id,
                                     float x, float y, float z, float heading, float pitch, float roll,
-                                    float scale);
+                                    float scale, const PreviewSuffix *suffix = nullptr);
 void SendRealEstateOperationResult(Client *c, uint32_t result);
+
+// Value overload; forwards to the pointer form above.
+inline bool SendPlacementPreview(Client *c, uint32_t door_id, uint32_t item_id, const std::string &model,
+                                 uint32_t zone_id, uint32_t neighborhood_id,
+                                 float x, float y, float z, float heading,
+                                 const PreviewSuffix &suffix)
+{
+	return SendPlacementPreview(c, door_id, item_id, model, zone_id, neighborhood_id, x, y, z, heading, &suffix);
+}
+
+// Value overload; forwards to the pointer form above.
+inline bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
+                                          const std::string &model, uint32_t zone_id, uint32_t neighborhood_id,
+                                          float x, float y, float z, float heading, float pitch, float roll,
+                                          float scale, const PreviewSuffix &suffix)
+{
+	return SendRealEstateFurniturePreview(c, door_id, row_id, item_id, model, zone_id, neighborhood_id, x, y, z, heading, pitch, roll, scale, &suffix);
+}
+
 
 // Log-only coverage for the remaining real-estate messages lives in Client::MapOpcodes
 // (k_log_only_rof2), which registers them against Client::Handle_OP_Unimplemented.
@@ -1909,7 +2033,7 @@ void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
 						auto insert = database.QueryDatabase(fmt::format(
 							"INSERT INTO nms_house_item "
 							"(door_id, item_id, charges, pos_x, pos_y, pos_z, heading, pitch, roll, scale, placement_type, placed_by, placed_at) "
-							"VALUES ({}, {}, 1, {}, {}, {}, {}, {}, {}, {}, 0, {}, NOW())",
+							"VALUES ({}, {}, 1, {}, {}, {}, {}, {}, {}, {}, 1, {}, NOW())",
 							estate_id, item_id, pos_x, pos_y, pos_z, heading, pitch, roll,
 							scale > 0.0f ? scale : 1.0f, CharacterID()
 						));
@@ -2145,21 +2269,44 @@ void Client::Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app)
 		}
 
 		auto stored = database.QueryDatabase(fmt::format(
-			"SELECT container FROM nms_house_item WHERE id = {} AND door_id = {} AND container >= 0 LIMIT 1",
+			"SELECT container FROM nms_house_item WHERE id = {} AND door_id = {} LIMIT 1",
 			source_item, source_door
 		));
 
 		if (!stored.Success() || !stored.RowCount()) {
 			LogInfo(
-				"[Housing] withdraw from [{}]: row [{}] is not stored on lot [{}]",
+				"[Housing] item operation from [{}]: row [{}] is not on lot [{}]",
 				GetName(), source_item, source_door
 			);
 			SendRealEstateOperationResult(this, 9);
 			return;
 		}
 
-		const int container = Strings::ToInt(stored.begin()[0] ? stored.begin()[0] : "0");
+		const int current = Strings::ToInt(stored.begin()[0] ? stored.begin()[0] : "-1");
 
+		// The action word is the destination, and it is what the Shed/Closet/Crate buttons mean.
+		// It used to be ignored here, so every one of them returned the row to the player: the
+		// buttons were not flipped, the destination simply never happened.
+		const int destination = (action == 2) ? kContainerCloset
+		                      : (action == 3) ? kContainerShed
+		                      : (action == 6) ? kContainerCrate
+		                      : -1;
+
+		if (destination >= 0 && current == -1) {
+			if (!StoreFurnitureRow(this, source_item, destination)) {
+				SendRealEstateOperationResult(this, 9);
+				return;
+			}
+
+			SendRealEstateItemList(this, source_door);
+			SendRealEstateOperationResult(this, 0);
+
+			LogInfo("[Housing] stored row [{}] in [{}] on lot [{}] for [{}]",
+			        source_item, ContainerName(destination), source_door, GetName());
+			return;
+		}
+
+		// No destination (the Inventory button) or a row already in a container: back to the player.
 		if (!ReturnFurnitureRow(this, source_item)) {
 			SendRealEstateOperationResult(this, 1);
 			return;
@@ -2168,10 +2315,8 @@ void Client::Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app)
 		SendRealEstateItemList(this, source_door);
 		SendRealEstateOperationResult(this, 0);
 
-		LogInfo(
-			"[Housing] withdraw from [{}]: row [{}] taken out of [{}] on lot [{}]",
-			GetName(), source_item, ContainerName(container), source_door
-		);
+		LogInfo("[Housing] withdraw from [{}]: row [{}] taken out of [{}] on lot [{}]",
+		        GetName(), source_item, ContainerName(current), source_door);
 		return;
 	}
 
@@ -2564,6 +2709,11 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 	const uint32_t estate_id = NormalizeEstateDoor(ReadU32(app, 32));
 	const uint32_t item_id   = ReadU32(app, 36);
 
+	// 52/56 are not screen coordinates: they are the two opaque words the client echoes, and
+	// the preview has to hand them back for the placement controller to accept the reply.
+	const uint32_t word0 = ReadU32(app, 52);
+	const uint32_t word1 = ReadU32(app, 56);
+
 	// The shared model lookup: idfile first, name as the fallback the building flow uses.
 	const auto model_for = [&](uint32_t id, std::string &out) -> bool {
 		auto model_row = database.QueryDatabase(fmt::format(
@@ -2595,6 +2745,22 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			if (!inst || !inst->GetUnscaledItem()) {
 				LogInfo("[Housing] placement begin from [{}]: slot [{}] is empty", GetName(), slot);
 				return;
+			}
+			
+			// A non-zero sub is the index inside the bag sitting in that slot (the trace carried
+			// 0x00020017 for slot 23, bag 2). Ignoring it previewed the BAG, so the client placed the
+			// bag itself and every item taken out of a bag turned into one.
+			if (sub) {
+				auto *inner = inst->GetItem(static_cast<uint8_t>(sub));
+			
+				if (!inner || !inner->GetUnscaledItem()) {
+					LogInfo("[Housing] placement begin from [{}]: slot [{}] has no item at [{}]",
+					        GetName(), slot, sub);
+					SendRealEstateOperationResult(this, 9);
+					return;
+				}
+			
+				inst = inner;
 			}
 
 			const uint32_t carried_id = inst->GetUnscaledItem()->ID;
@@ -2640,7 +2806,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 						Strings::ToFloat(dr[0] ? dr[0] : "0"),
 						Strings::ToFloat(dr[1] ? dr[1] : "0"),
 						Strings::ToFloat(dr[2] ? dr[2] : "0"),
-						Strings::ToFloat(dr[3] ? dr[3] : "0")
+						Strings::ToFloat(dr[3] ? dr[3] : "0"),
+						NewPlacementSuffix(slot, word0, word1, plot.door_id, nb_id)
 					);
 					return;
 				}
@@ -2649,7 +2816,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			// Row id 0 marks the not-yet-placed ghost; the commit answers with the template id.
 			SendRealEstateFurniturePreview(
 				this, plot.door_id, 0, carried_id, model, zone->GetZoneID(), nb_id,
-				GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f
+				GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f,
+				NewPlacementSuffix(slot, word0, word1, plot.door_id, nb_id)
 			);
 			return;
 		}
@@ -2704,7 +2872,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 				static_cast<float>(Strings::ToFloat(row[0] ? row[0] : "0")),
 				static_cast<float>(Strings::ToFloat(row[1] ? row[1] : "0")),
 				static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0")),
-				static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"))
+				static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0")),
+				NewPlacementSuffix(33, word0, word1, estate_id, Strings::ToUnsignedInt(row[4]))
 			);
 			return;
 		}
@@ -2734,7 +2903,9 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			SendRealEstateFurniturePreview(
 				this, estate_id, item_id, item_id, model, zone->GetZoneID(),
 				Strings::ToUnsignedInt(f[10] ? f[10] : "0"),
-				GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f
+				GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f,
+				EstateMoveSuffix(true, word0, word1, estate_id,
+					Strings::ToUnsignedInt(f[10] ? f[10] : "0"))
 			);
 			return;
 		}
@@ -2748,7 +2919,9 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			Strings::ToFloat(f[4] ? f[4] : "0"),
 			Strings::ToFloat(f[5] ? f[5] : "0"),
 			Strings::ToFloat(f[6] ? f[6] : "0"),
-			Strings::ToFloat(f[7] ? f[7] : "1")
+			Strings::ToFloat(f[7] ? f[7] : "1"),
+			EstateMoveSuffix(false, word0, word1, estate_id,
+				Strings::ToUnsignedInt(f[10] ? f[10] : "0"))
 		);
 		return;
 	}
@@ -2780,6 +2953,22 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			LogInfo("[Housing] placement begin from [{}]: slot [{}] is empty", GetName(), slot);
 			return;
 		}
+		
+		// A non-zero sub is the index inside the bag sitting in that slot (the trace carried
+		// 0x00020017 for slot 23, bag 2). Ignoring it previewed the BAG, so the client placed the
+		// bag itself and every item taken out of a bag turned into one.
+		if (sub) {
+			auto *inner = inst->GetItem(static_cast<uint8_t>(sub));
+		
+			if (!inner || !inner->GetUnscaledItem()) {
+				LogInfo("[Housing] placement begin from [{}]: slot [{}] has no item at [{}]",
+				        GetName(), slot, sub);
+				SendRealEstateOperationResult(this, 9);
+				return;
+			}
+		
+			inst = inner;
+		}
 
 		const uint32_t carried_id = inst->GetUnscaledItem()->ID;
 
@@ -2791,7 +2980,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 
 		SendRealEstateFurniturePreview(
 			this, door_id, 0, carried_id, model, zone->GetZoneID(), nb_id,
-			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f
+			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f,
+			NewPlacementSuffix(slot, word0, word1, door_id, nb_id)
 		);
 		return;
 	}
@@ -2818,7 +3008,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 
 		SendRealEstateFurniturePreview(
 			this, door_id, 0, item_id, model, zone->GetZoneID(), nb_id,
-			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f
+			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f,
+			NewPlacementSuffix(33, word0, word1, door_id, nb_id)
 		);
 		return;
 	}
@@ -2832,7 +3023,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 			this, door_id, item_id, item_id,
 			(f[8] && *f[8]) ? f[8] : (f[9] ? f[9] : ""),
 			zone->GetZoneID(), nb_id,
-			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f
+			GetX(), GetY(), GetZ(), GetHeading(), 0.0f, 0.0f, 1.0f,
+			EstateMoveSuffix(true, word0, word1, door_id, nb_id)
 		);
 		return;
 	}
@@ -2847,7 +3039,8 @@ void Client::Handle_OP_RealEstatePlacementBegin(const EQApplicationPacket *app)
 		Strings::ToFloat(f[4] ? f[4] : "0"),
 		Strings::ToFloat(f[5] ? f[5] : "0"),
 		Strings::ToFloat(f[6] ? f[6] : "0"),
-		Strings::ToFloat(f[7] ? f[7] : "1")
+		Strings::ToFloat(f[7] ? f[7] : "1"),
+		EstateMoveSuffix(false, word0, word1, door_id, nb_id)
 	);
 }
 
@@ -3549,7 +3742,8 @@ void SendRealEstateAreaManifest(Client *c, int variant = 0)
 // placement controller reads. RESULT 0 means permitted.
 bool SendPlacementPreview(Client *c, uint32_t door_id, uint32_t item_id, const std::string &model,
                           uint32_t zone_id, uint32_t neighborhood_id,
-                          float x, float y, float z, float heading)
+                          float x, float y, float z, float heading,
+                          const PreviewSuffix *suffix)
 {
 	if (!c || !zone || model.empty()) {
 		return false;
@@ -3567,13 +3761,7 @@ bool SendPlacementPreview(Client *c, uint32_t door_id, uint32_t item_id, const s
 
 	Writer w;
 	WritePlacementActor(w, actor);
-	w.U8(0);                                  // source kind: stored/property item
-	w.U16(33); w.U16(0xFFFF); w.U16(0xFFFF);  // source slots: cursor slot 33, no bag
-	w.U8(0); w.U8(0); w.U8(0);                // flags
-	w.U32(0); w.U32(0); w.U32(0);             // opaque words
-	w.U32(1);                                 // region map count
-	w.U32(door_id); w.U32(0);                 // KEY = area id, RESULT = 0 (permitted)
-	w.U32(neighborhood_id); w.U32(0);         // required final pair: zone estate + result
+	WritePreviewSuffix(w, suffix ? *suffix : LegacyPreviewSuffix(door_id, neighborhood_id));
 
 	const auto &buf = w.Buffer();
 	auto outapp = new EQApplicationPacket(OP_RealEstatePlacementBegin, static_cast<uint32>(buf.size()));
@@ -3783,8 +3971,10 @@ bool SendRealEstateFurnitureWorldRemove(Client *c, uint32_t door_id, uint32_t ro
 	return true;
 }
 
-// Draws every furniture row recorded for a lot. Sent from the interior identity (zone-in
-// and #housing send); the building path keeps its own SendRealEstateExteriors.
+// Draws the furniture rows recorded for a lot at one placement type: 0 inside the house
+// interior (sent from the interior identity), 1 out in the yard (sent from the neighbourhood
+// identity for each owned plot). The client keeps no copy of these world actors, so every
+// identity burst re-sends them. The building path keeps its own SendRealEstateExteriors.
 // 0x1228 S2C: the placement result. Result 0 closes the client's placement preview and commits
 // its local state; the native result codes (9 invalid source, 20 too far, 23 not in region...)
 // come from the same recovered table the overlay documents.
@@ -3814,7 +4004,7 @@ void SendRealEstateOperationResult(Client *c, uint32_t result)
 bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
                                     const std::string &model, uint32_t zone_id, uint32_t neighborhood_id,
                                     float x, float y, float z, float heading, float pitch, float roll,
-                                    float scale)
+                                    float scale, const PreviewSuffix *suffix)
 {
 	if (!c || !zone || model.empty()) {
 		return false;
@@ -3837,13 +4027,7 @@ bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id
 
 	Writer w;
 	WritePlacementActor(w, actor);
-	w.U8(0);                                  // source kind: stored/property item
-	w.U16(33); w.U16(0xFFFF); w.U16(0xFFFF);  // source slots: cursor slot 33, no bag
-	w.U8(0); w.U8(0); w.U8(0);                // flags
-	w.U32(0); w.U32(0); w.U32(0);             // opaque words
-	w.U32(1);                                 // region map count
-	w.U32(door_id); w.U32(0);                 // KEY = area id, RESULT = 0 (permitted)
-	w.U32(neighborhood_id); w.U32(0);         // required final pair: zone estate + result
+	WritePreviewSuffix(w, suffix ? *suffix : LegacyPreviewSuffix(door_id, neighborhood_id));
 
 	const auto &buf = w.Buffer();
 	auto outapp = new EQApplicationPacket(OP_RealEstatePlacementBegin, static_cast<uint32>(buf.size()));
@@ -4014,7 +4198,7 @@ void SendRealEstateItemList(Client *c, uint32_t estate_id)
 	);
 }
 
-void SendRealEstateFurniture(Client *c, uint32_t door_id)
+void SendRealEstateFurniture(Client *c, uint32_t door_id, uint32_t placement_type)
 {
 	if (!c || !zone || !door_id) {
 		return;
@@ -4027,8 +4211,8 @@ void SendRealEstateFurniture(Client *c, uint32_t door_id)
 		"       COALESCE(it.idfile, ''), COALESCE(it.Name, '') "
 		"FROM nms_house_item f "
 		"LEFT JOIN items it ON it.id = f.item_id "
-		"WHERE f.door_id = {} AND f.container = -1 ORDER BY f.id",
-		door_id
+		"WHERE f.door_id = {} AND f.container = -1 AND f.placement_type = {} ORDER BY f.id",
+		door_id, placement_type
 	));
 
 	if (!rows.Success() || !rows.RowCount()) {
@@ -4162,8 +4346,36 @@ void Client::Handle_OP_RealEstatePickup(const EQApplicationPacket *app)
 
 	uint32_t guid_zone = 0, door_id = 0, row_id = 0;
 
-	if (!DecodeRealEstateId(guid, guid_zone, door_id, row_id) || !row_id) {
+	bool resolved = DecodeRealEstateId(guid, guid_zone, door_id, row_id) && row_id != 0;
+
+	// The frame also names the estate and the item at 32 and 36 (the same Source the placement
+	// codecs read). When the GUID does not decode -- a shape never captured for a yard actor --
+	// fall back to those, so the pickup resolves to this lot's newest row for that item instead
+	// of dead-ending with no reply at all.
+	if (!resolved && app->size >= 40) {
+		const uint32_t estate_field = NormalizeEstateDoor(ReadU32(app, 32));
+		const uint32_t item_field   = ReadU32(app, 36);
+
+		if (estate_field && item_field != UINT32_MAX) {
+			auto row = database.QueryDatabase(fmt::format(
+				"SELECT id FROM nms_house_item WHERE door_id = {} AND item_id = {} AND container = -1 "
+				"ORDER BY id DESC LIMIT 1",
+				estate_field, item_field
+			));
+
+			if (row.Success() && row.RowCount() && row.begin()[0]) {
+				door_id  = estate_field;
+				row_id   = Strings::ToUnsignedInt(row.begin()[0]);
+				resolved = true;
+				LogInfo("[Housing] pickup from [{}]: GUID [{}] unresolved, estate/item fields gave row [{}] lot [{}]",
+				        GetName(), guid, row_id, door_id);
+			}
+		}
+	}
+
+	if (!resolved) {
 		LogInfo("[Housing] pickup from [{}]: GUID [{}] does not resolve to furniture", GetName(), guid);
+		SendRealEstateOperationResult(this, 9);
 		return;
 	}
 
@@ -4171,6 +4383,7 @@ void Client::Handle_OP_RealEstatePickup(const EQApplicationPacket *app)
 	if (!FurniturePlotIsMine(this, door_id)) {
 		LogInfo("[Housing] pickup from [{}]: row [{}] lot [{}] (guid zone [{}]) is not theirs",
 		        GetName(), row_id, door_id, guid_zone);
+		SendRealEstateOperationResult(this, 9);
 		return;
 	}
 
@@ -4187,9 +4400,14 @@ void Client::Handle_OP_RealEstatePickup(const EQApplicationPacket *app)
 
 	if (!ReturnFurnitureRow(this, row_id)) {
 		Message(Chat::White, "[housing] that item could not be picked up.");
+		SendRealEstateOperationResult(this, 1);
 		return;
 	}
 
+	// The client closes its pickup on this result and re-reads the list; without it the window
+	// kept the old rows and reported the item as not found at the location.
+	SendRealEstateItemList(this, door_id);
+	SendRealEstateOperationResult(this, 0);
 	Message(Chat::White, "[housing] item picked up.");
 }
 
@@ -4675,6 +4893,13 @@ void Client::SendRealEstateIdentity()
 	// it has to be re-sent on every zone-in because the client keeps no copy.
 	SendRealEstateExteriors(this);
 
+	// Yard furniture is the same kind of world actor as a building and the client is equally
+	// not remembering it: re-send each owned lot's outside rows. Interior rows belong to the
+	// interior identity. Without this pass a yard item vanished as soon as the player zoned.
+	for (uint32_t plot_id : owned_plots) {
+		SendRealEstateFurniture(this, plot_id, 1);
+	}
+
 	// Last, so every estate it names is already registered: the My Plots window.
 	SendRealEstateOwnedList(this);
 
@@ -4708,7 +4933,7 @@ void HousingLeave(Client *c, bool notify)
 	// The interior and the lot it belongs to; the exit point is that lot's door.
 	auto home = database.QueryDatabase(fmt::format(
 		"SELECT h.zone, COALESCE(n.zone, ''), COALESCE(d.pos_x, 0), COALESCE(d.pos_y, 0), "
-		"       COALESCE(d.pos_z, 0), COALESCE(p.door_id, 0) "
+		"       COALESCE(d.pos_z, 0), COALESCE(p.door_id, 0), COALESCE(d.heading, 0) "
 		"FROM house h "
 		"LEFT JOIN nms_plot p ON p.house_id = h.id "
 		"LEFT JOIN nms_neighborhood n ON n.id = p.neighborhood_id "
@@ -4744,13 +4969,21 @@ void HousingLeave(Client *c, bool notify)
 
 	auto row = home.begin();
 
-	const float door_x = static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0"));
-	const float door_y = static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"));
-	const float door_z = static_cast<float>(Strings::ToFloat(row[4] ? row[4] : "0"));
+	const float door_x    = static_cast<float>(Strings::ToFloat(row[2] ? row[2] : "0"));
+	const float door_y    = static_cast<float>(Strings::ToFloat(row[3] ? row[3] : "0"));
+	const float door_z    = static_cast<float>(Strings::ToFloat(row[4] ? row[4] : "0"));
+	const float door_head = static_cast<float>(Strings::ToFloat(row[6] ? row[6] : "0"));
+
+	// The exterior is drawn at the marker pose, so standing on the marker is standing inside
+	// the house. Exit a stride out along the marker heading instead; 45 clears every footprint
+	// this server renders today and Judy confirmed it lands outside the walls.
+	constexpr float kLeaveClearance = 45.0f;
 
 	if (door_x != 0.0f || door_y != 0.0f) {
-		sx = door_x;
-		sy = door_y;
+		const float radians = door_head * (2.0f * 3.14159265f / 512.0f);
+
+		sx = door_x + std::sin(radians) * kLeaveClearance;
+		sy = door_y - std::cos(radians) * kLeaveClearance;
 		sz = door_z;
 	}
 
@@ -4763,7 +4996,7 @@ void HousingLeave(Client *c, bool notify)
 		c->GetName(), here, sx, sy, sz
 	);
 
-	c->MovePC(zone_id, sx, sy, sz, 0.0f);
+	c->MovePC(zone_id, sx, sy, sz, static_cast<float>((static_cast<uint32_t>(door_head) + 256u) % 512u));
 }
 // The game's own command name for this, available to every player.
 void command_leaverealestate(Client *c, const Seperator *sep)

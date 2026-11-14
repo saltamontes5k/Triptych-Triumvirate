@@ -59593,4 +59593,302 @@ VALUES (1520009201, 'potimea', 0, 290.65, 917.77, 9.2, 0.0, 0, 0);
 		.content_schema_update = false,
 	},
 
+	// ------------------------------------------------------------------
+	// v406 (2026-11-14) -- Xebuxoruk drops The Forsaken's Feather.
+	// Xebuxoruk (npc 1120001288, potimea v9, loottable 794330) gets a
+	// signature drop: The Forsaken's Feather (item 9921016) -- Lore,
+	// TRADEABLE, magic, no stats. Handing it to A_Little_Bird (npc
+	// 12000195, bazaar) grants the full Classic -> Plane of Time catch-up:
+	// stages RoK/SoV/SoL/PoP plus the elemental-god catch-up stages (GoD =
+	// Saryrn; DoN and LDoN = the five elemental gods), the pop.flags.* web
+	// at its exact required values, the PoP zone flags through
+	// potimea/potimeb, and the physical zone keys Classic -> PoTime
+	// (including the VT Scepter of Shadows 22198 -- owner decision
+	// 2026-11-14, deliberately re-included despite v314's chain-only rule;
+	// the chain still works, it just stops being the only source). Grant
+	// logic: plugin::GrantProgressionThroughPoTime
+	// (Release-NMS-Plugins/NMS_progression_utils.pl) -- gap-filling only,
+	// and the bird refuses the feather when nothing is left to grant.
+	// Loot: separate lootdrop 1520009435 attached to loottable 794330,
+	// droplimit 1 / mindrop 1 / probability 100 -> one feather per kill.
+	// Idempotent: defensive DELETE-then-INSERT on explicit ids; loot
+	// INSERTs carry ON DUPLICATE KEY UPDATE; temp-table clone is
+	// re-runnable. Item id 9921016 = 9M custom band, next free after
+	// 9921015 (verified 2026-11-14); lootdrop id = lootdrop max+1.
+	// Twin: utils/sql/20261114_xeb_forsaken_feather_v406.sql (keep in
+	// sync). Rollback: 20261114_xeb_forsaken_feather_v406_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 406,
+		.description = "20261114_xeb_forsaken_feather_v406",
+		.check = "SELECT id FROM items WHERE id = 9921016 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"XEBFEATHER406(
+-- v406 (2026-11-14) -- Xebuxoruk drops The Forsaken's Feather (item
+-- 9921016, Lore, tradeable); lootdrop 1520009435 on loottable 794330,
+-- guaranteed per kill. Hand-in: A_Little_Bird (bazaar) ->
+-- plugin::GrantProgressionThroughPoTime -- full Classic -> PoTime
+-- catch-up plus keys.
+--
+-- Idempotent: DELETE-then-INSERT on explicit ids; the loot INSERTs also
+-- carry ON DUPLICATE KEY UPDATE.
+-- Twin of utils/sql/20261114_xeb_forsaken_feather_v406.sql (keep in sync).
+-- Rollback: 20261114_xeb_forsaken_feather_v406_rollback.sql
+
+DELETE FROM `loottable_entries` WHERE `loottable_id` = 794330 AND `lootdrop_id` = 1520009435;
+DELETE FROM `lootdrop_entries`  WHERE `lootdrop_id`  = 1520009435;
+DELETE FROM `lootdrop`          WHERE `id`           = 1520009435;
+DELETE FROM `items`             WHERE `id`           = 9921016;
+
+-- The Forsaken's Feather: clone of Tiny Metal Quill (8723, itemtype 11,
+-- book 0), overrides only. loregroup -1 = lore (same as writ 18471).
+DROP TEMPORARY TABLE IF EXISTS `tmp_forsaken_feather`;
+CREATE TEMPORARY TABLE `tmp_forsaken_feather` AS
+SELECT *, 9921016 AS `new_id` FROM `items` WHERE `id` = 8723;
+UPDATE `tmp_forsaken_feather` SET
+    `id`        = `new_id`,
+    `name`      = 'The_Forsaken_Feather',
+    `lore`      = 'The Forsaken''s Feather',
+    `loregroup` = -1,
+    `icon`      = 1146,
+    `weight`    = 0,
+    `price`     = 0,
+    `nodrop`    = 0,
+    `magic`     = 1,
+    `norent`    = 0,
+    `stackable` = 0,
+    `stacksize` = 1;
+ALTER TABLE `tmp_forsaken_feather` DROP COLUMN `new_id`;
+INSERT INTO `items` SELECT * FROM `tmp_forsaken_feather`;
+DROP TEMPORARY TABLE IF EXISTS `tmp_forsaken_feather`;
+
+INSERT INTO `lootdrop` (`id`, `name`)
+VALUES (1520009435, '794330_Zebuxoruk__Feather')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
+
+INSERT INTO `lootdrop_entries` (`lootdrop_id`, `item_id`, `item_charges`, `chance`)
+VALUES (1520009435, 9921016, 1, 100)
+ON DUPLICATE KEY UPDATE `chance` = VALUES(`chance`);
+
+INSERT INTO `loottable_entries`
+    (`loottable_id`, `lootdrop_id`, `multiplier`, `droplimit`, `mindrop`, `probability`)
+VALUES
+    (794330, 1520009435, 1, 1, 1, 100)
+ON DUPLICATE KEY UPDATE `probability` = VALUES(`probability`);
+)XEBFEATHER406",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v407 (2026-11-14) -- housing: yard rows get their own placement_type,
+	// and the script-driven furniture table is retired.
+	//
+	// nms_house_item separates the two places a furniture row can sit:
+	// placement_type 0 = inside the house interior (re-drawn by
+	// SendRealEstateFurniture on zone-in), 1 = out in the yard (drawn once at
+	// commit). The yard commit used to write 0 like the interior one, so a yard
+	// item was re-sent as an interior world actor at yard coordinates: two of
+	// Judy's lot 19 rows (the Ogre Graveyard Tombstone, x 1206 / y -1988, and an
+	// Adventurer's Pack, x 1296 / y -2067) stand in her yard but were drawn
+	// inside phinterior3a1, a thousand units off the room. The UPDATE below
+	// repairs the row this migration shipped with; the split itself is
+	// forward-only, since a stored yard row and a stored interior row are
+	// otherwise indistinguishable.
+	//
+	// house_objects was the script-driven MVP's furniture store (the interior
+	// zone.lua wrote it through house_list_objects / house_add_object /
+	// house_delete_object). The native real-estate flow writes nms_house_item,
+	// those bindings are gone from zone/lua_general.cpp, and the table held no
+	// rows on this database, so DROP it.
+	//
+	// Idempotent: the UPDATE is guarded by placement_type = 0, the DROP is
+	// IF EXISTS. Twin: utils/sql/20261114_housing_placement_type_split_v407.sql
+	// Rollback: utils/sql/20261114_housing_placement_type_split_v407_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 407,
+		.description = "20261114_housing_placement_type_split_v407",
+		.check = "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'house_objects'",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"HOUSEPLACE407(
+-- v407 (2026-11-14) -- housing: placement_type split (0 interior, 1 yard)
+-- plus the retirement of the script-driven house_objects table.
+--
+-- Repair: Judy's lot 19 tombstone (row 6, item 90637) stands in her yard but
+-- was stored with placement_type 0, so the interior identity re-sent it
+-- inside phinterior3a1 at (1206, -1988).
+UPDATE `nms_house_item`
+   SET `placement_type` = 1
+ WHERE `id` = 6 AND `item_id` = 90637 AND `placement_type` = 0;
+
+-- Retired: the interior zone.lua MVP wrote furniture here; nothing reads or
+-- writes it any more and it holds no rows.
+DROP TABLE IF EXISTS `house_objects`;
+)HOUSEPLACE407",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v408 (2026-11-14) -- Xebuxoruk no longer aggros on sight.
+	// aggroradius was 250, so anyone zoned into a Forsaken Hourglass instance
+	// was attacked on arrival (an unflagged player died to it on 2026-11-14).
+	// His fight starts on a hail; the encounter script also applies
+	// ModifyNPCStat("aggroradius", "0") at spawn so a live instance picks it
+	// up from "#reload quests" + repop.
+	// Twin: utils/sql/20261114_xeb_passive_until_hailed_v408.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 408,
+		.description = "20261114_xeb_passive_until_hailed_v408",
+		.check = "SELECT id FROM npc_types WHERE id = 1120001288 AND aggroradius = 0 AND assistradius = 0 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"XEBPASSIVE408(
+-- v408 (2026-11-14) -- Xebuxoruk waits: no aggro until hailed.
+--
+-- npc_types row 1120001288 carried aggroradius 250 / assistradius 70, so
+-- anyone dropped into a Forsaken Hourglass instance was attacked on arrival --
+-- an unflagged player was zoned in by the courtyard sundial and killed before
+-- he could react (2026-11-14).
+--
+-- His fight starts on a hail: potimea/encounters/xebuxoruk_clone.lua's
+-- evt_xeb_say runs the monologue and then AddToHateList's the hailer. Aggro
+-- radius 0 keeps him standing until then; attacking him still pulls him.
+--
+-- The encounter script also applies both stats at spawn (ModifyNPCStat), so a
+-- live instance picks this up from "#reload quests" + a repop without a
+-- shared-memory rebuild.
+--
+-- Idempotent: plain UPDATEs.
+-- Rollback: 20261114_xeb_passive_until_hailed_v408_rollback.sql
+
+UPDATE npc_types SET aggroradius = 0, assistradius = 0 WHERE id = 1120001288;
+)XEBPASSIVE408",
+		.content_schema_update = false,
+	},
+
+
+	// ------------------------------------------------------------------
+	// v409 (2026-11-14) -- potimea: drop the duplicate clocktower-top dial.
+	// The zone's own top dial answers doorid 44 (zone log), so the extra
+	// TRANQSUND500 the earlier passes added just stood next to it.
+	// Shared zone: the row is deleted (that dial sends doorid 1 there).
+	// Arena: the row stays, name blanked -- it is the click sink the exit
+	// handler resolves against, so the way down survives while the duplicate
+	// model disappears.
+	// Twin: utils/sql/20261114_potimea_tower_dial_cleanup_v409.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 409,
+		.description = "20261114_potimea_tower_dial_cleanup_v409",
+		.check = "SELECT id FROM doors WHERE zone = 'potimea' AND doorid = 44 AND version = 0 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"PTIMETOWER409(
+-- v409 (2026-11-14) -- the clocktower top already has its own dial: drop ours.
+--
+-- The zone's own top dial answers a click with doorid 44 (zone log 2026-11-14
+-- 14:15: "Door [44] client handle, client distance from door [9.25]"), so the
+-- extra TRANQSUND500 model the earlier passes added is a duplicate next to a
+-- dial that is already there.
+--
+-- Shared zone (version 0): the row is removed -- in v0 that dial sends doorid
+-- 1 (POITMMCHN500, the way back down), so a doorid-44 row had nothing to catch
+-- and only drew a spare dial.
+-- Arena (version 9): the row stays with its name blanked; it is the click sink
+-- potimea/player.lua's door_id == 44 instance branch resolves against (the way
+-- back to the sundial). Blanking the name removes the duplicate model only.
+--
+-- Idempotent: DELETE + UPDATE.
+-- Rollback: 20261114_potimea_tower_dial_cleanup_v409_rollback.sql
+
+DELETE FROM doors WHERE zone = 'potimea' AND doorid = 44 AND version = 0;
+
+UPDATE doors SET name = '', size = 6
+WHERE zone = 'potimea' AND doorid = 44 AND version = 9 AND name <> '';
+)PTIMETOWER409",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v410 (2026-11-14) -- housing: the building pose is recorded separately
+	// from the lot marker.
+	//
+	// Leaving a house zoned the player onto the lot marker, and the exterior was
+	// drawn at that same marker pose, so the arrival point was inside the walls.
+	// The server now records house_x/y/z/heading one setback (45 units) behind
+	// the marker along the marker heading, and the exterior draw reads that pose
+	// (SendRealEstateExteriors COALESCEs it over the door row). This backfills the
+	// plots that were housed before the split; new placements are written by
+	// AttachHouseToPlot.
+	//
+	// Idempotent: only rows with a NULL pose are touched.
+	// Twin: utils/sql/20261114_housing_house_pose_v410.sql
+	// Rollback: utils/sql/20261114_housing_house_pose_v410_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 410,
+		.description = "20261114_housing_house_pose_v410",
+		.check = "SELECT 1 FROM nms_plot p JOIN nms_neighborhood n ON n.id = p.neighborhood_id JOIN doors d ON d.zone = n.zone AND d.doorid = p.door_id AND d.version = 0 WHERE p.house_item_id > 0 AND p.house_x IS NULL LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"HOUSEPOSE410(
+-- v410 (2026-11-14) -- housing: record where each building actually stands.
+--
+-- The lot marker is the walkway stone the player leaves the house onto, and the exterior used
+-- to be drawn at that same pose -- so leaving landed inside the walls. The building is now one
+-- setback (45 units) behind the marker along the marker heading, which is what the server
+-- writes for every new placement; this backfills the plots that were placed before the split.
+UPDATE `nms_plot` p
+JOIN `nms_neighborhood` n ON n.id = p.`neighborhood_id`
+JOIN `doors` d ON d.`zone` = n.`zone` AND d.`doorid` = p.`door_id` AND d.`version` = 0
+SET p.`house_x` = d.`pos_x` - SIN(d.`heading` * 2 * PI() / 512) * 45,
+    p.`house_y` = d.`pos_y` + COS(d.`heading` * 2 * PI() / 512) * 45,
+    p.`house_z` = d.`pos_z`,
+    p.`house_heading` = d.`heading`
+WHERE p.`house_item_id` > 0
+  AND (p.`house_x` IS NULL OR p.`house_y` IS NULL OR p.`house_z` IS NULL);
+)HOUSEPOSE410",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v411 (2026-11-14) -- housing: clear the recorded building pose.
+	//
+	// v410 moved the exterior draw off the lot marker by one setback and
+	// recorded that pose on the plot. In game the building landed on yard
+	// furniture that had been placed around the marker footprint (Judy's lot
+	// 19: two gnomes and a pack ended up inside the walls). The draw is back
+	// on the marker, so the recorded pose is cleared here.
+	//
+	// The leave clearance stays: that offset belongs to the arrival point, and
+	// with it the player lands outside the walls on the first try.
+	//
+	// Idempotent: only non-NULL poses are touched.
+	// Twin: utils/sql/20261114_housing_house_pose_revert_v411.sql
+	// Rollback: utils/sql/20261114_housing_house_pose_revert_v411_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 411,
+		.description = "20261114_housing_house_pose_revert_v411",
+		.check = "SELECT 1 FROM nms_plot WHERE house_x IS NOT NULL OR house_y IS NOT NULL OR house_z IS NOT NULL OR house_heading IS NOT NULL LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"HOUSEPOSE411(
+-- v411 (2026-11-14) -- housing: undo the building-pose move.
+--
+-- v410 recorded a building pose 45 units behind the lot marker and the exterior
+-- draw used it. That put the building on top of yard furniture placed around the
+-- marker footprint, so the draw is back on the marker and the recorded pose is
+-- cleared. The exit keeps its 45-unit clearance: the offset belongs to the arrival
+-- point, not to where the house stands.
+UPDATE `nms_plot`
+   SET `house_x` = NULL, `house_y` = NULL, `house_z` = NULL, `house_heading` = NULL
+ WHERE `house_x` IS NOT NULL OR `house_y` IS NOT NULL OR `house_z` IS NOT NULL
+    OR `house_heading` IS NOT NULL;
+)HOUSEPOSE411",
+		.content_schema_update = false,
+	},
 };

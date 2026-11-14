@@ -222,9 +222,47 @@ function evt_xeb_spawn(e)
 		return
 	end
 
+	-- He waits. Aggro is earned by a hail (evt_xeb_say) or by attacking him,
+	-- never by walking into the arena -- one unflagged passer-by was killed
+	-- here on 2026-11-14 because the shared-memory row carries aggroradius
+	-- 250. Keep this line in sync with npc_types.aggroradius = 0 (v407+).
+	e.self:ModifyNPCStat("aggroradius", "0")
+	e.self:ModifyNPCStat("assistradius", "0")
+
 	xeb_state = new_state()
 	eq.set_next_hp_event(95)
 	eq.zone_emote(ZONE_EMOTE_COLOR, "The hourglass inverts. Xebuxoruk, The Forsaken tears free of the timeline and opens his eyes.")
+end
+
+-- The monologue is the once-per-engage curtain. Whoever starts the fight --
+-- a hail or the first swing -- gets it, and only the first of them does.
+local MONOLOGUE = {
+	"Hail? HAIL? You kick open the doors of the ages for trinkets and titles, rewind rivers of hours when they inconvenience you -- and you wonder why Time cracked?",
+	"Veeshan is dead. The Wyrm-Mother, who dreamed this world onto the wheel with one breath, gone -- and you clapped your little hands and called it triumph and asked for a suit of her scale in a dead world.",
+	"History is Spirit — Geist — unfolding itself through your greed, the cunning of reason! You thought you farmed the loot, slew evil. The loot farmed YOU, and you murder hobos are very the HAND of all EVIL! Mayong would not be a god without your meddling! Every evil you slay you strengthen!",
+	"And the legends? You pressed them flat. Shuffled the brave Fippy, the Chardok King, the Warlords of ages into cards; dealt the heroes of ten ages out at smoky tables for coin, loot, and boast -- until no one came to play anymore, and the decks were left to molder in a drawer.",
+	"When one Norrath bored you, you shattered it and raised a second, a third — mirror worlds, marching on without their original.",
+	"My brother demanded you understand, and the gods caged him for it. Time is aufgehoben — cancelled, preserved, lifted up — into ME!",
+}
+
+-- Returns false when the curtain already fell (hail then swing, or a second
+-- attacker joining), so callers can pick the short line instead.
+local function deliver_monologue(self)
+	if xeb_state and xeb_state.monologued then
+		return false
+	end
+
+	if xeb_state then
+		xeb_state.monologued = true
+	end
+
+	-- Shout, not Say: his lines are a zone-wide curtain (yellow text), not
+	-- something only the person standing next to him hears.
+	for _, line in ipairs(MONOLOGUE) do
+		self:Shout(line)
+	end
+	self:Emote("smirks as the last word leaves him. 'Enough. Your time ends HERE.'")
+	return true
 end
 
 function evt_xeb_say(e)
@@ -232,26 +270,12 @@ function evt_xeb_say(e)
 		return
 	end
 
-	-- The monologue is a once-per-engage moment; afterwards the fight has
-	-- his whole attention.
-	if xeb_state and xeb_state.monologued then
+	-- Already engaged: the fight has his whole attention.
+	if not deliver_monologue(e.self) then
 		e.self:Emote("ignores your hail -- the fight has his whole attention.")
 		return
 	end
 
-	e.self:Say("Hail? HAIL? You kick open the doors of the ages for trinkets and titles, rewind rivers of hours when they inconvenience you -- and you wonder why Time cracked?");
-	e.self:Say("Veeshan is dead. The Wyrm-Mother, who dreamed this world onto the wheel with one breath, gone -- and you clapped your little hands and called it triumph and asked for a suit of her scale in a dead world.");
-	e.self:Say("History is Spirit — Geist — unfolding itself through your greed, the cunning of reason! You thought you farmed the loot, slew evil. The loot farmed YOU, and you murder hobos are very the HAND of all EVIL! Mayong would not be a god without your meddling! Every evil you slay you strengthen!");
-	e.self:Say("And the legends? You pressed them flat. Shuffled the brave Fippy, the Chardok King, the Warlords of ages into cards; dealt the heroes of ten ages out at smoky tables for coin, loot, and boast -- until no one came to play anymore, and the decks were left to molder in a drawer.");
-	e.self:Say("When one Norrath bored you, you shattered it and raised a second, a third — mirror worlds, marching on without their original.");
-	e.self:Say("My brother demanded you understand, and the gods caged him for it. Time is aufgehoben — cancelled, preserved, lifted up — into ME!");
-
-	-- Done hamming it up: the Forsaken turns on whoever hailed him (the
-	-- combat-join handler then sets up phase 1).
-	if xeb_state then
-		xeb_state.monologued = true
-	end
-	e.self:Emote("smirks as the last word leaves him. 'Enough. Your time ends HERE.'")
 	e.self:AddToHateList(e.other, 5000, 0)
 end
 
@@ -262,7 +286,13 @@ function evt_xeb_combat(e)
 			xeb_state = new_state()
 			eq.set_next_hp_event(95)
 		end
-		e.self:Emote("smirks, 'Your time is nearly spent!'")
+
+		-- Attacking him is a valid way to start the fight, so it opens with
+		-- the same monologue the hail does. If a hail already pulled him,
+		-- fall back to the short taunt.
+		if not deliver_monologue(e.self) then
+			e.self:Emote("smirks, 'Your time is nearly spent!'")
+		end
 	else
 		eq.stop_all_timers()
 

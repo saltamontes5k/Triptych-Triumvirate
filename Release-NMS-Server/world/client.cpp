@@ -2781,7 +2781,9 @@ void Client::SendUnsupportedClientPacket(const std::string& message)
 
 	auto e = (CharacterSelectEntry_Struct*) buff_ptr;
 
-	strcpy(e->Name, message.c_str());
+	// The client renders this in a fixed 64-byte slot; a rule-driven message can
+	// outgrow it, so the copy is bounded rather than left to strcpy.
+	strn0cpy(e->Name, message.c_str(), sizeof(e->Name));
 
 	e->Race        = Race::Human;
 	e->Class       = Class::Warrior;

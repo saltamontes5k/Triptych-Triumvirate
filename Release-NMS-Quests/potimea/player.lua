@@ -56,20 +56,29 @@ local function enter_xeb_expedition(e)
         if expedition:GetZoneName() == "potimea" then
             -- Wipe recovery: your hourglass expedition is still running.
             local instance_id = tonumber(expedition:GetInstanceID()) or 0
-            if instance_id == 0 then
+            -- A GM whose hourglass is already spent (defeat lockout) is not
+            -- helped by wiping back into it: retire it and roll a fresh one.
+            if e.self:GetGM() and e.self:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
+                eq.debug("[hourglass] GM locked out of a spent expedition -- retiring it for a fresh one")
+                expedition:RemoveAllMembers()
+            elseif instance_id == 0 then
                 e.self:Message(MT.Red, "The tower reaches for you, but the way will not open. Yell at a GM.")
                 return
+            else
+                e.self:Message(MT.Yellow, "The hourglass remembers you. The tower raises you back to its summit.")
+                e.self:MovePCInstance(POTIMEA_ZONEID, instance_id, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
+                return
             end
-
-            e.self:Message(MT.Yellow, "The hourglass remembers you. The tower raises you back to its summit.")
-            e.self:MovePCInstance(POTIMEA_ZONEID, instance_id, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
         else
             e.self:Message(MT.Red, "You remain bound to another timeline. Release that claim before the tower will answer you.")
+            return
         end
-        return
     end
 
-    if e.self:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
+    -- GMs test the encounter; the 72h defeat lockout must not wall them out of
+    -- creating a fresh hourglass.
+    local is_gm = e.self:GetGM()
+    if not is_gm and e.self:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
         e.self:Message(MT.Red, "The hourglass is cold beneath your hand. You have already unmade the one who wears Zebuxoruk's face -- for now.")
         return
     end
@@ -77,11 +86,18 @@ local function enter_xeb_expedition(e)
     expedition = e.self:CreateExpedition(xeb_expedition_info)
     if not expedition.valid then
         e.self:Message(MT.Red, "The hourglass will not turn. (Instance creation failed -- tell a GM.)")
+        eq.debug("[hourglass] expedition creation FAILED for " .. tostring(e.self:GetCleanName()))
         return
     end
 
+    local new_instance = tonumber(expedition:GetInstanceID()) or 0
+    eq.debug(string.format("[hourglass] created for %s dz [%s] instance [%d]", tostring(e.self:GetCleanName()), tostring(expedition:GetID()), new_instance))
+    if is_gm then
+        e.self:Message(MT.DarkGray, string.format("[hourglass] new expedition dz %s, instance %d", tostring(expedition:GetID()), new_instance))
+    end
+
     e.self:Message(MT.Yellow, "The hourglass inverts. The clocktower rises through stolen time and Xebuxoruk's arena opens beneath you.")
-    e.self:MovePCInstance(POTIMEA_ZONEID, tonumber(expedition:GetInstanceID()) or 0, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
+    e.self:MovePCInstance(POTIMEA_ZONEID, new_instance, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
 end
 
 -- The Ring of Time -- five dials, one per trial wing. Clicking a dial sends you
@@ -212,12 +228,15 @@ function event_click_door(e)
             return
         end
 
-        -- The sundial is a portal, not a locked door: clicking it IS the
-        -- deliberate act, so the click path asks for no flag. This is the
-        -- shortcut entry the players asked for -- bring a friend and it
-        -- opens for them too. The old-school hail walk-up below keeps the
-        -- progression gates (Quarm at the zone-in dial, xebuxoruk_unlock at
-        -- the courtyard sundial), so the "real" way in still honours flags.
+        -- Post-Quarm content: the dial only answers someone who has watched
+        -- Quarm fall (the FNagafen progression stage), or a GM. Handing an
+        -- unflagged player a version-9 instance drops them in front of a
+        -- 3.75M HP raid boss, which is how a passer-by got killed on
+        -- 2026-11-14.
+        if not e.self:GetGM() and not prog.stage_complete(e.self, "FNagafen") then
+            e.self:Message(MT.Red, "The sundial is still. Only one who has watched Quarm fall may wake the hourglass.")
+            return
+        end
         enter_xeb_expedition(e)
 
     elseif door_id == 2 then -- OBJ_VOIDPORTAL: SoD void entry

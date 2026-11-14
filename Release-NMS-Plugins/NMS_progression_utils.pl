@@ -1431,3 +1431,174 @@ sub ProgressionCommand {
             . " " . quest::saylink("#progression clear $stage", 1, "[clear]"));
     }
 }
+
+# ---------------------------------------------------------------------------
+# The Forsaken's Feather catch-up grant (Xebuxoruk -> A_Little_Bird).
+#
+# One-shot "caught up on flagging" for a hand-in token (item 9921016,
+# migration v406): completes every objective of the stages Classic through
+# Plane of Time PLUS the elemental-god catch-up stages (GoD = Saryrn; DoN
+# and LDoN = the five elemental gods, the same objectives as the PoP
+# elementals), the full pop.flags.* web at its exact required values, the
+# PoP zone flags through potimea/potimeb, and the physical zone keys
+# Classic -> PoTime.
+#
+# Deliberately out of scope: OoW and later stages, the deeper GoD gate
+# buckets (god.flags.sewers/.kt/.qvic/.txevu) and the GoD key items -- the
+# player continues Gates of Discord progression from here. Unlike the GM
+# tool above, this grant DOES hand out keys -- owner decision 2026-11-14.
+#
+# Gap-filling by design, so it is safe for characters with existing
+# progress:
+#   - SetSubflag is only called for objectives that are not set yet (its
+#     stage-completion side effects -- titles, waypoints, level cap,
+#     race/class locks, SoV keyring -- fire on real change only, and
+#     skipping already-set objectives keeps the message flood honest);
+#   - pop.flags.* buckets are overwritten with their canonical values,
+#     never downgraded (door checks are exact-equality against these);
+#   - SetZoneFlag re-sets harmlessly;
+#   - KeyRingAdd is duplicate-safe (zone/client.cpp checks KeyRingCheck
+#     first); inventory copies of key items are left alone.
+# Nothing is ever removed.
+#
+# Scoping: stage flags and pop.flags.* are per-ACCOUNT (the server's
+# existing <accountid>-progress-flag-<stage> model); zone flags and the
+# keyring are per-CHARACTER -- alts inherit the flags but need their own
+# hand-in for keys and zone flags.
+#
+# The key list includes the Scepter of Shadows (22198) BY OWNER DECISION:
+# it re-opens the auto-grant that v314 closed -- the VT quest chain still
+# works, it just stops being the only source. The rest of the key list is
+# the doors.keyitem enumeration (2026-11-14) filtered to classic -> PoTime
+# zones, plus the script-checked Howling Stone key (17274: charasis
+# CLICKDOOR checks KeyRingCheck first).
+#
+# Call modes:
+#   GrantProgressionThroughPoTime($client)     -- grant; returns 1 if
+#                                                 anything was granted, 0
+#                                                 if the caller already
+#                                                 has all of it.
+#   GrantProgressionThroughPoTime($client, 1)  -- dry run: grants nothing,
+#                                                 reports whether a real
+#                                                 grant would change
+#                                                 anything (the hand-in
+#                                                 NPC refuses and returns
+#                                                 the item on 0).
+# ---------------------------------------------------------------------------
+
+my @GRANT_STAGES = qw(RoK SoV SoL PoP GoD DoN LDoN);
+
+# pop.flags.* -> exact required value. Source of truth: potranquility/
+# player.lua door_requirements (askr = 4; behemoth, codecay, saryrn = 2;
+# everything else 1) -- same keys and values as the Librarian's lists.
+my %POP_FLAG_GRANT = (
+    hedge      => 1,  construct   => 1,  terris     => 1,  poxbourne => 1,
+    adler      => 1,  grummus     => 1,  elder      => 1,
+    codecay    => 2,  bertox      => 1,
+    mavuin     => 1,  tribunal    => 1,  valor      => 1,
+    xanamech   => 1,
+    behemoth   => 2,
+    shadyglade => 1,  newleaf     => 1,  saryrn     => 2,
+    askr       => 4,  agnarr      => 1,  karana     => 1,  aerin     => 1,
+    faye       => 1,  trell       => 1,  garn       => 1,  marr      => 1,
+    tallon     => 1,  vallon      => 1,  rallos     => 1,  librarian => 1,
+    arlyxir    => 1,  dresolik    => 1,  jiva       => 1,  rizlona   => 1,
+    xuzl       => 1,  solusek     => 1,  fennin     => 1,  xegony    => 1,
+    coirnav    => 1,  arbitor     => 1,  rathe      => 1,
+    maelin     => 1,
+);
+
+# Zone flags for the potranquility portal destinations plus potimea (219)
+# and potimeb (223) -- zoneidnumber values verified 2026-11-14.
+my @GRANT_ZONE_FLAGS = (
+    200,             # codecay
+    207,             # potorment
+    208, 210,        # povalor, postorms
+    209, 211, 212,   # bothunder, hohonora, solrotower
+    213, 214, 217,   # powar, potactics, pofire
+    215, 216, 218,   # poair, powater, poeartha
+    222,             # poearthb
+    219, 223,        # potimea, potimeb
+);
+
+# Physical zone keys Classic -> PoTime: doors.keyitem enumeration
+# (2026-11-14) filtered to atlas stages RoK/SoV/SoL/PoP plus classic zones,
+# plus the script-checked Howling Stone key. GoD and later keys (ikkinz,
+# tipt, txevu, mechanotus, dragonscale, westkorlach) are deliberately
+# excluded.
+my @GRANT_KEYS = (
+    # Classic
+    20361, 20362, 20363,                                # Befallen
+    12267,                                              # Highkeep
+    20441, 20442, 20443, 20444, 20445,                  # Najena
+    20029,                                              # Qeynos
+    20911, 20912, 20913, 20914, 20915, 20916,           # Plane of Sky
+    20917, 20918, 20919,
+    # Kunark
+    12708, 12710, 12711, 12712, 12713,                  # Droga
+    12961, 20886,                                       # City of Mist
+    17274,                                              # Key of Charasis (Howling Stone)
+    20511, 20512, 20513, 20514, 20515, 20516,           # Charasis wings
+    20883,                                              # Trakanon Idol (Sebilis)
+    6378, 6379, 6380,                                   # Paineel / The Hole
+    # Velious
+    20033, 20034, 20035, 20036, 20037, 20038, 20039,    # Frozenshadow / CC
+    27265,                                              # Sleeper's Key
+    27650,                                              # Grieg's Key
+    28060,                                              # Jaled Dar's Tomb Key
+    28602,                                              # Shrine Key (Skyshrine)
+    20884,                                              # Key of Veeshan
+    # Luclin
+    19710, 19711, 19719,                                # SSRA
+    52007,                                              # Shar Vahl Cell Key
+    8010,                                               # Vex Thal Palace Key
+    22198,                                              # Scepter of Shadows (owner call)
+    18392,                                              # Teleportation Crystal
+    # Planes of Power
+    25596,                                              # Crystalline Globe (povalor)
+    22954,                                              # Screaming Sphere (potorment)
+    28636,                                              # Gem-Etched Key (poeartha)
+    28638,                                              # Wind Etched Key (poair)
+    28999,                                              # Gryme's Crypt Key (podisease)
+);
+
+sub GrantProgressionThroughPoTime {
+    my ($client, $dry_run) = @_;
+    $dry_run //= 0;
+    my $changed = 0;
+
+    # 1) Stage objectives -- gap-filling only.
+    foreach my $stage (@GRANT_STAGES) {
+        next unless exists $STAGE_PREREQUISITES{$stage};
+        foreach my $objective (@{$STAGE_PREREQUISITES{$stage}}) {
+            next if GetSubflag($client, $stage, $objective);
+            $changed = 1;
+            SetSubflag($client, $stage, $objective, 1) unless $dry_run;
+        }
+    }
+
+    # 2) The PoP flag web, at exact required values (never downgraded).
+    foreach my $key (sort keys %POP_FLAG_GRANT) {
+        my $required = $POP_FLAG_GRANT{$key};
+        my $current  = $client->GetAccountBucket("pop.flags.$key");
+        next if (($current // '') + 0) >= $required;
+        $changed = 1;
+        $client->SetAccountBucket("pop.flags.$key", $required) unless $dry_run;
+    }
+
+    # 3) Zone flags (per character).
+    foreach my $zone_id (@GRANT_ZONE_FLAGS) {
+        next if $client->HasZoneFlag($zone_id);
+        $changed = 1;
+        $client->SetZoneFlag($zone_id) unless $dry_run;
+    }
+
+    # 4) Keys (per character; KeyRingAdd is duplicate-safe anyway).
+    foreach my $key_item (@GRANT_KEYS) {
+        next if $client->KeyRingCheck($key_item);
+        $changed = 1;
+        $client->KeyRingAdd($key_item) unless $dry_run;
+    }
+
+    return $changed;
+}

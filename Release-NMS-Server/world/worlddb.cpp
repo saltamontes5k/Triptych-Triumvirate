@@ -141,7 +141,8 @@ void WorldDatabase::GetCharSelectInfo(uint32 account_id, EQApplicationPacket **o
 
 		memset(&pp, 0, sizeof(PlayerProfile_Struct));
 		memset(cse->Name, 0, sizeof(cse->Name));
-		strcpy(cse->Name, e.name.c_str());
+		// Bounded: a name filling the 64-byte field would lose its terminator to the Class write below.
+		strn0cpy(cse->Name, e.name.c_str(), sizeof(cse->Name));
 
 		// multi-classing
 		if (RuleB(Custom, MulticlassingEnabled)) {

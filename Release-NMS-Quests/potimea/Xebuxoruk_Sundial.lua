@@ -14,6 +14,8 @@
 -- exit door both land at (298, 919), just outside it, so leaving the arena
 -- does not bounce the player straight back in.
 
+local prog = require("nms_progression")
+
 local POTIMEA_ZONEID    = 219
 local XEB_EXPEDITION    = "The Forsaken Hourglass"
 local XEB_LOCKOUT_EVENT = "Xebuxoruk the Forsaken"
@@ -33,19 +35,30 @@ local function enter_hourglass(client)
     if expedition.valid then
         if expedition:GetZoneName() == "potimea" then
             local instance_id = tonumber(expedition:GetInstanceID()) or 0
-            if instance_id == 0 then
+            -- A GM whose hourglass is already spent (defeat lockout) is not
+            -- helped by wiping back into it: retire it and roll a fresh one.
+            if client:GetGM() and client:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
+                eq.debug("[hourglass] GM locked out of a spent expedition -- retiring it for a fresh one")
+                expedition:RemoveAllMembers()
+                expedition = nil
+            elseif instance_id == 0 then
                 client:Message(MT.Red, "The tower reaches for you, but the way will not open. Yell at a GM.")
                 return
+            else
+                client:Message(MT.Yellow, "The hourglass remembers you. The tower raises you back to its summit.")
+                client:MovePCInstance(POTIMEA_ZONEID, instance_id, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
+                return
             end
-            client:Message(MT.Yellow, "The hourglass remembers you. The tower raises you back to its summit.")
-            client:MovePCInstance(POTIMEA_ZONEID, instance_id, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
+        else
+            client:Message(MT.Red, "You remain bound to another timeline. Release that claim before the tower will answer you.")
             return
         end
-        client:Message(MT.Red, "You remain bound to another timeline. Release that claim before the tower will answer you.")
-        return
     end
 
-    if client:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
+    -- GMs test the encounter; the 72h defeat lockout must not wall them out of
+    -- creating a fresh hourglass.
+    local is_gm = client:GetGM()
+    if not is_gm and client:HasExpeditionLockout(XEB_EXPEDITION, XEB_LOCKOUT_EVENT) then
         client:Message(MT.Red, "The hourglass is cold beneath your hand. You have already unmade the one who wears Zebuxoruk's face -- for now.")
         return
     end
@@ -53,11 +66,18 @@ local function enter_hourglass(client)
     expedition = client:CreateExpedition(xeb_expedition_info)
     if not expedition.valid then
         client:Message(MT.Red, "The hourglass will not turn. (Instance creation failed -- tell a GM.)")
+        eq.debug("[hourglass] expedition creation FAILED for " .. tostring(client:GetCleanName()))
         return
     end
 
+    local new_instance = tonumber(expedition:GetInstanceID()) or 0
+    eq.debug(string.format("[hourglass] created for %s dz [%s] instance [%d]", tostring(client:GetCleanName()), tostring(expedition:GetID()), new_instance))
+    if is_gm then
+        client:Message(MT.DarkGray, string.format("[hourglass] new expedition dz %s, instance %d", tostring(expedition:GetID()), new_instance))
+    end
+
     client:Message(MT.Yellow, "The sundial drinks the light and inverts. Xebuxoruk's arena opens on the clocktower top.")
-    client:MovePCInstance(POTIMEA_ZONEID, tonumber(expedition:GetInstanceID()) or 0, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
+    client:MovePCInstance(POTIMEA_ZONEID, new_instance, XEB_TOWER_TOP.x, XEB_TOWER_TOP.y, XEB_TOWER_TOP.z, XEB_TOWER_TOP.h)
 end
 
 function event_spawn(e)
@@ -70,5 +90,20 @@ function event_enter(e)
     if not who or not who:IsClient() then
         return
     end
+
+    -- Post-Quarm content: only an account that has finished Quarm (the
+    -- FNagafen progression stage) or a GM may wake the hourglass. Everyone
+    -- else gets one hint per hour and is left standing on the dial -- an
+    -- unflagged walker must never be handed a version-9 instance, because
+    -- Xebuxoruk is a raid boss waiting on the other side.
+    if not who:GetGM() and not prog.stage_complete(who, "FNagafen") then
+        local hint_key = "xeb-sundial-hint-" .. tostring(who:CharacterID())
+        if not eq.get_data(hint_key) then
+            eq.set_data(hint_key, "1", "1h")
+            who:Message(MT.Red, "The sundial is still. Only one who has watched Quarm fall may wake the hourglass.")
+        end
+        return
+    end
+
     enter_hourglass(who)
 end

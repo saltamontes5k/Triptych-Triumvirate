@@ -1028,7 +1028,7 @@ uint32 lua_get_instance_zone_id_by_id(uint16 instance_id) {
 	return database.GetInstanceZoneID(instance_id);
 }
 
-// ---------- Player Housing (house / house_objects) ----------
+// ---------- Player Housing (house) ----------
 
 uint32 lua_house_get_instance_for_char(uint32 char_id) {
 	auto results = database.QueryDatabase(
@@ -1067,60 +1067,6 @@ uint32 lua_house_create(uint32 char_id, uint32 instance_id, std::string zone) {
 	}
 
 	return results.LastInsertedID();
-}
-
-std::string lua_house_list_objects(uint32 instance_id) {
-	auto results = database.QueryDatabase(
-		fmt::format(
-			"SELECT h.`id`, h.`item_id`, h.`x`, h.`y`, h.`z`, h.`heading` "
-			"FROM `house_objects` h JOIN `house` a ON a.`id` = h.`house_id` "
-			"WHERE a.`instance_id` = {}",
-			instance_id
-		)
-	);
-	if (!results.Success()) {
-		return {};
-	}
-
-	std::string out;
-	for (auto row : results) {
-		if (!out.empty()) {
-			out += "|";
-		}
-		out += fmt::format("{}:{}:{}:{}:{}:{}", static_cast<const char*>(row[0]), static_cast<const char*>(row[1]), static_cast<const char*>(row[2]), static_cast<const char*>(row[3]), static_cast<const char*>(row[4]), static_cast<const char*>(row[5]));
-	}
-
-	return out;
-}
-
-uint32 lua_house_add_object(uint32 instance_id, uint32 item_id, float x, float y, float z, float h) {
-	auto house = database.QueryDatabase(
-		fmt::format("SELECT `id` FROM `house` WHERE `instance_id` = {}", instance_id)
-	);
-	if (!house.Success() || house.RowCount() == 0) {
-		return 0;
-	}
-
-	auto house_row = house.begin();
-	auto results = database.QueryDatabase(
-		fmt::format(
-			"INSERT INTO `house_objects` (`house_id`, `item_id`, `x`, `y`, `z`, `heading`) "
-			"VALUES ({}, {}, {:.3f}, {:.3f}, {:.3f}, {:.3f})",
-			house_row[0], item_id, x, y, z, h
-		)
-	);
-	if (!results.Success()) {
-		return 0;
-	}
-
-	return results.LastInsertedID();
-}
-
-bool lua_house_delete_object(uint32 object_row_id) {
-	auto results = database.QueryDatabase(
-		fmt::format("DELETE FROM `house_objects` WHERE `id` = {}", object_row_id)
-	);
-	return results.Success() && results.RowsAffected() > 0;
 }
 
 // ---------- Realtor one-time grant (per account) ----------
@@ -6342,9 +6288,6 @@ luabind::scope lua_register_general() {
 		luabind::def("house_get_instance_for_char", &lua_house_get_instance_for_char),
 		luabind::def("house_get_owner_for_instance", &lua_house_get_owner_for_instance),
 		luabind::def("house_create", &lua_house_create),
-		luabind::def("house_list_objects", &lua_house_list_objects),
-		luabind::def("house_add_object", &lua_house_add_object),
-		luabind::def("house_delete_object", &lua_house_delete_object),
 	luabind::def("house_realtor_door", &lua_house_realtor_door),
 	luabind::def("house_realtor_claim", &lua_house_realtor_claim),
 	luabind::def("house_realtor_link_plot", &lua_house_realtor_link_plot),
