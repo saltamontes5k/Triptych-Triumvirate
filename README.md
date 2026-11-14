@@ -21,6 +21,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - A little bird rebrand due to player bias against elementals
 - Rule-gated bazaar exile — unauthed-client handling is now a rule; disabled means one polite note per zone-in instead of the countdown
 - Keying is back for pre Pop zones to slow the rush
+- Added a rule to gate gaining tradeskills from raidboss kills
 
 ### This update's changes (11/10)
 - compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
