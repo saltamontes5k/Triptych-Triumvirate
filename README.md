@@ -17,7 +17,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - No more grief kills of the vault merchant
 - Various quest fixes, powater/poearth issues
 - MacroQuest coexistence hardened: the old gCXStrAccess "drain" retired for read-only observation, plus a breadcrumb on the client's out-of-memory trap so crash dumps finally explain themselves.
-- LoN soundtrack stops with the card game; vault bag contents carry icon + slot.
+- LoN soundtrack stops with the card game
 - A little bird rebrand due to player bias against elementals
 - Rule-gated bazaar exile — unauthed-client handling is now a rule; disabled means one polite note per zone-in instead of the countdown
 - Keying is back for pre Pop zones to slow the rush
