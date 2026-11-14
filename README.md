@@ -6,6 +6,14 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (11/14)
+
+- Some server stability fixes
+- Moved housing bags  so they're out of sight and leaving your house doesn't get you stuck inside of it in neighborhood zone (Kree)
+- fixed old housing instructions, replaced with new ones
+- more various housing fixes 
+- Gated Xeb dial encounter behind quarm flag so he doesn't yank and faceroll new to time players
+
 ### This update's changes (11/13)
 
 - Housing and furniture placement works at a basic level still has some kinks, follow the menu guide, lot rent isn't in so hold on to Georgist High Fantasy Monopoly dreams
@@ -13,7 +21,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - Various fixes to potimeA, if you killed quarm should be able to click on one of the dials on the gem monster side of potimeA for a special battle
 - Starvation/thirst code, off by default, customizable
 - LoN cards save progress and free starter kits in the bazaar, also an npc that sells them
-- Personal loot is in with 0 (off) and 4 other options, only 1 where you and your group mate(s) each get a copy has been tested extensively, also loot theft halted with 1-4 on
+- Personal loot is in with 0 (off) and (soon 3 others) for now 1 where you and your group mate(s) each get a copy has been tested extensively, also loot theft halted with 1-4 on
 - No more grief kills of the vault merchant
 - Various quest fixes, powater/poearth issues
 - MacroQuest coexistence hardened: the old gCXStrAccess "drain" retired for read-only observation, plus a breadcrumb on the client's out-of-memory trap so crash dumps finally explain themselves.
