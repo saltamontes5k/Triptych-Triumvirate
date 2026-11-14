@@ -304,7 +304,7 @@ void SharedTaskManager::LoadSharedTaskState()
 	if (!shared_task_members_data.empty()) {
 		std::vector<uint32_t> character_ids;
 		for (const auto       &m: shared_task_members_data) {
-			character_ids.emplace_back(m.character_id);
+			character_ids.emplace_back(static_cast<uint32_t>(m.character_id));
 		}
 
 		shared_task_character_data = CharacterDataRepository::GetWhere(

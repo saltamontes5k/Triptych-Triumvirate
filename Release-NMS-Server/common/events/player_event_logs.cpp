@@ -35,7 +35,7 @@ void PlayerEventLogs::Init()
 
 	// initialize settings from database
 	auto             s = PlayerEventLogSettingsRepository::All(*m_database);
-	std::vector<int> db{};
+	std::vector<int64_t> db{};
 	db.reserve(s.size());
 	for (auto &e: s) {
 		if (e.id >= PlayerEvent::MAX) {

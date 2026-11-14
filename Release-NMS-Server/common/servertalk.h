@@ -422,9 +422,10 @@ class ServerPacket
 {
 public:
 	~ServerPacket() { safe_delete_array(pBuffer); }
-	ServerPacket(uint16 in_opcode = 0, uint32 in_size = 0) {
+	// size_t in, uint32 out (see EQApplicationPacket): callers pass sizeof()/length sums.
+	ServerPacket(uint16 in_opcode = 0, size_t in_size = 0) {
 		this->compressed = false;
-		size = in_size;
+		size = static_cast<uint32>(in_size);
 		opcode = in_opcode;
 		if (size == 0) {
 			pBuffer = 0;

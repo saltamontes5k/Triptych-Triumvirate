@@ -99,7 +99,9 @@ public:
 		{ app_opcode_size = GetExecutablePlatform() == ExePlatformUCS ? 1 : 2; }
 	EQApplicationPacket(const EmuOpcode op) : EQPacket(op, nullptr, 0), opcode_bypass(0)
 		{ app_opcode_size = GetExecutablePlatform() == ExePlatformUCS ? 1 : 2; }
-	EQApplicationPacket(const EmuOpcode op, const uint32 len) : EQPacket(op, nullptr, len), opcode_bypass(0)
+	// size_t in, uint32 out: every caller passes sizeof() or a length sum, which is a
+	// size_t. Narrowing here (once, explicitly) keeps the warning out of ~700 call sites.
+	EQApplicationPacket(const EmuOpcode op, const size_t len) : EQPacket(op, nullptr, static_cast<uint32>(len)), opcode_bypass(0)
 		{ app_opcode_size = GetExecutablePlatform() == ExePlatformUCS ? 1 : 2; }
 	EQApplicationPacket(const EmuOpcode op, const unsigned char *buf, const uint32 len) : EQPacket(op, buf, len), opcode_bypass(0)
 		{ app_opcode_size = GetExecutablePlatform() == ExePlatformUCS ? 1 : 2; }
