@@ -20,6 +20,7 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 - LoN soundtrack stops with the card game; vault bag contents carry icon + slot.
 - A little bird rebrand due to player bias against elementals
 - Rule-gated bazaar exile — unauthed-client handling is now a rule; disabled means one polite note per zone-in instead of the countdown
+- Keying is back for pre Pop zones to slow the rush
 
 ### This update's changes (11/10)
 - compiled binaries removed from the repo - server exes, runtime dlls, map tools, all of it. Build from source (see Building); the client add-on builds from Release-NMS-Client too
@@ -176,7 +177,7 @@ Each folder has its own README with detailed instructions. Start with the server
 - **Triune of Fate** — an alternate currency that drops from kills and buys unlocks
 - **Item upgrade tiers** — drops can roll as Enchanted or Legendary versions
 - **Offline bazaar** — offline trader/buyer/barter support
-- **Glamour & languages** — mount glamour merchant, armour glamour, and a languages trainer
+- **Glamour & languages** — mount glamour merchant, armour glamour, and a languages trainer Also #illusion to store/use illusions from
 - **Personal Power** — Personal procs via blessing of the gods questline, not from AAs, clickies, and not from augs. It follows the PC around
 - **Tome trainers** — located in the bazaar backrooms
 - **Legends of Norrath Card Game** - Trading Card game, for nostalgia, has rewards, free 5 packs a month for existing, packs rare world drop**
@@ -186,7 +187,8 @@ Each folder has its own README with detailed instructions. Start with the server
 - **Shrouds** - Shrouds, transform into a different monster-singular class, currently includes one monster quest
 - **Tradeskill by Quest and Raiding** - Tradeskill via Monster quest (well inanimate object quest) and soon raise tradeskills directly via killing of select raid bosses
 - Assorted client-side quality-of-life fixes, shipped as `dinput8.dll`
-
+- **Housing and Lots** - Houses you can live in and furnish
+- **85 Level Cap and Goal of UF Reachable Progression** - Lvl 85 player cap and a goal of making up to UF reachable progression wise
 ---
 
 ## Quick start (LAN)
@@ -296,23 +298,17 @@ Honest state of the world, so you know what you are getting into:
 - Deity quests rank 3+ need to be put in
 - Many OoW+ AAs don't do anything, there are broken swarm pet spells and broken spells in general
 - merchants LDoN-UF ranges have no or missing stock
-- quest tester went down this week, didn't test Halloween/deity quests yet
 - you have to do everything again for travel achievements
-- achievements hunter system isn't in and nms innate slayer system appears to be too distinct for a clean merge, at best maybe a hybrid system in the future
-- housing needs more passes
-- shroud code needs more passes
-- legendary/master mercs in and have bot brains in merc bodies, future availability for multiclassing possible though currently EQbot AI chokes on it, they're cheap right now but that will change in the future
+- housing and shroud code needs more passes
+- legendary/master mercs in and have bot brains in merc bodies, future availability for multiclassing possible though currently EQbot AI chokes on it
 - few silly OMM quests in, not properly level locked not properly tested
 - avatar of wing ring in poair is glitchy but completable
-- if there's any major delay entering emps room after engage you get multiple bloods with chance of multiple emperors, strategize wisely
 - new librarian npc to act as offline guide for flagging, he's not 100pct correct on things yet
 - custom xeb (evil zeb) event in but needs finetuning/is buggy
 - tzvz can be cheesed for tradeskill grinding,
 - blessings of gods questline needs more tuning and some deities/agnostic line may not be completable yet
 - various npcs facing the wrong way, wrong appearance etc
-- today you just faceroll and click into vexthal/ssra (emp area is keyed), in the future i may bring the keying quest back so you spend quality time on the moon
-- can also faceroll and click into vp, may change this in future and add vp as progression prereq for something
-- Arcade added in hastily still needs buttons and doesn't fully work
+- Arcade added in hastily still needs buttons and doesn't work
 - curio traps in veeshan/poair (don't click the loot) has not been heavily tested
 
 ---
