@@ -209,7 +209,7 @@ local function fail_trial()
 		client:Message(MT.Red, "Your clay is unfit for the kiln. You are cast out of the expedition.")
 		client:SendSound()
 		strip_dressing(client)
-		client:RemoveShroud()
+		client:RemoveSpiritShroud()
 	end
 	eq.set_timer("pottery_fail_kick", 5000)
 end
@@ -291,7 +291,7 @@ local function win_trial()
 	eq.zone_emote(15, "The kiln ward falls silent. Pimm's voice echoes from the Bazaar: 'Magnificent! Fire it, glaze it, ship it!'")
 	for _, client in ipairs(golems_in_zone(members_in_zone())) do
 		strip_dressing(client)
-		client:RemoveShroud()
+		client:RemoveSpiritShroud()
 		local skill = client:GetSkill(POTTERY_SKILL)
 		if skill < POTTERY_CAP then
 			local gain = math.min(30, POTTERY_CAP - skill)
@@ -386,7 +386,7 @@ function event_timer(e)
 		for _, client in ipairs(members) do
 			if client:GetHP() <= 0 then
 				strip_dressing(client)
-				client:RemoveShroudSilent()
+				client:RemoveSpiritShroud()
 				fail_trial()
 				return
 			end
@@ -406,7 +406,7 @@ function event_timer(e)
 			local id = client:CharacterID()
 			if not in_form(client) then
 				if seen_unshrouded[id] then
-					client:ApplyShroud(SHROUD_ID)
+					client:ApplySpiritShroud(120125)
 					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's buffs
 					-- (their haste / regen / shields would ride along otherwise).

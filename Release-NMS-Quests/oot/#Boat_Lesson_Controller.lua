@@ -23,7 +23,7 @@
 -- Version 0 Ocean of Tears (the world zone) is untouched.
 
 local BOAT_VERSION   = 29
-local BOAT_SHROUD_ID = 502
+local BOAT_SHROUD_ID = 140140 -- spirit template (Rusty Steamboat 40); legacy id was 502
 local OOT_ID         = 69 -- zoneidnumber (canonical), not zone.id
 local BOAT_TASK_ID   = 800004
 local LEVITATION     = 2894 -- stock targetable Levitation (Flight 7530 is self-only)
@@ -212,7 +212,7 @@ function event_timer(e)
 			local id = client:CharacterID()
 			if client:GetRace() ~= 141 then
 				if seen_unshrouded[id] then
-					client:ApplyShroud(BOAT_SHROUD_ID)
+					client:ApplySpiritShroud(BOAT_SHROUD_ID)
 					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's buffs
 					-- (their damage shields / haste / speed buffs would ride

@@ -124,7 +124,14 @@ function event_say(e)
 			eq.say_link("maze") .. "], ask me about the maze. Everyone asks eventually. The [" ..
 			eq.say_link("space") .. "] story is extra.",
 			e.other:GetCleanName()))
-		e.other:TaskSelector(MISSION_TASKS)
+		-- Offer through McKenzie himself. Plain TaskSelector records the
+		-- *client's* entity id as the task giver, and CanAcceptNewTask
+		-- CastToNPCs that id -> "accepted task from missing npc", so the
+		-- accept never reaches event_task_accepted here and no expedition
+		-- is assembled. TaskSelectorFromNPC records this NPC instead.
+		if not e.other:TaskSelectorFromNPC(e.self, MISSION_TASKS) then
+			e.other:Message(15, "Old Man McKenzie waves you off. 'Window's stuck, kid. Hail me again.'")
+		end
 	end
 end
 

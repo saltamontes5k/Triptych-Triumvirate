@@ -24,7 +24,7 @@
 -- Moorwalker) is untouched.
 
 local HUNT_VERSION  = 40
-local HUNT_SHROUD   = 503
+local HUNT_SHROUD   = 140240 -- spirit template (Western Moorwalker 40); legacy id was 503
 local MOORS_ID      = 395 -- zoneidnumber (canonical), not zone.id
 local BREW_ITEM     = 41408 -- McKenzie's Special Brew (alternate_currency 18)
 
@@ -306,7 +306,7 @@ function event_timer(e)
 			local id = client:CharacterID()
 			if client:GetRace() ~= 436 then
 				if seen_unshrouded[id] then
-					client:ApplyShroud(HUNT_SHROUD)
+					client:ApplySpiritShroud(HUNT_SHROUD)
 					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's
 					-- buffs so nothing rides along into the basilisk.

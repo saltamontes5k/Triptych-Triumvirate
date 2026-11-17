@@ -583,14 +583,33 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 
 	// Shrouds (server-driven monster shroud system)
 	bool        OpenShroudWindow(Mob* npc);
+	// Offer only the listed form ids. This is the mission-scoped window the live
+	// spirit-shroud UI supported: the caller (a tradeskill quest NPC, a mission
+	// controller) decides the set instead of the whole catalog. An empty list
+	// means the catalog, i.e. the keeper behaviour.
+	bool        OpenShroudWindowFor(Mob* npc, const std::vector<uint32>& ids);
 	void        ApplyShroud(uint32 shroud_id);
 	void        RemoveShroud(bool send_updates = true);
 	void        SaveShroudSnapshot(uint32 shroud_id, bool native_template = false);
 	void        ClearShroudSnapshot();
 	void        LoadAndApplyShroudState();
-	void        ResendShroudState();
+	// Shroud UI packets for a character that logs in already wearing a form.
+	void        SendShroudZoneInState();
+	// Zone-in inventory for a form: only the form's own starter gear is sent, so
+	// the real equipment/bank never reaches the client while transformed. The
+	// unshroud reload sends the real inventory again.
+	void        SendShroudInventoryView();
+	uint32      ShroudInventoryTemplateId() const;
+	// Clears the client's shroud-selection modal before a form change zones it.
+	void        SendShroudSelectComplete();
+	// Zone the client to itself so it rebuilds from the zone-in profile: the
+	// form (or the restored real character) arrives on the wire and no runtime
+	// OP_Shroud transform is sent. Same zone, same instance, same spot.
+	void        ReloadForShroudTransition(const char* why);
 	inline bool IsShrouded() const { return m_shrouded; }
-	inline uint32 GetShroudID() const { return m_shroud_id; }
+	// Quest forms carry m_shroud_id, spirit forms carry the template id; scripts
+	// only ever need "which form is this", so report whichever is set.
+	inline uint32 GetShroudID() const { return m_shroud_id ? m_shroud_id : m_spirit_shroud_template; }
 
 	// Live-like monster points / shroud AAs (see Custom:ShroudLiveMode).
 	inline uint32 GetShroudPoints() const { return m_shroud_points; }
@@ -609,7 +628,6 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool IsShroudAbilityForCurrentForm(uint32 aa_id) const;
 	uint32 ShroudAbilityMaxRank(uint32 aa_id) const;
 	void ShroudPurgeOwnedAAs();
-	void FillShroudTransformExtras(ShroudSelf_Struct *shroud);
 
 	// Native RoF2 Spirit Shroud protocol (Custom:EnableSpiritShrouds; see
 	// zone/client_spirit_shroud.cpp and reference/nsqemu-spirit-shrouds/
@@ -619,13 +637,28 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	const SpiritShroud::Template *SpiritShroudDefinition() const { return m_spirit_shroud_definition.get(); }
 	bool LoadSpiritShroudState();
 	void OpenSpiritShrouds();
+	// Mission-scoped variant: only the listed template ids are offered (empty =
+	// the whole verified catalog). Same window, same protocol.
+	void OpenSpiritShroudsFor(const std::vector<uint32_t>& only);
+	// Forms the currently open window was allowed to offer (mission scope).
+	std::vector<uint32_t> m_spirit_shroud_scoped;
 	void OpenSpiritShroudBank();
 	void ChangeSpiritShroud(uint32_t template_id);
 	void ReapplyNativeShroud(uint32_t template_id);
-	void EnterNativeShroud(uint32_t template_id);
-	void RestoreNativeShroud();
+	// script_granted: a quest applied the form directly. A quest apply is the
+	// entitlement (quests are the entry points), so the entitlement_key check
+	// is waived the same way a mission-scoped window waives it.
+	void EnterNativeShroud(uint32_t template_id, bool script_granted = false);
+	// send_updates=false: the silent twin used by zone-in/death hooks (the
+	// client rebuilds from spawn data; no reload or form-change messages).
+	void RestoreNativeShroud(bool send_updates = true);
 	void IssueNativeStarterItems(const SpiritShroud::Template &t);
 	void RemoveNativeStarterItems(uint32_t template_id);
+	// The AA window lists a row while shrouded only when the server flags its
+	// per-row shroud byte, which reads m_shroud_ability_caps -- the legacy
+	// loader never runs for native forms, so the native path fills the same map
+	// from the template's own ability list.
+	void SetNativeShroudAbilityCaps(const SpiritShroud::Template &t);
 	void ShroudRebuildAAArray();
 	void ShroudRebuildRanksFromPP();
 	bool HasSpiritShroudRank(uint32_t rank) const;
@@ -722,6 +755,7 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	void BulkSendTraderInventory(uint32 char_id);
 	void SendSingleTraderItem(uint32 character_id, const std::string &serial_number);
 	void BulkSendMerchantInventory(int merchant_id, int npcid);
+	bool PassesMerchantBucket(const MerchantList& ml);
 
 	inline uint8 GetLanguageSkill(uint8 language_id) const { return m_pp.languages[language_id]; }
 
@@ -2586,7 +2620,8 @@ private:
 	int sent_inventory;
 
 	Timer m_initial_wc;
-	Timer m_nms_loot_restore_timer; // /nmsloot: delayed pending-offer restore after zone-in
+	Timer m_nms_loot_restore_timer; // /nmsloot: one-shot pending-offer restore after zone-in
+	Timer m_nms_loot_expire_timer;  // /nmsloot: slow poll that delivers expired offers into bags
 	Client::AttackMode m_attack_mode = AttackMode::UNDEFINED;
 
 	// https://github.com/EQEmu/Server/pull/2479
@@ -2744,10 +2779,7 @@ private:
 	uint8                m_shroud_saved_texture      = UINT8_MAX;
 	uint8                m_shroud_saved_helmtexture  = UINT8_MAX;
 	float                m_shroud_saved_size         = -1.0f;
-	// Zone-in re-apply is deferred: an OP_Shroud that arrives while the RoF2
-	// client is still building the zone crashes its self-spawn re-add.
-	bool                 m_shroud_zonein_pending     = false;
-	uint32               m_shroud_zonein_at          = 0;
+
 	// Live-like monster points (Custom:ShroudLiveMode bit 4): a separate pool
 	// granted fresh per shroud apply, spent on shroud AAs only, reset on leave.
 	// Kept out of m_pp so the ShroudPersistGuard never sees it.

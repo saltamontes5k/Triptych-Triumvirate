@@ -17,6 +17,8 @@
 #include "questmgr.h"
 #include "zonedb.h"
 
+#include "nms_housing_actors.h"
+
 #include "../common/strings.h"
 
 #include "fmt/format.h"
@@ -1129,6 +1131,13 @@ bool StoreFurnitureRow(Client *c, uint32_t row_id, int container);
 // Client-UI placement (v2): the estate item list that fills the Items window, the placement
 // preview for furniture rows, and the 0x1228 result that closes the preview loop.
 void SendRealEstateItemList(Client *c, uint32_t estate_id);
+// Hailstone/roF2 incremental item-summary messages. The list only appends or replaces rows --
+// the client merges them by estate+row key (hailstone-client src/net/real_estate_packets.h,
+// game::RealEstateManager::add_item_rows) -- so a withdrawn row and a wholly emptied estate have
+// to be said explicitly, or the Items window keeps listing what is gone.
+void SendRealEstateItemRowAdd(Client *c, uint32_t estate_id, uint32_t row_id);
+void SendRealEstateItemRowRemoved(Client *c, uint32_t estate_id, uint32_t row_id);
+void SendRealEstateItemSummaryForget(Client *c, uint32_t estate_id);
 bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id, uint32_t item_id,
                                     const std::string &model, uint32_t zone_id, uint32_t neighborhood_id,
                                     float x, float y, float z, float heading, float pitch, float roll,
@@ -2046,6 +2055,7 @@ void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
 								this, estate_id, row_id, item_id, model, zone->GetZoneID(),
 								pos_x, pos_y, pos_z, heading, scale > 0.0f ? scale : 1.0f
 							);
+							SendRealEstateItemRowAdd(this, estate_id, row_id);
 							SendRealEstateItemList(this, estate_id);
 							SendRealEstateOperationResult(this, 0);
 
@@ -2201,6 +2211,7 @@ void Client::Handle_OP_RealEstatePlacementCommit(const EQApplicationPacket *app)
 			scale > 0.0f ? scale : 1.0f
 		);
 
+		SendRealEstateItemRowAdd(this, estate_id, row_id);
 		SendRealEstateItemList(this, estate_id);
 		SendRealEstateOperationResult(this, 0);
 
@@ -2474,6 +2485,9 @@ void Client::Handle_OP_RealEstateItemOperation(const EQApplicationPacket *app)
 	else {
 		RemoveItem(item_id, 1);
 	}
+
+	// One row for the pane, then the whole list (the list stays the authoritative refresh).
+	SendRealEstateItemRowAdd(this, door_id, static_cast<uint32_t>(insert.LastInsertedID()));
 
 	// Refresh the window's list and close the operation.
 	SendRealEstateItemList(this, door_id);
@@ -4045,6 +4059,31 @@ bool SendRealEstateFurniturePreview(Client *c, uint32_t door_id, uint32_t row_id
 	return true;
 }
 
+// One estate item row, exactly the shape the 0x1cef list and the 0x087f summary carry
+// (hailstone-client src/net/real_estate_packets.h ReItemRow: u32 re, u32 row key, u8 placed,
+// u32 f04, 7 x u32 counters, str text, str owner, item body). The seven counters hold the pose
+// as floats in the original client's order: heading, pitch, roll, scale, X, Y, Z.
+void WriteEstateItemRow(Writer &w, uint32_t requested_estate, uint32_t row_id, bool placed,
+                        float heading, float pitch, float roll, float scale,
+                        float x, float y, float z, const std::string &owner_name,
+                        const std::string &item_body)
+{
+	w.U32(requested_estate);
+	w.U32(row_id);
+	w.U8(placed ? 1 : 0);
+	w.U32(0);              // expired
+	w.Float(heading);
+	w.Float(pitch);
+	w.Float(roll);
+	w.Float(scale);
+	w.Float(x);
+	w.Float(y);
+	w.Float(z);
+	w.Str("");             // display owner: empty = the viewer's own estate
+	w.Str(owner_name);
+	w.Bytes(item_body);
+}
+
 // 0x1cef S2C estate item list: u32 estate + u32 count + per-item entries. Entry format per the
 // public reconstruction's FurnitureEntry (estate, row id, placed byte, expired word, pose as
 // heading/pitch/roll/scale then Y/X/Z, display owner, owner, embedded item serialization). The
@@ -4162,23 +4201,16 @@ void SendRealEstateItemList(Client *c, uint32_t estate_id)
 					);
 				}
 
-				w.U32(requested_estate);
-				w.U32(row_id);
 				// container -1 is placed in the world; 0/1/2 are the closet/shed/crate rows.
 				const int container = row[12] ? Strings::ToInt(row[12]) : (Strings::ToUnsignedInt(row[11] ? row[11] : "0") ? 0 : -1);
-				w.U8(container < 0 ? 1 : 0);   // placed (0 = stored in a container)
-				w.U32(0);             // expired
-				w.Float(Strings::ToFloat(row[3] ? row[3] : "0"));   // heading
-				w.Float(Strings::ToFloat(row[4] ? row[4] : "0"));   // pitch
-				w.Float(Strings::ToFloat(row[5] ? row[5] : "0"));   // roll
-				w.Float(Strings::ToFloat(row[6] ? row[6] : "1"));   // scale
 				// ItemEntry carries X/Y/Z (the world actor is the one that swaps to Y/X/Z).
-				w.Float(Strings::ToFloat(row[7] ? row[7] : "0"));   // X
-				w.Float(Strings::ToFloat(row[8] ? row[8] : "0"));   // Y
-				w.Float(Strings::ToFloat(row[9] ? row[9] : "0"));   // Z
-				w.Str("");            // display owner: empty = the viewer's own estate
-				w.Str(owner_name);
-				w.Bytes(body);
+				WriteEstateItemRow(
+					w, requested_estate, row_id, container < 0,
+					Strings::ToFloat(row[3] ? row[3] : "0"), Strings::ToFloat(row[4] ? row[4] : "0"),
+					Strings::ToFloat(row[5] ? row[5] : "0"), Strings::ToFloat(row[6] ? row[6] : "1"),
+					Strings::ToFloat(row[7] ? row[7] : "0"), Strings::ToFloat(row[8] ? row[8] : "0"),
+					Strings::ToFloat(row[9] ? row[9] : "0"), owner_name, body
+				);
 				++count;
 			}
 		}
@@ -4196,6 +4228,109 @@ void SendRealEstateItemList(Client *c, uint32_t estate_id)
 		"[Housing] item list for [{}]: estate [{}], owner [{}], rows [{}], {} bytes",
 		c->GetName(), estate_id, owner, count, buf.size()
 	);
+}
+
+// 0x2cf7: one row added or changed. {u32 estate, one row}; the client merges it into that
+// estate's summary by key, so a single deposit does not need the whole list.
+void SendRealEstateItemRowAdd(Client *c, uint32_t estate_id, uint32_t row_id)
+{
+	if (!c || !estate_id || estate_id == UINT32_MAX || !row_id) {
+		return;
+	}
+
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT h.item_id, h.charges, h.heading, h.pitch, h.roll, h.scale, "
+		"       h.pos_x, h.pos_y, h.pos_z, COALESCE(cd.name, ''), h.stowed, h.container "
+		"FROM nms_house_item h "
+		"LEFT JOIN character_data cd ON cd.id = h.placed_by "
+		"WHERE h.id = {} LIMIT 1",
+		row_id
+	));
+
+	if (!rows.Success() || !rows.RowCount()) {
+		return;
+	}
+
+	auto row = rows.begin();
+
+	const uint32_t item_id = Strings::ToUnsignedInt(row[0] ? row[0] : "0");
+	const auto *data = item_id ? database.GetItem(item_id) : nullptr;
+
+	if (!data) {
+		return;
+	}
+
+	auto *inst = database.CreateBaseItem(data, static_cast<int16_t>(
+		Strings::ToUnsignedInt(row[1] ? row[1] : "1")));
+
+	if (!inst) {
+		return;
+	}
+
+	EQ::OutBuffer body_ob;
+	RoF2::SerializeItem(body_ob, inst, EQ::invslot::slotCursor, 0, ItemPacketCharInventory);
+	const std::string body = body_ob.str();
+	safe_delete(inst);
+
+	if (body.empty()) {
+		return;
+	}
+
+	// Same container rule as the list: -1 is placed in the world, 0/1/2 are the stored rows.
+	const int container = row[11] ? Strings::ToInt(row[11])
+	                              : (Strings::ToUnsignedInt(row[10] ? row[10] : "0") ? 0 : -1);
+
+	Writer w;
+	WriteEstateItemRow(
+		w, estate_id, row_id, container < 0,
+		Strings::ToFloat(row[2] ? row[2] : "0"), Strings::ToFloat(row[3] ? row[3] : "0"),
+		Strings::ToFloat(row[4] ? row[4] : "0"), Strings::ToFloat(row[5] ? row[5] : "1"),
+		Strings::ToFloat(row[6] ? row[6] : "0"), Strings::ToFloat(row[7] ? row[7] : "0"),
+		Strings::ToFloat(row[8] ? row[8] : "0"),
+		row[9] ? std::string(row[9]) : std::string(), body
+	);
+
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemRowAdd, static_cast<uint32>(w.Buffer().size()));
+	std::memcpy(outapp->pBuffer, w.Buffer().data(), w.Buffer().size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+}
+
+// 0x1baf: one row left the estate. {u32 estate, u32 row key}; the client drops that key from
+// that summary. An unknown key is a no-op, so telling both pane keys is safe.
+void SendRealEstateItemRowRemoved(Client *c, uint32_t estate_id, uint32_t row_id)
+{
+	if (!c || !estate_id || estate_id == UINT32_MAX || !row_id) {
+		return;
+	}
+
+	Writer w;
+	w.U32(estate_id);
+	w.U32(row_id);
+
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemRemoved, static_cast<uint32>(w.Buffer().size()));
+	std::memcpy(outapp->pBuffer, w.Buffer().data(), w.Buffer().size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+
+	LogInfo("[Housing] row [{}] withdrawn from estate [{}] for [{}]", row_id, estate_id, c->GetName());
+}
+
+// 0x7d28: forget an estate's item summary. {u32 estate}; the pane is erased and the next list
+// or row builds it again. Used when a lot's last row goes away.
+void SendRealEstateItemSummaryForget(Client *c, uint32_t estate_id)
+{
+	if (!c || !estate_id || estate_id == UINT32_MAX) {
+		return;
+	}
+
+	Writer w;
+	w.U32(estate_id);
+
+	auto outapp = new EQApplicationPacket(OP_RealEstateItemSummaryForget, static_cast<uint32>(w.Buffer().size()));
+	std::memcpy(outapp->pBuffer, w.Buffer().data(), w.Buffer().size());
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
 }
 
 void SendRealEstateFurniture(Client *c, uint32_t door_id, uint32_t placement_type)
@@ -4286,6 +4421,17 @@ bool ReturnFurnitureRow(Client *c, uint32_t row_id)
 
 	if (zone) {
 		SendRealEstateFurnitureWorldRemove(c, door_id, row_id, item_id, zone->GetZoneID());
+	}
+
+	// The item list only appends rows, so the withdrawn row has to be said explicitly or the
+	// Items window keeps listing a piece that is no longer on the lot. Both summary keys are
+	// told: the yard pane keys by lot, the house-interior pane by kHouseEstateBase + lot.
+	SendRealEstateItemRowRemoved(c, door_id, row_id);
+	SendRealEstateItemRowRemoved(c, kHouseEstateBase + door_id, row_id);
+
+	if (!PlotItemCount(door_id, -2)) {
+		SendRealEstateItemSummaryForget(c, door_id);
+		SendRealEstateItemSummaryForget(c, kHouseEstateBase + door_id);
 	}
 
 	LogInfo("[Housing] furniture row [{}] (item [{}]) returned to [{}]", row_id, item_id, c->GetName());
@@ -5035,10 +5181,21 @@ void command_housing(Client *c, const Seperator *sep)
 		c->Message(Chat::White, "#housing retemplate <door_id> - rebuild the interior from the lot's building item");
 		c->Message(Chat::White, "#housing plotsearch [mode] - send the plot-search window opener (0x2b35)");
 		c->Message(Chat::White, "#housing guildplot <door_id> [off] - make a lot a guild plot");
+		c->Message(Chat::White, "#housing actor spawn <estate_id> <npc_type_id> [row_id] [item_id] - publish a bound world actor (0x21ea)");
+		c->Message(Chat::White, "#housing actor list | remove <estate_id> <row_id> | bind <estate_id> <row_id>");
 		return;
 	}
 
 	const std::string sub  = sep->arg[1];
+
+	// World-actor publication (nms_housing_actors.cpp): spawn an NPC that stands for an
+	// estate row and tell the client which row it belongs to. This is the substrate the
+	// house guest NPCs -- pets and bought service assistants -- will sit on; on its own it
+	// is only a GM test surface, so it never runs from a player-facing path yet.
+	if (sub == "actor" || sub == "actors") {
+		NmsHousingActors::HandleCommand(c, sep);
+		return;
+	}
 	const std::string zone_name = zone ? zone->GetShortName() : "";
 
 	// Places a house item the character is carrying onto a lot: the item is consumed, the

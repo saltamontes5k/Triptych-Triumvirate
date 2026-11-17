@@ -3400,6 +3400,15 @@ uint32 QuestManager::MerchantCountItem(uint32 NPCid, uint32 itemid) {
 	return Quant;	// return the quantity of itemid (0 if it was never found)
 }
 
+// Re-reads the merchantlist rows for every merchant NPC currently in the zone.
+// This is the only runtime path that refreshes static vendor stock (the merchant
+// table is loaded once at zone boot); quest::MerchantSetItem only touches the
+// temp list and refuses Class::AlternateCurrencyMerchant vendors, which sell
+// through merchantlist.alt_currency_cost instead.
+void QuestManager::ReloadMerchants() {
+	entity_list.ReloadMerchants();
+}
+
 std::string QuestManager::varlink(EQ::ItemInstance* inst)
 {
 	QuestManagerCurrentQuestVars();

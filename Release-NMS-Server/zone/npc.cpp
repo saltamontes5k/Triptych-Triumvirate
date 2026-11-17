@@ -301,6 +301,7 @@ NPC::NPC(const NPCType *npc_type_data, Spawn2 *in_respawn, const glm::vec4 &posi
 	m_skip_global_loot = npc_type_data->skip_global_loot;
 	m_skip_auto_scale  = npc_type_data->skip_auto_scale;
 	rare_spawn         = npc_type_data->rare_spawn;
+	rare_creature      = npc_type_data->rare_creature;
 	no_target_hotkey   = npc_type_data->no_target_hotkey;
 	primary_faction    = 0;
 	faction_amount     = npc_type_data->faction_amount;

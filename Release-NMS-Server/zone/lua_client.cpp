@@ -1892,6 +1892,44 @@ void Lua_Client::OpenShroudWindow(Lua_Mob npc) {
 	self->OpenShroudWindow(npc);
 }
 
+// Mission-scoped spirit-shroud window: client:OpenShroudWindowFor(npc, {ids}).
+// The caller decides which forms appear, so one NPC can serve a whole family of
+// mission forms (the live OMM missions handed the window a fixed set the same
+// way) instead of every branch needing its own keeper.
+void Lua_Client::OpenShroudWindowFor(Lua_Mob npc, luabind::object ids) {
+	Lua_Safe_Call_Void();
+
+	if (luabind::type(ids) != LUA_TTABLE) {
+		return;
+	}
+
+	std::vector<uint32> wanted;
+	for (int i = 1; i <= MAXCHOOSERENTRIES; ++i) {
+		auto cur = ids[i];
+		if (luabind::type(cur) == LUA_TNUMBER) {
+			wanted.push_back(luabind::object_cast<uint32>(cur));
+		}
+	}
+
+	if (wanted.empty()) {
+		return;
+	}
+
+	self->OpenShroudWindowFor(npc, wanted);
+}
+
+void Lua_Client::ApplySpiritShroud(uint32 template_id) {
+	Lua_Safe_Call_Void();
+	// A quest apply is the entitlement: waive the keeper entitlement_key the
+	// same way a mission-scoped window does (client.h EnterNativeShroud).
+	self->EnterNativeShroud(template_id, true);
+}
+
+void Lua_Client::RemoveSpiritShroud() {
+	Lua_Safe_Call_Void();
+	self->RestoreNativeShroud();
+}
+
 void Lua_Client::RemoveShroud() {
 	Lua_Safe_Call_Void();
 	self->RemoveShroud();
@@ -4537,7 +4575,10 @@ luabind::scope lua_register_client() {
 	.def("NukeItem", (void(Lua_Client::*)(uint32,int))&Lua_Client::NukeItem)
 	.def("OpenLFGuildWindow", (void(Lua_Client::*)(void))&Lua_Client::OpenLFGuildWindow)
 	.def("OpenShroudWindow", (void(Lua_Client::*)(Lua_Mob))&Lua_Client::OpenShroudWindow)
+	.def("OpenShroudWindowFor", (void(Lua_Client::*)(Lua_Mob, luabind::object))&Lua_Client::OpenShroudWindowFor)
 	.def("ApplyShroud", (void(Lua_Client::*)(uint32_t))&Lua_Client::ApplyShroud)
+	.def("ApplySpiritShroud", (void(Lua_Client::*)(uint32_t))&Lua_Client::ApplySpiritShroud)
+	.def("RemoveSpiritShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveSpiritShroud)
 	.def("RemoveShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroud)
 	.def("RemoveShroudSilent", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroudSilent)
 	.def("PlayMP3", (void(Lua_Client::*)(std::string))&Lua_Client::PlayMP3)

@@ -103,13 +103,15 @@ my $SOD_TOWER_KEY    = 88343;
 my %SOD_OFFERS = (
     # Oceangreen
     466141 => [[303000, ()], [303001, 303000]],                     # Sergeant Bronal Cadran
-    466035 => [[303002, ()], [303003, 303002], [303004, 303003]],   # Captain Hiran Tillin
-    # Freedom! joins the chain live-faithfully: Raxtor offers it after the
-    # Tillin tasks, and Beat the Blackburrow Boss now requires it plus the
-    # v145 theme tasks Summary Execution (Bracka) and What Evil Lurks
-    # (Fripp) -- the live page's full request gate.
-    466160 => [[303080, 303003, 303004],
-               [303005, 303003, 303004, 303080, 303106, 303107]],  # Raxtor Darkpaw
+    # Familiarity is Key follows Man the Defenses and No Cure for Death,
+    # matching the accepted Oceangreen task prerequisites.
+    466035 => [[303002, 303000, 303001], [303003, 303002], [303004, 303003]],  # Captain Hiran Tillin
+    # Freedom! is gated on Summary Execution, Invading the Invaders and
+    # What Evil Lurks (the accepted live request gate); Beat the
+    # Blackburrow Boss follows Freedom! alone. The accepted task ids are
+    # 920183 / 920180; ours are 303080 / 303005 in the same order.
+    466160 => [[303080, 303106, 303109, 303107],
+               [303005, 303080]],                                   # Raxtor Darkpaw
     466155 => [[303081, ()], [303109, ()]],                         # Elder Mystic Foppye
     # Queen Malarian path (v111): Cadmael carries the path and requests the
     # raid once Jerom's Bubonians task is also done; Stop the Ascension

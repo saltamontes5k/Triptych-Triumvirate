@@ -263,7 +263,7 @@ local function fail(reason)
 		if client:GetRace() == KEG_RACE then
 			client:BuffFadeAll()
 		end
-		client:RemoveShroud()
+		client:RemoveSpiritShroud()
 	end
 
 	eq.set_timer("keg_fail_kick", FAIL_KICK_MS)
@@ -299,7 +299,7 @@ local function win()
 	eq.zone_emote(15, "The seven objectors are blown clean out of the hall. The Priest of Brell pronounces the union. The keg has saved the wedding!")
 	for _, client in ipairs(kegs) do
 		client:BuffFadeAll()
-		client:RemoveShroud()
+		client:RemoveSpiritShroud()
 		grant_reward(client)
 	end
 
@@ -308,7 +308,7 @@ end
 
 local function apply_keg(client)
 	dismiss_pets(client)
-	client:ApplyShroud(KEG_SHROUD_ID)
+	client:ApplySpiritShroud(100125)
 	if client:GetRace() ~= KEG_RACE then
 		client:Message(MT.Red, "The keg form refuses you. You must be at least level 25.")
 		return
@@ -628,7 +628,7 @@ function event_timer(e)
 		for _, client in ipairs(members) do
 			if client:GetHP() <= 0 then
 				client:BuffFadeAll()
-				client:RemoveShroudSilent()
+				client:RemoveSpiritShroud()
 				fail("The keg has been spilled. The wedding cannot continue.")
 				return
 			end

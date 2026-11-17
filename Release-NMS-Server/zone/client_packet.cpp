@@ -173,6 +173,19 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_RealEstateTransferResult)
 	NMS_LOG_ONLY(OP_RealEstateTransferConsent)
 	NMS_LOG_ONLY(OP_RealEstateBindSpawn)
+	// Hailstone housing cross-reference (hailstone-client v0.7.1-beta): named so the message logs
+	// with its opcode instead of dropping as unknown. No handler; see patch_RoF2.conf.
+	NMS_LOG_ONLY(OP_RealEstateNop1)
+	NMS_LOG_ONLY(OP_RealEstateItemSummaryUpdate)
+	NMS_LOG_ONLY(OP_RealEstateItemRowAdd)
+	NMS_LOG_ONLY(OP_RealEstateItemRemoved)
+	NMS_LOG_ONLY(OP_RealEstateAccessList)
+	NMS_LOG_ONLY(OP_RealEstateNop2)
+	NMS_LOG_ONLY(OP_RealEstateRemove)
+	NMS_LOG_ONLY(OP_RealEstateItemMenu13)
+	NMS_LOG_ONLY(OP_RealEstateOwnedListToggle)
+	NMS_LOG_ONLY(OP_RealEstateItemSummaryForget)
+	NMS_LOG_ONLY(OP_RealEstateOwnedItemListToggle)
 	NMS_LOG_ONLY(OP_GuildTrophyAvailable)
 	NMS_LOG_ONLY(OP_GuildTrophyActive)
 	NMS_LOG_ONLY(OP_GuildTrophyToggle)
@@ -874,19 +887,11 @@ void Client::ReapplyBuff(uint32 index, bool from_suppress)
 // Finish client connecting state
 void Client::CompleteConnect()
 {
-	// Native Spirit Shroud state metadata loads first (form definition and
-	// owned-rank set for the protocol path); the persisted shroud re-apply
-	// below then branches on it.
-	LoadSpiritShroudState();
-
-	// If the zone was killed mid-shroud, restore the real profile before any
-	// class/stat logic runs so the character is never stranded as a shroud;
-	// otherwise re-apply a persisted shroud (shrouds survive zoning/relogging).
-	LoadAndApplyShroudState();
-
-	if (RuleB(Custom, MulticlassingEnabled)) {
-		m_pp.classes = Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
-	}
+	// Shroud state (and the multiclass class bitmask) is applied earlier, in
+	// Handle_Connect_OP_ZoneEntry, BEFORE the zone-in profile is serialized —
+	// that is what lets the client receive the form on the wire with no
+	// runtime OP_Shroud transform. Nothing shroud-related belongs here: this
+	// point is already after the profile has been sent.
 
 	// Load Kill Counters
 	auto kdb = AccountKillCountsRepository::GetWhere(database, fmt::format("account_id = {}", account_id));
@@ -905,6 +910,11 @@ void Client::CompleteConnect()
 	MarkPetListDirty();
 
 	SendAllPackets();
+
+	// A character that logged in wearing a form needs its shroud UI packets
+	// (progress, monster points, template stats) — they are not profile fields
+	// and the pre-reload flow carried them on the OP_Shroud transform.
+	SendShroudZoneInState();
 
 	hpupdate_timer.Start();
 	autosave_timer.Start();
@@ -1083,6 +1093,9 @@ void Client::CompleteConnect()
 	// ready yet and MacroQuest faults on the CXStr-backed window. Process() sends it
 	// after a short settle delay instead.
 	m_nms_loot_restore_timer.Start(3000);
+	// Expiry delivery poll. Separate from the zone-in restore: this one repeats, but it only
+	// touches the DB and refreshes the window when an offer actually expired into the bags.
+	m_nms_loot_expire_timer.Start(15000);
 
 	DeleteEntityVariable(SEE_BUFFS_FLAG);
 
@@ -2057,6 +2070,55 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 	/* Reset rest timer if the durations have been lowered in the database */
 	if ((m_pp.RestTimer > RuleI(Character, RestRegenTimeToActivate)) && (m_pp.RestTimer > RuleI(Character, RestRegenRaidTimeToActivate)))
 		m_pp.RestTimer = 0;
+
+	// ---------------------------------------------------------------------
+	// Shroud state is applied HERE, at the end of the m_pp assembly and before
+	// the profile is serialized below, so the form's class/race/level/stats/AA
+	// travel in the normal OP_PlayerProfile. The client builds the shroud
+	// character from that profile exactly as it builds any other, which is why
+	// no OP_Shroud transform (and no client-side patch) is needed at runtime.
+	//
+	// Ordering matters: these loads used to run in CompleteConnect(), i.e.
+	// AFTER this profile had already been sent, which is what forced the
+	// deferred OP_Shroud re-apply. Do not move them back.
+	//
+	// Native Spirit Shroud metadata loads first (form definition and owned-rank
+	// set for the protocol path); the persisted shroud re-apply then branches on
+	// it. If the zone was killed mid-shroud the restore branch puts the real
+	// profile back before it is serialized, so the client is never stranded.
+	LoadSpiritShroudState();
+	LoadAndApplyShroudState();
+
+	// A form change zones the player to themselves, which the client only
+	// answers in safe-coords mode, so the arrival is the zone's safe point.
+	// Put them back where they were (see ReloadForShroudTransition).
+	if (const std::string stored = GetBucket("ShroudReturnPos"); !stored.empty()) {
+		SetBucket("ShroudReturnPos", "");
+
+		float x = 0.0f, y = 0.0f, z = 0.0f, heading = 0.0f;
+		unsigned long long stamp = 0;
+		if (std::sscanf(stored.c_str(), "%f,%f,%f,%f,%llu", &x, &y, &z, &heading, &stamp) == 5) {
+			const uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+			if (now >= stamp && now - stamp <= 120) {
+				m_Position = glm::vec4(x, y, z, heading);
+				LogInfo("Client [{}] shroud reload position restored to ({:.2f}, {:.2f}, {:.2f})",
+					GetCleanName(), x, y, z);
+			} else {
+				LogInfo("Client [{}] ignored a stale shroud reload position", GetCleanName());
+			}
+		}
+	}
+
+	// Multiclass bitmask must be in the profile too (same reason). While a
+	// shroud form is active the character is single-class by definition — the
+	// client renders the class list from this bitmask, so leaving the real
+	// multiclass mask here showed a cake-shaped Bard/Rogue/Berserker (and let
+	// multiclass AA/spell gates follow the real classes into the form).
+	if (RuleB(Custom, MulticlassingEnabled)) {
+		m_pp.classes = IsShrouded()
+			? GetPlayerClassBit(m_pp.class_)
+			: Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
+	}
 
 	/* This checksum should disappear once dynamic structs are in... each struct strategy will do it */ // looks to be in place now
 	//CRC32::SetEQChecksum((unsigned char*)&m_pp, sizeof(PlayerProfile_Struct) - sizeof(m_pp.m_player_profile_version) - 4);
@@ -3316,6 +3378,10 @@ void Client::Handle_OP_AltCurrencyMerchantRequest(const EQApplicationPacket *app
 				continue;
 			}
 
+			if (!PassesMerchantBucket(ml)) {
+				continue;
+			}
+
 			item = database.GetItem(ml.item);
 			if (item) {
 				item_ss << "^" << item->Name << "|";
@@ -3374,6 +3440,10 @@ void Client::Handle_OP_AltCurrencyPurchase(const EQApplicationPacket *app)
 
 			int32 fac = tar->GetPrimaryFaction();
 			if (fac != 0 && GetModCharacterFactionLevel(fac) < ml.faction_required) {
+				continue;
+			}
+
+			if (!PassesMerchantBucket(ml)) {
 				continue;
 			}
 
@@ -3584,6 +3654,10 @@ void Client::Handle_OP_AltCurrencySell(const EQApplicationPacket *app)
 				continue;
 			}
 
+			if (!PassesMerchantBucket(ml)) {
+				continue;
+			}
+
 			item = database.GetItem(ml.item);
 			if (!item)
 				continue;
@@ -3708,6 +3782,10 @@ void Client::Handle_OP_AltCurrencySellSelection(const EQApplicationPacket *app)
 
 				int32 fac = tar->GetPrimaryFaction();
 				if (fac != 0 && GetModCharacterFactionLevel(fac) < ml.faction_required) {
+					continue;
+				}
+
+				if (!PassesMerchantBucket(ml)) {
 					continue;
 				}
 
@@ -6208,6 +6286,10 @@ void Client::Handle_OP_Consider(const EQApplicationPacket *app)
 		}
 
 		SendColoredText(color, std::string("This creature would take an army to defeat!"));
+	}
+
+	if (t->IsRareCreature()) {
+		SendColoredText(color, std::string("This is a Rare Creature"));
 	}
 
 	if (t->GetSpecialAbility(SpecialAbility::CharmImmunity)) {
@@ -14880,15 +14962,9 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 				break;
 			}
 
-			if (!ml.bucket_name.empty() && !ml.bucket_value.empty()) {
-				DataBucketKey k = GetScopedBucketKeys();
-				k.key = ml.bucket_name;
-
-				auto b = DataBucket::GetData(k);
-				if (b.value.empty() || !zone->CompareDataBucket(ml.bucket_comparison, ml.bucket_value, b.value)) {
-					gate_blocked = true;
-					break;
-				}
+			if (!PassesMerchantBucket(ml)) {
+				gate_blocked = true;
+				break;
 			}
 
 			item_id = ml.item;

@@ -120,6 +120,7 @@ SET(zone_sources
     nms_starvation.cpp
     nms_lon_session.cpp
     nms_housing.cpp
+    nms_housing_actors.cpp
     nms_window.cpp
     tradeskills.cpp
     trading.cpp

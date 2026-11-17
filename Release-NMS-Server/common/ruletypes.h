@@ -1234,7 +1234,7 @@ RULE_BOOL(Custom, 	NMSVaultScriptPanel, 				false, 	"Render the Nautilus Vault a
 
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
-RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")
+RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points. Only bit 4 is live: 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4). Bits 1, 2 and 8 described fields of the old runtime OP_Shroud profile block and are inert since form changes became a zone-in profile swap (2026-11-15); the client no longer needs any shroud patch. Recommended 4.")
 RULE_INT(Custom, 	ShroudMonsterPointScale, 				100, "Percent multiplier applied to the monster-point grant for a shroud form (100 = the live guide's baseline ladder: a 10-point starter below level 20, then 32/36/40/45/50/55 at levels 20-45, 78 at 50, 84 at 55, 91 at 60, 97 at 65, 104 at 70). 0 grants no monster points at all (the guide's strict values, where a low-level form's basics are free); the guide's per-form totals otherwise vary by up to about 40 percent, so raise this if the baseline feels stingy.")
 // Native RoF2 Spirit Shroud protocol (ported from the nightstalker6669 e7cb5dc
 // reconstruction). Sits beside the quest-path rules above; both paths share the
@@ -1286,14 +1286,28 @@ RULE_BOOL(Custom, 	NautilusVault,						true, "Enable the Nautilus Vault (#vault_
 RULE_BOOL(Custom, 	ProcLockerStacks,					true, "When true, the Nautilus Vault Proc Locker procs independently of the held weapon and its augs (all can proc in one swing). When false, the locker item replaces the held weapon's proc and suppresses its aug procs (reference behavior).")
 RULE_BOOL(Custom, 	ProcLockerModSlots,					true, "When true, Nautilus Vault slots 84-87 (the Foci/Skill Mod placeholders on the Proc Locker page) lend their item's skill mods, instrument mods, and focus effects - never stats or procs. Free-form: any non-container item can be parked, which is how a bard parks a second instrument.")
 
-// /nmsloot personal loot offers (mukluk4/Modular-Options loot-offers). Needs the table from
-// migration v375 and a loot window client (our dinput8 window or the Hailstone add-on); a
-// client without either sees nothing, so keep NmsLootOffers off until the dll has shipped.
-// Corpse emptying follows this server's copy rule: with 2+ recipients (and solo when
-// NmsLootEmptySoloCorpse is on) the corpse's loot-table items are removed and every
-// recipient gets a copy of exactly what was removed; quest-added items stay (lootdrop_id 0).
-// With an emptying rule off, the older independent per-player roll remains.
-RULE_BOOL(Custom, 	NmsLootOffers,						false, "/nmsloot: on an NPC's death, create personal loot offers for the killer and each group or raid member in the zone. When a corpse-empty rule is on, each recipient gets a copy of exactly the loot-table items removed from the corpse; otherwise the loot is rolled independently per player. Keep/Sell/Tribute/Bank/Vault/Destroy/Pass from anywhere in the zone; expired offers are delivered to bags when possible. Off = corpse loot only")
+// Loot distribution master rule: one switch for every loot style this server runs.
+//   0 = off: native corpse looting, nothing is stripped, no offers exist.
+//   1 = /nmsloot personal offers (needs the v375 table and a loot window client: our dinput8
+//       window or the Hailstone add-on). Copies every recipient; the two emptying bools apply
+//       here only.
+//   2 = instant 1-100 roll per item: every eligible player rolls once, one line per item, the
+//       winner gets a normal offer (Keep/Sell/Tribute/Bank/Vault/Pass still work).
+//   3 = random recipient per item, delivered straight to bags.
+//   4 = the party/raid leader takes every item, delivered straight to bags.
+// Modes 1-4 strip the corpse's loot-table items (quest-added items stay, lootdrop_id 0) and
+// split the corpse coin. Modes 2/3 roll or assign inside the raid loot-policy set
+// (RaidLootType: LeaderOnly, LeaderAndGroupLeadersOnly, LeaderSelected, EntireRaid) plus the
+// credited killer, who can always loot natively. Mode 4 designates the raid leader, then a
+// LeaderSelected looter, then the group leader, then the credited player. Items a recipient
+// cannot hold (bags and cursor full, LORE conflict) go to the next candidate and finally back
+// on the corpse as a quest-style item. Supersedes Custom:NmsLootOffers.
+RULE_INT(Custom, 	LootSystem,							0, "Loot distribution: 0=off (native corpse looting), 1=/nmsloot personal offers, 2=instant 1-100 roll per item with the winner offered it, 3=random recipient per item, 4=party/raid leader takes every item. Modes 1-4 strip the corpse's loot-table items (quest items stay) and split the coin; 2/3 draw from the raid loot-policy set plus the credited killer; 4 is leader, then a selected looter, then the group leader, then the credited player. 1 and 2 need the character_nms_loot_offers table (v375). Supersedes Custom:NmsLootOffers.")
+
+// Pre-LootSystem switch. The loot code no longer reads it; kept declared so existing rule rows
+// (and anything out of tree that still writes it) keep loading. Migration v415 copies its live
+// value into Custom:LootSystem so this server stays on the offers flow.
+RULE_BOOL(Custom, 	NmsLootOffers,						false, "(Superseded by Custom:LootSystem - no longer read.) /nmsloot personal loot offers: on an NPC's death, create offers for the killer and each group or raid member in the zone.")
 RULE_INT(Custom, 	NmsLootOfferExpireSeconds,			300, "Seconds before an unclaimed /nmsloot offer expires (the client countdown)")
 RULE_BOOL(Custom, 	NmsLootEmptyGroupCorpse,			true, "With /nmsloot offers going to 2 or more players, remove the corpse's loot-table items, give every recipient a copy of exactly the items removed (quest-added items stay) and let the emptied corpse decay at once. On by default")
 RULE_BOOL(Custom, 	NmsLootEmptySoloCorpse,				true, "With /nmsloot offers going to a lone player, do the same: remove the corpse's loot-table items, give the player a copy of exactly the items removed, so only one loot source remains (quest-added items stay). On here; upstream defaults it off")

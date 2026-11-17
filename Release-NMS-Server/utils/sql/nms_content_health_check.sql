@@ -28,7 +28,8 @@
 -- READ-ONLY: SELECT/SHOW only. Safe on any server, any number of times.
 -- ============================================================================
 
-SELECT 'db_version.custom_version (expect 63 once a v63 binary has booted)' AS what, custom_version AS value FROM db_version LIMIT 1;
+-- The literal tracks CUSTOM_BINARY_DATABASE_VERSION in common/version.h: bump BOTH together.
+SELECT 'db_version.custom_version (expect 445)' AS what, custom_version AS value FROM db_version LIMIT 1;
 
 -- ---- v18 / v23: Beastlord spell merchant + scrolls -------------------------
 SELECT 'v23 bl merchant npc (expect 1)' AS what, COUNT(*) AS value FROM npc_types WHERE id = 1120001300;
@@ -106,9 +107,25 @@ SELECT 'v41 triune currency (expect Triune of Fate)' AS what, `value` AS value F
 SELECT 'v41 triune drop rule (expect 150)' AS what, rule_value AS value FROM rule_values WHERE rule_name = 'Custom:TriuneOfFateDropChance' LIMIT 1;
 
 -- ---- v42: Drakkin breath weapons (and similar slot-3 resist damage spells) always stack -
--- The rule is a single comma string; assert the Osh'vir lineage (first rank 11112, custom
--- rank-15 clone 50011) is present so a stale/truncated value is caught.
-SELECT 'v42 always-stack has breath ids (expect 1)' AS what, (rule_value LIKE '%11112%' AND rule_value LIKE '%50011%') AS value FROM rule_values WHERE rule_name = 'Spells:AlwaysStackSpells' LIMIT 1;
+-- The rule is one comma string. Assert every breath-family id 11112-11201 is listed plus
+-- the four spore/oil spells v42 scoped -- a truncated or rewritten value fails here.
+--
+-- The old form of this assertion also demanded id 50011, one of the custom rank-14/15
+-- breath clones v42's comment mentions (50009-50014, "from tss_crescent_reach_quests.sql").
+-- Those spells do not exist in this tree or in peq.spells_new (0 rows in 50000-50100, and
+-- no such SQL file in HEAD), so the assertion was testing a comment rather than the data.
+-- v42 itself never ran here either: its check is "rule_value missing 11112", and the base
+-- PEQ rule already carried the whole family, so it was skipped by design.
+SELECT 'v42 breath family in always-stack (expect 90)' AS what,
+       (SELECT COUNT(*) FROM spells_new s
+         WHERE s.id BETWEEN 11112 AND 11201
+           AND CONCAT(',', (SELECT rule_value FROM rule_values WHERE rule_name = 'Spells:AlwaysStackSpells'), ',')
+               LIKE CONCAT('%,', s.id, ',%')) AS value;
+SELECT 'v42 spore and oil spells in always-stack (expect 4)' AS what,
+       (SELECT COUNT(*) FROM spells_new s
+         WHERE s.id IN (7176,7708,8260,11495)
+           AND CONCAT(',', (SELECT rule_value FROM rule_values WHERE rule_name = 'Spells:AlwaysStackSpells'), ',')
+               LIKE CONCAT('%,', s.id, ',%')) AS value;
 
 -- ---- v50: alternate-currency rows + client strings self-heal -----------------------------
 -- The base release-peq.sql import ships only alternate_currency ids 1 and 6 and no db_str
@@ -198,3 +215,79 @@ SELECT 'v402 Dorinan still unprotected (expect 1)' AS what, COUNT(*) AS value
   FROM npc_types WHERE id = 115015 AND name = 'Loremaster_Dorinan'
     AND merchant_id = 115015 AND untargetable = 0
     AND (special_abilities = '' OR special_abilities IS NULL);
+
+-- ---- v422: AA rank tail (nine missing terminal ranks) ---------------------------------
+SELECT 'v422 aa ranks present (expect 9)' AS what,
+       COUNT(*) AS value FROM aa_ranks
+ WHERE id IN (13298,13303,8441,13314,13282,8431,10771,14263,13319);
+SELECT 'v422 aa rank effects (expect 23)' AS what,
+       COUNT(*) AS value FROM aa_rank_effects
+ WHERE rank_id IN (13298,13303,8441,13314,13282,8431,10771,14263,13319);
+SELECT 'v422 ranks at our cap (expect 9)' AS what,
+       COUNT(*) AS value FROM aa_ranks
+ WHERE id IN (13298,13303,8441,13314,13282,8431,10771,14263,13319)
+   AND level_req = 85 AND expansion = 16;
+
+-- ---- v423: spell id columns widened past the smallint ceiling -------------------------
+SELECT 'v423 character_buffs.spell_id (expect int(11))' AS what,
+       COLUMN_TYPE AS value FROM information_schema.COLUMNS
+ WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_buffs' AND COLUMN_NAME = 'spell_id';
+SELECT 'v423 narrow spell id columns left (expect 0)' AS what,
+       COUNT(*) AS value FROM information_schema.COLUMNS
+ WHERE TABLE_SCHEMA = DATABASE()
+   AND ((TABLE_NAME='blocked_spells' AND COLUMN_NAME='spellid')
+     OR (TABLE_NAME='character_memmed_spells' AND COLUMN_NAME='spell_id')
+     OR (TABLE_NAME='character_spells' AND COLUMN_NAME='spell_id')
+     OR (TABLE_NAME='ldon_trap_templates' AND COLUMN_NAME='spell_id')
+     OR (TABLE_NAME='npc_spells_entries' AND COLUMN_NAME='spellid'))
+   AND DATA_TYPE IN ('smallint','mediumint','tinyint');
+
+-- ---- v424: tutorial zone unlocked (last v40 straggler) --------------------------------
+SELECT 'v424 tutoriala unlocked (expect 0)' AS what,
+       COUNT(*) AS value FROM zone WHERE zoneidnumber = 188 AND min_status = 255;
+
+-- ---- v425: baking rock salt correction (16 rows off Clockwork Observer Boots) ---------
+SELECT 'v425 rock salt entries (expect 16)' AS what,
+       COUNT(*) AS value FROM tradeskill_recipe_entries
+ WHERE item_id = 75856 AND id IN (12394,12437,13396,13422,13431,13456,13464,13487,13503,13521,13530,13578,13701,13732,15147,15164);
+SELECT 'v425 boot entries left (expect 0)' AS what,
+       COUNT(*) AS value FROM tradeskill_recipe_entries
+ WHERE item_id = 65445 AND id IN (12394,12437,13396,13422,13431,13456,13464,13487,13503,13521,13530,13578,13701,13732,15147,15164);
+
+-- ---- v426/v427: spirit shroud catalogue (Imp Wizard + captured forms) ----------------
+SELECT 'v426 imp wizard template (expect 1)' AS what,
+       COUNT(*) AS value FROM spirit_shroud_templates WHERE id = 20105;
+SELECT 'v426 imp wizard links (expect 7)' AS what,
+       COUNT(*) AS value FROM spirit_shroud_abilities WHERE template_id = 20105 AND rank_id BETWEEN 48000 AND 48006;
+SELECT 'v426 imp wizard aa ranks (expect 7)' AS what,
+       COUNT(*) AS value FROM aa_ranks WHERE id BETWEEN 48000 AND 48006;
+-- Counts track the latest catalogue migration: v437 (hallucination forms), v439 (ladder
+-- backport) and v440 (ladder stats) each grow the catalogue, so 476 / 164 -- the v427-era
+-- numbers -- began failing the moment v437 landed. These are bumped to the current state and
+-- any migration that adds forms or links must bump them again.
+-- The enabled/disabled split is the sharper check: an import that lands entirely disabled
+-- passes a total-count test while being invisible to players.
+SELECT 'v440 shroud templates total (expect 496)' AS what,
+       COUNT(*) AS value FROM spirit_shroud_templates;
+SELECT 'v440 shroud templates enabled,disabled (expect 468,28)' AS what,
+       CONCAT(SUM(`enabled` = 1), ',', SUM(`enabled` = 0)) AS value FROM spirit_shroud_templates;
+SELECT 'v427 catalogue aa ranks (expect 59)' AS what,
+       COUNT(*) AS value FROM aa_ranks WHERE id BETWEEN 48100 AND 48158;
+SELECT 'v440 catalogue links (expect 35130)' AS what,
+       COUNT(*) AS value FROM spirit_shroud_abilities WHERE template_id <> 20105;
+SELECT 'v440 catalogue forms with links (expect 468)' AS what,
+       COUNT(DISTINCT template_id) AS value FROM spirit_shroud_abilities;
+
+-- ---- v429: four reconstruction tradeskill packages (220 recipes) ---------------------
+SELECT 'v429 imported recipes (expect 220)' AS what,
+       COUNT(*) AS value FROM tradeskill_recipe WHERE id BETWEEN 9000001 AND 9000220;
+SELECT 'v429 imported entries (expect 1056)' AS what,
+       COUNT(*) AS value FROM tradeskill_recipe_entries WHERE recipe_id BETWEEN 9000001 AND 9000220;
+
+-- ---- v445: AA rows attached to ranks that do not exist (orphan cleanup) ---------------
+-- Both tables are loaded whole at boot, so an orphan row is inert debris that also hides a
+-- pruned-rank gap. v445 removed 60 prereq rows and 1 effect row; these keep them gone.
+SELECT 'v445 AA orphan prereq rows (expect 0)' AS what,
+       COUNT(*) AS value FROM aa_rank_prereqs p LEFT JOIN aa_ranks r ON r.id = p.rank_id WHERE r.id IS NULL;
+SELECT 'v445 AA orphan effect rows (expect 0)' AS what,
+       COUNT(*) AS value FROM aa_rank_effects e LEFT JOIN aa_ranks r ON r.id = e.rank_id WHERE r.id IS NULL;

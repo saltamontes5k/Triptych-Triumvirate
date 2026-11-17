@@ -24,7 +24,7 @@ function event_timer(e)
 		eq.stop_timer("zeb3");
 	elseif (e.timer == "zeb4") then
 		eq.stop_timer("zeb4");
-		e.self:Stop();
+		eq.stop();
 		e.self:GMMove(-582, -1100, 0, 127);
 	end
 end

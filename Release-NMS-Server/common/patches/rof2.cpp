@@ -2616,8 +2616,12 @@ namespace RoF2
 		outapp->WriteUInt32(0);		// Checksum, we will update this later
 		outapp->WriteUInt32(0);		// Checksum size, we will update this later
 
-		outapp->WriteUInt32(0);		// Unknown
-		outapp->WriteUInt32(0);		// Unknown
+		// Main=0, Alt shroud=1 + the Spirit Shroud template id. This is how the
+		// stock client enters shroud mode (Monster Abilities pane, monster
+		// points) straight from the zone-in profile -- upstream
+		// nightstalker6669/EQEmu writes these two dwords the same way.
+		outapp->WriteUInt32(emu->unknown0112 ? 1 : 0);	// Main=0, Alt shroud=1
+		outapp->WriteUInt32(emu->unknown0112);		// Spirit Shroud template ID
 
 
 		outapp->WriteUInt8(emu->gender);	// Gender
@@ -3611,14 +3615,10 @@ namespace RoF2
 		outapp->WriteSInt32(emu->expansion);
 		outapp->WriteSInt32(emu->category);
 		// NMS: the row's byte 144 is the client's per-row "shroud" flag
-		// (sub_4A1F80 returns *(row+144)). The AA window's monster-mode gate
-		// (sub_4A40F0) accepts a row only when
-		//   (holder->Shrouded == 1 || holder->Shrouded == 2) && row[144] != 0,
-		// so this byte must be set for the rows the *current form* may use. The
-		// decision is made server-side (Client::IsShroudAbilityForCurrentForm,
-		// from the guide mapping) and travels in emu->shroud_row; the classic
-		// ShroudPassive/ShroudActive categories stay accepted so hand-made
-		// category-3/4 content keeps working.
+		// (sub_4A1F80 returns *(row+144)). The Monster Abilities pane lists a row
+		// only when the profile marker put the client in shroud mode and this byte
+		// is set, so the decision travels in emu->shroud_row (the current form's
+		// own ranks). The classic 3/4 categories stay accepted for hand-made rows.
 		const bool is_shroud_row =
 			emu->shroud_row != 0 || emu->category == 3 || emu->category == 4;
 		outapp->WriteUInt8(is_shroud_row ? 1 : 0); // shroud
@@ -5115,108 +5115,9 @@ namespace RoF2
 		};
 	}
 
-	// ---------------------------------------------------------------------
-	// Native Spirit Shroud serializers (RoF2 May 2013 protocol): run the
-	// ordinary struct strategy for one packet and capture its encoded bytes.
-	// ---------------------------------------------------------------------
-	namespace {
-		class ShroudEncodingSink final : public EQStreamInterface {
-		public:
-			std::vector<std::vector<uint8_t>> packets;
-			void QueuePacket(const EQApplicationPacket *p, bool = true) override {
-				if (p) packets.emplace_back(p->pBuffer, p->pBuffer + p->size);
-			}
-			void FastQueuePacket(EQApplicationPacket **p, bool ack = true) override {
-				if (p && *p) { QueuePacket(*p, ack); delete *p; *p = nullptr; }
-			}
-			EQApplicationPacket *PopPacket() override { return nullptr; }
-			void Close() override {}
-			void ReleaseFromUse() override {}
-			void RemoveData() override {}
-			std::string GetRemoteAddr() const override { return {}; }
-			uint32 GetRemoteIP() const override { return 0; }
-			uint16 GetRemotePort() const override { return 0; }
-			bool CheckState(EQStreamState) override { return false; }
-			std::string Describe() const override { return "RoF2 prepared encoding"; }
-			EQStreamState GetState() override { return CLOSED; }
-			void SetOpcodeManager(OpcodeManager **) override {}
-			OpcodeManager *GetOpcodeManager() const override { return nullptr; }
-			Stats GetStats() const override { return Stats{}; }
-			void ResetStats() override {}
-			EQStreamManagerInterface *GetManager() const override { return nullptr; }
-		};
-
-		std::optional<std::vector<uint8_t>> ShroudEncode(EmuOpcode opcode, const void *data, size_t size)
-		{
-			if (!data || !size || size > 16 * 1024 * 1024) return std::nullopt;
-			auto sink = std::make_shared<ShroudEncodingSink>();
-			auto *packet = new EQApplicationPacket(opcode, size);
-			std::memcpy(packet->pBuffer, data, size);
-			struct_strategy.Encode(&packet, sink, false);
-			delete packet;
-			if (sink->packets.size() != 1 || sink->packets.front().empty()) return std::nullopt;
-			return std::move(sink->packets.front());
-		}
-	}
-
-	std::optional<std::vector<uint8_t>> SerializeShroudSpawn(const Spawn_Struct &spawn)
-	{
-		return ShroudEncode(OP_ZoneSpawns, &spawn, sizeof(spawn));
-	}
-
-	std::optional<std::vector<uint8_t>> SerializeShroudNormalProfile(const PlayerProfile_Struct &profile)
-	{
-		return ShroudEncode(OP_PlayerProfile, &profile, sizeof(profile));
-	}
-
-	std::optional<std::vector<uint8_t>> SerializeShroudInventory(const std::vector<std::pair<int16_t, const EQ::ItemInstance*>> &roots)
-	{
-		if (roots.size() > 4096) return std::nullopt;
-		EQ::OutBuffer out;
-		uint32_t count = static_cast<uint32_t>(roots.size());
-		out.write(reinterpret_cast<const char*>(&count), sizeof(count));
-		size_t nodes = 0;
-		std::set<int16_t> slots;
-		const auto valid_tree = [&](const auto &self, const EQ::ItemInstance &item, size_t depth) -> bool {
-			if (depth > 8 || ++nodes > 4096 || !item.GetUnscaledItem() || item.GetMerchantSlot()) return false;
-			for (uint8_t slot = EQ::invbag::SLOT_BEGIN; slot <= EQ::invbag::SLOT_END; ++slot)
-				if (const auto *child = item.GetItem(slot); child && !self(self, *child, depth + 1)) return false;
-			return true;
-		};
-		for (const auto &root : roots) {
-			if (!root.second || !slots.insert(root.first).second || !valid_tree(valid_tree, *root.second, 0)) return std::nullopt;
-			const auto previous = out.tellp();
-			SerializeItem(out, root.second, root.first, 0, ItemPacketCharInventory);
-			if (out.tellp() <= previous || out.size() > 16 * 1024 * 1024) return std::nullopt;
-		}
-		const auto size = out.size();
-		auto *bytes = out.detach();
-		std::vector<uint8_t> result(bytes, bytes + size);
-		delete[] bytes;
-		return result;
-	}
-
-	std::optional<std::vector<uint8_t>> SerializeShroudBankItem(const EQ::ItemInstance &item, int16_t slot)
-	{
-		if (slot < EQ::invslot::GENERAL_BEGIN || slot > EQ::invslot::GENERAL_END) return std::nullopt;
-		size_t nodes = 0;
-		const auto valid = [&](const auto &self, const EQ::ItemInstance &value, size_t depth) -> bool {
-			if (depth > 8 || ++nodes > 4096 || !value.GetUnscaledItem() || value.GetMerchantSlot()) return false;
-			for (uint8_t i = EQ::invbag::SLOT_BEGIN; i <= EQ::invbag::SLOT_END; ++i)
-				if (const auto *child = value.GetItem(i); child && !self(self, *child, depth + 1)) return false;
-			return true;
-		};
-		if (!valid(valid, item, 0)) return std::nullopt;
-		const auto serialized = item.Serialize(slot);
-		std::vector<uint8_t> input(4 + serialized.size());
-		const uint32_t type = ItemPacketTrade;
-		std::memcpy(input.data(), &type, 4);
-		std::memcpy(input.data() + 4, serialized.data(), serialized.size());
-		auto bytes = ShroudEncode(OP_ItemPacket, input.data(), input.size());
-		if (!bytes || bytes->size() <= 4 || bytes->size() > 16 * 1024 * 1024) return std::nullopt;
-		return bytes;
-	}
-
+	// Shroud inspection cache entry: a native ItemPtr without an ItemPacket
+	// type or inventory count. The only surviving shroud serializer; the
+	// spawn/profile/inventory/bank encoders were unused and are gone.
 	std::optional<std::vector<uint8_t>> SerializeShroudPreviewItem(const EQ::ItemInstance &instance)
 	{
 		if (!instance.GetUnscaledItem() || instance.GetMerchantSlot()) return std::nullopt;

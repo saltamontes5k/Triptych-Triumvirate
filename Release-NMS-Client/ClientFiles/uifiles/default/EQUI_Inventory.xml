@@ -9780,7 +9780,7 @@
 	</Page>
 	<Listbox item="IWEI_ItemList">
 		<ScreenID>EI_ItemList</ScreenID>
-		<!--<DrawTemplate>WDT_Inner</DrawTemplate>
+		<DrawTemplate>WDT_Inner</DrawTemplate>
 		<AutoStretch>true</AutoStretch>
 		<TopAnchorToTop>true</TopAnchorToTop>
 		<BottomAnchorToTop>false</BottomAnchorToTop>
@@ -9796,7 +9796,7 @@
 			<B>255</B>
 		</TextColor>
 		<Style_Border>true</Style_Border>
-		<Style_VScroll>true</Style_VScroll>-->
+		<Style_VScroll>true</Style_VScroll>
 		<Columns>
 			<Width>24</Width>
 			<Heading />
@@ -9820,7 +9820,7 @@
 	</Listbox>
 	<Button item="IWEI_ToggleButton">
 		<ScreenID>EI_ToggleButton</ScreenID>
-		<!--<RelativePosition>true</RelativePosition>
+		<RelativePosition>true</RelativePosition>
 		<AutoStretch>true</AutoStretch>
 		<TopAnchorToTop>false</TopAnchorToTop>
 		<BottomAnchorToTop>false</BottomAnchorToTop>
@@ -9838,12 +9838,12 @@
 			<R>255</R>
 			<G>255</G>
 			<B>255</B>
-		</TextColor>-->
+		</TextColor>
 		<Template>BDT_Normal</Template>
 	</Button>
 	<Button item="IWEI_AllOnButton">
 		<ScreenID>EI_AllOnButton</ScreenID>
-		<!--<RelativePosition>true</RelativePosition>
+		<RelativePosition>true</RelativePosition>
 		<AutoStretch>true</AutoStretch>
 		<TopAnchorToTop>false</TopAnchorToTop>
 		<BottomAnchorToTop>false</BottomAnchorToTop>
@@ -9861,12 +9861,12 @@
 			<R>255</R>
 			<G>255</G>
 			<B>255</B>
-		</TextColor>-->
+		</TextColor>
 		<Template>BDT_Normal</Template>
 	</Button>
 	<Button item="IWEI_AllOffButton">
 		<ScreenID>EI_AllOffButton</ScreenID>
-		<!--<RelativePosition>true</RelativePosition>
+		<RelativePosition>true</RelativePosition>
 		<AutoStretch>true</AutoStretch>
 		<TopAnchorToTop>false</TopAnchorToTop>
 		<BottomAnchorToTop>false</BottomAnchorToTop>
@@ -9884,7 +9884,7 @@
 			<R>255</R>
 			<G>255</G>
 			<B>255</B>
-		</TextColor>-->
+		</TextColor>
 		<Template>BDT_Normal</Template>
 	</Button>
 	<Page item="IW_EIPage">

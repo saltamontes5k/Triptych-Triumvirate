@@ -53,10 +53,6 @@
 
 extern Zone *zone;
 
-// zone/shroud.cpp: builds and queues the OP_Shroud self-transform (spawn
-// block + profile block); the native path reuses it unchanged.
-void SendShroudTransform(Client *client, const PlayerProfile_Struct &profile, float size);
-
 namespace {
 
 using SpiritShroud::Bytes;
@@ -76,9 +72,12 @@ std::unique_ptr<EQ::ItemInstance> CreateShroudItem(Client &c, uint32 item_id, in
 
 auto Q(Database &db, const std::string &sql)
 {
-	if (db.GetStatus() != DBcore::Connected) {
-		throw std::runtime_error("shroud database disconnected");
-	}
+	// Do NOT gate on db.GetStatus(). When no separate content database is
+	// configured, zone/main.cpp points content_db at the primary connection with
+	// SetMySQL(database); the proxy never sets its own status, so it reports
+	// Disconnected while every query works. That check made the whole spirit
+	// catalog throw "shroud database disconnected" on a healthy server.
+	// Run the query and let its error text carry the diagnosis.
 	auto r = db.QueryDatabase(sql, false);
 	if (!r.Success()) {
 		throw std::runtime_error("shroud storage query failed: " + r.ErrorMessage());
@@ -134,7 +133,7 @@ std::vector<Template> Catalog(uint32_t only_id = 0, bool include_disabled = fals
 		"native_hp_regen,native_mana_regen_sitting,native_mana_regen_standing,native_endurance_regen,"
 		"native_cold,native_fire,native_magic,native_disease,native_poison,native_additional_resist,"
 		"native_corruption,native_ac,native_attack,native_unarmed_damage,native_unarmed_delay,"
-		"resource_maxima,model_size FROM spirit_shroud_templates" +
+		"resource_maxima,model_size,texture,helmet_texture FROM spirit_shroud_templates" +
 		std::string(only_id ? " WHERE id=" + S(only_id) : (include_disabled ? "" : " WHERE enabled=1")) +
 		" ORDER BY progression_id,branch_id,level,id LIMIT 1001");
 	if (rows.RowCount() > 1000) {
@@ -193,6 +192,8 @@ std::vector<Template> Catalog(uint32_t only_id = 0, bool include_disabled = fals
 		t.has_native_resources = t.has_native_stats;
 		t.resource_maxima      = N(r[47]) != 0;
 		t.model_size           = r[48] ? std::stof(r[48]) : 0.0f;
+		t.texture              = r[49] ? N(r[49]) : 0;
+		t.helmet_texture       = r[50] ? N(r[50]) : 255;
 
 		if (t.resource_maxima) {
 			auto base = zone->GetBaseData(uint8_t(t.level), uint8_t(t.class_id));
@@ -274,13 +275,16 @@ std::vector<Template> Catalog(uint32_t only_id = 0, bool include_disabled = fals
 	return out;
 }
 
-bool Offered(Client &c, const Template &t)
+bool Offered(Client &c, const Template &t, bool ignore_entitlement = false)
 {
 	if (!SpiritShroud::Offered(t, RuleB(Custom, AllowTestSpiritShrouds))) {
 		return false;
 	}
+	// A GM sees and takes every displayable form: no progression thresholds and
+	// no entitlement rows. The verified-definition check above still applies.
+	const bool gm = c.GetGM();
 	// Retained templates remain restorable; only new entry uses progression gates.
-	if (!t.test_only) {
+	if (!t.test_only && !gm) {
 		auto branch = Q(content_db,
 			"SELECT b.unlock_xp FROM spirit_shroud_branch_progression b "
 			"JOIN spirit_shroud_progression_definitions d ON d.progression_id=b.progression_id "
@@ -297,7 +301,8 @@ bool Offered(Client &c, const Template &t)
 			return false;
 		}
 	}
-	if (t.entitlement_key.empty()) {
+	// A mission that named its forms has already decided who may wear them.
+	if (ignore_entitlement || gm || t.entitlement_key.empty()) {
 		return true;
 	}
 	auto owned = Q(database,
@@ -399,6 +404,11 @@ void CaptureOriginalExperience(Client &c, SpiritShroud::ExperienceState &experie
 
 void Client::OpenSpiritShrouds()
 {
+	OpenSpiritShroudsFor({});
+}
+
+void Client::OpenSpiritShroudsFor(const std::vector<uint32_t>& only)
+{
 	if (!zone || m_spirit_shroud_transition || IsDead() || IsEngaged()) {
 		return;
 	}
@@ -425,8 +435,17 @@ void Client::OpenSpiritShrouds()
 		std::string tree;
 		uint32_t last_p = 0;
 		uint32_t last_b = 0;
+		// Remember the mission scope: selection is re-gated on apply, and those
+		// forms are entitled to this character only through this window.
+		m_spirit_shroud_scoped = only;
 		for (auto &t : all) {
-			if (t.level > GetLevel() || !Offered(*this, t)) {
+			const bool scoped = !only.empty() &&
+				std::find(only.begin(), only.end(), t.id) != only.end();
+			// A GM browses every level; a GM marker on a template means unlocked.
+			if ((!GetGM() && t.level > GetLevel()) || !Offered(*this, t, scoped)) {
+				continue;
+			}
+			if (!only.empty() && !scoped) {
 				continue;
 			}
 			auto xp = Progress(database, CharacterID(), t.progression);
@@ -442,7 +461,7 @@ void Client::OpenSpiritShrouds()
 				last_b = t.branch;
 			}
 			tree += Token("TEMPLATE", '\a') + Token(t.name, '\a') + Token(S(t.level), '\a') +
-				Token(S(t.id), '\a') + Token(xp >= t.unlock_xp ? "1" : "0", '\a');
+				Token(S(t.id), '\a') + Token((GetGM() || xp >= t.unlock_xp) ? "1" : "0", '\a');
 		}
 		if (tree.empty()) {
 			Message(Chat::Yellow, "No verified Spirit Shroud forms are available.");
@@ -484,27 +503,42 @@ void Client::Handle_OP_SpiritShroudRequest(const EQApplicationPacket *p)
 	}
 }
 
+// Clears the RoF2 shroud-selection modal ("Please wait while your transformation
+// is completed."). The client enters that wait when it sends the select packet
+// (0x1cd0) and only leaves it on this empty completion; a zone change queued
+// behind the modal is ignored until it clears. The old OP_Shroud transform
+// cleared it implicitly — the reload does not, so send it explicitly, before
+// anything that can zone the client.
+void Client::SendShroudSelectComplete()
+{
+	if (ClientVersion() != EQ::versions::ClientVersion::RoF2 || !eqs) {
+		return;
+	}
+
+	auto *manager = eqs->GetOpcodeManager();
+	const uint16 wire = manager ? manager->EmuToEQ(OP_SpiritShroudComplete) : 0;
+	if (!wire) {
+		return;
+	}
+
+	EQApplicationPacket finished(OP_Unknown, 0);
+	finished.SetOpcodeBypass(wire);
+	QueuePacket(&finished);
+}
+
 void Client::Handle_OP_SpiritShroudSelect(const EQApplicationPacket *p)
 {
 	if (!RuleB(Custom, EnableSpiritShrouds) || !p || p->size != 4) {
 		return;
 	}
+	// The select puts the client into its "transformation in progress" modal.
+	// Clear it FIRST: a form change now zones the client, and the zone change is
+	// ignored while the modal is up (that was the hang at the keeper).
+	SendShroudSelectComplete();
+
 	if (uint64_t(std::time(nullptr)) <= m_spirit_shroud_menu_until &&
 		Keeper(*this, m_spirit_shroud_keeper)) {
 		ChangeSpiritShroud(Read32(p->pBuffer));
-	}
-	if (!m_spirit_shroud_transition && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
-		// RoF2 enters a modal item-operation wait before sending 0x1cd0. Its
-		// empty 0x7786 completion clears that wait on a rejected/rolled-back
-		// choice.
-		const uint16 wire = (eqs && eqs->GetOpcodeManager())
-			? eqs->GetOpcodeManager()->EmuToEQ(OP_SpiritShroudComplete)
-			: 0;
-		if (wire) {
-			EQApplicationPacket finished(OP_Unknown, 0);
-			finished.SetOpcodeBypass(wire);
-			QueuePacket(&finished);
-		}
 	}
 }
 
@@ -715,14 +749,83 @@ void Client::ChangeSpiritShroud(uint32_t id)
 	}
 }
 
-void Client::EnterNativeShroud(uint32_t template_id)
+// ------------------------------------------------------------------
+// AA ownership persistence (upstream nightstalker6669/EQEmu model)
+//
+// The client learns which AAs a character owns from the character load, not from
+// the AA table. A form's free grants are therefore written to the real AA table
+// and the character's own rows are parked while the form is worn; keeping
+// ownership only in memory (m_pp.aa_array) never reached the client's profile
+// after the reload, which is why the window listed nothing the form owned.
+// ------------------------------------------------------------------
+void PersistFormAAOwnership(Client &c, const SpiritShroud::Template &t)
+{
+	Q(database, "CREATE TABLE IF NOT EXISTS shroud_original_character_alternate_abilities "
+		"LIKE character_alternate_abilities");
+	Q(database, "DELETE FROM shroud_original_character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	Q(database, "INSERT INTO shroud_original_character_alternate_abilities "
+		"SELECT * FROM character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	Q(database, "DELETE FROM character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	std::set<uint32_t> granted;
+	for (auto rank_id : t.free_abilities) {
+		auto *rank = zone->GetAlternateAdvancementRank(rank_id);
+		if (!rank || !rank->base_ability) {
+			continue;
+		}
+		if (!granted.insert(rank->base_ability->id).second) {
+			continue;
+		}
+		Q(database, "INSERT INTO character_alternate_abilities(id,aa_id,aa_value,charges) VALUES (" +
+			S(c.CharacterID()) + "," + S(rank->base_ability->first_rank_id) + "," +
+			S(rank->current_value) + ",0)");
+	}
+	LogInfo("Client [{}] form [{}]: [{}] AA grants persisted; original rows parked",
+		c.GetCleanName(), t.id, granted.size());
+}
+
+void RestoreFormAAOwnership(Client &c)
+{
+	Q(database, "DELETE FROM character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	Q(database, "INSERT INTO character_alternate_abilities "
+		"SELECT * FROM shroud_original_character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	Q(database, "DELETE FROM shroud_original_character_alternate_abilities WHERE id=" + S(c.CharacterID()));
+	LogInfo("Client [{}] AA ownership restored from the parked rows", c.GetCleanName());
+}
+
+// ------------------------------------------------------------------
+// Inventory persistence for a form (upstream shroud_original_inventory model)
+//
+// The reload re-reads inventory from the database, so the character's rows are
+// parked and the form's starter equipment is written in their place. The
+// in-memory inventory is irrelevant across the reload.
+// ------------------------------------------------------------------
+void SnapshotInventoryForForm(Client &c)
+{
+	Q(database, "CREATE TABLE IF NOT EXISTS shroud_original_inventory LIKE inventory");
+	Q(database, "DELETE FROM shroud_original_inventory WHERE character_id=" + S(c.CharacterID()));
+	Q(database, "INSERT INTO shroud_original_inventory SELECT * FROM inventory WHERE character_id=" + S(c.CharacterID()));
+	Q(database, "DELETE FROM inventory WHERE character_id=" + S(c.CharacterID()));
+	LogInfo("Client [{}] inventory parked for the form", c.GetCleanName());
+}
+
+void RestoreInventoryFromForm(Client &c)
+{
+	Q(database, "DELETE FROM inventory WHERE character_id=" + S(c.CharacterID()));
+	Q(database, "INSERT INTO inventory SELECT * FROM shroud_original_inventory WHERE character_id=" + S(c.CharacterID()));
+	Q(database, "DELETE FROM shroud_original_inventory WHERE character_id=" + S(c.CharacterID()));
+	LogInfo("Client [{}] inventory restored from the parked rows", c.GetCleanName());
+}
+
+void Client::EnterNativeShroud(uint32_t template_id, bool script_granted)
 {
 	auto all = Catalog(template_id);
 	if (all.size() != 1) {
 		throw std::runtime_error("shroud template missing");
 	}
 	const Template &t = all.front();
-	if (!Offered(*this, t) || t.level > GetLevel()) {
+	const bool scoped = std::find(m_spirit_shroud_scoped.begin(), m_spirit_shroud_scoped.end(), t.id)
+		!= m_spirit_shroud_scoped.end();
+	if (!Offered(*this, t, scoped || script_granted) || (!GetGM() && t.level > GetLevel())) {
 		throw std::runtime_error("shroud template not available");
 	}
 	if (Progress(database, CharacterID(), t.progression) < t.unlock_xp) {
@@ -743,8 +846,11 @@ void Client::EnterNativeShroud(uint32_t template_id)
 
 	m_shrouded            = true;
 	m_shroud_id           = 0; // native forms are keyed by m_spirit_shroud_template
-	m_shroud_zonein_pending = false;
 	m_spirit_shroud_template  = t.id;
+	// Tells the client it is in shroud mode: the profile dword pair at the top of
+	// OP_PlayerProfile (1 + template id). Without it the client renders the
+	// ordinary AA window and the Monster Abilities pane never appears.
+	m_pp.unknown0112 = t.id;
 	m_spirit_shroud_definition = std::make_shared<const Template>(t);
 	m_spirit_shroud_aa_ranks.clear();
 	for (auto rank_id : t.abilities) {
@@ -769,15 +875,20 @@ void Client::EnterNativeShroud(uint32_t template_id)
 		allocated_spent += N(row[2]);
 		auto *rank = zone->GetAlternateAdvancementRank(rank_id);
 		if (rank && rank->base_ability && rank->base_ability->id == ability_id) {
-			SetAA(ability_id, rank->current_value, 0);
+			// Ownership is form state, not a trainable rank: write the map the
+			// profile array is rebuilt from. SetAA() keys by ability id but
+			// validates a rank id against GetMaxLevel and silently refuses the
+			// form's grants, which left the form unowned in the profile.
+			aa_ranks[ability_id] = std::make_pair(int(rank->current_value), 0u);
 		}
 	}
 
 	for (auto rank_id : t.abilities) {
 		auto *rank = zone->GetAlternateAdvancementRank(rank_id);
 		if (!rank || !rank->base_ability || rank->cost < 0 ||
-			(rank->base_ability->category != AACategory::ShroudPassive &&
-				rank->base_ability->category != AACategory::ShroudActive) ||
+			((rank->base_ability->category != AACategory::ShroudPassive &&
+				rank->base_ability->category != AACategory::ShroudActive) &&
+				!SpiritShroud::NativeAbility(rank->base_ability->id)) ||
 			rank->level_req > t.level ||
 			!(rank->base_ability->classes & (1U << t.class_id))) {
 			throw std::runtime_error("invalid shroud AA definition");
@@ -785,9 +896,10 @@ void Client::EnterNativeShroud(uint32_t template_id)
 		if (std::find(t.free_abilities.begin(), t.free_abilities.end(), rank_id) == t.free_abilities.end()) {
 			continue; // paid ranks restore from allocations only
 		}
-		SetAA(rank->base_ability->id, rank->current_value, 0);
+		aa_ranks[rank->base_ability->id] = std::make_pair(int(rank->current_value), 0u);
 	}
 	ShroudRebuildAAArray();
+	SetNativeShroudAbilityCaps(t);
 
 	// The form's pool is the real AA pool while transformed (upstream model):
 	// monster points are aapoints, purchases charge aapoints_spent.
@@ -852,6 +964,7 @@ void Client::EnterNativeShroud(uint32_t template_id)
 		"SELECT revision FROM spirit_shroud_state WHERE character_id=" + S(CharacterID()));
 	m_spirit_shroud_revision = state.RowCount() ? N(state.begin()[0]) : 0;
 
+	SnapshotInventoryForForm(*this);
 	IssueNativeStarterItems(t);
 
 	// Appearance + transform (same order as the quest path).
@@ -861,6 +974,8 @@ void Client::EnterNativeShroud(uint32_t template_id)
 	race        = t.race;
 	gender      = t.gender;
 	class_      = t.class_id;
+	texture     = t.texture;
+	helmtexture = t.helmet_texture;
 	SetLevel(t.level);
 	CalcBonuses();
 	SetMaxHP();
@@ -869,30 +984,27 @@ void Client::EnterNativeShroud(uint32_t template_id)
 	m_pp.cur_hp    = GetHP();
 	m_pp.mana      = current_mana;
 	m_pp.endurance = current_endurance;
-	SendShroudTransform(this, m_pp, t.model_size);
-	SendHPUpdate();
 
-	AppearanceStruct appearance{};
-	appearance.race_id        = t.race;
-	appearance.gender_id      = t.gender;
-	appearance.texture        = 0;
-	appearance.helmet_texture = 0;
-	appearance.size           = t.model_size;
-	appearance.send_effects   = true;
-	SendIllusionPacket(appearance);
+	// The reload re-reads the character row, so the form's monster-point pool has
+	// to live there or the window shows the old pool and purchases are refused
+	// (upstream writes character_data.aa_points the same way).
+	Q(database, "UPDATE character_data SET aa_points=" + S(uint64_t(t.monster_points)) +
+		",aa_points_spent=0 WHERE id=" + S(CharacterID()));
 
-	SendAlternateAdvancementTable();
-	SendAlternateAdvancementPoints();
-	SendAlternateAdvancementStats();
-	SendSpiritShroudProgress();
-	m_spirit_shroud_resource_refreshes = 3;
+	// Ownership must exist in the database before the reload, or the character
+	// load hands the client its old AA set (upstream model).
+	PersistFormAAOwnership(*this, t);
 
+	// Same-zone reload: the client rebuilds from the zone-in profile, which the
+	// connect path marshals from the form m_pp set above. No transform packet.
 	Message(Chat::Yellow, "You take on the form of %s.", t.name.c_str());
 	LogInfo("Client [{}] entered native Spirit Shroud form [{}] (template [{}])",
 		GetCleanName(), t.name, t.id);
+
+	ReloadForShroudTransition("enter native shroud");
 }
 
-void Client::RestoreNativeShroud()
+void Client::RestoreNativeShroud(bool send_updates)
 {
 	if (!IsSpiritShrouded() || !m_shroud_saved_valid) {
 		throw std::runtime_error("shroud state changed");
@@ -939,8 +1051,10 @@ void Client::RestoreNativeShroud()
 		Q(database,
 			"UPDATE spirit_shroud_experience_state SET settled_at=" + S(uint64_t(std::time(nullptr))) +
 			" WHERE character_id=" + S(CharacterID()) + " AND settled_at IS NULL");
-		Message(Chat::Experience,
-			"Your earned experience returns with you as the form is removed.");
+		if (send_updates) {
+			Message(Chat::Experience,
+				"Your earned experience returns with you as the form is removed.");
+		}
 	}
 
 	// Ownership returns from the snapshot (the restore below copies the saved
@@ -958,11 +1072,49 @@ void Client::RestoreNativeShroud()
 		"UPDATE spirit_shroud_state SET template_id=0,revision=revision+1 WHERE character_id=" +
 		S(CharacterID()));
 
-	// Core restore: real profile back onto m_pp + transform/illusion/AA resend.
-	RemoveShroud();
+	// Core restore: real profile back onto m_pp, then the same-zone reload that
+	// every form change uses. Clearing the snapshot must happen before it so the
+	// re-entering client is not seen as still-shrouded.
+	// Restore the character's own pool before the reload re-reads the row.
+	Q(database, "UPDATE character_data SET aa_points=" + S(uint64_t(m_shroud_saved_pp.aapoints)) +
+		",aa_points_spent=" + S(uint64_t(m_shroud_saved_pp.aapoints_spent)) +
+		" WHERE id=" + S(CharacterID()));
+	// The form's starter items disappear with the form; the character's own rows
+	// come back from the parked snapshot.
+	RestoreInventoryFromForm(*this);
+	// Put the character's own AA rows back before the reload re-reads them.
+	RestoreFormAAOwnership(*this);
 	ClearShroudSnapshot();
-	SendSpiritShroudProgress();
+	RemoveShroud(send_updates);
+	if (send_updates) {
+		// The real AA set came back from the snapshot above; the client kept the
+		// form's (cleared) AA window across the reload, so rebuild it here.
+		SendClearPlayerAA();
+		SendAlternateAdvancementTable();
+		SendAlternateAdvancementPoints();
+		SendAlternateAdvancementStats();
+	}
 	LogInfo("Client [{}] restored from native Spirit Shroud form [{}]", GetCleanName(), template_id);
+}
+
+// Native twin of LoadShroudAbilityCaps: the caps map is what the AA-table
+// sender reads to flag a row's shroud byte (the client's monster pane lists
+// only flagged rows), so a native form fills it from its own template --
+// highest listed chain rank per ability.
+void Client::SetNativeShroudAbilityCaps(const Template &t)
+{
+	m_shroud_ability_caps.clear();
+	for (const auto rank_id : t.abilities) {
+		auto *rank = zone->GetAlternateAdvancementRank(rank_id);
+		if (!rank || !rank->base_ability) {
+			continue;
+		}
+		const auto have = m_shroud_ability_caps.find(rank->base_ability->id);
+		if (have == m_shroud_ability_caps.end() ||
+			have->second < static_cast<uint32>(rank->current_value)) {
+			m_shroud_ability_caps[rank->base_ability->id] = static_cast<uint32>(rank->current_value);
+		}
+	}
 }
 
 void Client::IssueNativeStarterItems(const Template &t)
@@ -976,18 +1128,26 @@ void Client::IssueNativeStarterItems(const Template &t)
 		if (slot >= uint64_t(EQ::invslot::slotCursor) || item_id > UINT32_MAX) {
 			throw std::runtime_error("invalid shroud starter slot");
 		}
-		if (GetInv().GetItem(int16_t(slot))) {
-			continue; // zone-in re-apply: already issued
+		// The character's inventory was parked, so the database is the authority
+		// and the reload is what shows the gear. Pushing into the in-memory
+		// inventory here would collide with the still-loaded character items.
+		auto persisted = Q(database,
+			"SELECT item_id FROM inventory WHERE character_id=" + S(CharacterID()) +
+			" AND slot_id=" + S(slot));
+		if (persisted.RowCount()) {
+			continue; // already issued for this form
 		}
 		std::unique_ptr<EQ::ItemInstance> item(database.CreateItem(uint32_t(item_id), 1));
 		if (!item || item->IsStackable() || item->IsEvolving()) {
 			throw std::runtime_error("unsupported shroud starter definition");
 		}
 		item->SetCustomData(SpiritShroud::StarterSessionKey, S(t.id));
-		if (GetInv().PushItem(int16_t(slot), item.get()) != int16_t(slot)) {
-			throw std::runtime_error("shroud starter slot occupied");
-		}
-		item.release();
+		Q(database,
+			"INSERT INTO inventory(character_id,slot_id,item_id,charges,instnodrop,custom_data,guid) VALUES (" +
+			S(CharacterID()) + "," + S(slot) + "," + S(item_id) + ",1,1,'" +
+			SpiritShroud::StarterSessionKey + "^" + S(t.id) + "^'," +
+			S(uint64_t(item->GetSerialNumber())) + ")");
+		LogInfo("[SHROUD-AA] starter slot [{}] item [{}] written to inventory", slot, item_id);
 	}
 }
 
@@ -1187,8 +1347,9 @@ void Client::PurchaseSpiritShroudRank(uint32_t rank_id, bool saved_set)
 	}
 	auto *target = zone->GetAlternateAdvancementRank(rank_id);
 	if (!target || !target->base_ability ||
-		(target->base_ability->category != AACategory::ShroudPassive &&
-			target->base_ability->category != AACategory::ShroudActive) ||
+		((target->base_ability->category != AACategory::ShroudPassive &&
+			target->base_ability->category != AACategory::ShroudActive) &&
+			!SpiritShroud::NativeAbility(target->base_ability->id)) ||
 		!(target->base_ability->classes & (1U << GetClass())) || target->base_ability->grant_only ||
 		target->base_ability->charges || !HasSpiritShroudRank(rank_id) ||
 		target->current_value > target->base_ability->GetMaxLevel(this)) {
@@ -1244,7 +1405,7 @@ void Client::PurchaseSpiritShroudRank(uint32_t rank_id, bool saved_set)
 		m_pp.aapoints_spent = (m_pp.aapoints_spent > UINT32_MAX - uint32_t(cost))
 			? UINT32_MAX
 			: m_pp.aapoints_spent + uint32_t(cost);
-		SetAA(root, target->current_value, 0);
+		aa_ranks[target->base_ability->id] = std::make_pair(int(target->current_value), 0u);
 		CalcBonuses();
 		SendAlternateAdvancementTable();
 		SendAlternateAdvancementPoints();
@@ -1464,8 +1625,8 @@ void Client::ReapplyNativeShroud(uint32_t template_id)
 
 		m_shrouded                 = true;
 		m_shroud_id                = 0;
-		m_shroud_zonein_pending    = false;
 		m_spirit_shroud_template   = t.id;
+		m_pp.unknown0112           = t.id;
 		m_spirit_shroud_definition = std::make_shared<const Template>(t);
 		m_spirit_shroud_aa_ranks.clear();
 		for (auto rank_id : t.abilities) {
@@ -1487,17 +1648,18 @@ void Client::ReapplyNativeShroud(uint32_t template_id)
 			allocated_spent += N(row[2]);
 			auto *rank = zone->GetAlternateAdvancementRank(N(row[1]));
 			if (rank && rank->base_ability && rank->base_ability->id == N(row[0])) {
-				SetAA(rank->base_ability->id, rank->current_value, 0);
+				aa_ranks[rank->base_ability->id] = std::make_pair(int(rank->current_value), 0u);
 			}
 		}
 		for (auto rank_id : t.abilities) {
 			auto *rank = zone->GetAlternateAdvancementRank(rank_id);
 			if (rank && rank->base_ability &&
 				std::find(t.free_abilities.begin(), t.free_abilities.end(), rank_id) != t.free_abilities.end()) {
-				SetAA(rank->base_ability->id, rank->current_value, 0);
+				aa_ranks[rank->base_ability->id] = std::make_pair(int(rank->current_value), 0u);
 			}
 		}
 		ShroudRebuildAAArray();
+		SetNativeShroudAbilityCaps(t);
 
 		m_pp.aapoints       = t.monster_points;
 		m_pp.aapoints_spent = (allocated_spent > t.monster_points)
@@ -1545,16 +1707,14 @@ void Client::ReapplyNativeShroud(uint32_t template_id)
 		race        = t.race;
 		gender      = t.gender;
 		class_      = t.class_id;
+		texture     = t.texture;
+		helmtexture = t.helmet_texture;
 		SetLevel(t.level);
 		CalcBonuses();
 		SetMaxHP();
 
-		// The RoF2 client crashes if OP_Shroud arrives while it is still
-		// building the zone; defer to the zone-settle path (same as the quest
-		// path's deferred re-apply).
-		m_shroud_zonein_pending = true;
-		m_shroud_zonein_at      = Timer::GetTimeSeconds() + 3;
-
+		// Form state is in m_pp before the zone-in profile is serialized, so the
+		// client builds it from that profile; nothing to defer.
 		LogInfo("Client [{}] re-applied native Spirit Shroud form [{}] (template [{}]) on zone-in",
 			GetCleanName(), t.name, t.id);
 	} catch (const std::exception &error) {

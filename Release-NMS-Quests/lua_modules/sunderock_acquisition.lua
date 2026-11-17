@@ -72,8 +72,19 @@ function M.timer(e)
   local n=D.acquisition.note
   if active(c,n.task)or os.time()-stamp>15 then c:SetBucket(note_key,'')
   elseif c:CountItem(n.item)>before then
-   c:SetBucket(note_key,'')
-   if c:GetLevel()>=D.tasks[n.task].min_level then c:TaskSelector({n.task})end
+   -- Offer through a real nearby NPC: plain TaskSelector records the client's
+   -- own entity id as the giver and CanAcceptNewTask CastToNPCs it, so the
+   -- accept always fails "accepted task from missing npc". The receipt stays
+   -- armed until an NPC is in offer range (60 = MAX_TASK_SELECT_DISTANCE, the
+   -- client closes the window past it); the native 15s expiry still bounds it.
+   if c:GetLevel()>=D.tasks[n.task].min_level then
+    local best,bd,d
+    for o in eq.get_entity_list():GetNPCList().entries do
+     if o.valid then d=o:CalculateDistance(c)
+      if d<=60 and(not best or d<bd)then best,bd=o,d end end
+    end
+    if best then c:SetBucket(note_key,'');c:TaskSelectorFromNPC(best,{n.task})end
+   end
   end
  elseif raw~=''then c:SetBucket(note_key,'')end
  for id,t in pairs(D.tasks)do

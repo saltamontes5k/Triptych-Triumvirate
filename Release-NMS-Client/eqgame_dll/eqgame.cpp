@@ -769,34 +769,29 @@ void TriggerLocalAbilityUI(int targetSkillId) {
 
 
 // ---------------------------------------------------------------------------
-// NMS: Shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
+// NMS: shroud transforms need no client patch any more (retired 2026-11-15)
 //
-// The client's OP_Shroud self path (eqgame+0x4C2EA0) clears the local-player
-// spawn pointer (flt_DD2630 @ 0xDD2630) before applying the shroud profile,
-// and only restores it inside the success path of the spawn re-parse
-// (sub_4BD5F0). When the re-parse takes its "spawn still exists -> update in
-// place" branch it returns 0, the dispatcher early-returns, and the player
-// pointer stays NULL: feigned pose, dead UI.
+// The server used to apply a shroud with a runtime OP_Shroud self-transform,
+// and that path needed three byte patches: NOP the 'mov [flt_DD2630],0' that
+// nulled the local-player pointer (0x4C2F60), force the completion branch
+// (0x4C2F85), and retarget the profile store at 0x579255 so the wire dword at
+// block+0x350C landed in BaseProfile+0x340C instead of +0x3408. There were also
+// /sit+/stand and hotbar re-show nudges for the class rebuild the transform
+// caused.
 //
-// Two tiny patches, both of which only ever execute inside this self path:
-//   A) 0x4C2F60: 'mov dword ptr [0xDD2630], 0' (10 bytes) -> NOPs
-//   B) 0x4C2F85: 'jnz short +0x0A' (75 0A) -> 'jmp short +0x0A' (EB 0A),
-//      i.e. always run the completion path (standstate restore + UI reload)
+// Form changes are a same-zone reload now: the server applies the form to the
+// character before the zone-in profile is serialized, so the client builds it
+// from the ordinary profile and OP_Shroud is never sent. All of the above is
+// gone with it; the remaining AA pane scan bound below is a content contract,
+// not shroud code.
+//
+// Keep ShroudPatchLog: its byte guard is what records a silently skipped patch.
 // ---------------------------------------------------------------------------
 
-// NMS: shroud diagnostics. 0 = compile out all shroud runtime logging and
-// packet captures (leave 0 for release builds).
-// NMS: the shroud diagnostics that used to live here (ShroudLog and friends, the
-// AA-pane probe, packet dumps and the per-opcode probes) were removed once the
-// feature was verified. The only shroud logging left is ShroudPatchLog below: it
-// is always compiled in because a byte-guard mismatch means a patch silently did
-// not apply, which a released build should record.
 
-
-// NMS: status log for the shroud byte-guards. Always compiled in (unlike
-// ShroudLog): a guard mismatch means a patch silently did not apply, which is
-// exactly what a released build should record. Success lines are one short line
-// per patch at startup.
+// NMS: status log for the client byte-guards. Always compiled in: a guard
+// mismatch means a patch silently did not apply, which a released build should
+// record. Success lines are one short line per patch at startup.
 static void ShroudPatchLog(const char *fmt, ...) {
   FILE *f = fopen("nms_client_patch.log", "a");
   if (!f)
@@ -1037,92 +1032,23 @@ static void PSLogItemPacket(const char *buf, size_t size) {
 }
 #endif
 
-// Set after the OP_Shroud self-transform completes; consumed by the pulse
-// hook which issues /sit + /stand so the actor rebuilds its pose.
-bool g_shroudPoseFix = false;
-
-static DWORD g_clientBase = 0x400000;
-
-static void ApplyShroudFlowFix(DWORD baseAddress) {
-  g_clientBase = baseAddress;
-
-  // The client's AA pane builder walks AA ids 0..49998 only
-  // (eqgame+0x608CDF: 'cmp eax,0C34Fh' / jl).  The shroud content band lives
-  // at 90100-90300, so every shroud row was invisible to the window no matter
-  // what the row contained.  Widen the bound to 100000: enough for the shroud
-  // content band (91000-99999), and deliberately not more.  Nothing else in the
-  // database lives above 90400 today (EQS's own custom AAs are 61xxx/70xxx/71xxx,
-  // which this same client limit already scanned), so no other content changes
-  // visibility.
-  {
-    const DWORD pBound = g_clientBase + (0x608CE0 - 0x400000);
-    const unsigned char expect[4] = {0x4F, 0xC3, 0x00, 0x00};  // 0xC34F = 49999
-    if (memcmp((const void *)pBound, expect, sizeof(expect)) == 0) {
-      const unsigned int bound = 100000;
-      PatchA((LPVOID)pBound, &bound, sizeof(bound));
-      ShroudPatchLog("AA pane scan bound widened to %u @ %08X", bound, pBound);
-    } else {
-      const unsigned char *pb = (const unsigned char *)pBound;
-      ShroudPatchLog("AA pane scan bound patch SKIPPED: %02X %02X %02X %02X @ %08X",
-                pb[0], pb[1], pb[2], pb[3], pBound);
-    }
-  }
-  DWORD pNull = (DWORD)0x004C2F60 - 0x400000 + baseAddress;
-  DWORD pJz = (DWORD)0x004C2F85 - 0x400000 + baseAddress;
-
-  // NOTE: at runtime the loader relocates the absolute address inside
-  // 'mov dword ptr [0xDD2630], 0' (base != 0x400000), so only the opcode +
-  // disp32 prefix (C7 05 30 26) can be matched; the imm32 varies.
-  const unsigned char expectNullPrefix[4] = {0xC7, 0x05, 0x30, 0x26};
-  if (memcmp((const void *)pNull, expectNullPrefix, 4) == 0) {
-    static const unsigned char nops[10] = {0x90, 0x90, 0x90, 0x90, 0x90,
-                                           0x90, 0x90, 0x90, 0x90, 0x90};
-    PatchA((LPVOID)pNull, nops, 10);
-    ShroudPatchLog("shroud fix A applied: NOPed mov [flt_DD2630],0 @ %08X", pNull);
+// The client's AA pane builder walks AA ids 0..49998 only
+// (eqgame+0x608CDF: 'cmp eax,0C34Fh' / jl), so every rank row above that is
+// invisible to the window no matter what the row contains. EQS content does
+// exceed it (the 61xxx-62xxx and 9xxxx custom bands, and the shroud bands), so
+// widen the bound to 100000. This is a content contract, not shroud code: it
+// applies to every character whether or not a form exists.
+static void ApplyAAPaneScanFix(DWORD baseAddress) {
+  const DWORD pBound = (DWORD)0x00608CE0 - 0x400000 + baseAddress;
+  const unsigned char expect[4] = {0x4F, 0xC3, 0x00, 0x00};  // 0xC34F = 49999
+  if (memcmp((const void *)pBound, expect, sizeof(expect)) == 0) {
+    const unsigned int bound = 100000;
+    PatchA((LPVOID)pBound, &bound, sizeof(bound));
+    ShroudPatchLog("AA pane scan bound widened to %u @ %08X", bound, pBound);
   } else {
-    ShroudPatchLog("shroud fix A SKIPPED: unexpected bytes @ %08X", pNull);
-  }
-
-  const unsigned char expectJz[2] = {0x75, 0x0A};
-  if (memcmp((const void *)pJz, expectJz, 2) == 0) {
-    const unsigned char jmp[2] = {0xEB, 0x0A};
-    PatchA((LPVOID)pJz, jmp, 2);
-    ShroudPatchLog("shroud fix B applied: jnz->jmp @ %08X", pJz);
-  } else {
-    ShroudPatchLog("shroud fix B SKIPPED: unexpected bytes @ %08X", pJz);
-  }
-
-  // ---------------------------------------------------------------------
-  // NMS: server-authoritative shroud state (the "monster character" flag).
-  //
-  // The profile applier eqgame+0x5789B0 (called by the OP_Shroud handler at
-  // 0x4C2F6E and by the OP_PlayerProfile applier at 0x579763) copies the wire
-  // profile dword at block+0x350C into BaseProfile+0x3408 -- the field
-  // EQData.h calls "Unknown0x3408"; nothing reads it for shroud purposes.
-  //
-  // The switch the client actually uses is BaseProfile+0x340C ("profileType":
-  // ida sub_7EBB70 stores the key "profileType" into this+0x340C, EQData.h
-  // has "/*0x340c*/ DWORD Shrouded"). It gates the AA window monster mode
-  // (sub_4A40F0 requires Shrouded == 1 or 2), IsShrouded (0x441E70) and the
-  // shroud UI. No server packet reaches it natively: the RoF2 profile has no
-  // such member, and the only writers in the client are the PcProfile
-  // text/binary loaders that no shroud opcode calls.
-  //
-  // Retarget the single store (one displacement byte, same instruction length)
-  // so the server block+0x350C value drives the real field. Behaviour is
-  // unchanged for unshrouded profiles: ENCODE(OP_PlayerProfile) writes 0 to
-  // that wire field, so the flag lands as 0.
-  // ---------------------------------------------------------------------
-  DWORD pShroudStore = (DWORD)0x00579255 - 0x400000 + baseAddress;
-  const unsigned char expectStore[4] = {0x08, 0x34, 0x00, 0x00};
-  if (memcmp((const void *)pShroudStore, expectStore, 4) == 0) {
-    const unsigned char disp340C = 0x0C;  // 0x3408 -> 0x340C
-    PatchA((LPVOID)pShroudStore, &disp340C, 1);
-    ShroudPatchLog("shroud flag store retargeted to BaseProfile+0x340C @ %08X",
-                    pShroudStore);
-  } else {
-    ShroudPatchLog("shroud flag store SKIPPED: unexpected bytes @ %08X",
-                    pShroudStore);
+    const unsigned char *pb = (const unsigned char *)pBound;
+    ShroudPatchLog("AA pane scan bound patch SKIPPED: %02X %02X %02X %02X @ %08X",
+                   pb[0], pb[1], pb[2], pb[3], pBound);
   }
 }
 
@@ -1131,121 +1057,6 @@ unsigned char __fastcall HandleWorldMessage_Trampoline(
     DWORD * con, DWORD edx, unsigned __int32 unk, unsigned __int16 opcode,
     char *buf, size_t size);
 
-// NMS: the shroud profile swap (OP_Shroud) rebuilds the class-dependent UI and
-// leaves the hotbar windows (HotButtonWnd + pages 2..10) hidden; they only come
-// back at zone-in. Re-show them after the handler so the bars survive both the
-// shroud and the unshroud. Re-run a few times over the next second because the
-// client can re-hide them while it finishes rebuilding the UI.
-void ShroudRestoreHotbars() {
-  static const char *kHotbarWnds[] = {
-      "HotButtonWnd",  "HotButtonWnd2", "HotButtonWnd3", "HotButtonWnd4",
-      "HotButtonWnd5", "HotButtonWnd6", "HotButtonWnd7", "HotButtonWnd8",
-      "HotButtonWnd9", "HotButtonWnd10",
-  };
-
-  for (const char *name : kHotbarWnds) {
-    CXWnd *wnd = FindMQ2Window((PCHAR)name);
-    if (wnd) {
-      wnd->Show(true, true);
-    }
-  }
-}
-
-int   g_shroudHotbarFixesLeft = 0;
-
-// NMS: server-authoritative shroud state carrier.
-//
-// The profile block of OP_Shroud carries the shroud flag at +0x350C (server:
-// BuildShroudProfileBlock, Custom:ShroudLiveMode bit 8).  The client switch
-// everything keys off is BaseProfile+0x340C -- but the applier (eqgame+0x5789B0)
-// only writes it *before* the handler re-initialises the profile object:
-// BaseProfile::BaseProfile (eqgame+0x7EF0E0) zeroes 0x340C/0x3410/0x3414/0x3418
-// during the same OP_Shroud, so the value is wiped within the handler.  Capture
-// the server's dword from the packet and re-stamp it after the handler and on
-// each follow-up tick, which makes the server authoritative for the flag.
-uint32_t g_serverShroudState    = 0;
-int    g_serverShroudStateValid = 0;
-int    g_serverShroudStampLeft  = 0;
-DWORD  g_serverShroudStampNext  = 0;
-DWORD  g_aaRefreshAt            = 0;  // coalesced AA-window repopulate
-
-// NMS: AA-window list probe.  The four AA panes hold {text, row-id} entries;
-// the list object keeps its entry count at +472 and the entry vector at +476,
-// each entry 296 bytes with the value (AA rank id) at +16 -- see the AA
-// window refresh eqgame+0x609F90.  Counting shroud-band ids tells us whether
-// the rows were filtered out before reaching the UI or are being listed.
-// NMS: AA table + window probe.
-//  - looks up our shroud rows in the client's AA table (manager dword_D20358)
-//    and dumps the fields the gates read (shroud byte +144, category +140,
-//    classes +104, total_cost +112, prev/next +116/+120, current/max +36/+108)
-//  - enumerates the four AA panes' entries (count at list+472, vector at +476,
-//    296-byte entries with the value at +16 -- see eqgame+0x609F90)
-// NMS: one-shot diagnostic re-run after the auto-grant removal.  Answers:
-//   - what the client believes it owns (full AAList scan)
-//   - whether the table holds rows for the ability ids themselves
-//   - whether the monster pane still lists a normal row that merely carries the
-//     shroud byte (does the path work at all now?)
-//   - whether our row's payload still disqualifies a normal row
-static int g_diagDone = 0;
-
-static int NMSDiagPaneScan(void *aa, int wantOurs, int wantA) {
-  unsigned char *ab = (unsigned char *)aa;
-  int total = 0;
-  for (int li = 0; li < 4; ++li) {
-    unsigned char *l = *(unsigned char **)(ab + 672 + 4 * li);
-    if (!l)
-      continue;
-    const unsigned int c = *(unsigned int *)(l + 472);
-    const unsigned char *dp = *(const unsigned char **)(l + 476);
-    if (c > 5000 || !dp)
-      continue;
-    total += (int)c;
-    for (unsigned int e = 0; e < c && e < 400; ++e) {
-      const unsigned int id = *(const unsigned int *)(dp + 296 * e + 16);
-      if (id == 90300)
-        wantOurs = 1;
-      if (id == 41841)
-        wantA = 1;
-    }
-  }
-  return (wantOurs ? 1 : 0) | (wantA ? 2 : 0) | (total << 8);
-}
-
-
-void ShroudRefreshAAWindow(void) {
-  __try {
-    CXWnd *aaWnd = FindMQ2Window("AAWindow");
-    if (!aaWnd)
-      return;
-    typedef void(__fastcall * AARefresh_t)(void *, int);
-    AARefresh_t refresh = (AARefresh_t)(g_clientBase + (0x609F90 - 0x400000));
-    refresh((void *)aaWnd, 0);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-  }
-}
-
-void ShroudStampServerState(const char *when) {
-  if (!g_serverShroudStateValid)
-    return;
-  __try {
-    PCHARINFO2 ci = GetCharInfo2();
-    if (ci) {
-      unsigned char *bb = reinterpret_cast<unsigned char *>(ci);
-      unsigned int *flag = reinterpret_cast<unsigned int *>(bb + 0x340C);
-      if (*flag != g_serverShroudState) {
-        *flag = g_serverShroudState;
-        // The AA window's panes are populated by the refresh at
-        // eqgame+0x609F90 (-> sub_608AC0, which filters rows through the
-        // monster gate).  That populate runs inside the OP_Shroud handler,
-        // before this stamp, so it saw 'not shrouded' and produced an empty
-        // monster list.  Re-run it now that the server's state is applied.
-        ShroudRefreshAAWindow();
-      }
-    }
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-  }
-}
-DWORD g_shroudHotbarNextTick  = 0;
 
 
 // Legends of Norrath (the in-game card game). eqgame hands the card game's DLL
@@ -1437,52 +1248,6 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
   if (opcode == 0x4c89 && PSApplyPowerPacket(buf, size))
     return 1;
 #endif
-  // NMS: shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
-  if (opcode == 0x66b5 || opcode == 0x7a27) {
-    // NMS: our monster rows only exist in the client's AA table while the
-    // shroud is applied, and the table is rebuilt around the OP_Shroud
-    // transform.  The window's populate (eqgame+0x608AC0) runs on the first
-    // packet of the burst, i.e. before the rows land, so coalesce the burst
-    // and repopulate once it goes quiet (see the pulse hook).
-    if (g_serverShroudStateValid && g_serverShroudState > 0) {
-      g_aaRefreshAt = GetTickCount() + 700;
-    }
-  }
-  if (opcode == 0x6562) {
-    // Capture the server's shroud-state dword from the profile block
-    // (offset +0x350C).  Guarded so the other-player shroud form (which has no
-    // profile block) cannot feed us garbage: accept only 0/1 from a block whose
-    // identity bytes look like a real profile.
-    if (size >= 6) {
-      unsigned short endOff = *(unsigned short *)(buf + 4);
-      if (endOff >= 6 && (size_t)endOff + 0x350C + 4 <= size) {
-        const unsigned char *blk = (const unsigned char *)(buf + endOff);
-        const unsigned int state = *(const unsigned int *)(blk + 0x350C);
-        const bool looks_like_profile =
-            blk[0x10] >= 1 && blk[0x10] <= 16 &&
-            blk[0x11] >= 1 && blk[0x11] <= 100 && blk[0x08] <= 2;
-        if (looks_like_profile && state <= 2) {
-          g_serverShroudState = state;
-          g_serverShroudStateValid = 1;
-          g_serverShroudStampLeft = 12;
-          g_serverShroudStampNext = GetTickCount() + 500;
-        }
-      }
-    }
-    unsigned char shroud_ret =
-        HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
-    ShroudStampServerState("after-apply");
-    // The transform animation leaves the actor in its last frame (this branch
-    // fails to rebuild the shroud model); nudge the pose with /sit + /stand.
-    extern bool g_shroudPoseFix;
-    g_shroudPoseFix = true;
-    // Put the hotbar windows back; schedule follow-ups to beat deferred UI work.
-    ShroudRestoreHotbars();
-    g_shroudHotbarFixesLeft = 12;
-    g_shroudHotbarNextTick  = GetTickCount() + 500;
-    return shroud_ret;
-  }
-
   // Capture the real zone UdpConnection* via the Send hook instead — see UdpSend_Detour
   // Capture bitmask from OP_ServerAuthStats for deferred CAuth response
   if (opcode == 0x1338 && size >= 4) {
@@ -2174,8 +1939,8 @@ void InitHooks() {
   EzDetour((DWORD)var, HandleWorldMessage_Detour,
            HandleWorldMessage_Trampoline);
 
-  // NMS: Shroud self-transform flow fix (see ApplyShroudFlowFix above)
-  ApplyShroudFlowFix(baseAddress);
+  // NMS: AA pane scan bound (content contract; see ApplyAAPaneScanFix above)
+  ApplyAAPaneScanFix(baseAddress);
 
   // Hook UdpConnection::Send (0x8C51F0) to capture the real zone UdpConnection* for CAuth
   var = (((DWORD)0x008C51F0 - 0x400000) + baseAddress);

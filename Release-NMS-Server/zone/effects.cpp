@@ -159,43 +159,36 @@ int Mob::GetSharedCriticalHealOverTime() {
 	return base + (GetOwner()->GetSharedCriticalHealOverTime() * RuleI(Spells, PetsScaleWithOwnerPercent) / 100);
 }
 
+// Heroic spell damage: 400 points of the caster's heroic casting stat is +100%
+// damage. Multiclass casters stack INT and WIS. The class lists match the heroic
+// bonuses in bonuses.cpp, so Shadow Knights count as INT and Paladins, Rangers
+// and Beastlords count as WIS. Mob types without heroic item bonuses return 0.
+int Mob::GetHeroicSpellDamagePct() const
+{
+	if (!IsOfClientBot() && !IsMerc()) {
+		return 0;
+	}
+
+	int heroic = 0;
+
+	if (HasAnyClass({ Class::Necromancer, Class::Wizard, Class::Magician, Class::Enchanter, Class::ShadowKnight })) {
+		heroic += std::max(0, GetHeroicINT());
+	}
+
+	if (HasAnyClass({ Class::Cleric, Class::Druid, Class::Shaman, Class::Paladin, Class::Ranger, Class::Beastlord })) {
+		heroic += std::max(0, GetHeroicWIS());
+	}
+
+	return heroic / 4;
+}
+
 int64 Mob::GetActSpellDamage(uint16 spell_id, int64 value, Mob* target) {
 	if (spells[spell_id].target_type == ST_Self) {
 		return value;
 	}
 
-        bool heroic_stat_bonus = false;
-        // give heroic stat bonus if memorized
-        if (IsClient()) {
-                for (int i = 0; i < EQ::spells::SPELL_GEM_COUNT; ++i) {
-                        if (CastToClient()->GetPP().mem_spells[i] == spell_id) {
-                                heroic_stat_bonus = true;
-                                break;
-                        }
-                }
-        }
-        if (!heroic_stat_bonus) {
-				// AA abilities are class level 254, if its less than level 254, and its not a combat skill and not a combat proc, give the bonus
-                if (!((IsCombatSkill(spell_id) || IsCombatProc(spell_id)))) {
-                        for (uint8 class_id = Class::Warrior; class_id <= Class::Berserker; class_id++) {
-                                if (GetSpellLevelForCaster(spell_id) < UINT8_MAX) {
-                                        heroic_stat_bonus = true;
-                                        break;
-                                }
-                        }
-                }
-        }
-
-        if (heroic_stat_bonus) {
-
-
-		float scalar = 1.0f;
-		if (IsBeneficialSpell(spell_id)) {
-			scalar += GetHeroicWIS() / 1000.0f;
-		} else {
-			scalar += GetHeroicINT() / 1000.0f;
-		}
-		value *= scalar;
+	if (const int heroic_pct = GetHeroicSpellDamagePct()) {
+		value += value * heroic_pct / 100;
 	}
 
 	if (IsNPC()) {
@@ -484,6 +477,10 @@ int64 Mob::GetActDoTDamage(uint16 spell_id, int64 value, Mob* target, bool from_
 
 	if (RuleB(Spells, AllowExtraDmgSkill) && !RuleB(Character, ItemExtraSkillDamageCalcAsPercent)) {
 		extra_dmg += GetSkillDmgAmt(spells[spell_id].skill);
+	}
+
+	if (const int heroic_pct = GetHeroicSpellDamagePct()) {
+		value += value * heroic_pct / 100;
 	}
 
 	if (extra_dmg) {

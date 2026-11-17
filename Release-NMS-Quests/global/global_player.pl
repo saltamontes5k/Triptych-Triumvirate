@@ -72,7 +72,10 @@ sub EVENT_ENTERZONE {
     # bind release after a failed defense, instance expiry -- is restored
     # here. The silent variant writes no packets: the fresh zone-in spawn
     # data already carries the real form. The sticky icing goes with it.
-    if ($client->GetRace() == 629
+    # GMs keep the form anywhere (the keeper hands mission forms out to them);
+    # the mission-zone-only rule is for players.
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 110125
         && !($zonesn eq 'rivervale' && $client->GetZoneInstanceVersion() == 202)) {
         $client->BuffFadeBySpellID(13836); # Parsing Root: the actual cake root (kept in sync with #Cake_Defense_Baker.lua)
         $client->BuffFadeBySpellID(44025);
@@ -83,47 +86,54 @@ sub EVENT_ENTERZONE {
     # kaladima v25 -- zone-out, bind release after a failed wedding, instance
     # expiry -- is restored here. Race 377 is the stock barrel/keg model; the
     # shroud is only ever applied inside the version 25 expedition.
-    if ($client->GetRace() == 377
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 100125
         && !($zonesn eq 'kaladima' && $client->GetZoneInstanceVersion() == 25)) {
         $client->RemoveShroudSilent();
     }
 
-    # NMS: Boat Lesson cleanup. A boat shroud (race 141) that leaves oot v29
-    # -- zone-out, bind release after a failed lesson, instance expiry -- is
-    # restored here. Race 141 is the stock rowboat model (a_boat) and is only
-    # ever worn inside the version 29 expedition; the levitation goes with it.
-    if ($client->GetRace() == 141
+    # NMS: Boat Lesson cleanup. A boat shroud (race 141, spirit template
+    # 140140) that leaves oot v29 -- zone-out, bind release after a failed
+    # lesson, instance expiry -- is restored here. Race 141 is the stock
+    # rowboat model (a_boat) and is only ever worn inside the version 29
+    # expedition; the levitation goes with it.
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 140140
         && !($zonesn eq 'oot' && $client->GetZoneInstanceVersion() == 29)) {
         $client->BuffFadeBySpellID(2894); # stock Levitation (kept in sync with #Boat_Lesson_Controller.lua)
         $client->RemoveShroudSilent();
     }
 
     # NMS: King of the Monsters cleanup. A Moorwalker kaiju shroud (race 436,
-    # the basilisk) that leaves moors v40 -- zone-out, bind release after a
-    # failed hunt, instance expiry -- is restored here. Race 436 is the stock
-    # basilisk model; the shroud is only ever worn inside the version 40
-    # expedition.
-    if ($client->GetRace() == 436
+    # the basilisk, spirit template 140240) that leaves moors v40 -- zone-out,
+    # bind release after a failed hunt, instance expiry -- is restored here.
+    # Race 436 is the stock basilisk model; the shroud is only ever worn
+    # inside the version 40 expedition.
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 140240
         && !($zonesn eq 'moors' && $client->GetZoneInstanceVersion() == 40)) {
         $client->RemoveShroudSilent();
     }
 
     # NMS: Midnight Snack cleanup. A dwarven ghost shroud (race 117 texture
-    # 3, the Garanel Rucksif hull) that leaves skyshrine v41 -- zone-out,
-    # bind release after a failed binge, instance expiry -- is restored here.
-    # Race 117 is the stock dwarf ghost model; the shroud is only ever worn
-    # inside the version 41 expedition.
-    if ($client->GetRace() == 117
+    # 3, the Garanel Rucksif hull, spirit template 140340) that leaves
+    # skyshrine v41 -- zone-out, bind release after a failed binge, instance
+    # expiry -- is restored here. Race 117 is the stock dwarf ghost model;
+    # the shroud is only ever worn inside the version 41 expedition.
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 140340
         && !($zonesn eq 'skyshrine' && $client->GetZoneInstanceVersion() == 41)) {
         $client->RemoveShroudSilent();
     }
 
     # NMS: Derelict Space Station cleanup. A Master Officer armor shroud
-    # (race 323, the animated armor hull) that leaves netherbian v66 --
-    # zone-out, bind release after a failed purge, instance expiry -- is
-    # restored here. Race 323 is the stock animated armor model; the shroud
-    # is only ever worn inside the version 66 expedition.
-    if ($client->GetRace() == 323
+    # (race 323, the animated armor hull, spirit template 140440) that
+    # leaves netherbian v66 -- zone-out, bind release after a failed purge,
+    # instance expiry -- is restored here. Race 323 is the stock animated
+    # armor model; the shroud is only ever worn inside the version 66
+    # expedition.
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 140440
         && !($zonesn eq 'netherbian' && $client->GetZoneInstanceVersion() == 66)) {
         $client->RemoveShroudSilent();
     }
@@ -134,7 +144,8 @@ sub EVENT_ENTERZONE {
     # bind release after a failed trial, instance expiry -- is restored here.
     # Race 17 is only ever worn inside the version 80 expedition; the clay
     # toughenings go with it.
-    if (($client->GetRace() == 17 || $client->GetRace() == 379)
+    if (!$client->GetGM()
+        && $client->GetShroudID() == 120125
         && !($zonesn eq 'beholder' && $client->GetZoneInstanceVersion() == 80)) {
         $client->BuffFadeBySpellID(44033); # Clay Toughening I (kept in sync with #Pottery_Trial_Controller.lua)
         $client->BuffFadeBySpellID(44034); # Clay Toughening II

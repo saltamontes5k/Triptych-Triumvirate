@@ -431,7 +431,12 @@ public:
 	uint32 GetMoney(uint8 type, uint8 subtype);
 	void OpenLFGuildWindow();
 	void OpenShroudWindow(Lua_Mob npc);
+	void OpenShroudWindowFor(Lua_Mob npc, luabind::object ids);
 	void ApplyShroud(uint32 shroud_id);
+	// Spirit-shroud twins: the mission controllers use these once the native
+	// engine is on, so a script never has to know which table backs the form.
+	void ApplySpiritShroud(uint32 template_id);
+	void RemoveSpiritShroud();
 	void RemoveShroud();
 	void RemoveShroudSilent();
 	void NotifyNewTitlesAvailable();

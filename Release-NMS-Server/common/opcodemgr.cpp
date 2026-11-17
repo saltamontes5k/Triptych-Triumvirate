@@ -148,13 +148,15 @@ bool RegularOpcodeManager::LoadOpcodes(const char *filename, bool report_errors)
 	MOpcodes.lock();
 
 	loaded = true;
-	eq_to_emu = new EmuOpcode[MAX_EQ_OPCODE];
+	safe_delete_array(eq_to_emu);
+	safe_delete_array(emu_to_eq);
+	eq_to_emu = new EmuOpcode[MAX_EQ_OPCODE + 1];
 	emu_to_eq = new uint16[_maxEmuOpcode];
-	EQOpcodeCount = MAX_EQ_OPCODE;
+	EQOpcodeCount = MAX_EQ_OPCODE + 1;
 	EmuOpcodeCount = _maxEmuOpcode;
 
 	//dont need to set eq_to_emu cause every element should get a value
-	memset(eq_to_emu, 0, sizeof(EmuOpcode)*MAX_EQ_OPCODE);
+	memset(eq_to_emu, 0, sizeof(EmuOpcode)*(MAX_EQ_OPCODE + 1));
 	memset(emu_to_eq, 0, sizeof(uint16)*_maxEmuOpcode);
 
 	bool ret = LoadOpcodesFile(filename, &s, report_errors);
@@ -170,7 +172,7 @@ bool RegularOpcodeManager::ReloadOpcodes(const char *filename, bool report_error
 	s.it = this;
 	MOpcodes.lock();
 
-	memset(eq_to_emu, 0, sizeof(uint16)*MAX_EQ_OPCODE);
+	memset(eq_to_emu, 0, sizeof(EmuOpcode)*(MAX_EQ_OPCODE + 1));
 
 	bool ret = LoadOpcodesFile(filename, &s, report_errors);
 

@@ -7220,7 +7220,7 @@ INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`res
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008643,'sod_raid_471001_discordtower_v51',0,0,600,300,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008643,471001,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008643,'discordtower',51,1,150,-48.375,0,600);
-")SODRAID91A",
+)SODRAID91A",
 		.content_schema_update = false,
 	},
 
@@ -7302,7 +7302,7 @@ INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`res
 
 INSERT INTO `npc_types` SELECT * FROM sod_rk3_nt;
 DROP TEMPORARY TABLE sod_rk3_nt;
-")SODRK392",
+)SODRK392",
 		.content_schema_update = false,
 	},
 
@@ -7654,7 +7654,7 @@ INSERT INTO loottable_entries (loottable_id, lootdrop_id, multiplier, droplimit,
 (178716,178716,1,1,0,100),
 (178717,178717,1,1,0,100);
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178710, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 1, 10, -1, -1, '', ''
+SELECT 178710, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 1, 10, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0379 AS tier_chance UNION ALL
     SELECT 1, 0.0357 UNION ALL
@@ -7667,7 +7667,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178711, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 11, 20, -1, -1, '', ''
+SELECT 178711, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 11, 20, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0403 AS tier_chance UNION ALL
     SELECT 1, 0.0379 UNION ALL
@@ -7680,7 +7680,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178712, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 21, 30, -1, -1, '', ''
+SELECT 178712, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 21, 30, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0417 AS tier_chance UNION ALL
     SELECT 1, 0.0403 UNION ALL
@@ -7693,7 +7693,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178713, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 31, 40, -1, -1, '', ''
+SELECT 178713, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 31, 40, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0417 AS tier_chance UNION ALL
     SELECT 1, 0.0431 UNION ALL
@@ -7706,7 +7706,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178714, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 41, 55, -1, -1, '', ''
+SELECT 178714, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 41, 55, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0431 AS tier_chance UNION ALL
     SELECT 1, 0.0446 UNION ALL
@@ -7719,7 +7719,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178715, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 56, 70, -1, -1, '', ''
+SELECT 178715, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 56, 70, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0431 AS tier_chance UNION ALL
     SELECT 1, 0.0446 UNION ALL
@@ -7732,7 +7732,7 @@ CROSS JOIN (
     UNION ALL SELECT 36 UNION ALL SELECT 39 UNION ALL SELECT 42 UNION ALL SELECT 45
 ) classes;
 INSERT INTO lootdrop_entries (lootdrop_id, item_id, item_charges, equip_item, chance, disabled_chance, trivial_min_level, trivial_max_level, multiplier, npc_min_level, npc_max_level, min_expansion, max_expansion, content_flags, content_flags_disabled)
-SELECT 178716, 121571 + 3*tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 71, 85, -1, -1, '', ''
+SELECT 178716, 121571 + tier_off + class_off, 1, 0, tier_chance, 0, 0, 0, 1, 71, 85, -1, -1, '', ''
 FROM (
     SELECT 0 AS tier_off, 0.0431 AS tier_chance UNION ALL
     SELECT 1, 0.0446 UNION ALL
@@ -9367,8 +9367,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180046,'Scroll: Shield of Spurs Rk. II',20,504,65535,1,1,1,250000,7,15018,76,'Scroll: Shield of Spurs Rk. II',0);
 )SODVEND110" R"SODVEND110A(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180047,'Scroll: Horde of Hornets Rk. II',20,504,65535,1,1,1,250000,7,15024,76,'Scroll: Horde of Hornets Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180048,'Scroll: Dragonscale Aquifer Rk. II',20,504,65535,1,1,1,250000,7,15027,76,'Scroll: Dragonscale Aquifer Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180049,'Scroll: Drifting Haze Rk. II',20,504,65535,1,1,1,250000,7,15036,76,'Scroll: Drifting Haze Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180050,'Scroll: Skylight Sagacity Rk. II',20,504,65535,1,1,1,250000,7,15080,76,'Scroll: Skylight Sagacity Rk. II',0);
@@ -9419,8 +9417,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180095,'Scroll: Silent Mind Rk. II',20,504,65535,1,1,1,250000,7,14510,77,'Scroll: Silent Mind Rk. II',0);
 )SODVEND110A" R"SODVEND110B(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180096,'Scroll: Speed of Erradien Rk. II',20,504,65535,1,1,1,250000,7,14513,77,'Scroll: Speed of Erradien Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180097,'Scroll: Din of Tashan Rk. II',20,504,65535,1,1,1,250000,7,14516,77,'Scroll: Din of Tashan Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180098,'Scroll: Cajole Rk. II',20,504,65535,1,1,1,250000,7,14519,77,'Scroll: Cajole Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180099,'Scroll: Mystify Rk. II',20,504,65535,1,1,1,250000,7,14549,77,'Scroll: Mystify Rk. II',0);
@@ -9471,8 +9467,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180144,'Scroll: Promised Recovery Rk. II',20,504,65535,1,1,1,250000,7,14109,78,'Scroll: Promised Recovery Rk. II',0);
 )SODVEND110B" R"SODVEND110C(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180145,'Scroll: Peerless Penchant Rk. II',20,504,65535,1,1,1,250000,7,14115,78,'Scroll: Peerless Penchant Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180146,'Scroll: Bite of the Borrower Rk. II',20,504,65535,1,1,1,250000,7,14146,78,'Scroll: Bite of the Borrower Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180147,'Scroll: Temple Strike Rk. II',20,504,65535,1,1,1,250000,7,14184,78,'Scroll: Temple Strike Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180148,'Scroll: Forbear Corruption Rk. II',20,504,65535,1,1,1,250000,7,14223,78,'Scroll: Forbear Corruption Rk. II',0);
@@ -9523,8 +9517,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180193,'Scroll: Rigor Mortis Rk. II',20,504,65535,1,1,1,250000,7,15224,78,'Scroll: Rigor Mortis Rk. II',0);
 )SODVEND110C" R"SODVEND110D(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180194,'Scroll: Gemmi''s Mending Rk. II',20,504,65535,1,1,1,250000,7,15260,78,'Scroll: Gemmi''s Mending Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180195,'Scroll: Bloodworg Focusing Rk. II',20,504,65535,1,1,1,250000,7,15263,78,'Scroll: Bloodworg Focusing Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180196,'Scroll: Ancestral Hearkening Rk. II',20,504,65535,1,1,1,250000,7,15272,78,'Scroll: Ancestral Hearkening Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180197,'Scroll: Bite of the Brownie Rk. II',20,504,65535,1,1,1,250000,7,15275,78,'Scroll: Bite of the Brownie Rk. II',0);
@@ -9575,8 +9567,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180242,'Scroll: Wheel of Fists Rk. II',20,504,65535,1,1,1,250000,7,14797,79,'Scroll: Wheel of Fists Rk. II',0);
 )SODVEND110D" R"SODVEND110E(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180243,'Scroll: Crystalpalm Discipline Rk. II',20,504,65535,1,1,1,250000,7,14821,79,'Scroll: Crystalpalm Discipline Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180244,'Scroll: Auroral Darkness Rk. II',20,504,65535,1,1,1,250000,7,14869,79,'Scroll: Auroral Darkness Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180245,'Scroll: Visziaj''s Pallid Haze Rk. II',20,504,65535,1,1,1,250000,7,14892,79,'Scroll: Visziaj''s Pallid Haze Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180246,'Scroll: Spectralside Rk. II',20,504,65535,1,1,1,250000,7,14895,79,'Scroll: Spectralside Rk. II',0);
@@ -9627,8 +9617,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180291,'Scroll: Rallied Shield of Vie Rk. II',20,504,65535,1,1,1,250000,7,14307,80,'Scroll: Rallied Shield of Vie Rk. II',0);
 )SODVEND110E" R"SODVEND110F(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180292,'Scroll: Blood of the Devoted Rk. II',20,504,65535,1,1,1,250000,7,14316,80,'Scroll: Blood of the Devoted Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180293,'Scroll: Circle of Divinity Rk. II',20,504,65535,1,1,1,250000,7,14326,80,'Scroll: Circle of Divinity Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180294,'Scroll: Frantic Renewal Rk. II',20,504,65535,1,1,1,250000,7,14344,80,'Scroll: Frantic Renewal Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180295,'Scroll: Word of Vivacity Rk. II',20,504,65535,1,1,1,250000,7,14350,80,'Scroll: Word of Vivacity Rk. II',0);
@@ -9679,8 +9667,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180340,'Scroll: Shade of Renewal Rk. II',20,504,65535,1,1,1,250000,7,15321,80,'Scroll: Shade of Renewal Rk. II',0);
 )SODVEND110F" R"SODVEND110G(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180341,'Scroll: Thorn Wilting Rk. II',20,504,65535,1,1,1,250000,7,15334,80,'Scroll: Thorn Wilting Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180342,'Scroll: Ward of Resurgence Rk. II',20,504,65535,1,1,1,250000,7,15337,80,'Scroll: Ward of Resurgence Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180343,'Scroll: Sneer Rk. II',20,504,65535,1,1,1,250000,7,15361,80,'Scroll: Sneer Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180344,'Scroll: Knuckle Smash Rk. II',20,504,65535,1,1,1,250000,7,15379,80,'Scroll: Knuckle Smash Rk. II',0);
@@ -9732,8 +9718,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180390,'Scroll: Finsternacht Orb Rk. II',20,504,65535,1,1,1,250000,7,19016,81,'Scroll: Finsternacht Orb Rk. II',0);
 )SODVEND110G" R"SODVEND110H(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180391,'Scroll: Devout Touch Rk. II',20,504,65535,1,1,1,250000,7,19054,81,'Scroll: Devout Touch Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180392,'Scroll: Devout Force Rk. II',20,504,65535,1,1,1,250000,7,19057,81,'Scroll: Devout Force Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180393,'Scroll: Expiation Rk. II',20,504,65535,1,1,1,250000,7,19066,81,'Scroll: Expiation Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180394,'Scroll: Eulogy Rk. II',20,504,65535,1,1,1,250000,7,19105,81,'Scroll: Eulogy Rk. II',0);
@@ -9785,8 +9769,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 )SODVEND110H" R"SODVEND110I(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180440,'Scroll: Harvesting Inferno Rk. II',20,504,65535,1,1,1,250000,7,18520,82,'Scroll: Harvesting Inferno Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180441,'Scroll: Promised Reknit Rk. II',20,504,65535,1,1,1,250000,7,18535,82,'Scroll: Promised Reknit Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180442,'Scroll: Hushed Mind Rk. II',20,504,65535,1,1,1,250000,7,18568,82,'Scroll: Hushed Mind Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180443,'Scroll: Bark of Tashan Rk. II',20,504,65535,1,1,1,250000,7,18574,82,'Scroll: Bark of Tashan Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180444,'Scroll: Seduction Rk. II',20,504,65535,1,1,1,250000,7,18577,82,'Scroll: Seduction Rk. II',0);
@@ -9837,8 +9819,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 )SODVEND110I" R"SODVEND110J(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180489,'Scroll: Temple Bash Rk. II',20,504,65535,1,1,1,250000,7,18205,83,'Scroll: Temple Bash Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180490,'Scroll: Blood Hatchet Rk. II',20,504,65535,1,1,1,250000,7,18211,83,'Scroll: Blood Hatchet Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180491,'Scroll: Repel Corruption Rk. II',20,504,65535,1,1,1,250000,7,18244,83,'Scroll: Repel Corruption Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180492,'Scroll: Palladium of Vie Rk. II',20,504,65535,1,1,1,250000,7,18259,83,'Scroll: Palladium of Vie Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180493,'Scroll: Devout Light Rk. II',20,504,65535,1,1,1,250000,7,18262,83,'Scroll: Devout Light Rk. II',0);
@@ -9890,8 +9870,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180538,'Scroll: Venril''s Covenant Rk. II',20,504,65535,1,1,1,250000,7,19332,83,'Scroll: Venril''s Covenant Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180539,'Scroll: Malarian Carapace Rk. II',20,504,65535,1,1,1,250000,7,19365,83,'Scroll: Malarian Carapace Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180540,'Scroll: Dannal''s Mending Rk. II',20,504,65535,1,1,1,250000,7,19422,83,'Scroll: Dannal''s Mending Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180541,'Scroll: Darkpaw Focusing Rk. II',20,504,65535,1,1,1,250000,7,19425,83,'Scroll: Darkpaw Focusing Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180542,'Scroll: Ancestral Obligation Rk. II',20,504,65535,1,1,1,250000,7,19434,83,'Scroll: Ancestral Obligation Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180543,'Scroll: Bite of the Ukun Rk. II',20,504,65535,1,1,1,250000,7,19437,83,'Scroll: Bite of the Ukun Rk. II',0);
@@ -9942,8 +9920,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180587,'Scroll: Tectonic Tumult Rk. II',20,504,65535,1,1,1,250000,7,18289,84,'Scroll: Tectonic Tumult Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180588,'Scroll: Abolish Corruption Rk. II',20,504,65535,1,1,1,250000,7,18307,84,'Scroll: Abolish Corruption Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180589,'Scroll: Silent Edict Rk. II',20,504,65535,1,1,1,250000,7,18313,84,'Scroll: Silent Edict Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180590,'Scroll: Unwavering Hammer of Zeal Rk. II',20,504,65535,1,1,1,250000,7,18331,84,'Scroll: Unwavering Hammer of Zeal Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180591,'Scroll: Chromassail Rk. II',20,504,65535,1,1,1,250000,7,18359,84,'Scroll: Chromassail Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180592,'Scroll: Blessed Aquifer Rk. II',20,504,65535,1,1,1,250000,7,18377,84,'Scroll: Blessed Aquifer Rk. II',0);
@@ -9994,8 +9970,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180636,'Scroll: Nectar of the Slitheren Rk. II',20,504,65535,1,1,1,250000,7,19480,84,'Scroll: Nectar of the Slitheren Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180637,'Scroll: Maelstrom Blade Rk. II',20,504,65535,1,1,1,250000,7,19529,84,'Scroll: Maelstrom Blade Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180638,'Scroll: Punch Through Rk. II',20,504,65535,1,1,1,250000,7,19553,84,'Scroll: Punch Through Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180639,'Scroll: Crystalwing Shell Rk. II',20,504,65535,1,1,1,250000,7,19624,84,'Scroll: Crystalwing Shell Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180640,'Scroll: Magmatic Eruption Rk. II',20,504,65535,1,1,1,250000,7,19627,84,'Scroll: Magmatic Eruption Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180641,'Scroll: Icesheet Cascade Rk. II',20,504,65535,1,1,1,250000,7,19630,84,'Scroll: Icesheet Cascade Rk. II',0);
@@ -10046,8 +10020,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180685,'Scroll: Mind Twist Rk. II',20,504,65535,1,1,1,250000,7,18652,85,'Scroll: Mind Twist Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180686,'Scroll: Mana Reiterate Aura Rk. II',20,504,65535,1,1,1,250000,7,18679,85,'Scroll: Mana Reiterate Aura Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180687,'Scroll: Fickle Blaze Rk. II',20,504,65535,1,1,1,250000,7,18790,85,'Scroll: Fickle Blaze Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180688,'Scroll: Ethereal Symbiosis Rk. II',20,504,65535,1,1,1,250000,7,18793,85,'Scroll: Ethereal Symbiosis Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180689,'Scroll: Mass Ethereal Transvergence Rk. II',20,504,65535,1,1,1,250000,7,18799,85,'Scroll: Mass Ethereal Transvergence Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180690,'Scroll: Rumbling Servant Rk. II',20,504,65535,1,1,1,250000,7,18821,85,'Scroll: Rumbling Servant Rk. II',0);
@@ -10099,8 +10071,6 @@ INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180735,'Scroll: Axe of Rallos Rk. II',20,504,65535,1,1,1,250000,7,19742,85,'Scroll: Axe of Rallos Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180736,'Scroll: Erud''s Retort Rk. II',20,504,65535,1,1,1,250000,7,19757,85,'Scroll: Erud''s Retort Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180737,'Scroll: Erud''s Channeled Mark Rk. II',20,504,65535,1,1,1,250000,7,19760,85,'Scroll: Erud''s Channeled Mark Rk. II',0);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180738,'Scroll: Erud''s Retort Effect Rk. II',20,504,65535,1,1,1,250000,7,19763,85,'Scroll: Erud''s Retort Effect Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180739,'Scroll: Hypnotic Stare Rk. II',20,504,65535,1,1,1,250000,7,19791,85,'Scroll: Hypnotic Stare Rk. II',0);
 INSERT INTO `items` (`id`,`name`,`itemtype`,`icon`,`classes`,`nodrop`,`weight`,`size`,`price`,`scrolltype`,`scrolleffect`,`scrolllevel`,`lore`,`loregroup`) VALUES (180740,'Scroll: Flinch Rk. II',20,504,65535,1,1,1,250000,7,19830,85,'Scroll: Flinch Rk. II',0);
@@ -10199,8 +10169,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,2,103118)
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,3,103123);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (461000,4,103128);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,1,103113);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,2,103118);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,3,103123);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`) VALUES (462000,4,103128);
@@ -10385,8 +10353,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,54,180049,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,55,180050,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,56,180051,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,57,180052,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,58,180053,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,59,180054,750);
@@ -10519,8 +10485,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,185,180180,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,186,180181,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,187,180182,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,188,180183,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,189,180184,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,190,180185,750);
@@ -10652,8 +10616,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,315,180310,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,316,180311,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,317,180312,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,318,180313,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,319,180314,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,320,180315,750);
@@ -10785,8 +10747,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,445,180440,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,446,180441,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,447,180442,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,448,180443,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,449,180444,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,450,180445,750);
@@ -10918,8 +10878,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,575,180570,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,576,180571,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,577,180572,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,578,180573,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,579,180574,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,580,180575,750);
@@ -11051,8 +11009,6 @@ INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUE
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,705,180700,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,706,180701,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,707,180702,750);
-")SODVEND110"
-		R"SODVEND110(
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,708,180703,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,709,180704,750);
 INSERT INTO `merchantlist` (`merchantid`,`slot`,`item`,`faction_required`) VALUES (999999,710,180705,750);
@@ -11135,7 +11091,7 @@ INSERT INTO `npc_types` SELECT * FROM sod_vendor_portal_nt;
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008657,'sod_void_rift_potimea',0,0,600,300,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008657,478757,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008657,'potimea',0,110,0,8,0,600);
-")SODVEND110V",
+)SODVEND110V",
 		.content_schema_update = false,
 	},
 
@@ -11259,8 +11215,6 @@ DELETE FROM `zone` WHERE `short_name` = 'bertoxtemple' AND `version` = 51;
 )SODP2111" R"SODP2111A(
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 51, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'bertoxtemple' AND `version` = 0;
 
-")SODP2111"
-		R"SODP2111(
 DELETE FROM `zone` WHERE `short_name` = 'oldkithicor' AND `version` = 51;
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 51, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'oldkithicor' AND `version` = 0;
 
@@ -11275,8 +11229,6 @@ DELETE FROM `zone` WHERE `short_name` = 'discord' AND `version` = 51;
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 51, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'discord' AND `version` = 0;
 
 DELETE FROM `zone` WHERE `short_name` = 'discord' AND `version` = 52;
-")SODP2111"
-		R"SODP2111(
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 52, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'discord' AND `version` = 0;
 
 DELETE FROM `zone` WHERE `short_name` = 'discord' AND `version` = 53;
@@ -11290,10 +11242,8 @@ DELETE FROM `zone` WHERE `short_name` = 'oceangreenhills' AND `version` = 51;
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 51, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'oceangreenhills' AND `version` = 0;
 
 DELETE FROM `zone` WHERE `short_name` = 'korascian' AND `version` = 51;
-")SODP2111"
-		R"SODP2111(
 INSERT INTO `zone` (zoneidnumber,version,short_name,long_name,min_status,map_file_name,note,min_expansion,max_expansion,content_flags,content_flags_disabled,expansion,file_name,safe_x,safe_y,safe_z,safe_heading,graveyard_id,min_level,max_level,timezone,maxclients,ruleset,underworld,minclip,maxclip,fog_minclip,fog_maxclip,fog_blue,fog_red,fog_green,sky,ztype,zone_exp_multiplier,walkspeed,time_type,fog_red1,fog_green1,fog_blue1,fog_minclip1,fog_maxclip1,fog_red2,fog_green2,fog_blue2,fog_minclip2,fog_maxclip2,fog_red3,fog_green3,fog_blue3,fog_minclip3,fog_maxclip3,fog_red4,fog_green4,fog_blue4,fog_minclip4,fog_maxclip4,fog_density,flag_needed,canbind,cancombat,canlevitate,castoutdoor,hotzone,insttype,shutdowndelay,peqzone,bypass_expansion_check,suspendbuffs,rain_chance1,rain_chance2,rain_chance3,rain_chance4,rain_duration1,rain_duration2,rain_duration3,rain_duration4,snow_chance1,snow_chance2,snow_chance3,snow_chance4,snow_duration1,snow_duration2,snow_duration3,snow_duration4,gravity,type,skylock,fast_regen_hp,fast_regen_mana,fast_regen_endurance,npc_max_aggro_dist,npc_update_range,client_update_range,max_movement_update_range,underworld_teleport_index,lava_damage,min_lava_damage,idle_when_empty,seconds_before_idle,shard_at_player_count) SELECT `zoneidnumber`, 51, `short_name`, `long_name`, `min_status`, `map_file_name`, `note`, `min_expansion`, `max_expansion`, `content_flags`, `content_flags_disabled`, `expansion`, `file_name`, `safe_x`, `safe_y`, `safe_z`, `safe_heading`, `graveyard_id`, `min_level`, `max_level`, `timezone`, `maxclients`, `ruleset`, `underworld`, `minclip`, `maxclip`, `fog_minclip`, `fog_maxclip`, `fog_blue`, `fog_red`, `fog_green`, `sky`, `ztype`, `zone_exp_multiplier`, `walkspeed`, `time_type`, `fog_red1`, `fog_green1`, `fog_blue1`, `fog_minclip1`, `fog_maxclip1`, `fog_red2`, `fog_green2`, `fog_blue2`, `fog_minclip2`, `fog_maxclip2`, `fog_red3`, `fog_green3`, `fog_blue3`, `fog_minclip3`, `fog_maxclip3`, `fog_red4`, `fog_green4`, `fog_blue4`, `fog_minclip4`, `fog_maxclip4`, `fog_density`, `flag_needed`, `canbind`, `cancombat`, `canlevitate`, `castoutdoor`, `hotzone`, `insttype`, `shutdowndelay`, `peqzone`, `bypass_expansion_check`, `suspendbuffs`, `rain_chance1`, `rain_chance2`, `rain_chance3`, `rain_chance4`, `rain_duration1`, `rain_duration2`, `rain_duration3`, `rain_duration4`, `snow_chance1`, `snow_chance2`, `snow_chance3`, `snow_chance4`, `snow_duration1`, `snow_duration2`, `snow_duration3`, `snow_duration4`, `gravity`, `type`, `skylock`, `fast_regen_hp`, `fast_regen_mana`, `fast_regen_endurance`, `npc_max_aggro_dist`, `npc_update_range`, `client_update_range`, `max_movement_update_range`, `underworld_teleport_index`, `lava_damage`, `min_lava_damage`, `idle_when_empty`, `seconds_before_idle`, `shard_at_player_count` FROM `zone` WHERE `short_name` = 'korascian' AND `version` = 0;
-")SODP2111C",
+)SODP2111C",
 		.content_schema_update = false,
 	},
 
@@ -17401,7 +17351,7 @@ INSERT INTO `task_activities` (taskid,activityid,req_activity_id,step,activityty
 -- Faction rewards, matching the v110 vendor convention (faction 1222:
 -- group tasks +150).
 UPDATE `tasks` SET `faction_reward` = 1222, `faction_amount` = 150 WHERE `id` IN (303080,303081);
-")SODOG143",
+)SODOG143",
 		.content_schema_update = false,
 	},
 
@@ -17435,7 +17385,7 @@ UPDATE `tasks` SET `faction_reward` = 1222, `faction_amount` = 150 WHERE `id` IN
 
 UPDATE `tasks` SET `faction_reward` = 1223
 WHERE `id` IN (303010,303011,303012,303074,303075,303076);
-")SODKF144",
+)SODKF144",
 		.content_schema_update = false,
 	},
 
@@ -17523,8 +17473,6 @@ INSERT INTO `task_activities` (taskid,activityid,req_activity_id,step,activityty
 (303109,0,-1,1,2,'the enraged gnolls',0,12,'the enraged gnolls','468002|468004|468006|468007|468008|468010|468012|468017|468019|468021|468023|468024|468027|468028|468029|468030|468031|468032|468033|468034|468036|468037|468039|468041|468042|468045|468047|468050|468051|468052|468059|468060','','',0,0,0,0,0,0,0,'-1','0','oldblackburrow',-1,0,0),
 )SODTHEME145" R"SODTHEME145A(
 (303109,1,0,2,3,'a Wrext Mal Insignia',0,2,'a Wrext Mal Insignia','','17342','',0,0,0,0,0,0,0,'-1','0','oldblackburrow',-1,0,0),
-")SODTHEME145"
- R"SODTHEME145(
 (303116,0,-1,1,4,'Captain Hiran Tillin',0,1,'Captain Hiran Tillin','466035','','',0,0,0,0,0,0,0,'-1','0','',-1,0,0),
 (303110,0,-1,1,3,'an Infected Animal Organ',0,5,'an Infected Animal Organ','','17283','',0,0,0,0,0,0,0,'-1','0','oceangreenhills',-1,0,0),
 (303110,1,0,2,3,'an Undamaged Animal Organ',0,1,'an Undamaged Animal Organ','','17282','',0,0,0,0,0,0,0,'-1','0','oceangreenhills',-1,0,0),
@@ -17614,7 +17562,7 @@ INSERT INTO `task_activities` (taskid,activityid,req_activity_id,step,activityty
 -- theme tasks raise Silla Herald (1223, +150, v144 convention).
 UPDATE `tasks` SET `faction_reward` = 1222, `faction_amount` = 150 WHERE `id` IN (303100,303101,303102,303103,303104,303105,303106,303107,303108,303109,303110,303111,303112,303113,303114,303115,303116,303117,303118,303119);
 UPDATE `tasks` SET `faction_reward` = 1223, `faction_amount` = 150 WHERE `id` IN (303120,303121,303122,303123,303124,303125,303126,303130,303131,303132,303133,303134,303135,303140,303141,303142,303143,303144,303145,303146);
-")SODTHEME145A",
+)SODTHEME145A",
 		.content_schema_update = false,
 	},
 
@@ -17760,8 +17708,6 @@ UPDATE sod_theme_rare_nt SET id = 1120002059, name = 'an_ebony_stalker', level =
 INSERT INTO sod_theme_rare_nt SELECT * FROM npc_types WHERE id = 456150;
 )SODRARE146" R"SODRARE146A(
 UPDATE sod_theme_rare_nt SET id = 1120002060, name = 'Eliowie_Dawnheart', level = 80, hp = 150000, mana = 0, loottable_id = 1520008380, merchant_id = 0 WHERE id = 456150;
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO sod_theme_rare_nt SELECT * FROM npc_types WHERE id = 456150;
 UPDATE sod_theme_rare_nt SET id = 1120002061, name = 'Groomb_Mystseer', level = 80, hp = 150000, mana = 0, loottable_id = 1520008381, merchant_id = 0 WHERE id = 456150;
 INSERT INTO sod_theme_rare_nt SELECT * FROM npc_types WHERE id = 456150;
@@ -17913,8 +17859,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
     (1520008380,17313,6,0,100,0,0,0,1,0,0,-1,-1);
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008343,'sod_theme_hills_nightstalker',1000000,5000000,0,0);
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008381,'sod_theme_hills_nightstalker_drop');
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008343,1520008381,1,0,0,100);
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
@@ -18063,8 +18007,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008361,'sod_theme_megrima',1000000,5000000,0,0);
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008399,'sod_theme_megrima_drop');
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008361,1520008399,1,0,0,100);
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
     (1520008399,105513,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -18212,8 +18154,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008379,'sod_theme_ebony_stalker',1000000,5000000,0,0);
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008417,'sod_theme_ebony_stalker_drop');
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008379,1520008417,1,0,0,100);
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
     (1520008417,106942,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -18364,8 +18304,6 @@ INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008664,11
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008664,'oldblackburrow',0,93,-314,47,0,3600);
 
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008665,'sod_theme_rare_garght',0,0,3600,1800,0);
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008665,1120002015,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008665,'oldblackburrow',0,140,-225,47,0,3600);
 
@@ -18506,8 +18444,6 @@ INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`d
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008699,1120002049,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008699,'bertoxtemple',0,66,26,2,0,3600);
 
-")SODRARE146"
- R"SODRARE146(
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008700,'sod_theme_rare_steward',0,0,3600,1800,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008700,1120002050,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008700,'bertoxtemple',0,113,115,2,0,3600);
@@ -18599,7 +18535,7 @@ INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`res
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008722,'sod_theme_rare_kravek',0,0,3600,1800,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008722,1120002072,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008722,'oldcommons',0,2664,368,-20,0,3600);
-")SODRARE146F",
+)SODRARE146F",
 		.content_schema_update = false,
 	},
 
@@ -18754,8 +18690,6 @@ INSERT INTO sod_kunark_rare_nt SELECT * FROM npc_types WHERE id = 453038;
 UPDATE sod_kunark_rare_nt SET id = 1120002106, name = 'Louko', level = 85, hp = 250000, mana = 0, loottable_id = 1520008426, merchant_id = 0, faction_amount = -25 WHERE id = 453038;
 )SODKUN147" R"SODKUN147A(
 INSERT INTO sod_kunark_rare_nt SELECT * FROM npc_types WHERE id = 452251;
-")SODKUN147"
- R"SODKUN147(
 UPDATE sod_kunark_rare_nt SET id = 1120002107, name = 'Mordid', level = 82, hp = 200000, mana = 0, loottable_id = 1520008427, merchant_id = 0, faction_amount = -25 WHERE id = 452251;
 INSERT INTO sod_kunark_rare_nt SELECT * FROM npc_types WHERE id = 453003;
 UPDATE sod_kunark_rare_nt SET id = 1120002108, name = 'Oracao', level = 84, hp = 240000, mana = 0, loottable_id = 1520008428, merchant_id = 0, faction_amount = -25 WHERE id = 453003;
@@ -18903,8 +18837,6 @@ INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008448,'sod_kunark_keymaster_dr
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008409,1520008448,1,0,0,100);
 )SODKUN147A" R"SODKUN147B(
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
-")SODKUN147"
- R"SODKUN147(
     (1520008448,105737,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008448,105755,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008448,106237,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -19056,8 +18988,6 @@ INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUE
 )SODKUN147B" R"SODKUN147C(
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008466,'sod_kunark_mordid_drop');
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008427,1520008466,1,0,0,100);
-")SODKUN147"
- R"SODKUN147(
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
     (1520008466,105720,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008466,105741,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -19199,8 +19129,6 @@ INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008751,11
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008751,'oldkurn',0,-316.38,-197.62,140.0,0,3600);
 
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008752,'sod_kunark_rare_cosensal',0,0,3600,1800,0);
-")SODKUN147"
- R"SODKUN147(
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008752,1120002102,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008752,'oldkurn',0,-285.12,-65.38,152.88,0,3600);
 
@@ -19231,7 +19159,7 @@ INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`res
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008759,'sod_kunark_rare_hilith',0,0,3600,1800,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008759,1120002109,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008759,'oldkurn',0,86.5,96.75,2.88,0,3600);
-")SODKUN147D",
+)SODKUN147D",
 		.content_schema_update = false,
 	},
 
@@ -19446,8 +19374,6 @@ INSERT INTO `task_activities` (taskid,activityid,req_activity_id,step,activityty
 (303153,1,0,2,2,'the Shivstalker thieves',0,5,'the Shivstalker thieves','475050','','',0,0,0,0,0,0,0,'-1','0','toskirakk',-1,0,0),
 )SODRAT150" R"SODRAT150A(
 (303153,2,1,3,2,'Basta Shivstalker',0,1,'Basta Shivstalker','475053','','',0,0,0,0,0,0,0,'-1','0','toskirakk',-1,0,0),
-")SODRAT150"
- R"SODRAT150(
 (303153,3,2,4,3,'Basta Shivstalker''s Head',0,1,'Basta Shivstalker''s Head','','88350','',0,0,0,0,0,0,0,'-1','0','toskirakk',-1,0,0),
 (303153,4,3,5,4,'Muskorr Agitarr',0,1,'Muskorr Agitarr','475046','','',0,0,0,0,0,0,0,'-1','0','',-1,0,0),
 (303153,5,4,6,2,'Kuddor Gakk',0,1,'Kuddor Gakk','475055','','',0,0,0,0,0,0,0,'-1','0','toskirakk',-1,0,0),
@@ -19568,8 +19494,6 @@ INSERT INTO sod_rathe_rare_nt SELECT * FROM npc_types WHERE id = 476102;
 )SODRAT150A" R"SODRAT150B(
 UPDATE sod_rathe_rare_nt SET id = 1120002132, name = 'Mauk_Peskysnout', level = 86, hp = 280000, mana = 0, loottable_id = 1520008452, merchant_id = 0, faction_amount = -25 WHERE id = 476102;
 INSERT INTO sod_rathe_rare_nt SELECT * FROM npc_types WHERE id = 476078;
-")SODRAT150"
- R"SODRAT150(
 UPDATE sod_rathe_rare_nt SET id = 1120002133, name = 'Perd_Kraknakk', level = 86, hp = 280000, mana = 0, loottable_id = 1520008453, merchant_id = 0, faction_amount = -25 WHERE id = 476078;
 INSERT INTO sod_rathe_rare_nt SELECT * FROM npc_types WHERE id = 476103;
 UPDATE sod_rathe_rare_nt SET id = 1120002134, name = 'Provost_Vokk_Raskk', level = 87, hp = 300000, mana = 0, loottable_id = 1520008454, merchant_id = 0, faction_amount = -25 WHERE id = 476103;
@@ -19716,8 +19640,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008444,'sod_rathe_auridont',1000000,5000000,0,0);
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008483,'sod_rathe_auridont_drop');
-")SODRAT150"
- R"SODRAT150(
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008444,1520008483,1,0,0,100);
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
     (1520008483,105825,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -19871,8 +19793,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
     (1520008500,105819,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008500,105852,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008500,106319,1,0,25,0,0,0,1,0,0,-1,-1),
-")SODRAT150"
- R"SODRAT150(
     (1520008500,106352,1,0,15,0,0,0,1,0,0,-1,-1);
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008462,'sod_rathe_yozan',1000000,5000000,0,0);
@@ -20014,10 +19934,8 @@ INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`res
 
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008792,'sod_rathe_rare_yozan',0,0,3600,1800,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008792,1120002142,100);
-")SODRAT150"
- R"SODRAT150(
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008792,'rathechamber',0,-575.5,886.0,-38.25,0,3600);
-")SODRAT150E",
+)SODRAT150E",
 		.content_schema_update = false,
 	},
 
@@ -20252,8 +20170,6 @@ INSERT INTO `tasks` (id,type,duration,duration_code,title,description,reward_tex
 (303184,0,0,0,'Favors of the Hopelost','Citykeeper Nardic tends the hopeless. Carry word to the lookouts and bring back two babel crystal shards from the castigators as proof the roads are watched.','Experience','',0,250000,0,0,0,75,0,0,0,0,0,0,'',0,0,0,0,0,-1,0,1),
 
 )SODDIS152" R"SODDIS152A((303185,0,0,0,'A Limit to Despair','Nardic wants no ceremony, only confirmation. Speak with Givrund and Ziven, then tell Nardic the city still has hands to save it.','Experience','',0,250000,0,0,0,75,0,0,0,0,0,0,'',0,0,0,0,0,-1,0,1),
-")SODDIS152"
- R"SODDIS152(
 (303186,0,0,0,'The Missing Chalice','Givrund''s devotional chalice went to the acolytes'' altar. Acolyte Torsk carried it -- reclaim it from him and return.','Experience','',0,250000,0,0,0,75,0,0,0,0,0,0,'',0,0,0,0,0,-1,0,1);
 
 INSERT INTO `task_activities` (taskid,activityid,req_activity_id,step,activitytype,target_name,goalmethod,goalcount,description_override,npc_match_list,item_id_list,item_list,dz_switch_id,min_x,min_y,min_z,max_x,max_y,max_z,skill_list,spell_list,zones,zone_version,optional,list_group) VALUES
@@ -20375,8 +20291,6 @@ DROP TEMPORARY TABLE sod_disco_rare_nt;
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008463,'sod_disco_chaxyl',1000000,5000000,0,0);
 INSERT INTO `lootdrop` (`id`,`name`) VALUES (1520008503,'sod_disco_chaxyl_drop');
-")SODDIS152"
- R"SODDIS152(
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (1520008463,1520008503,1,0,0,100);
 INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_item`,`chance`,`disabled_chance`,`trivial_min_level`,`trivial_max_level`,`multiplier`,`npc_min_level`,`npc_max_level`,`min_expansion`,`max_expansion`) VALUES
     (1520008503,105928,1,0,25,0,0,0,1,0,0,-1,-1),
@@ -20530,8 +20444,6 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
     (1520008520,105903,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008520,105941,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008520,106403,1,0,25,0,0,0,1,0,0,-1,-1),
-")SODDIS152"
- R"SODDIS152(
     (1520008520,106441,1,0,15,0,0,0,1,0,0,-1,-1);
 
 INSERT INTO `loottable` (`id`,`name`,`mincash`,`maxcash`,`avgcoin`,`done`) VALUES (1520008481,'sod_disco_chainrender',1000000,5000000,0,0);
@@ -20678,8 +20590,6 @@ INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`d
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008805,1120002155,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008805,'olddranik',0,964.0,1056.0,90.0,0,3600);
 
-")SODDIS152"
- R"SODDIS152(
 INSERT INTO `spawngroup` (`id`,`name`,`spawn_limit`,`dist`,`delay`,`mindelay`,`despawn`) VALUES (1520008806,'sod_disco_rare_ulkat',0,0,3600,1800,0);
 INSERT INTO `spawnentry` (`spawngroupID`,`npcID`,`chance`) VALUES (1520008806,1120002156,100);
 INSERT INTO `spawn2` (`spawngroupID`,`zone`,`version`,`x`,`y`,`z`,`heading`,`respawntime`) VALUES (1520008806,'olddranik',0,1364.12,766.75,136.5,0,3600);
@@ -20759,7 +20669,7 @@ INSERT INTO `lootdrop_entries` (`lootdrop_id`,`item_id`,`item_charges`,`equip_it
     (1520008535,106405,1,0,25,0,0,0,1,0,0,-1,-1),
     (1520008535,106436,1,0,15,0,0,0,1,0,0,-1,-1);
 INSERT INTO `loottable_entries` (`loottable_id`,`lootdrop_id`,`multiplier`,`droplimit`,`mindrop`,`probability`) VALUES (94826,1520008535,1,0,0,100);
-")SODDIS152D",
+)SODDIS152D",
 		.content_schema_update = false,
 	},
 	// ------------------------------------------------------------------------------------------------
@@ -41832,7 +41742,7 @@ ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VAL
 INSERT INTO npc_faction_entries (npc_faction_id,faction_id,value,npc_value,temp) VALUES
 (30398002,1111,-20,0,0)
 ON DUPLICATE KEY UPDATE value=VALUES(value),npc_value=VALUES(npc_value),temp=VALUES(temp);
---2011-revised archived Mines guide: Scar drops three separate shield copies.
+-- 2011-revised archived Mines guide: Scar drops three separate shield copies.
 UPDATE lootdrop_entries SET multiplier=3 WHERE lootdrop_id=120970 AND item_id=85744;
 COMMIT;
 )ROF302C",
@@ -59890,5 +59800,6445 @@ UPDATE `nms_plot`
     OR `house_heading` IS NOT NULL;
 )HOUSEPOSE411",
 		.content_schema_update = false,
+	},
+
+	// v415 - Loot distribution master rule.
+	//
+	// One switch for every loot style this server runs: 0 native corpse looting, 1 the /nmsloot
+	// personal offers flow that has been live, 2 instant 1-100 roll per item (the winner is
+	// offered the item), 3 random recipient per item, 4 party/raid leader takes every item.
+	// Modes 1-4 strip the corpse's loot-table items (quest-added items stay, lootdrop_id 0) and
+	// split the corpse coin; 2/3 draw from the raid loot-policy set plus the credited killer;
+	// 4 designates the raid leader, then a LeaderSelected looter, then the group leader, then the
+	// credited player.
+	//
+	// Custom:NmsLootOffers is superseded. It stays declared so old rows keep loading, but the
+	// zone code no longer reads it; this copies its live value once, so a server that had offers
+	// on stays on the offers flow and an install without the row lands on native looting. The
+	// compiled default is 0 (ruletypes.h), so an install that only ever boots the binary gets
+	// native looting rather than a window-less offers flow.
+	//
+	// Idempotent: the check returns a row only while Custom:LootSystem is absent, and the payload
+	// is INSERT IGNORE so a hand-set mode is never overwritten.
+	// Twin: utils/sql/20261114_loot_system_rule_v415.sql
+	// Rollback: utils/sql/20261114_loot_system_rule_v415_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 415,
+		.description = "20261114_loot_system_rule_v415",
+		.check = "SELECT 1 FROM (SELECT 1) AS one LEFT JOIN rule_values rv ON rv.ruleset_id = 1 AND rv.rule_name = 'Custom:LootSystem' WHERE rv.rule_name IS NULL LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"LOOTSYSTEM415(
+SET NAMES utf8mb4;
+
+INSERT IGNORE INTO `rule_values` (`ruleset_id`,`rule_name`,`rule_value`,`notes`)
+SELECT 1,
+       'Custom:LootSystem',
+       CASE WHEN LOWER(COALESCE(rv.`rule_value`, '')) IN ('true','1') THEN '1' ELSE '0' END,
+       'Loot distribution: 0=off (native corpse looting), 1=/nmsloot personal offers, 2=instant 1-100 roll per item, 3=random recipient per item, 4=party/raid leader takes all. Supersedes Custom:NmsLootOffers.'
+  FROM (SELECT 1) AS one
+  LEFT JOIN `rule_values` rv
+         ON rv.`ruleset_id` = 1 AND rv.`rule_name` = 'Custom:NmsLootOffers';
+)LOOTSYSTEM415",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// rare_creature: the player-facing "rare spawn" flag. Kept separate from
+	// rare_spawn, which v101 uses for Ascendant shard eligibility (2,974 raid
+	// targets / named). The consider line reads rare_creature, so it can never
+	// fire on a raid boss just because the boss can drop a shard.
+	// Twin: utils/sql/20261114_rare_creature_column_v413.sql
+	// Rollback: utils/sql/20261114_rare_creature_column_v413_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 413,
+		.description = "20261114_rare_creature_column_v413",
+		.check = "SHOW COLUMNS FROM `npc_types` LIKE 'rare_creature'",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+ALTER TABLE `npc_types` ADD COLUMN `rare_creature` TINYINT NOT NULL DEFAULT 0;
+)",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// Stamp the shipped rare bands. Population and per-band counts:
+	// docs/rare_creature_stamp_population.md. Idempotent: only rows still at 0.
+	// Twin: utils/sql/20261114_rare_creature_stamps_v414.sql
+	// Rollback: utils/sql/20261114_rare_creature_stamps_v414_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 414,
+		.description = "20261114_rare_creature_stamps_v414",
+		.check = "SELECT 1 FROM npc_types WHERE id = 27168 AND rare_creature = 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"(
+UPDATE `npc_types`
+   SET `rare_creature` = 1
+ WHERE `rare_creature` = 0
+   AND (
+        `id` IN (18142, 26000, 27148, 27149, 27152, 27168, 128089, 151255,
+                163045, 163046, 163172, 340033, 340034, 340400, 397904)
+     OR `id` BETWEEN 1120002010 AND 1120002171
+     OR `id` BETWEEN 1120002200 AND 1120002299
+     OR `id` BETWEEN 1120002300 AND 1120002384
+   );
+)",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v416 (2026-11-14) -- potimea: the clocktower's big machine dial renders
+	// in the Forsaken Hourglass arena again.
+	// The v9 arena has exactly one doors row: the invisible doorid-44 exit
+	// sink. Zone::LoadZoneDoors only falls back to the shared zone's doors
+	// when the version's own load is EMPTY, so that one row defeats the
+	// fallback and none of the shared zone's door models have ever rendered
+	// inside the instance. The big clockwork machine dial -- doors doorid 1,
+	// POITMMCHN500, (0, 0, 179.752) heading 128 size 100 -- exists in
+	// versions 0 and 100 only; v357 built the "bare clocktower-top arena"
+	// without cloning it, and v409's cleanup left the instance with zero
+	// visible door geometry. This clones the shared-zone machine row into
+	// version 9 at its exact spot; the doorid-44 sink stays invisible (it is
+	// the click potimea/player.lua's door_id == 44 instance branch resolves
+	// against), and clicks on the machine land in player.lua's
+	// door_id == 1 branch, same as the shared zone.
+	// Version 412 was consumed and re-based away earlier on 2026-11-14; this
+	// takes the next free number instead of reusing it.
+	// Idempotent: the defensive DELETE clears any prior v9 clone, the INSERT
+	// re-creates exactly one.
+	// Twin: utils/sql/20261114_potimea_v9_machine_dial_v416.sql (keep in sync).
+	// Rollback: utils/sql/20261114_potimea_v9_machine_dial_v416_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 416,
+		.description = "20261114_potimea_v9_machine_dial_v416",
+		.check = "SELECT id FROM doors WHERE zone = 'potimea' AND doorid = 1 AND version = 9 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"PTIMEAV9DIAL416(
+DELETE FROM doors WHERE zone = 'potimea' AND doorid = 1 AND version = 9;
+
+INSERT INTO doors (doorid, zone, version, name, pos_y, pos_x, pos_z, heading,
+                   opentype, guild, lockpick, keyitem, nokeyring, triggerdoor,
+                   triggertype, disable_timer, doorisopen, door_param, dest_zone,
+                   dest_instance, dest_x, dest_y, dest_z, dest_heading,
+                   invert_state, incline, size, buffer, client_version_mask,
+                   is_ldon_door, close_timer_ms, dz_switch_id, min_expansion,
+                   max_expansion, content_flags, content_flags_disabled)
+SELECT doorid, zone, 9, name, pos_y, pos_x, pos_z, heading,
+       opentype, guild, lockpick, keyitem, nokeyring, triggerdoor,
+       triggertype, disable_timer, doorisopen, door_param, dest_zone,
+       dest_instance, dest_x, dest_y, dest_z, dest_heading,
+       invert_state, incline, size, buffer, client_version_mask,
+       is_ldon_door, close_timer_ms, dz_switch_id, min_expansion,
+       max_expansion, content_flags, content_flags_disabled
+FROM doors
+WHERE zone = 'potimea' AND doorid = 1 AND version = 0
+LIMIT 1;
+)PTIMEAV9DIAL416",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v418 (2026-11-14) -- eighteen AA rank restorations from the developed
+	// fork, re-levelled to our cap.
+	// Source batches: utils/sql/aa/2026_11_05_*.sql in the fork (they carry
+	// level_req 88-95 for a level-100 server; Character:MaxLevel here is 85,
+	// so every rank is re-authored at level_req 85).
+	// Line selection: each duplicated AA name has a purchasable line
+	// (grant_only = 0) plus grant-only +20000 rebuild twins. IsBetterAALine
+	// prefers the purchasable line before comparing strength, ranks or
+	// expansion, and MigrateDuplicateAALines folds onto it, so every rank
+	// below continues a grant_only = 0 line.
+	// Chain handling: each new rank id is the id the line's terminal row
+	// already points at (dangling next_id from the pruned rank). The
+	// INSERT ... SELECT is driven by that pointer, so it fills only the gap
+	// that exists and needs no prev_id/next_id surgery.
+	// Expansion stays 16 (highest in use here; the fork tags 17/18). SIDs,
+	// spell_type and recast_time inherit from the preceding rank; effect rows
+	// are copied for the five spell-less lines.
+	// Twin: utils/sql/20261114_aa_missing_rank_relevel_85_v418.sql (keep in sync).
+	// Rollback: utils/sql/20261114_aa_missing_rank_relevel_85_v418_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 418,
+		.description = "20261114_aa_missing_rank_relevel_85_v418",
+		.check = "SELECT id FROM aa_ranks WHERE id = 13719 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"AA418(
+-- v418 (2026-11-14) -- AA rank restorations from the developed fork, re-levelled to
+-- our cap.
+--
+-- Source: nightstalker6669/EQEmu develop utils/sql/aa/2026_11_05_*.sql (18 batches). Their
+-- rows carry level_req 88-95 because they target a level-100 server; our Character:MaxLevel
+-- is 85, so each rank is re-authored here at level_req 85 (the client still shows one rank
+-- per purchase; only the requirement moves).
+--
+-- Line selection: every duplicated AA name has a purchasable line (grant_only = 0) plus
+-- grant-only rebuild twins (grant_only = 1, +20000 ids). Client::IsBetterAALine prefers the
+-- purchasable line before it compares strength, ranks or expansion, so the purchasable line
+-- is the one the AA window shows and the one MigrateDuplicateAALines folds onto. Each rank
+-- below therefore continues a grant_only = 0 line, never a grant-only twin.
+--
+-- Chain handling: each target rank id is the id the line's terminal row ALREADY points at
+-- (a dangling next_id left by the pruned rank). The INSERT ... SELECT is driven by that
+-- pointer, so it can only fill the gap that exists and needs no prev_id/next_id surgery:
+-- a wrong or already-filled pointer inserts nothing.
+--
+-- Expansion stays 16 (our highest in use); the fork tags these 17/18. SIDs, spell_type and
+-- recast_time are inherited from the preceding rank. Effect rows are copied for the five
+-- spell-less lines (Improved Burst of Life, Hastened Group Guardian, Hastened Harmonious
+-- Arrow, Hastened Empathic Fury, Twinheal); the rest carry their effect in the bound spell.
+--
+-- Idempotent: NOT EXISTS guard per rank; re-running inserts nothing.
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261114_aa_missing_rank_relevel_85_v418_rollback.sql
+
+-- Auspice of the Hunter (ability 462)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10742, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 23554, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10741 AND `next_id` = 10742
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10742);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10742, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10741
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10742);
+
+-- Bladed Song (ability 669)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13491, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 30743, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13490 AND `next_id` = 13491
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13491);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13491, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13490
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13491);
+
+-- Convergence of Spirits (ability 519)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10094, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 30793, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10093 AND `next_id` = 10094
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10094);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10094, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10093
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10094);
+
+-- Dance of Blades (ability 359)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13497, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 11, 85, 30749, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13496 AND `next_id` = 13497
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13497);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13497, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13496
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13497);
+
+-- Dirge of the Sleepwalker (ability 3701)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13506, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 13, 85, 30758, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13505 AND `next_id` = 13506
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13506);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13506, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13505
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13506);
+
+-- Fortify Companion (ability 3707)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13292, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 9, 85, 30642, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13291 AND `next_id` = 13292
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13292);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13292, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13291
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13292);
+
+-- Frenzied Burnout (ability 60)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13719, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 31590, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13718 AND `next_id` = 13719
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13719);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13719, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13718
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13719);
+
+-- Frost Arrows (ability 290)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13536, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 11, 85, 30778, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10777 AND `next_id` = 13536
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13536);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13536, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10777
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13536);
+
+-- Group Guardian of the Forest (ability 873)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13543, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 30785, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13542 AND `next_id` = 13543
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13543);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13543, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13542
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13543);
+
+-- Guardian of the Forest (ability 184)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10761, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 23641, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10760 AND `next_id` = 10761
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10761);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10761, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10760
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10761);
+
+-- Hastened Empathic Fury (ability 454)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 12823, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 0, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 12822 AND `next_id` = 12823
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 12823);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 12823, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 12822
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 12823);
+
+-- Hastened Group Guardian of the Forest (ability 921)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10716, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 0, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10715 AND `next_id` = 10716
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10716);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10716, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10715
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10716);
+
+-- Hastened Harmonious Arrow (ability 925)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10732, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 0, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10731 AND `next_id` = 10732
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10732);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10732, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10731
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10732);
+
+-- Improved Burst of Life (ability 999)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 7769, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 0, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 7768 AND `next_id` = 7769
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 7769);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 7769, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 7768
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 7769);
+
+-- Outrider's Accuracy (ability 3804)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 14113, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 32330, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 14112 AND `next_id` = 14113
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14113);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 14113, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 14112
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14113);
+
+-- Poison Arrows (ability 927)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10738, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 12, 85, 23634, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 10737 AND `next_id` = 10738
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10738);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 10738, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 10737
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10738);
+
+-- Prolonged Destruction (ability 452)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 14339, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 15, 85, 32383, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 14338 AND `next_id` = 14339
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14339);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 14339, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 14338
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14339);
+
+-- Twinheal (ability 385)
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13412, `upper_hotkey_sid`, `lower_hotkey_sid`, `title_sid`, `desc_sid`, 18, 85, 0, `spell_type`, `recast_time`, 16, `id`, -1
+  FROM `aa_ranks` WHERE `id` = 13411 AND `next_id` = 13412
+   AND NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13412);
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT 13412, `slot`, `effect_id`, `base1`, `base2` FROM `aa_rank_effects` WHERE `rank_id` = 13411
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13412);
+)AA418",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v419 (2026-11-14) -- Journeyman III-V for the four mercenary roles, and
+	// Hadya sells Shissar only.
+	// Source: the developed fork's utils/sql/mercenary/005 (110/120/130% of
+	// the same class/clientlevel Journeyman II row). Our twelve class stubs
+	// (8/9/10 tank, 18/19/20 healer, 28/29/30 melee, 38/39/40 caster) already
+	// exist with zero stats and zero templates; this fills them rather than
+	// inserting new npc types.
+	// SoD lock: already in force and unchanged -- GetSoDMercTierCap() reads
+	// the '<accountid>-sod-merc-tier' bucket (1-5) and CheckCanHireMerc refuses
+	// a template whose merc_subtypes.tier_id exceeds it, so III/IV/V need 3/4/5.
+	// Hadya (npc 202418, template 27) was the one multi-race broker and sat at
+	// 99 entries -- one below MAX_MERC 100 -- so three more tiers would have
+	// overflowed the fixed merc merchant packet and the window would send
+	// nothing. Her 88 non-Shissar listings are trimmed by explicit id, leaving
+	// Shissar (race 696) plus its new III-V rows: 99 -> 14. The nineteen race
+	// liaisons sell one race each and go 44 -> 56; max shop after this is 56.
+	// Expected: +1,020 merc_stats, +366 merc_templates, 1,232 listings total.
+	// Twin: utils/sql/20261114_merc_journeyman_3_5_v419.sql (keep in sync).
+	// Rollback: utils/sql/20261114_merc_journeyman_3_5_v419_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 419,
+		.description = "20261114_merc_journeyman_3_5_v419",
+		.check = "SELECT merc_npc_type_id FROM merc_stats WHERE merc_npc_type_id = 8 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"MERC419(
+-- v419 (2026-11-14) -- Journeyman III-V content, and Hadya sells Shissar only.
+--
+-- Source: nightstalker6669/EQEmu develop utils/sql/mercenary/005_complete_journeyman_ranks.sql
+-- (110/120/130% of the same class/clientlevel Journeyman II row). That script maps four
+-- tier-II rows onto the four class stubs; our DB already carries those twelve stub npc types
+-- (8/9/10 tank, 18/19/20 healer, 28/29/30 melee, 38/39/40 caster), each with zero stats and
+-- zero templates, so this fills them instead of inserting new npc types.
+--
+-- SoD lock: unchanged and already in force. Client::GetSoDMercTierCap() reads the
+-- '<accountid>-sod-merc-tier' bucket (1-5, default 1) and CheckCanHireMerc refuses any
+-- template whose merc_subtypes.tier_id exceeds it, so Journeyman III/IV/V need bucket 3/4/5.
+--
+-- Hadya (npc 202418, merc_merchant_template 27) was the only multi-race broker and carried 99
+-- entries -- one below MAX_MERC 100 -- so three more tiers there would have overflowed the
+-- fixed merc merchant packet and Client::Handle_OP_MercenaryMerchantList would send nothing.
+-- Her 88 non-Shissar listings are trimmed by explicit id first (99 -> 11), which leaves room
+-- for her Shissar III-V rows (11 -> 14). The nineteen race liaisons sell one race each and go
+-- 44 -> 56; the widest shop after this file is 56.
+--
+-- Idempotent: every INSERT is guarded per target row/shop; re-running the trim removes nothing.
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261114_merc_journeyman_3_5_v419_rollback.sql
+
+-- 1. Hadya: Shissar only (merc_merchant_template 27, npc 202418). The 88 non-Shissar listings
+--    are named explicitly so the rollback can restore exactly these and nothing else.
+DELETE FROM `merc_merchant_template_entries`
+ WHERE `merc_merchant_template_id` = 27
+   AND `merc_template_id` IN (
+     1, 2, 3, 4, 5, 16, 17, 18,
+     19, 20, 21, 22, 27, 28, 132, 133,
+     134, 135, 136, 137, 138, 139, 140, 141,
+     149, 150, 151, 152, 232, 233, 234, 235,
+     236, 247, 248, 286, 287, 288, 289, 290,
+     296, 297, 298, 299, 300, 303, 304, 307,
+     308, 581, 582, 583, 584, 593, 594, 595,
+     596, 657, 658, 659, 660, 661, 662, 663,
+     664, 713, 714, 715, 716, 745, 746, 747,
+     748, 753, 754, 755, 756, 1338, 1339, 1340,
+     1341, 1342, 1343, 1344, 1345, 1346, 1347, 1348
+   );
+
+-- 2. Stats: 110/120/130% of the generic Journeyman II row, per class (tier III/IV/V).
+INSERT INTO `merc_stats` (`merc_npc_type_id`,`clientlevel`,`level`,`hp`,`mana`,`AC`,`ATK`,`STR`,`STA`,`DEX`,`AGI`,`_INT`,`WIS`,`CHA`,`MR`,`CR`,`DR`,`FR`,`PR`,`Corrup`,`mindmg`,`maxdmg`,`attack_count`,`attack_speed`,`attack_delay`,`special_abilities`,`Accuracy`,`hp_regen_rate`,`mana_regen_rate`,`runspeed`,`statscale`,`spellscale`,`healscale`)
+SELECT `m`.`tid`, `clientlevel`, `level`, CASE WHEN `hp` > 0 THEN LEAST(2147483647, FLOOR(CAST(`hp` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `hp` END, CASE WHEN `mana` > 0 THEN LEAST(2147483647, FLOOR(CAST(`mana` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `mana` END, CASE WHEN `AC` > 0 THEN LEAST(32767, FLOOR(CAST(`AC` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `AC` END, CASE WHEN `ATK` > 0 THEN LEAST(8388607, FLOOR(CAST(`ATK` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `ATK` END, CASE WHEN `STR` > 0 THEN LEAST(16777215, FLOOR(CAST(`STR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `STR` END, CASE WHEN `STA` > 0 THEN LEAST(16777215, FLOOR(CAST(`STA` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `STA` END, CASE WHEN `DEX` > 0 THEN LEAST(16777215, FLOOR(CAST(`DEX` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `DEX` END, CASE WHEN `AGI` > 0 THEN LEAST(16777215, FLOOR(CAST(`AGI` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `AGI` END, CASE WHEN `_INT` > 0 THEN LEAST(16777215, FLOOR(CAST(`_INT` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `_INT` END, CASE WHEN `WIS` > 0 THEN LEAST(16777215, FLOOR(CAST(`WIS` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `WIS` END, CASE WHEN `CHA` > 0 THEN LEAST(16777215, FLOOR(CAST(`CHA` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `CHA` END, CASE WHEN `MR` > 0 THEN LEAST(32767, FLOOR(CAST(`MR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `MR` END, CASE WHEN `CR` > 0 THEN LEAST(32767, FLOOR(CAST(`CR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `CR` END, CASE WHEN `DR` > 0 THEN LEAST(32767, FLOOR(CAST(`DR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `DR` END, CASE WHEN `FR` > 0 THEN LEAST(32767, FLOOR(CAST(`FR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `FR` END, CASE WHEN `PR` > 0 THEN LEAST(32767, FLOOR(CAST(`PR` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `PR` END, CASE WHEN `Corrup` > 0 THEN LEAST(32767, FLOOR(CAST(`Corrup` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `Corrup` END, CASE WHEN `mindmg` > 0 THEN LEAST(4294967295, FLOOR(CAST(`mindmg` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `mindmg` END, CASE WHEN `maxdmg` > 0 THEN LEAST(4294967295, FLOOR(CAST(`maxdmg` AS DECIMAL(30,6)) * `m`.`pct` / 100)) ELSE `maxdmg` END, `attack_count`, `attack_speed`, `attack_delay`, `special_abilities`, `Accuracy`, `hp_regen_rate`, `mana_regen_rate`, `runspeed`, `statscale`, `spellscale`, `healscale`
+  FROM `merc_stats` `s`
+  JOIN (SELECT 7 AS src, 8 AS tid, 110 AS pct UNION ALL SELECT 7,9,120 UNION ALL SELECT 7,10,130 UNION ALL SELECT 17,18,110 UNION ALL SELECT 17,19,120 UNION ALL SELECT 17,20,130 UNION ALL SELECT 27,28,110 UNION ALL SELECT 27,29,120 UNION ALL SELECT 27,30,130 UNION ALL SELECT 37,38,110 UNION ALL SELECT 37,39,120 UNION ALL SELECT 37,40,130) `m` ON `m`.`src` = `s`.`merc_npc_type_id`
+ WHERE NOT EXISTS (SELECT 1 FROM `merc_stats` `d` WHERE `d`.`merc_npc_type_id` = `m`.`tid`);
+
+-- 3. Appearance rows: copied from the same generic II row, per (minlevel,maxlevel) range.
+INSERT INTO `merc_armorinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`texture`,`helmtexture`,`armortint_id`,`armortint_red`,`armortint_green`,`armortint_blue`)
+SELECT `m`.`tid`, `a`.`minlevel`, `a`.`maxlevel`, `a`.`texture`, `a`.`helmtexture`, `a`.`armortint_id`, `a`.`armortint_red`, `a`.`armortint_green`, `a`.`armortint_blue`
+  FROM `merc_armorinfo` `a`
+  JOIN (SELECT 7 AS src, 8 AS tid, 110 AS pct UNION ALL SELECT 7,9,120 UNION ALL SELECT 7,10,130 UNION ALL SELECT 17,18,110 UNION ALL SELECT 17,19,120 UNION ALL SELECT 17,20,130 UNION ALL SELECT 27,28,110 UNION ALL SELECT 27,29,120 UNION ALL SELECT 27,30,130 UNION ALL SELECT 37,38,110 UNION ALL SELECT 37,39,120 UNION ALL SELECT 37,40,130) `m` ON `m`.`src` = `a`.`merc_npc_type_id`
+ WHERE NOT EXISTS (SELECT 1 FROM `merc_armorinfo` `d` WHERE `d`.`merc_npc_type_id` = `m`.`tid` AND `d`.`minlevel` = `a`.`minlevel` AND `d`.`maxlevel` = `a`.`maxlevel`);
+
+INSERT INTO `merc_weaponinfo` (`merc_npc_type_id`,`minlevel`,`maxlevel`,`d_melee_texture1`,`d_melee_texture2`,`prim_melee_type`,`sec_melee_type`)
+SELECT `m`.`tid`, `w`.`minlevel`, `w`.`maxlevel`, `w`.`d_melee_texture1`, `w`.`d_melee_texture2`, `w`.`prim_melee_type`, `w`.`sec_melee_type`
+  FROM `merc_weaponinfo` `w`
+  JOIN (SELECT 7 AS src, 8 AS tid, 110 AS pct UNION ALL SELECT 7,9,120 UNION ALL SELECT 7,10,130 UNION ALL SELECT 17,18,110 UNION ALL SELECT 17,19,120 UNION ALL SELECT 17,20,130 UNION ALL SELECT 27,28,110 UNION ALL SELECT 27,29,120 UNION ALL SELECT 27,30,130 UNION ALL SELECT 37,38,110 UNION ALL SELECT 37,39,120 UNION ALL SELECT 37,40,130) `m` ON `m`.`src` = `w`.`merc_npc_type_id`
+ WHERE NOT EXISTS (SELECT 1 FROM `merc_weaponinfo` `d` WHERE `d`.`merc_npc_type_id` = `m`.`tid` AND `d`.`minlevel` = `w`.`minlevel` AND `d`.`maxlevel` = `w`.`maxlevel`);
+
+-- 4. Templates: one per (tier-II template) x (tier III/IV/V), pointing at the class stub.
+--    dbstring keeps its shape and swaps the trailing tier digit ('1010102' -> '1010103').
+INSERT INTO `merc_templates` (`merc_type_id`,`merc_subtype_id`,`merc_npc_type_id`,`dbstring`,`name_type_id`,`clientversion`)
+SELECT DISTINCT `a`.`merc_type_id`, `b`.`merc_subtype_id`, `n`.`merc_npc_type_id`,
+       CONCAT(LEFT(`a`.`dbstring`, LENGTH(`a`.`dbstring`) - 1), `b`.`tier_id`),
+       `a`.`name_type_id`, `a`.`clientversion`
+  FROM `merc_templates` `a`
+  JOIN `merc_types` `y` ON `y`.`merc_type_id` = `a`.`merc_type_id`
+  JOIN `merc_subtypes` `sa` ON `sa`.`merc_subtype_id` = `a`.`merc_subtype_id`
+  JOIN `merc_subtypes` `b` ON `b`.`class_id` = `sa`.`class_id` AND `b`.`tier_id` BETWEEN 3 AND 5
+  JOIN `merc_npc_types` `n` ON `n`.`proficiency_id` = 2 AND `n`.`class_id` = `b`.`class_id` AND `n`.`tier_id` = `b`.`tier_id`
+ WHERE `y`.`proficiency_id` = 2 AND `sa`.`tier_id` = 2
+   AND NOT EXISTS (SELECT 1 FROM `merc_templates` `d` WHERE `d`.`merc_type_id` = `a`.`merc_type_id` AND `d`.`merc_subtype_id` = `b`.`merc_subtype_id`);
+
+-- 5. Shop listings: extend only the catalogues that already sell that race's tier II.
+INSERT INTO `merc_merchant_template_entries` (`merc_merchant_template_id`,`merc_template_id`)
+SELECT DISTINCT `e`.`merc_merchant_template_id`, `nt`.`merc_template_id`
+  FROM `merc_merchant_template_entries` `e`
+  JOIN `merc_templates` `a` ON `a`.`merc_template_id` = `e`.`merc_template_id`
+  JOIN `merc_types` `y` ON `y`.`merc_type_id` = `a`.`merc_type_id`
+  JOIN `merc_subtypes` `sa` ON `sa`.`merc_subtype_id` = `a`.`merc_subtype_id`
+  JOIN `merc_subtypes` `b` ON `b`.`class_id` = `sa`.`class_id` AND `b`.`tier_id` BETWEEN 3 AND 5
+  JOIN `merc_templates` `nt` ON `nt`.`merc_type_id` = `a`.`merc_type_id` AND `nt`.`merc_subtype_id` = `b`.`merc_subtype_id`
+ WHERE `y`.`proficiency_id` = 2 AND `sa`.`tier_id` = 2
+   AND NOT EXISTS (SELECT 1 FROM `merc_merchant_template_entries` `d` WHERE `d`.`merc_merchant_template_id` = `e`.`merc_merchant_template_id` AND `d`.`merc_template_id` = `nt`.`merc_template_id`);
+)MERC419",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v420 (2026-11-14) -- Bazaar glamour vendors: the two Purveyors and
+	// Stablehand Ponyboy become true AlternateCurrency merchants like
+	// Caerulea (class 70, alt_currency_id 6 = Triune of Fate), each seeded
+	// with 20 random cosmetic 'Glamour -' augments at alt_currency_cost 5.
+	// Merchant ids 1000024 (weapon pool, npc 1120001103), 1000025 (armour
+	// pool, npc 1120001110), 1000026 (mixed pool, npc 1120001301). cshome
+	// twin 1120001098 untouched. Ongoing rotation is quest-side: zone boot
+	// or weekly re-rolls these rows (script_init.lua + Stablehand_Ponyboy.pl)
+	// and quest::ReloadMerchants() refreshes the live zone lists.
+	// Twin: utils/sql/20261114_bazaar_glamour_vendors_v420.sql (keep in sync).
+	// Rollback: utils/sql/20261114_bazaar_glamour_vendors_v420_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 420,
+		.description = "20261114_bazaar_glamour_vendors_v420",
+		.check = "SELECT merchantid FROM merchantlist WHERE merchantid = 1000024 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"GLAM420(
+-- v420 (2026-11-14) -- Bazaar glamour vendors: the two Purveyors and Stablehand
+-- Ponyboy become true AlternateCurrency merchants (like Caerulea, npc 1120001186),
+-- each selling a rotating assortment of 20 cosmetic 'Glamour -' augments for
+-- 5 Triune of Fate (alternate_currency 6, item 46779) per piece.
+--
+-- Merchant ids 1000024/1000025/1000026 (Caerulea is 1000023; all three were free):
+--   1000024 -> Purveyor_of_Glamour        (npc 1120001103): weapon glamours
+--   1000025 -> Purveyor_of_Armour_Glamour (npc 1120001110): armour glamours
+--   1000026 -> Stablehand_Ponyboy         (npc 1120001301): weapon + armour mix
+--
+-- Pools are the cosmetic glamour namespaces the glamour system itself defines
+-- (itemtype 54 augment rows, appearance-only, races/classes 65535):
+--   weapon: charmfile = 'ITEMTransAugAll'   (2,365 rows)
+--   armour: charmfile LIKE 'ArmorOrnLea%'   (8,039 rows)
+-- Stat-bearing ornaments (identity charmfiles ITEMTransAug1HS/...) and the
+-- v417 Emperor's Finest gag items are not in these pools.
+--
+-- This file seeds the FIRST random assortment. Ongoing rotation is not done by
+-- migrations -- quests/bazaar/script_init.lua + quests/bazaar/Stablehand_Ponyboy.pl
+-- re-roll these rows on zone boot or weekly (whichever comes first) and then
+-- quest::ReloadMerchants() refreshes the zone's live vendor lists.
+--
+-- The three NPCs carry npc_faction_id 0, so faction_required 0 means no gate on
+-- every buy/list path (client_packet.cpp guards fac != 0; the list path computes
+-- faction_level 0 for faction-less NPCs).
+--
+-- Idempotent: npc_types updates are naturally repeatable; each INSERT guards on
+-- its own merchantid already being stocked. The manifest check (merchantid 1000024
+-- absent) keeps the whole file to a single apply.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261114_bazaar_glamour_vendors_v420_rollback.sql
+
+-- 1. Vendor class: 70 = Class::AlternateCurrencyMerchant (the class the server
+--    hard-gates Handle_OP_AltCurrencyPurchase to), alt_currency_id 6 = Triune of Fate.
+UPDATE npc_types SET class = 70, merchant_id = 1000024, alt_currency_id = 6
+ WHERE id = 1120001103;  -- Purveyor_of_Glamour (bazaar; cshome twin 1120001098 untouched)
+
+UPDATE npc_types SET class = 70, merchant_id = 1000025, alt_currency_id = 6
+ WHERE id = 1120001110;  -- Purveyor_of_Armour_Glamour (bazaar)
+
+UPDATE npc_types SET class = 70, merchant_id = 1000026, alt_currency_id = 6
+ WHERE id = 1120001301;  -- Stablehand_Ponyboy (bazaar)
+
+-- 2. Seed stock: 20 random glamours per vendor at 5 Triunes each.
+--    Row shape mirrors Caerulea's live rows.
+
+INSERT INTO merchantlist
+       (merchantid, slot, item, faction_required, level_required, min_status,
+        max_status, alt_currency_cost, classes_required, probability,
+        bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion,
+        content_flags, content_flags_disabled)
+SELECT 1000024, ROW_NUMBER() OVER (ORDER BY id), id, 0, 0, 0, 255, 5, 65535, 100,
+       '', '', 0, -1, -1, NULL, NULL
+  FROM (
+        SELECT id FROM items
+         WHERE name LIKE 'Glamour - %'
+           AND itemtype = 54
+           AND charmfile = 'ITEMTransAugAll'
+           AND name NOT LIKE 'Summoned%'
+         ORDER BY RAND() LIMIT 20
+       ) weapon_pool
+ WHERE NOT EXISTS (SELECT 1 FROM merchantlist WHERE merchantid = 1000024);
+
+INSERT INTO merchantlist
+       (merchantid, slot, item, faction_required, level_required, min_status,
+        max_status, alt_currency_cost, classes_required, probability,
+        bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion,
+        content_flags, content_flags_disabled)
+SELECT 1000025, ROW_NUMBER() OVER (ORDER BY id), id, 0, 0, 0, 255, 5, 65535, 100,
+       '', '', 0, -1, -1, NULL, NULL
+  FROM (
+        SELECT id FROM items
+         WHERE name LIKE 'Glamour - %'
+           AND itemtype = 54
+           AND charmfile LIKE 'ArmorOrnLea%'
+           AND name NOT LIKE 'Summoned%'
+         ORDER BY RAND() LIMIT 20
+       ) armour_pool
+ WHERE NOT EXISTS (SELECT 1 FROM merchantlist WHERE merchantid = 1000025);
+
+INSERT INTO merchantlist
+       (merchantid, slot, item, faction_required, level_required, min_status,
+        max_status, alt_currency_cost, classes_required, probability,
+        bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion,
+        content_flags, content_flags_disabled)
+SELECT 1000026, ROW_NUMBER() OVER (ORDER BY id), id, 0, 0, 0, 255, 5, 65535, 100,
+       '', '', 0, -1, -1, NULL, NULL
+  FROM (
+        (SELECT id FROM items
+          WHERE name LIKE 'Glamour - %'
+            AND itemtype = 54
+            AND charmfile = 'ITEMTransAugAll'
+            AND name NOT LIKE 'Summoned%')
+        UNION
+        (SELECT id FROM items
+          WHERE name LIKE 'Glamour - %'
+            AND itemtype = 54
+            AND charmfile LIKE 'ArmorOrnLea%'
+            AND name NOT LIKE 'Summoned%')
+        ORDER BY RAND() LIMIT 20
+       ) mixed_pool
+ WHERE NOT EXISTS (SELECT 1 FROM merchantlist WHERE merchantid = 1000026);
+)GLAM420",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v421 (2026-11-14) -- Bazaar: Stablehand Ponyboy's vendor window sells
+	// mounts, not glamours. v420 seeded his merchant list (1000026) with a
+	// mixed glamour assortment alongside the two Purveyors -- too literal.
+	// This replaces 1000026's stock with the same pool his saylink service
+	// rolls (one representative per distinct mount, 'Fast' preferred,
+	// per-row classes_required copied from each item's classes mask), at 5
+	// Triunes each. 1000024/1000025 stay glamour vendors, untouched.
+	// Twin: utils/sql/20261114_bazaar_ponyboy_mount_stock_v421.sql (keep in sync).
+	// Rollback: utils/sql/20261114_bazaar_ponyboy_mount_stock_v421_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 421,
+		.description = "20261114_bazaar_ponyboy_mount_stock_v421",
+		.check = "SELECT ml.merchantid FROM merchantlist ml JOIN items i ON i.id = ml.item JOIN spells_new s ON s.id = i.clickeffect WHERE ml.merchantid = 1000026 AND s.teleport_zone IN (SELECT filename FROM horses) LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"PONY421(
+-- v421 (2026-11-14) -- Bazaar: Stablehand Ponyboy's vendor window sells mounts,
+-- not glamours. The v420 seed gave his merchant list (1000026) a mixed glamour
+-- assortment alongside the two Purveyors; that was too literal a reading of the
+-- request -- Ponyboy is the mount tender, so his window gets the same pool his
+-- saylink service rolls: one representative item per distinct mount, preferring
+-- the 'Fast' variant, with per-row classes_required copied from each item's own
+-- classes mask (class steeds like Holy/Unholy Steed only show for their class,
+-- exactly like the saylink handout). The two Purveyors (1000024/1000025) are
+-- untouched and stay glamour vendors.
+--
+-- Price: 5 Triune of Fate (alternate_currency 6, item 46779) per mount -- the
+-- same $MOUNT_COST his saylink service charges.
+--
+-- Ongoing rotation is quest-side and unchanged in mechanism:
+-- quests/bazaar/Stablehand_Ponyboy.pl re-rolls 1000024/25 (glamour pools) and
+-- 1000026 (mount pool) on zone boot or weekly (whichever comes first), then
+-- quest::ReloadMerchants() refreshes the zone's live vendor lists.
+--
+-- Idempotent: DELETE + the NOT EXISTS guard keep the seed to one assortment;
+-- the manifest check (1000026 sells no mount) keeps the whole file to a single
+-- apply.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261114_bazaar_ponyboy_mount_stock_v421_rollback.sql
+
+-- 1. Drop Ponyboy's v420 glamour seed (glamour aug rows never match a mount:
+--    they carry no mount click effect, so the check below is empty until this
+--    file has run).
+DELETE FROM merchantlist WHERE merchantid = 1000026;
+
+-- 2. Seed 20 random mounts at 5 Triunes each; row shape mirrors Caerulea's
+--    live rows except classes_required, which copies each mount item's own
+--    classes mask (65535 for the common herd, the steed bitmasks for the
+--    class-restricted steeds).
+INSERT INTO merchantlist
+       (merchantid, slot, item, faction_required, level_required, min_status,
+        max_status, alt_currency_cost, classes_required, probability,
+        bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion,
+        content_flags, content_flags_disabled)
+SELECT 1000026, ROW_NUMBER() OVER (ORDER BY id), id, 0, 0, 0, 255, 5, classes, 100,
+       '', '', 0, -1, -1, NULL, NULL
+  FROM (
+        SELECT id, classes FROM (
+            SELECT i.id, i.classes,
+                   ROW_NUMBER() OVER (
+                       PARTITION BY s.teleport_zone
+                       ORDER BY (s.teleport_zone LIKE '%Fast') DESC, i.id ASC
+                   ) AS rn
+            FROM items i
+            JOIN spells_new s ON s.id = i.clickeffect
+            WHERE s.teleport_zone IN (SELECT filename FROM horses)
+              AND i.clicktype = 5
+              AND i.id < 1000000
+              AND i.classes > 0
+        ) ranked
+        WHERE rn = 1
+        ORDER BY RAND() LIMIT 20
+       ) mount_pool
+ WHERE NOT EXISTS (SELECT 1 FROM merchantlist WHERE merchantid = 1000026);
+)PONY421",
+		.content_schema_update = false,
+	},
+	// ------------------------------------------------------------------
+	// v422 (2026-11-15) -- AA rank tail: the nine missing terminal ranks
+	// (Healing Adept 18, Healing Gift 26, Combat Stability 40, Mental Clarity
+	// 30, Expansive Mind 32, Delay Death 32, Hastened Weapon Shield 8,
+	// Hastened Trueshot 8, Mental Stamina 17). Ported from
+	// nightstalker6669/EQEmu-Database migrations/aa/AA011-AA020, re-levelled
+	// to our cap: their rows say level_req 90-95 / expansion 17-18 on a level
+	// 100 server, ours land at level_req 85 / expansion 16 exactly as v418
+	// did for the other eighteen batches. AA017 Twinheal is absent (v418 has
+	// it). Each id is the dangling next_id of an existing line, so the insert
+	// needs no prev/next surgery and cannot mis-fill a live rank.
+	// Twin: utils/sql/20261115_aa_rank_tail_v422.sql (keep in sync).
+	// Rollback: utils/sql/20261115_aa_rank_tail_v422_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 422,
+		.description = "20261115_aa_rank_tail_v422",
+		.check = "SELECT id FROM aa_ranks WHERE id = 13298",
+		.condition = "empty",
+		.match = "",
+		.sql = R"AAT422(
+-- v422 (2026-11-15) -- AA rank tail: the nine missing terminal ranks.
+--
+-- Source: nightstalker6669/EQEmu-Database migrations/aa/AA011-AA020 proposals
+-- (2026_11_05_*.sql). Their rows carry level_req 90-95 and expansion 17/18 because they
+-- target a level-100 server. Our Character:MaxLevel is 85, so like v418 each rank is
+-- re-authored here at level_req 85; expansion stays 16 (our highest in use, the same
+-- choice v418 documents). Cost, SIDs, spell, spell_type and recast_time are taken from
+-- their proposal verbatim -- they are the preceding rank's own values -- and the effect
+-- rows are their postimages.
+--
+-- AA017 Twinheal is deliberately absent: v418 already inserted rank 13412.
+--
+-- Each target id is what the line's terminal row already points at (a dangling next_id
+-- left behind by the pruned rank), so every row here closes a gap that already exists;
+-- no prev_id/next_id surgery is needed, and a wrong or already-filled pointer inserts
+-- nothing.
+--
+-- Idempotent: every insert is guarded on the target row being absent and the predecessor
+-- pointer still being intact. Re-running inserts nothing.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_aa_rank_tail_v422_rollback.sql
+--
+
+-- Healing Adept (ability 18): 13297 already points at 13298 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13298,-1,-1,77,77,12,85,-1,0,0,16,13297,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13298)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13297 AND `next_id` = 13298);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 13298 AS rank_id, 1 AS slot, 125 AS effect_id, 55 AS base1, 55 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 2 AS slot, 137 AS effect_id, 0 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 3 AS slot, 141 AS effect_id, 1 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 4 AS slot, 139 AS effect_id, -6233 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 5 AS slot, 139 AS effect_id, -6265 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 6 AS slot, 125 AS effect_id, 55 AS base1, 55 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 7 AS slot, 137 AS effect_id, 147 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 13298 AS rank_id, 8 AS slot, 141 AS effect_id, 1 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13298)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 13298);
+
+-- Healing Gift (ability 19): 13302 already points at 13303 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13303,-1,-1,80,80,12,85,-1,0,0,16,13302,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13303)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13302 AND `next_id` = 13303);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 13303 AS rank_id, 1 AS slot, 274 AS effect_id, 45 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13303)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 13303);
+
+-- Combat Stability (ability 33): 8440 already points at 8441 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 8441,-1,-1,122,122,13,85,-1,0,0,16,8440,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8441)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8440 AND `next_id` = 8441);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 8441 AS rank_id, 1 AS slot, 259 AS effect_id, 67 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8441)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 8441);
+
+-- Mental Clarity (ability 224): 13313 already points at 13314 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13314,-1,-1,658,658,8,85,-1,0,0,16,13313,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13314)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13313 AND `next_id` = 13314);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 13314 AS rank_id, 1 AS slot, 15 AS effect_id, 30 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13314)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 13314);
+
+-- Expansive Mind (ability 348): 13281 already points at 13282 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13282,-1,-1,1072,1072,12,85,-1,0,0,16,13281,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13282)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13281 AND `next_id` = 13282);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 13282 AS rank_id, 1 AS slot, 318 AS effect_id, 32 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13282)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 13282);
+
+-- Delay Death (ability 335): 8430 already points at 8431 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 8431,-1,-1,1026,1026,10,85,-1,0,0,16,8430,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8431)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8430 AND `next_id` = 8431);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 8431 AS rank_id, 1 AS slot, 328 AS effect_id, 1700 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 8431)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 8431);
+
+-- Hastened Weapon Shield (ability 871): 10770 already points at 10771 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 10771,-1,-1,6751,6751,9,85,-1,0,0,16,10770,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10771)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10770 AND `next_id` = 10771);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 10771 AS rank_id, 1 AS slot, 310 AS effect_id, 1920000 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 10771 AS rank_id, 2 AS slot, 139 AS effect_id, 4519 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 10771)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 10771);
+
+-- Hastened Trueshot (ability 3803): 14101 already points at 14263 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 14263,-1,-1,6355,6355,12,85,-1,0,0,16,14101,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14263)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14101 AND `next_id` = 14263);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 14263 AS rank_id, 1 AS slot, 310 AS effect_id, 2880000 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 2 AS slot, 139 AS effect_id, 4506 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 3 AS slot, 310 AS effect_id, 2880000 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 4 AS slot, 385 AS effect_id, 11122 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 5 AS slot, 385 AS effect_id, 11222 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 6 AS slot, 385 AS effect_id, 11322 AS base1, 0 AS base2
+  UNION ALL
+  SELECT 14263 AS rank_id, 7 AS slot, 385 AS effect_id, 11522 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 14263)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 14263);
+
+-- Mental Stamina (ability 1208): 13318 already points at 13319 (rank gap).
+INSERT INTO `aa_ranks` (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`expansion`,`prev_id`,`next_id`)
+SELECT 13319,-1,-1,8210,8210,10,85,-1,0,0,16,13318,-1
+ WHERE NOT EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13319)
+   AND EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13318 AND `next_id` = 13319);
+
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+SELECT * FROM (
+  SELECT 13319 AS rank_id, 1 AS slot, 97 AS effect_id, 950 AS base1, 0 AS base2
+) e
+ WHERE EXISTS (SELECT 1 FROM `aa_ranks` WHERE `id` = 13319)
+   AND NOT EXISTS (SELECT 1 FROM `aa_rank_effects` WHERE `rank_id` = 13319);
+)AAT422",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v423 (2026-11-15) -- Spell id column widening (upstream update 9329).
+	// We skipped 9329 and our db_version (9332) is already past it, so the
+	// updater can never revisit it; this closes that hole. Latent only: our
+	// highest spell id is 44,041 and the narrowest column holds 65,535.
+	// Runs against the player database (the sentinel check is on
+	// character_buffs); if player and content DBs are ever split, the
+	// blocked_spells / ldon_trap_templates / npc_spells_entries ALTERs in the
+	// twin have to be split out to the content side.
+	// Twin: utils/sql/20261115_spell_id_columns_v423.sql (keep in sync).
+	// Rollback: utils/sql/20261115_spell_id_columns_v423_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 423,
+		.description = "20261115_spell_id_columns_v423",
+		.check = "SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'character_buffs' AND COLUMN_NAME = 'spell_id'",
+		.condition = "contains",
+		.match = "smallint",
+		.sql = R"SPELL423(
+-- v423 (2026-11-15) -- Spell id column widening (upstream update 9329, adapted).
+--
+-- Upstream EQEmu update 9329 "2026_04_27_spell_id_type_correction" widens ten spell-id
+-- columns to INTEGER so a spell id above 32,767 cannot silently truncate. We never took
+-- it: our manifest carries 9326, 9327, 9328 and then jumps to 9331, and db_version is
+-- already 9332, so DatabaseUpdate::UpdateManifest (which only runs entries whose version
+-- equals the counter it is walking) can never revisit 9329. This file closes that hole
+-- as a custom migration.
+--
+-- It is latent insurance, not a live bug: our highest spell id is 44,041 and the widest
+-- of the narrow columns is smallint unsigned (65,535). The day a spell above 65,535
+-- lands, character_buffs/character_spells/character_memmed_spells/npc_spells_entries/
+-- blocked_spells/ldon_trap_templates would truncate silently, so the columns are widened
+-- now while the tables are small.
+--
+-- Deviations from 9329, all deliberate:
+--   * damageshieldtypes.spellid and merc_spell_list_entries.spell_id are already
+--     int(10) unsigned, i.e. wider than INTEGER for any id below 2^31 -- skipped rather
+--     than flipped to signed for no gain.
+--   * our spell_buckets column is named `spellid` (upstream says `spell_id`) and is
+--     bigint(11) unsigned, already wider -- skipped. 9329 as written would fail here.
+--   * blocked_spells.spellid keeps NOT NULL DEFAULT 0; 9329 drops it to NULL. No row is
+--     NULL today and 0 is the "no spell" sentinel this table already uses.
+--   * INTEGER (signed) matches spells_new.id, which is int(11) -- the type every one of
+--     these columns is compared against.
+--
+-- Every MODIFY is a pure widening: no value changes, no index is dropped (MODIFY keeps
+-- the column's position and only the tables' own secondary indexes reference these
+-- columns).
+--
+-- Idempotent by manifest check (character_buffs.spell_id no longer contains 'smallint'),
+-- and re-running the ALTERs is itself harmless.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_spell_id_columns_v423_rollback.sql
+
+-- 1. blocked_spells (mediumint(8) unsigned -> int)
+ALTER TABLE `blocked_spells`
+  MODIFY COLUMN `spellid` INTEGER NOT NULL DEFAULT 0;
+
+-- 2. character_buffs (smallint(10) unsigned, no default -> int, no default)
+ALTER TABLE `character_buffs`
+  MODIFY COLUMN `spell_id` INTEGER NOT NULL;
+
+-- 3. character_memmed_spells (smallint(11) unsigned -> int)
+ALTER TABLE `character_memmed_spells`
+  MODIFY COLUMN `spell_id` INTEGER NOT NULL DEFAULT 0;
+
+-- 4. character_spells (smallint(11) unsigned -> int)
+ALTER TABLE `character_spells`
+  MODIFY COLUMN `spell_id` INTEGER NOT NULL DEFAULT 0;
+
+-- 5. ldon_trap_templates (smallint(5) unsigned -> int)
+ALTER TABLE `ldon_trap_templates`
+  MODIFY COLUMN `spell_id` INTEGER NOT NULL DEFAULT 0;
+
+-- 6. npc_spells_entries (smallint(5) unsigned -> int)
+ALTER TABLE `npc_spells_entries`
+  MODIFY COLUMN `spellid` INTEGER NOT NULL DEFAULT 0;
+)SPELL423",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v424 (2026-11-15) -- Unlock zone 188 tutoriala, the last v40 straggler
+	// (v40 did "expansion <= 14 AND min_status = 255" and its sibling 189
+	// tutorialb is already 0). Cosmetic: tutoriala has one spawn2 row and no
+	// zone_points, so nothing becomes reachable. It only makes the
+	// nms_content_health_check assertion tell the truth.
+	// Twin: utils/sql/20261115_tutorial_zone_unlock_v424.sql (keep in sync).
+	// Rollback: utils/sql/20261115_tutorial_zone_unlock_v424_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 424,
+		.description = "20261115_tutorial_zone_unlock_v424",
+		.check = "SELECT zoneidnumber FROM zone WHERE zoneidnumber = 188 AND short_name = 'tutoriala' AND min_status = 255",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"TUT424(
+-- v424 (2026-11-15) -- Unlock the tutorial zone, closing the last v40 straggler.
+--
+-- v40 ("era zones unlocked through Secrets of Faydwer", manifest line ~1171) ran
+--     UPDATE zone SET min_status = 0 WHERE expansion <= 14 AND min_status = 255;
+-- and 188 tutoriala is still 255 today while its sibling 189 tutorialb is 0, so the row
+-- was either inserted with 255 after v40 ran or restored by a later zone-table import.
+-- utils/sql/nms_content_health_check.sql asserts "v40 eras<=14 still locked at 255
+-- (expect 0)" and this is the one row that makes it fail.
+--
+-- Cosmetic, not a bug: tutoriala has one spawn2 row and no zone_points to or from it, so
+-- no player can reach it by travel either way. This file exists to make the health check
+-- tell the truth rather than to change reachability. If the intent is ever the opposite
+-- (keep tutorial zones locked), revert this file and change the check to exclude
+-- 'tutoriala'/'tutorialb' instead -- do not do both.
+--
+-- Idempotent: the WHERE clause only matches the locked row.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_tutorial_zone_unlock_v424_rollback.sql
+
+UPDATE `zone`
+   SET `min_status` = 0
+ WHERE `zoneidnumber` = 188
+   AND `short_name` = 'tutoriala'
+   AND `version` = 0
+   AND `min_status` = 255;
+)TUT424",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v425 (2026-11-15) -- Baking: Clockwork Observer Boots -> Rock Salt.
+	// Sixteen tradeskill_recipe_entries rows still carry item 65445 (a
+	// non-component boot) where the recipe needs 75856 Rock Salt; the
+	// correction comes from nightstalker6669/EQEmu-Database RRC050, whose
+	// before-state our rows match exactly. Recipes 351-353 share the defect
+	// but are outside that package and stay untouched pending a decision.
+	// Twin: utils/sql/20261115_tradeskill_rock_salt_v425.sql (keep in sync).
+	// Rollback: utils/sql/20261115_tradeskill_rock_salt_v425_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 425,
+		.description = "20261115_tradeskill_rock_salt_v425",
+		.check = "SELECT id FROM tradeskill_recipe_entries WHERE id = 12394 AND item_id = 65445",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"ROCK425(
+-- v425 (2026-11-15) -- Baking: Clockwork Observer Boots -> Rock Salt (16 recipes).
+--
+-- Source: nightstalker6669/EQEmu-Database migrations/tradeskills/recipes/RRC050
+-- ("Berry Ice Cream and the Rock Salt corrections"). Their before/after postimages name
+-- these sixteen tradeskill_recipe_entries rows, and our DB is still on the before: each
+-- of them carries item 65445 Clockwork Observer Boots (itemclass 0, i.e. not a tradeskill
+-- component at all) where the recipe needs item 75856 Rock Salt.
+--
+-- Their package also repairs the same column shift elsewhere; this file takes only the
+-- 65445 -> 75856 statement, because that is the one whose preimage our DB matches exactly
+-- (all sixteen ids present with 65445, and both item identities verify:
+--   65445 Clockwork Observer Boots, 75856 Rock Salt, 72502 Ice Cream Churn bagtype 54/8).
+--
+-- Not included: our recipes 351, 352 and 353 (entry ids 2717, 2726, 2731) carry item
+-- 65445 too. They are outside RRC050's scope -- the same recipe-level defect, three older
+-- rows -- and are left untouched pending a decision of their own.
+--
+-- Their guard also asserts the Ice Cream Churn row is itemclass 1 / bagtype 54 /
+-- bagslots 8; that is already true here (checked 2026-11-15).
+--
+-- Idempotent: the item_id = 65445 predicate means a re-run matches nothing.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_tradeskill_rock_salt_v425_rollback.sql
+
+UPDATE `tradeskill_recipe_entries`
+   SET `item_id` = 75856
+ WHERE `item_id` = 65445
+   AND `id` IN (12394,12437,13396,13422,13431,13456,13464,13487,13503,13521,13530,13578,13701,13732,15147,15164);
+)ROCK425",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v426 (2026-11-15) -- Spirit Shroud catalog part 1: Imp Wizard 5.
+	// Their 004, transcribed verbatim into our tables. template 20105
+	// (progression 2 Aberrations / branch 1, level 5, race 464, wizard, 93 hp
+	// / 152 mana / 100 endurance), the seven free Monster AAs 48000-48006,
+	// one rank effect (48000 slot 1 effect 426 = eight spell slots) and the
+	// seven ability links. First real content in the v390/v391 tables, which
+	// have been empty since 2026-11-11. AA band 48000-48006 (not 50000) because
+	// the RoF2 window only enumerates rank ids below 49999 -- their 007 is the
+	// upgrade path for installs that took the older 50xxx form; we never did.
+	// Twin: utils/sql/20261115_shroud_imp_wizard_v426.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_imp_wizard_v426_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 426,
+		.description = "20261115_shroud_imp_wizard_v426",
+		.check = "SELECT 1 FROM (SELECT 1) x WHERE (SELECT COUNT(*) FROM `aa_ranks` WHERE `id` BETWEEN 48000 AND 48006) < 7 OR (SELECT COUNT(*) FROM `spirit_shroud_abilities` WHERE `template_id` = 20105) < 7 OR (SELECT COUNT(*) FROM `spirit_shroud_templates` WHERE `id` = 20105) < 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"SHROUD426(
+-- v426 (2026-11-15) -- Spirit Shroud catalog, part 1: Imp Wizard 5 (their 004).
+--
+-- Source: nightstalker6669/EQEmu-Database migrations/shroud/utils/sql/shroud/
+-- 004_live_imp_wizard.sql. Rows are transcribed byte-for-byte from that file; only the
+-- target tables changed (their staging tables shroud_live_expected_* are not created
+-- here) and each statement gained the ON DUPLICATE KEY UPDATE their own apply step uses.
+--
+-- This is the first real content in our native shroud tables: our v390/v391 schema has
+-- been live since 2026-11-11 with spirit_shroud_templates, _abilities, _spells and
+-- _starter_equipment all empty, so Custom:EnableSpiritShrouds had nothing to hand out.
+--
+-- What lands: template 20105 "Imp Wizard 5" (progression 2 Aberrations / branch 1,
+-- level 5, race 464 gargoyle model, wizard, 93 hp / 152 mana / 100 endurance, the seven
+-- captured attributes, verified=1 test_only=0 content_version=2026102401), its seven
+-- free Monster AAs 48000-48006, one rank effect (48000 slot 1 effect 426 = the
+-- eight-slot Eyes Wide Open), and the seven spirit_shroud_abilities links.
+--
+-- Why 48000-48006 and not 50000-50006: the RoF2 AA window only enumerates rank ids
+-- below 49999. Their 007 file is the *upgrade* that moves an older 50xxx install to this
+-- band; we never installed the older form, so the relocation half of 007 is not carried
+-- here -- 004 already writes the final band. Verified free before writing: 0 rows in
+-- aa_ability/aa_ranks/a_rank_effects for 48000-48006 and for 50000-50006.
+--
+-- Prerequisites verified in peq on 2026-11-15: spells 7414 Fire I, 7428 Frost I,
+-- 7442 Thunder I, 7530 Flight, 7790 Spirit Sending, 8244 Ultravision all exist;
+-- db_str title ids 12636, 3231, 3245, 3259, 3482, 4223, 3577 all exist as type 1 (an
+-- AA row with a missing title sid renders blank in the window, so this matters);
+-- aa_ranks/aa_ability/spirit_shroud_templates/spirit_shroud_abilities all carry the
+-- primary keys the upserts need.
+--
+-- Their `ALTER spirit_shroud_templates ADD resource_maxima, model_size` is NOT repeated:
+-- our v390 already created both columns.
+--
+-- Spell 7790 (Spirit Sending) is a keepership return, not an ordinary gate -- their
+-- runtime intercepts it. Ours is wired the same way in zone/client_spirit_shroud.cpp;
+-- do not let it resolve to a bind-point Gate.
+--
+-- Idempotent: every statement is an upsert keyed on the target's primary key.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_shroud_imp_wizard_v426_rollback.sql
+
+-- 1. The seven Monster AA definitions (grant_only = 1, single rank each, classes 2048).
+INSERT INTO aa_ability
+ (id,name,category,classes,type,grant_only,first_rank_id) VALUES
+ (48000,'Eyes Wide Open',3,2048,1,1,48000),
+ (48001,'Fire',4,2048,1,1,48001),
+ (48002,'Frost',4,2048,1,1,48002),
+ (48003,'Thunder',4,2048,1,1,48003),
+ (48004,'Flight',4,2048,1,1,48004),
+ (48005,'Ultravision',4,2048,1,1,48005),
+ (48006,'Spirit Sending',4,2048,1,1,48006)
+ ON DUPLICATE KEY UPDATE id = VALUES(id);
+
+-- 2. Their ranks, all cost 0 (granted free on entry, never purchasable).
+INSERT INTO aa_ranks
+ (id,upper_hotkey_sid,lower_hotkey_sid,title_sid,desc_sid,cost,level_req,spell,spell_type,recast_time) VALUES
+ (48000,12636,12636,12636,12636,0,1,-1,0,0),
+ (48001,3231,3231,3231,3231,0,5,7414,1,4),
+ (48002,3245,3245,3245,3245,0,5,7428,1,4),
+ (48003,3259,3259,3259,3259,0,5,7442,1,4),
+ (48004,3482,3482,3482,3482,0,1,7530,1,8),
+ (48005,4223,4223,4223,4223,0,1,8244,27,8),
+ (48006,3577,3577,3577,3577,0,1,7790,9,900)
+ ON DUPLICATE KEY UPDATE id = VALUES(id);
+
+-- 3. The one rank effect: Eyes Wide Open grants the eight spell slots.
+INSERT INTO `aa_rank_effects` (`rank_id`,`slot`,`effect_id`,`base1`,`base2`)
+VALUES (48000,1,426,8,0)
+ ON DUPLICATE KEY UPDATE `effect_id` = VALUES(`effect_id`), `base1` = VALUES(`base1`), `base2` = VALUES(`base2`);
+
+-- 4. The form itself.
+INSERT INTO spirit_shroud_templates
+ (id,progression_id,branch_id,level,race,class_id,gender,hp,mana,endurance,
+  base_stat,unlock_xp,name,description,progression_name,branch_name,
+  enabled,content_version,verified,test_only,evidence_ref,monster_points,
+  stat_str,stat_sta,stat_cha,stat_dex,stat_int,stat_agi,stat_wis,resource_maxima,model_size)
+VALUES
+ (20105,2,1,5,464,12,2,93,152,100,0,0,'Imp Wizard 5',
+  'Modern Live resources, attributes and free Monster abilities; emulator combat formulas.',
+  'Aberrations','Imp Wizard',1,2026102401,1,0,
+  'Live 2026-10-24: Imp Wizard 5 selection, active stats and all seven initial AA ranks',
+  0,58,69,67,66,143,80,81,1,2.708332777)
+ ON DUPLICATE KEY UPDATE id = VALUES(id);
+
+-- 5. The seven free ability links (template 20105 -> ranks 48000-48006).
+INSERT INTO `spirit_shroud_abilities` (`template_id`,`rank_id`,`free_grant`)
+VALUES (20105,48000,1),(20105,48001,1),(20105,48002,1),(20105,48003,1),
+       (20105,48004,1),(20105,48005,1),(20105,48006,1)
+ ON DUPLICATE KEY UPDATE `free_grant` = VALUES(`free_grant`);
+)SHROUD426",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v427 (2026-11-15) -- Spirit Shroud catalog part 2: the captured
+	// catalogue (their 009). 475 forms (20110-90470), 59 Monster AAs and ranks
+	// at 48100-48158, 17 rank effects, 164 links, 14 starter-equipment rows.
+	// Their spirit_shroud_content_gaps (411 KB of authoring notes, read by no
+	// code path) is not carried; nor the display_* ALTER (v390 has it).
+	// The 475-form insert is split into 14 statements of ~12 KB and the whole
+	// entry is emitted as 16 separate std::string literals: MSVC fails with
+	// C2026 ("string too big") above 16 KB per literal, not the documented
+	// 64 KB -- measured on this tree 2026-11-15 (the largest literal that has
+	// ever compiled in this manifest is 14 KB). Applies after v426 by version
+	// order, which 009's own guard assumes.
+	// Twin: utils/sql/20261115_shroud_catalog_v427.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_catalog_v427_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 427,
+		.description = "20261115_shroud_catalog_v427",
+		.check = "SELECT 1 FROM (SELECT 1) x WHERE (SELECT COUNT(*) FROM `spirit_shroud_templates`) < 476 OR (SELECT COUNT(*) FROM `aa_ranks` WHERE `id` BETWEEN 48100 AND 48158) < 59 OR (SELECT COUNT(*) FROM `spirit_shroud_abilities` WHERE `template_id` <> 20105) < 164 OR (SELECT COUNT(*) FROM `spirit_shroud_starter_equipment`) < 14",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SHR427_0(INSERT INTO aa_ability (`id`,`name`,`category`,`classes`,`type`,`grant_only`,`first_rank_id`) VALUES
+(48100,'Eyes Wide Open',3,43267,1,1,48100),
+(48101,'Fire',4,2048,1,1,48101),
+(48137,'Flight',4,10240,1,1,48137),
+(48102,'Frost',4,2048,1,1,48102),
+(48152,'Innate Agility',3,43265,1,0,48152),
+(48144,'Innate Cold Protection',3,10243,1,0,48144),
+(48150,'Innate Dexterity',3,43267,1,0,48150),
+(48147,'Innate Disease Protection',3,10242,1,0,48147),
+(48143,'Innate Fire Protection',3,10242,1,0,48143),
+(48154,'Innate Intelligence',3,10240,1,0,48154),
+(48145,'Innate Magic Protection',3,43267,1,0,48145),
+(48146,'Innate Poison Protection',3,43266,1,0,48146),
+(48142,'Innate Regeneration',3,43267,1,0,48142),
+(48151,'Innate Stamina',3,34817,1,0,48151),
+(48156,'Mental Clarity',3,2050,1,0,48156),
+(48157,'Mystical Attuning',3,43267,1,0,48157),
+(48133,'Plane Shift: Blink',4,2049,1,1,48133),
+(48117,'Plane Shift: Ethereal',4,2049,1,1,48117),
+(48132,'Plane Shift: Material',4,2049,1,1,48132),
+(48134,'Spirit Sending',4,43267,1,1,48134),
+(48127,'Stun',4,2048,1,1,48127),
+(48103,'Thunder',4,2048,1,1,48103),
+(48140,'Ultravision',4,10240,1,1,48140),
+(48136,'Armor Cleave',4,32769,1,1,48136),
+(48148,'Enraging Bellow',4,1,1,0,48148),
+(48109,'Feral Rage',4,1,1,1,48109),
+(48107,'Hamstring',4,33025,1,1,48107),
+(48158,'Heightened Endurance',3,33025,1,0,48158),
+(48149,'Innate Strength',3,1,1,0,48149),
+(48108,'Lesion',4,33025,1,1,48108),
+(48122,'Maul',4,32769,1,1,48122),
+(48106,'Pain Tolerance',4,1,1,1,48106),
+(48129,'Stunning Blow',4,1,1,1,48129),
+(48119,'Ward of the Bear',4,1,1,1,48119),
+(48141,'Wildspeed',4,40961,1,1,48141),
+(48121,'Earth Bind',4,1,1,1,48121),
+(48124,'Feral Roar',4,1,1,1,48124),
+(48138,'Throw Stone',4,33025,1,1,48138),
+(48105,'Smoke Bomb',4,256,1,1,48105),
+(48125,'Boon of Vitality',4,2,1,1,48125),
+(48111,'Cure Disease',4,2,1,1,48111),
+(48128,'Divine Aura',4,2,1,1,48128),
+(48110,'Frost of the Ancients',4,2,1,1,48110),
+(48104,'Heal Wounds',4,2,1,1,48104),
+(48153,'Innate Wisdom',3,2,1,0,48153),
+(48123,'Mana Bolt',4,8194,1,1,48123),
+(48112,'Remove Curse',4,2,1,1,48112),
+(48135,'Gift of Speed',4,8192,1,1,48135),
+(48155,'Innate Charisma',3,8192,1,0,48155),
+(48115,'Invisibility',4,8192,1,1,48115),
+(48116,'Lethargy',4,8192,1,1,48116),
+(48113,'Levitation',4,8192,1,1,48113),
+(48126,'Malaise',4,8192,1,1,48126),
+(48139,'Pure Thought',4,8192,1,1,48139),
+(48114,'Sleep',4,8192,1,1,48114),
+(48118,'Swarm of Pain',4,8192,1,1,48118),
+(48120,'Ward of the Crocodile',4,32768,1,1,48120),
+(48130,'Dark Gift',4,2048,1,1,48130),
+(48131,'Dark Siphon',4,2048,1,1,48131) ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);
+
+INSERT INTO aa_ranks (`id`,`upper_hotkey_sid`,`lower_hotkey_sid`,`title_sid`,`desc_sid`,`cost`,`level_req`,`spell`,`spell_type`,`recast_time`,`prev_id`,`next_id`) VALUES
+(48100,12636,12636,12636,12636,0,1,-1,0,0,-1,-1),
+(48101,3231,3231,3231,3231,0,70,7427,1,9,-1,-1),
+(48137,3482,3482,3482,3482,0,1,7530,1,8,-1,-1),
+(48102,3245,3245,3245,3245,0,70,7441,1,9,-1,-1),
+(48152,3191,3191,3191,3191,1,25,-1,0,0,-1,-1),
+(48144,3050,3050,3050,3050,1,25,-1,0,0,-1,-1),
+(48150,3171,3171,3171,3171,1,25,-1,0,0,-1,-1),
+(48147,3080,3080,3080,3080,1,25,-1,0,0,-1,-1),
+(48143,3040,3040,3040,3040,1,25,-1,0,0,-1,-1),
+(48154,3211,3211,3211,3211,1,25,-1,0,0,-1,-1),
+(48145,3060,3060,3060,3060,1,25,-1,0,0,-1,-1),
+(48146,3070,3070,3070,3070,1,25,-1,0,0,-1,-1),
+(48142,3010,3010,3010,3010,1,25,-1,0,0,-1,-1),
+(48151,3181,3181,3181,3181,1,25,-1,0,0,-1,-1),
+(48156,3287,3287,3287,3287,2,25,-1,0,0,-1,-1),
+(48157,3005,3005,3005,3005,5,51,-1,0,0,-1,-1),
+(48133,3481,3481,3481,3481,0,70,7543,12,1800,-1,-1),
+(48117,3479,3479,3479,3479,0,50,7541,12,1800,-1,-1),
+(48132,3480,3480,3480,3480,0,60,7542,12,1800,-1,-1),
+(48134,3577,3577,3577,3577,0,1,7790,9,900,-1,-1),
+(48127,3620,3620,3620,3620,0,65,8309,3,21,-1,-1),
+(48103,3259,3259,3259,3259,0,70,7455,1,6,-1,-1),
+(48140,4223,4223,4223,4223,0,1,8244,27,8,-1,-1),
+(48136,3578,3578,3578,3578,0,70,8099,1,12,-1,-1),
+(48148,3096,3096,3096,3096,2,45,7456,24,900,-1,-1),
+(48109,3426,3426,3426,3426,5,70,7495,3,900,-1,-1),
+(48107,3413,3413,3413,3413,5,50,7482,5,12,-1,-1),
+(48158,3131,3131,3131,3131,1,61,-1,0,0,-1,-1),
+(48149,3161,3161,3161,3161,1,25,-1,0,0,-1,-1),
+(48108,3415,3415,3415,3415,10,70,7492,8,12,-1,-1),
+(48122,3548,3548,3548,3548,0,70,7775,11,3,-1,-1),
+(48106,3412,3412,3412,3412,5,55,7476,13,1800,-1,-1),
+(48129,3651,3651,3651,3651,0,25,8340,27,18,-1,-1),
+(48119,3508,3508,3508,3508,0,65,7567,10,9,-1,-1),
+(48141,4224,4224,4224,4224,0,1,8245,26,8,-1,-1),
+(48121,3529,3529,3529,3529,0,60,7588,10,9,-1,-1),
+(48124,3588,3588,3588,3588,0,70,8268,2,30,-1,-1),
+(48138,4191,4191,4191,4191,0,1,5225,25,15,-1,-1),
+(48105,3402,3402,3402,3402,10,70,7474,10,60,-1,-1),
+(48125,3595,3595,3595,3595,0,65,8289,1,7,-1,-1),
+(48111,3443,3443,3443,3443,0,60,7513,1,6,-1,-1),
+(48128,3625,3625,3625,3625,0,5,207,15,901,-1,-1),
+(48110,3429,3429,3429,3429,10,70,7505,1,6,-1,-1),
+(48104,3273,3273,3273,3273,0,70,7413,1,6,-1,-1),
+(48153,3201,3201,3201,3201,1,25,-1,0,0,-1,-1),
+(48123,3562,3562,3562,3562,0,70,7789,1,9,-1,-1),
+(48112,3447,3447,3447,3447,0,60,7517,1,6,-1,-1),
+(48135,3605,3605,3605,3605,0,65,8299,1,8,-1,-1),
+(48155,3221,3221,3221,3221,1,25,-1,0,0,-1,-1),
+(48115,3473,3473,3473,3473,0,30,42,1,8,-1,-1),
+(48116,3474,3474,3474,3474,0,70,7540,7,9,-1,-1),
+(48113,3467,3467,3467,3467,0,1,2894,1,8,-1,-1),
+(48126,3615,3615,3615,3615,0,70,8304,1,10,-1,-1),
+(48139,4201,4201,4201,4201,0,65,8180,0,8,-1,-1),
+(48114,3468,3468,3468,3468,0,70,7535,6,6,-1,-1),
+(48118,3488,3488,3488,3488,0,70,7554,1,6,-1,-1),
+(48120,3517,3517,3517,3517,0,65,7576,10,9,-1,-1),
+(48130,3656,3656,3656,3656,0,70,8347,27,9,-1,-1),
+(48131,3663,3663,3663,3663,0,65,8354,27,9,-1,-1) ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);
+
+INSERT INTO aa_rank_effects (`rank_id`,`slot`,`effect_id`,`base1`,`base2`) VALUES
+(48100,1,426,8,0),
+(48152,1,6,2,0),
+(48144,1,47,2,0),
+(48150,1,5,2,0),
+(48147,1,49,2,0),
+(48143,1,46,2,0),
+(48154,1,8,2,0),
+(48145,1,50,2,0),
+(48146,1,48,2,0),
+(48142,1,0,1,0),
+(48151,1,7,2,0),
+(48156,1,15,1,0),
+(48157,1,327,1,0),
+(48158,1,189,1,0),
+(48149,1,4,2,0),
+(48153,1,9,2,0),
+(48155,1,10,2,0) ON DUPLICATE KEY UPDATE `rank_id`=VALUES(`rank_id`);)SHR427_0")
+			+ std::string(R"SHR427_1(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(20205,2,2,5,0,14,2,91,151,99,0,0,'Evil Eye Psion 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-05-a1.png',0,57,60,105,62,140,72,81,1,NULL),
+(20210,2,2,10,0,14,2,181,312,202,0,0,'Evil Eye Psion 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-10-a2.png',0,60,64,107,66,145,76,83,1,NULL),
+(20215,2,2,15,0,14,2,275,478,307,0,0,'Evil Eye Psion 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-15-a1.png',0,63,69,109,71,149,78,87,1,NULL),
+(20220,2,2,20,0,14,2,389,681,421,0,0,'Evil Eye Psion 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-20-a1.png',0,67,78,117,80,160,85,92,1,NULL),
+(20225,2,2,25,0,14,2,489,860,530,0,0,'Evil Eye Psion 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-25-a2.png',0,69,80,117,83,162,87,93,1,NULL),
+(20230,2,2,30,0,14,2,630,1032,643,0,0,'Evil Eye Psion 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(20235,2,2,35,0,14,2,738,1230,755,0,0,'Evil Eye Psion 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(20240,2,2,40,0,14,2,899,1437,873,0,0,'Evil Eye Psion 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-40-a1.png',0,76,88,119,93,170,92,99,1,NULL),
+(20245,2,2,45,0,14,2,1047,1756,1025,0,0,'Evil Eye Psion 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-45-a1.png',0,78,90,125,98,174,95,101,1,NULL),
+(20250,2,2,50,0,14,2,1343,2222,1268,0,0,'Evil Eye Psion 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-50-a1.png',0,81,99,127,102,183,98,105,1,NULL),
+(20255,2,2,55,0,14,2,1635,2701,1573,0,0,'Evil Eye Psion 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-55-a1.png',0,90,114,138,119,194,109,111,1,NULL),
+(20260,2,2,60,0,14,2,1949,3191,1901,0,0,'Evil Eye Psion 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(20265,2,2,65,0,14,2,2299,3755,2405,0,0,'Evil Eye Psion 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-65-a1.png',0,110,136,148,161,228,130,126,1,NULL),
+(20270,2,2,70,0,14,2,2900,4885,3482,0,0,'Evil Eye Psion 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Psion',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-psion-70-a1.png',0,134,184,175,222,305,172,203,1,NULL),
+(20305,2,3,5,0,12,2,95,155,103,0,0,'Evil Eye Sorcerer 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-05-a1.png',0,58,69,67,66,143,80,81,1,NULL),
+(20310,2,3,10,0,12,2,191,318,210,0,0,'Evil Eye Sorcerer 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(20315,2,3,15,0,12,2,289,492,319,0,0,'Evil Eye Sorcerer 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-15-a1.png',0,64,79,69,76,152,86,87,1,NULL),
+(20320,2,3,20,0,12,2,411,694,438,0,0,'Evil Eye Sorcerer 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-20-a2.png',0,69,90,75,85,162,93,92,1,NULL),
+(20325,2,3,25,0,12,2,516,881,551,0,0,'Evil Eye Sorcerer 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(20330,2,3,30,0,12,2,663,1057,668,0,0,'Evil Eye Sorcerer 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-30-a1.png',0,74,95,75,93,165,96,94,1,NULL),
+(20335,2,3,35,0,12,2,777,1260,784,0,0,'Evil Eye Sorcerer 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(20340,2,3,40,0,12,2,950,1470,909,0,0,'Evil Eye Sorcerer 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-40-a2.png',0,78,102,76,99,173,101,99,1,NULL),
+(20345,2,3,45,0,12,2,1109,1808,1069,0,0,'Evil Eye Sorcerer 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-45-a1.png',0,80,104,80,105,178,104,101,1,NULL),
+(20350,2,3,50,0,12,2,1421,2275,1339,0,0,'Evil Eye Sorcerer 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(20355,2,3,55,0,12,2,1735,2756,1706,0,0,'Evil Eye Sorcerer 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(20360,2,3,60,0,12,2,2074,3241,2071,0,0,'Evil Eye Sorcerer 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-60-a1.png',0,98,141,90,142,210,128,115,1,NULL),
+(20365,2,3,65,0,12,2,2447,3811,2630,0,0,'Evil Eye Sorcerer 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-65-a1.png',0,113,156,94,172,232,143,126,1,NULL),
+(20370,2,3,70,0,12,2,3232,5001,3876,0,0,'Evil Eye Sorcerer 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Evil Eye Sorcerer',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-evil-eye-sorcerer-70-a1.png',0,137,211,111,237,305,189,203,1,NULL),
+(20505,2,5,5,0,1,2,158,0,115,0,0,'Gargoyle Fighter 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-05-a1.png',0,113,84,51,80,66,91,68,1,NULL),
+(20510,2,5,10,0,1,2,316,0,234,0,0,'Gargoyle Fighter 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-10-a2.png',0,119,90,52,86,68,95,70,1,NULL),
+(20515,2,5,15,0,1,2,481,0,361,0,0,'Gargoyle Fighter 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-15-a1.png',0,125,96,53,92,70,98,73,1,NULL),
+(20520,2,5,20,0,1,2,682,0,519,0,0,'Gargoyle Fighter 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-20-a1.png',0,133,109,57,103,75,106,77,1,NULL),
+(20525,2,5,25,0,1,2,859,0,667,0,0,'Gargoyle Fighter 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-25-a1.png',0,138,112,57,107,76,109,78,1,NULL),
+(20530,2,5,30,0,1,2,1102,0,823,0,0,'Gargoyle Fighter 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-30-a1.png',0,143,115,57,112,76,110,79,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_1")
+			+ std::string(R"SHR427_2(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(20535,2,5,35,0,1,2,1294,0,979,0,0,'Gargoyle Fighter 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-35-a1.png',0,148,118,57,116,78,112,81,1,NULL),
+(20540,2,5,40,0,1,2,1580,0,1149,0,0,'Gargoyle Fighter 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-40-a2.png',0,152,123,58,120,80,115,83,1,NULL),
+(20545,2,5,45,0,1,2,1842,0,1392,0,0,'Gargoyle Fighter 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(20550,2,5,50,0,1,2,2358,0,1768,0,0,'Gargoyle Fighter 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-50-a2.png',0,162,138,62,132,86,123,88,1,NULL),
+(20555,2,5,55,0,1,2,2862,0,2257,0,0,'Gargoyle Fighter 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-55-a1.png',0,178,158,67,153,91,137,93,1,NULL),
+(20560,2,5,60,0,1,2,3580,0,2820,0,0,'Gargoyle Fighter 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(20565,2,5,65,0,1,2,4274,0,3601,0,0,'Gargoyle Fighter 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-65-a2.png',0,218,189,72,207,107,163,106,1,NULL),
+(20570,2,5,70,0,1,2,5418,0,4651,0,0,'Gargoyle Fighter 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Gargoyle Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-gargoyle-fighter-70-a1.png',0,265,255,85,285,170,215,170,1,NULL),
+(20405,2,4,5,0,14,2,93,154,102,0,0,'Imp Trickster 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-05-a1.png',0,57,60,105,62,140,72,81,1,NULL),
+(20410,2,4,10,0,14,2,186,318,208,0,0,'Imp Trickster 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-10-a1.png',0,60,64,107,66,145,76,83,1,NULL),
+(20415,2,4,15,0,14,2,283,487,316,0,0,'Imp Trickster 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-15-a1.png',0,63,69,109,71,149,78,87,1,NULL),
+(20420,2,4,20,0,14,2,400,693,433,0,0,'Imp Trickster 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-20-a1.png',0,67,78,117,80,160,85,92,1,NULL),
+(20425,2,4,25,0,14,2,503,875,545,0,0,'Imp Trickster 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-25-a1.png',0,69,80,117,83,162,87,93,1,NULL),
+(20430,2,4,30,0,14,2,648,1050,661,0,0,'Imp Trickster 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(20435,2,4,35,0,14,2,759,1251,776,0,0,'Imp Trickster 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(20440,2,4,40,0,14,2,925,1461,897,0,0,'Imp Trickster 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-40-a2.png',0,76,88,119,93,170,92,99,1,NULL),
+(20445,2,4,45,0,14,2,1076,1783,1052,0,0,'Imp Trickster 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-45-a2.png',0,78,90,125,98,174,95,101,1,NULL),
+(20450,2,4,50,0,14,2,1380,2255,1301,0,0,'Imp Trickster 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-50-a1.png',0,81,99,127,102,183,98,105,1,NULL),
+(20455,2,4,55,0,14,2,1677,2737,1609,0,0,'Imp Trickster 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-55-a1.png',0,90,114,138,119,194,109,111,1,NULL),
+(20460,2,4,60,0,14,2,1998,3231,1941,0,0,'Imp Trickster 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(20465,2,4,65,0,14,2,2464,3884,2534,0,0,'Imp Trickster 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-65-a2.png',0,110,136,148,161,228,130,126,1,NULL),
+(20470,2,4,70,0,14,2,3128,5058,3655,0,0,'Imp Trickster 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-trickster-70-a1.png',0,134,184,175,222,305,172,203,1,NULL),
+(20110,2,1,10,0,12,2,186,312,204,0,0,'Imp Wizard 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(20115,2,1,15,0,12,2,282,483,310,0,0,'Imp Wizard 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-15-a1.png',0,64,79,69,76,152,86,87,1,NULL),
+(20120,2,1,20,0,12,2,400,682,426,0,0,'Imp Wizard 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-20-a2.png',0,69,90,75,85,162,93,92,1,NULL),
+(20125,2,1,25,0,12,2,503,866,536,0,0,'Imp Wizard 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(20130,2,1,30,0,12,2,645,1039,650,0,0,'Imp Wizard 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-30-a1.png',0,74,95,75,93,165,96,94,1,NULL),
+(20135,2,1,35,0,12,2,756,1239,763,0,0,'Imp Wizard 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(20140,2,1,40,0,12,2,925,1446,885,0,0,'Imp Wizard 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-40-a1.png',0,78,102,76,99,173,101,99,1,NULL),
+(20145,2,1,45,0,12,2,1080,1781,1042,0,0,'Imp Wizard 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-45-a1.png',0,80,104,80,105,178,104,101,1,NULL),
+(20150,2,1,50,0,12,2,1385,2242,1306,0,0,'Imp Wizard 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(20155,2,1,55,0,12,2,1672,2702,1652,0,0,'Imp Wizard 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(20160,2,1,60,0,12,2,1977,3162,1992,0,0,'Imp Wizard 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-60-a1.png',0,98,141,90,142,210,128,115,1,NULL),
+(20165,2,1,65,0,12,2,2310,3704,2523,0,0,'Imp Wizard 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Aberrations','Imp Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-65-a2.png',0,113,156,94,172,232,143,126,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_2")
+			+ std::string(R"SHR427_3(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(20170,2,1,70,464,12,2,2929,4770,3645,0,0,'Imp Wizard 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Aberrations','Imp Wizard',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-aberrations-imp-wizard-70-a1.png',104,137,211,111,237,305,189,203,1,4.0624995231628),
+(30105,3,1,5,0,1,2,152,0,110,0,0,'Bear Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-05-a1.png',0,113,84,51,80,66,91,68,1,NULL),
+(30110,3,1,10,0,1,2,303,0,225,0,0,'Bear Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-10-a1.png',0,119,90,52,86,68,95,70,1,NULL),
+(30115,3,1,15,0,1,2,461,0,347,0,0,'Bear Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-15-a1.png',0,125,96,53,92,70,98,73,1,NULL),
+(30120,3,1,20,0,1,2,655,0,501,0,0,'Bear Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-20-a2.png',0,133,109,57,103,75,106,77,1,NULL),
+(30125,3,1,25,0,1,2,824,0,644,0,0,'Bear Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-25-a2.png',0,138,112,57,107,76,109,78,1,NULL),
+(30130,3,1,30,0,1,2,1057,0,796,0,0,'Bear Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-30-a2.png',0,143,115,57,112,76,110,79,1,NULL),
+(30135,3,1,35,0,1,2,1241,0,947,0,0,'Bear Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-35-a1.png',0,148,118,57,116,78,112,81,1,NULL),
+(30140,3,1,40,0,1,2,1515,0,1113,0,0,'Bear Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-40-a1.png',0,152,123,58,120,80,115,83,1,NULL),
+(30145,3,1,45,0,1,2,1769,0,1351,0,0,'Bear Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(30150,3,1,50,0,1,2,2265,0,1718,0,0,'Bear Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-50-a1.png',0,162,138,62,132,86,123,88,1,NULL),
+(30155,3,1,55,0,1,2,2756,0,2203,0,0,'Bear Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-55-a2.png',0,178,158,67,153,91,137,93,1,NULL),
+(30160,3,1,60,0,1,2,3295,0,2681,0,0,'Bear Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(30165,3,1,65,0,1,2,3886,0,3418,0,0,'Bear Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Bear Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-65-a1.png',0,218,189,72,207,107,163,106,1,NULL),
+(30170,3,1,70,43,1,2,4912,0,4420,0,0,'Bear Beast 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Animals','Bear Beast',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-animals-bear-beast-70-a2.png',104,265,255,85,285,170,215,170,1,3.125),
+(30305,3,3,5,0,16,2,143,0,117,0,0,'Tiger Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-05-a2.png',0,129,94,52,81,55,85,68,1,NULL),
+(30310,3,3,10,0,16,2,286,0,242,0,0,'Tiger Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(30315,3,3,15,0,16,2,435,0,378,0,0,'Tiger Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-15-a1.png',0,142,107,54,93,58,92,73,1,NULL),
+(30320,3,3,20,0,16,2,620,0,544,0,0,'Tiger Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-20-a2.png',0,152,122,58,104,62,100,78,1,NULL),
+(30325,3,3,25,0,16,2,779,0,699,0,0,'Tiger Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-25-a2.png',0,157,125,58,108,63,103,79,1,NULL),
+(30330,3,3,30,0,16,2,999,0,857,0,0,'Tiger Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(30335,3,3,35,0,16,2,1174,0,1026,0,0,'Tiger Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-35-a1.png',0,169,132,58,117,65,105,82,1,NULL),
+(30340,3,3,40,0,16,2,1433,0,1209,0,0,'Tiger Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(30345,3,3,45,0,16,2,1674,0,1467,0,0,'Tiger Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-45-a2.png',0,177,141,62,129,68,112,86,1,NULL),
+(30350,3,3,50,0,16,2,2142,0,1867,0,0,'Tiger Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(30355,3,3,55,0,16,2,2603,0,2372,0,0,'Tiger Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(30360,3,3,60,0,16,2,3259,0,2970,0,0,'Tiger Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-60-a1.png',0,217,190,71,173,81,137,98,1,NULL),
+(30365,3,3,65,0,16,2,3894,0,3749,0,0,'Tiger Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-65-a2.png',0,249,211,74,210,89,154,107,1,NULL),
+(30370,3,3,70,0,16,2,4850,0,4778,0,0,'Tiger Beast 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Tiger Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-tiger-beast-70-a1.png',0,302,285,87,289,142,203,172,1,NULL),
+(30405,3,4,5,0,16,2,142,0,115,0,0,'Werewolf Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-05-a2.png',0,129,94,52,81,55,85,68,1,NULL),
+(30410,3,4,10,0,16,2,283,0,239,0,0,'Werewolf Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(30415,3,4,15,0,16,2,430,0,373,0,0,'Werewolf Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-15-a1.png',0,142,107,54,93,58,92,73,1,NULL),
+(30420,3,4,20,0,16,2,611,0,538,0,0,'Werewolf Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-20-a2.png',0,152,122,58,104,62,100,78,1,NULL),
+(30425,3,4,25,0,16,2,769,0,691,0,0,'Werewolf Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-25-a1.png',0,157,125,58,108,63,103,79,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_3")
+			+ std::string(R"SHR427_4(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(30430,3,4,30,0,16,2,986,0,848,0,0,'Werewolf Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(30435,3,4,35,0,16,2,1159,0,1015,0,0,'Werewolf Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-35-a1.png',0,169,132,58,117,65,105,82,1,NULL),
+(30440,3,4,40,0,16,2,1414,0,1197,0,0,'Werewolf Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(30445,3,4,45,0,16,2,1652,0,1453,0,0,'Werewolf Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-45-a2.png',0,177,141,62,129,68,112,86,1,NULL),
+(30450,3,4,50,0,16,2,2115,0,1850,0,0,'Werewolf Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(30455,3,4,55,0,16,2,2572,0,2354,0,0,'Werewolf Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-55-a2.png',0,203,176,69,155,76,129,94,1,NULL),
+(30460,3,4,60,0,16,2,3077,0,2871,0,0,'Werewolf Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-60-a1.png',0,217,190,71,173,81,137,98,1,NULL),
+(30465,3,4,65,0,16,2,3792,0,3695,0,0,'Werewolf Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-65-a2.png',0,249,211,74,210,89,154,107,1,NULL),
+(30470,3,4,70,0,16,2,4737,0,4720,0,0,'Werewolf Beast 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Werewolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-werewolf-beast-70-a1.png',0,302,285,87,289,142,203,172,1,NULL),
+(30205,3,2,5,0,16,2,140,0,114,0,0,'Wolf Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-05-a1.png',0,129,94,52,81,55,85,68,1,NULL),
+(30210,3,2,10,0,16,2,279,0,236,0,0,'Wolf Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(30215,3,2,15,0,16,2,424,0,369,0,0,'Wolf Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-15-a2.png',0,142,107,54,93,58,92,73,1,NULL),
+(30220,3,2,20,0,16,2,603,0,532,0,0,'Wolf Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-20-a1.png',0,152,122,58,104,62,100,78,1,NULL),
+(30225,3,2,25,0,16,2,759,0,684,0,0,'Wolf Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(30230,3,2,30,0,16,2,972,0,839,0,0,'Wolf Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(30235,3,2,35,0,16,2,1143,0,1005,0,0,'Wolf Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-35-a1.png',0,169,132,58,117,65,105,82,1,NULL),
+(30240,3,2,40,0,16,2,1394,0,1185,0,0,'Wolf Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(30245,3,2,45,0,16,2,1631,0,1440,0,0,'Wolf Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-45-a1.png',0,177,141,62,129,68,112,86,1,NULL),
+(30250,3,2,50,0,16,2,2087,0,1834,0,0,'Wolf Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(30255,3,2,55,0,16,2,2541,0,2336,0,0,'Wolf Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(30260,3,2,60,0,16,2,3041,0,2851,0,0,'Wolf Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-60-a1.png',0,217,190,71,173,81,137,98,1,NULL),
+(30265,3,2,65,0,16,2,3589,0,3588,0,0,'Wolf Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-65-a1.png',0,249,211,74,210,89,154,107,1,NULL),
+(30270,3,2,70,0,16,2,4625,0,4663,0,0,'Wolf Beast 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Animals','Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-animals-wolf-beast-70-a1.png',0,302,285,87,289,142,203,172,1,NULL),
+(40405,4,4,5,0,14,2,95,156,104,0,0,'Air Elemental Illusionist 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-05-a2.png',0,57,60,105,62,140,72,81,1,NULL),
+(40410,4,4,10,0,14,2,189,321,211,0,0,'Air Elemental Illusionist 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-10-a1.png',0,60,64,107,66,145,76,83,1,NULL),
+(40415,4,4,15,0,14,2,287,492,321,0,0,'Air Elemental Illusionist 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-15-a1.png',0,63,69,109,71,149,78,87,1,NULL),
+(40420,4,4,20,0,14,2,406,699,439,0,0,'Air Elemental Illusionist 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-20-a2.png',0,67,78,117,80,160,85,92,1,NULL),
+(40425,4,4,25,0,14,2,510,883,553,0,0,'Air Elemental Illusionist 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-25-a2.png',0,69,80,117,83,162,87,93,1,NULL),
+(40430,4,4,30,0,14,2,657,1059,670,0,0,'Air Elemental Illusionist 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(40435,4,4,35,0,14,2,770,1262,787,0,0,'Air Elemental Illusionist 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(40440,4,4,40,0,14,2,938,1473,909,0,0,'Air Elemental Illusionist 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-40-a1.png',0,76,88,119,93,170,92,99,1,NULL),
+(40445,4,4,45,0,14,2,1091,1797,1066,0,0,'Air Elemental Illusionist 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-45-a1.png',0,78,90,125,98,174,95,101,1,NULL),
+(40450,4,4,50,0,14,2,1398,2272,1318,0,0,'Air Elemental Illusionist 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-50-a1.png',0,81,99,127,102,183,98,105,1,NULL),
+(40455,4,4,55,0,14,2,1698,2755,1627,0,0,'Air Elemental Illusionist 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-55-a1.png',0,90,114,138,119,194,109,111,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_4")
+			+ std::string(R"SHR427_5(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(40460,4,4,60,0,14,2,2120,3330,2040,0,0,'Air Elemental Illusionist 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(40465,4,4,65,0,14,2,2532,3938,2588,0,0,'Air Elemental Illusionist 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-65-a1.png',0,110,136,148,161,228,130,126,1,NULL),
+(40470,4,4,70,0,14,2,3204,5116,3713,0,0,'Air Elemental Illusionist 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Air Elemental Illusionist',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-air-elemental-illusionist-70-a2.png',0,134,184,175,222,305,172,203,1,NULL),
+(40105,4,1,5,0,1,2,152,0,110,0,0,'Earth Elemental Fighter 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-05-a1.png',0,113,84,51,80,66,91,68,1,NULL),
+(40110,4,1,10,0,1,2,303,0,225,0,0,'Earth Elemental Fighter 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-10-a1.png',0,119,90,52,86,68,95,70,1,NULL),
+(40115,4,1,15,0,1,2,461,0,347,0,0,'Earth Elemental Fighter 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-15-a1.png',0,125,96,53,92,70,98,73,1,NULL),
+(40120,4,1,20,0,1,2,655,0,501,0,0,'Earth Elemental Fighter 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-20-a1.png',0,133,109,57,103,75,106,77,1,NULL),
+(40125,4,1,25,0,1,2,824,0,644,0,0,'Earth Elemental Fighter 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-25-a1.png',0,138,112,57,107,76,109,78,1,NULL),
+(40130,4,1,30,0,1,2,1057,0,796,0,0,'Earth Elemental Fighter 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-30-a1.png',0,143,115,57,112,76,110,79,1,NULL),
+(40135,4,1,35,0,1,2,1241,0,947,0,0,'Earth Elemental Fighter 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-35-a1.png',0,148,118,57,116,78,112,81,1,NULL),
+(40140,4,1,40,0,1,2,1515,0,1113,0,0,'Earth Elemental Fighter 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-40-a1.png',0,152,123,58,120,80,115,83,1,NULL),
+(40145,4,1,45,0,1,2,1769,0,1351,0,0,'Earth Elemental Fighter 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(40150,4,1,50,0,1,2,2265,0,1718,0,0,'Earth Elemental Fighter 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-50-a1.png',0,162,138,62,132,86,123,88,1,NULL),
+(40155,4,1,55,0,1,2,2756,0,2203,0,0,'Earth Elemental Fighter 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-55-a2.png',0,178,158,67,153,91,137,93,1,NULL),
+(40160,4,1,60,0,1,2,3295,0,2681,0,0,'Earth Elemental Fighter 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(40165,4,1,65,0,1,2,3886,0,3418,0,0,'Earth Elemental Fighter 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Earth Elemental Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-65-a1.png',0,218,189,72,207,107,163,106,1,NULL),
+(40170,4,1,70,209,1,2,4912,0,4420,0,0,'Earth Elemental Fighter 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Elementals','Earth Elemental Fighter',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-elementals-earth-elemental-fighter-70-a1.png',104,265,255,85,285,170,215,170,1,3.7499997615814),
+(40305,4,3,5,0,12,2,96,156,100,0,0,'Fire Elemental Wizard 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-05-a2.png',0,58,69,67,66,143,80,81,1,NULL),
+(40310,4,3,10,0,12,2,193,321,204,0,0,'Fire Elemental Wizard 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(40315,4,3,15,0,12,2,293,496,310,0,0,'Fire Elemental Wizard 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-15-a2.png',0,64,79,69,76,152,86,87,1,NULL),
+(40320,4,3,20,0,12,2,416,700,426,0,0,'Fire Elemental Wizard 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-20-a1.png',0,69,90,75,85,162,93,92,1,NULL),
+(40325,4,3,25,0,12,2,523,888,536,0,0,'Fire Elemental Wizard 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(40330,4,3,30,0,12,2,672,1066,650,0,0,'Fire Elemental Wizard 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-30-a1.png',0,74,95,75,93,165,96,94,1,NULL),
+(40335,4,3,35,0,12,2,787,1270,763,0,0,'Fire Elemental Wizard 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-35-a2.png',0,76,97,75,96,169,98,96,1,NULL),
+(40340,4,3,40,0,12,2,963,1482,885,0,0,'Fire Elemental Wizard 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-40-a1.png',0,78,102,76,99,173,101,99,1,NULL),
+(40345,4,3,45,0,12,2,1123,1821,1042,0,0,'Fire Elemental Wizard 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-45-a1.png',0,80,104,80,105,178,104,101,1,NULL),
+(40350,4,3,50,0,12,2,1440,2291,1306,0,0,'Fire Elemental Wizard 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(40355,4,3,55,0,12,2,1756,2774,1652,0,0,'Fire Elemental Wizard 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(40360,4,3,60,0,12,2,2099,3261,1992,0,0,'Fire Elemental Wizard 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-60-a2.png',0,98,141,90,142,210,128,115,1,NULL),
+(40365,4,3,65,0,12,2,2584,3918,2523,0,0,'Fire Elemental Wizard 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-65-a1.png',0,113,156,94,172,232,143,126,1,NULL),
+(40370,4,3,70,0,12,2,3308,5058,3645,0,0,'Fire Elemental Wizard 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Fire Elemental Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-fire-elemental-wizard-70-a1.png',0,137,211,111,237,305,189,203,1,NULL),
+(40205,4,2,5,0,2,2,97,148,101,0,0,'Water Elemental Cleric 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-05-a1.png',0,71,66,61,70,85,77,135,1,NULL),
+(40210,4,2,10,0,2,2,194,303,206,0,0,'Water Elemental Cleric 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-10-a1.png',0,75,71,62,76,87,81,139,1,NULL),
+(40215,4,2,15,0,2,2,293,472,313,0,0,'Water Elemental Cleric 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-15-a2.png',0,79,76,63,81,90,83,145,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_5")
+			+ std::string(R"SHR427_6(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(40220,4,2,20,0,2,2,455,660,441,0,0,'Water Elemental Cleric 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-20-a2.png',0,84,112,68,91,96,90,153,1,NULL),
+(40225,4,2,25,0,2,2,526,834,543,0,0,'Water Elemental Cleric 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-25-a1.png',0,87,89,68,94,97,93,155,1,NULL),
+(40230,4,2,30,0,2,2,672,1012,659,0,0,'Water Elemental Cleric 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-30-a1.png',0,90,91,68,99,97,93,157,1,NULL),
+(40235,4,2,35,0,2,2,791,1207,777,0,0,'Water Elemental Cleric 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-35-a1.png',0,93,94,68,102,100,95,161,1,NULL),
+(40240,4,2,40,0,2,2,964,1410,897,0,0,'Water Elemental Cleric 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-40-a1.png',0,96,98,69,106,103,98,165,1,NULL),
+(40245,4,2,45,0,2,2,1127,1714,1068,0,0,'Water Elemental Cleric 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-45-a1.png',0,98,100,73,112,105,101,168,1,NULL),
+(40250,4,2,50,0,2,2,1443,2140,1365,0,0,'Water Elemental Cleric 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-50-a1.png',0,102,109,74,116,110,105,174,1,NULL),
+(40255,4,2,55,0,2,2,1763,2588,1720,0,0,'Water Elemental Cleric 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-55-a1.png',0,113,125,80,135,117,116,184,1,NULL),
+(40260,4,2,60,0,2,2,2113,3049,2070,0,0,'Water Elemental Cleric 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-60-a1.png',0,120,135,83,151,124,124,192,1,NULL),
+(40265,4,2,65,0,2,2,2498,3622,2624,0,0,'Water Elemental Cleric 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-65-a1.png',0,138,150,86,183,137,139,210,1,NULL),
+(40270,4,2,70,0,2,2,3311,5001,3795,0,0,'Water Elemental Cleric 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Elementals','Water Elemental Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-elementals-water-elemental-cleric-70-a1.png',0,168,203,102,252,218,183,305,1,NULL),
+(50305,5,3,5,0,2,2,97,148,104,0,0,'Goblin Cleric 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-05-a1.png',0,71,66,61,70,85,77,135,1,NULL),
+(50310,5,3,10,0,2,2,194,303,212,0,0,'Goblin Cleric 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-10-a2.png',0,75,71,62,76,87,81,139,1,NULL),
+(50315,5,3,15,0,2,2,293,472,322,0,0,'Goblin Cleric 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-15-a1.png',0,79,76,63,81,90,83,145,1,NULL),
+(50320,5,3,20,0,2,2,417,660,442,0,0,'Goblin Cleric 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-20-a2.png',0,84,86,68,91,96,90,153,1,NULL),
+(50325,5,3,25,0,2,2,526,834,558,0,0,'Goblin Cleric 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-25-a1.png',0,87,89,68,94,97,93,155,1,NULL),
+(50330,5,3,30,0,2,2,672,1012,677,0,0,'Goblin Cleric 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-30-a2.png',0,90,91,68,99,97,93,157,1,NULL),
+(50335,5,3,35,0,2,2,791,1207,798,0,0,'Goblin Cleric 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-35-a2.png',0,93,94,68,102,100,95,161,1,NULL),
+(50340,5,3,40,0,2,2,964,1410,921,0,0,'Goblin Cleric 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-40-a1.png',0,96,98,69,106,103,98,165,1,NULL),
+(50345,5,3,45,0,2,2,1127,1714,1095,0,0,'Goblin Cleric 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-45-a1.png',0,98,100,73,112,105,101,168,1,NULL),
+(50350,5,3,50,0,2,2,1443,2140,1398,0,0,'Goblin Cleric 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-50-a1.png',0,102,109,74,116,110,105,174,1,NULL),
+(50355,5,3,55,0,2,2,1763,2588,1774,0,0,'Goblin Cleric 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-55-a2.png',0,113,125,80,135,117,116,184,1,NULL),
+(50360,5,3,60,0,2,2,2113,3049,2149,0,0,'Goblin Cleric 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-60-a2.png',0,120,135,83,151,124,124,192,1,NULL),
+(50365,5,3,65,0,2,2,2498,3622,2731,0,0,'Goblin Cleric 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-65-a2.png',0,138,150,86,183,137,139,210,1,NULL),
+(50370,5,3,70,0,2,2,3311,5001,4026,0,0,'Goblin Cleric 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-cleric-70-a2.png',0,168,203,102,252,218,183,305,1,NULL),
+(50105,5,1,5,0,9,2,114,0,109,0,0,'Goblin Rogue 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-05-a1.png',0,104,82,58,81,64,100,69,1,NULL),
+(50110,5,1,10,0,9,2,228,0,222,0,0,'Goblin Rogue 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-10-a1.png',0,110,88,59,87,66,105,71,1,NULL),
+(50115,5,1,15,0,9,2,346,0,343,0,0,'Goblin Rogue 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-15-a1.png',0,115,94,60,93,68,108,74,1,NULL),
+(50120,5,1,20,0,9,2,493,0,495,0,0,'Goblin Rogue 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-20-a1.png',0,123,107,64,104,73,117,79,1,NULL),
+(50125,5,1,25,0,9,2,620,0,637,0,0,'Goblin Rogue 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-25-a1.png',0,127,109,64,108,74,120,80,1,NULL),
+(50130,5,1,30,0,9,2,793,0,780,0,0,'Goblin Rogue 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-30-a1.png',0,132,112,64,113,74,121,81,1,NULL),
+(50135,5,1,35,0,9,2,932,0,937,0,0,'Goblin Rogue 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-35-a1.png',0,137,115,64,117,75,124,83,1,NULL),
+(50140,5,1,40,0,9,2,1136,0,1101,0,0,'Goblin Rogue 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-40-a2.png',0,140,120,66,121,77,127,85,1,NULL),
+(50145,5,1,45,0,9,2,1331,0,1338,0,0,'Goblin Rogue 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-45-a1.png',0,143,123,69,129,79,131,87,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_6")
+			+ std::string(R"SHR427_7(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(50150,5,1,50,0,9,2,1708,0,1702,0,0,'Goblin Rogue 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-50-a1.png',0,150,135,70,134,83,136,90,1,NULL),
+(50155,5,1,55,0,9,2,2064,0,2167,0,0,'Goblin Rogue 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-55-a1.png',0,165,155,76,155,88,151,95,1,NULL),
+(50160,5,1,60,0,9,2,2438,0,2622,0,0,'Goblin Rogue 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-60-a1.png',0,176,166,78,173,94,161,99,1,NULL),
+(50165,5,1,65,0,9,2,2858,0,3333,0,0,'Goblin Rogue 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-65-a1.png',0,202,185,82,210,104,180,108,1,NULL),
+(50170,5,1,70,433,9,2,3632,0,4305,0,0,'Goblin Rogue 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Goblinoid','Goblin Rogue',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-rogue-70-a1.png',104,245,250,96,289,165,238,174,1,3.3854162693024),
+(50405,5,4,5,0,12,2,96,156,104,0,0,'Goblin Wizard 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-05-a1.png',0,58,69,67,66,143,80,81,1,NULL),
+(50410,5,4,10,0,12,2,193,321,213,0,0,'Goblin Wizard 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(50415,5,4,15,0,12,2,293,496,323,0,0,'Goblin Wizard 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-15-a1.png',0,64,79,69,76,152,86,87,1,NULL),
+(50420,5,4,20,0,12,2,416,700,444,0,0,'Goblin Wizard 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-20-a1.png',0,69,90,75,85,162,93,92,1,NULL),
+(50425,5,4,25,0,12,2,523,888,558,0,0,'Goblin Wizard 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(50430,5,4,30,0,12,2,672,1066,677,0,0,'Goblin Wizard 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-30-a1.png',0,74,95,75,93,165,96,94,1,NULL),
+(50435,5,4,35,0,12,2,787,1270,794,0,0,'Goblin Wizard 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(50440,5,4,40,0,12,2,963,1482,921,0,0,'Goblin Wizard 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-40-a1.png',0,78,102,76,99,173,101,99,1,NULL),
+(50445,5,4,45,0,12,2,1123,1821,1082,0,0,'Goblin Wizard 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-45-a1.png',0,80,104,80,105,178,104,101,1,NULL),
+(50450,5,4,50,0,12,2,1440,2291,1355,0,0,'Goblin Wizard 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(50455,5,4,55,0,12,2,1756,2774,1724,0,0,'Goblin Wizard 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(50460,5,4,60,0,12,2,2099,3261,2091,0,0,'Goblin Wizard 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-60-a2.png',0,98,141,90,142,210,128,115,1,NULL),
+(50465,5,4,65,0,12,2,2584,3918,2737,0,0,'Goblin Wizard 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-65-a1.png',0,113,156,94,172,232,143,126,1,NULL),
+(50470,5,4,70,0,12,2,3308,5058,3933,0,0,'Goblin Wizard 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Goblin Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-goblin-wizard-70-a1.png',0,137,211,111,237,305,189,203,1,NULL),
+(50505,5,5,5,0,16,2,143,0,117,0,0,'Orc Battle Rager 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-05-a2.png',0,129,94,52,81,55,85,68,1,NULL),
+(50510,5,5,10,0,16,2,286,0,242,0,0,'Orc Battle Rager 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(50515,5,5,15,0,16,2,435,0,378,0,0,'Orc Battle Rager 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-15-a2.png',0,142,107,54,93,58,92,73,1,NULL),
+(50520,5,5,20,0,16,2,620,0,544,0,0,'Orc Battle Rager 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-20-a2.png',0,152,122,58,104,62,100,78,1,NULL),
+(50525,5,5,25,0,16,2,779,0,699,0,0,'Orc Battle Rager 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(50530,5,5,30,0,16,2,999,0,857,0,0,'Orc Battle Rager 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(50535,5,5,35,0,16,2,1174,0,1026,0,0,'Orc Battle Rager 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-35-a2.png',0,169,132,58,117,65,105,82,1,NULL),
+(50540,5,5,40,0,16,2,1433,0,1209,0,0,'Orc Battle Rager 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(50545,5,5,45,0,16,2,1674,0,1467,0,0,'Orc Battle Rager 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-45-a2.png',0,177,141,62,129,68,112,86,1,NULL),
+(50550,5,5,50,0,16,2,2142,0,1867,0,0,'Orc Battle Rager 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-50-a2.png',0,185,154,63,134,72,116,89,1,NULL),
+(50555,5,5,55,0,16,2,2603,0,2372,0,0,'Orc Battle Rager 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(50560,5,5,60,0,16,2,3259,0,2970,0,0,'Orc Battle Rager 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-60-a2.png',0,217,190,71,173,81,137,98,1,NULL),
+(50565,5,5,65,0,16,2,3894,0,3749,0,0,'Orc Battle Rager 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-65-a1.png',0,249,211,74,210,89,154,107,1,NULL),
+(50570,5,5,70,0,16,2,4850,0,4778,0,0,'Orc Battle Rager 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Battle Rager',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-battle-rager-70-a2.png',0,302,285,87,289,142,203,172,1,NULL),
+(50205,5,2,5,0,1,2,152,0,110,0,0,'Orc Brute 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-05-a2.png',0,113,84,51,80,66,91,68,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_7")
+			+ std::string(R"SHR427_8(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(50210,5,2,10,0,1,2,303,0,225,0,0,'Orc Brute 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-10-a2.png',0,119,90,52,86,68,95,70,1,NULL),
+(50215,5,2,15,0,1,2,461,0,347,0,0,'Orc Brute 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-15-a1.png',0,125,96,53,92,70,98,73,1,NULL),
+(50220,5,2,20,0,1,2,655,0,501,0,0,'Orc Brute 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-20-a2.png',0,133,109,57,103,75,106,77,1,NULL),
+(50225,5,2,25,0,1,2,824,0,644,0,0,'Orc Brute 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-25-a1.png',0,138,112,57,107,76,109,78,1,NULL),
+(50230,5,2,30,0,1,2,1057,0,796,0,0,'Orc Brute 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-30-a1.png',0,143,115,57,112,76,110,79,1,NULL),
+(50235,5,2,35,0,1,2,1241,0,947,0,0,'Orc Brute 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-35-a1.png',0,148,118,57,116,78,112,81,1,NULL),
+(50240,5,2,40,0,1,2,1515,0,1113,0,0,'Orc Brute 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-40-a1.png',0,152,123,58,120,80,115,83,1,NULL),
+(50245,5,2,45,0,1,2,1769,0,1351,0,0,'Orc Brute 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(50250,5,2,50,0,1,2,2265,0,1718,0,0,'Orc Brute 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-50-a1.png',0,162,138,62,132,86,123,88,1,NULL),
+(50255,5,2,55,0,1,2,2756,0,2203,0,0,'Orc Brute 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-55-a1.png',0,178,158,67,153,91,137,93,1,NULL),
+(50260,5,2,60,0,1,2,3295,0,2681,0,0,'Orc Brute 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(50265,5,2,65,0,1,2,3886,0,3418,0,0,'Orc Brute 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-65-a1.png',0,218,189,72,207,107,163,106,1,NULL),
+(50270,5,2,70,0,1,2,4912,0,4420,0,0,'Orc Brute 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Goblinoid','Orc Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-goblinoid-orc-brute-70-a1.png',0,265,255,85,285,170,215,170,1,NULL),
+(60105,6,1,5,0,2,2,94,145,101,0,0,'Kobold Cleric 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-05-a1.png',0,71,66,61,70,85,77,135,1,NULL),
+(60110,6,1,10,0,2,2,188,297,206,0,0,'Kobold Cleric 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-10-a1.png',0,75,71,62,76,87,81,139,1,NULL),
+(60115,6,1,15,0,2,2,285,463,313,0,0,'Kobold Cleric 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-15-a1.png',0,79,76,63,81,90,83,145,1,NULL),
+(60120,6,1,20,0,2,2,406,648,430,0,0,'Kobold Cleric 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-20-a1.png',0,84,86,68,91,96,90,153,1,NULL),
+(60125,6,1,25,0,2,2,512,819,543,0,0,'Kobold Cleric 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-25-a1.png',0,87,89,68,94,97,93,155,1,NULL),
+(60130,6,1,30,0,2,2,654,994,659,0,0,'Kobold Cleric 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-30-a2.png',0,90,91,68,99,97,93,157,1,NULL),
+(60135,6,1,35,0,2,2,770,1186,777,0,0,'Kobold Cleric 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-35-a1.png',0,93,94,68,102,100,95,161,1,NULL),
+(60140,6,1,40,0,2,2,938,1386,897,0,0,'Kobold Cleric 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-40-a1.png',0,96,98,69,106,103,98,165,1,NULL),
+(60145,6,1,45,0,2,2,1098,1687,1068,0,0,'Kobold Cleric 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-45-a1.png',0,98,100,73,112,105,101,168,1,NULL),
+(60150,6,1,50,0,2,2,1406,2107,1365,0,0,'Kobold Cleric 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-50-a1.png',0,102,109,74,116,110,105,174,1,NULL),
+(60155,6,1,55,0,2,2,1700,2534,1720,0,0,'Kobold Cleric 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-55-a1.png',0,113,125,80,135,117,116,184,1,NULL),
+(60160,6,1,60,0,2,2,2015,2970,2070,0,0,'Kobold Cleric 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-60-a1.png',0,120,135,83,151,124,124,192,1,NULL),
+(60165,6,1,65,0,2,2,2361,3515,2624,0,0,'Kobold Cleric 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-65-a1.png',0,138,150,86,183,137,139,210,1,NULL),
+(60170,6,1,70,455,2,2,3008,4770,3795,0,0,'Kobold Cleric 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Humanoid','Kobold Cleric',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-cleric-70-a2.png',104,168,203,102,252,218,183,305,1,2.7083327770233),
+(60205,6,2,5,0,9,2,116,0,110,0,0,'Kobold Rogue 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-05-a1.png',0,104,82,58,81,64,100,69,1,NULL),
+(60210,6,2,10,0,9,2,231,0,225,0,0,'Kobold Rogue 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-10-a2.png',0,110,88,59,87,66,105,71,1,NULL),
+(60215,6,2,15,0,9,2,351,0,347,0,0,'Kobold Rogue 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-15-a1.png',0,115,94,60,93,68,108,74,1,NULL),
+(60220,6,2,20,0,9,2,500,0,501,0,0,'Kobold Rogue 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-20-a1.png',0,123,107,64,104,73,117,79,1,NULL),
+(60225,6,2,25,0,9,2,628,0,644,0,0,'Kobold Rogue 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-25-a1.png',0,127,109,64,108,74,120,80,1,NULL),
+(60230,6,2,30,0,9,2,804,0,789,0,0,'Kobold Rogue 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-30-a1.png',0,132,112,64,113,74,121,81,1,NULL),
+(60235,6,2,35,0,9,2,945,0,947,0,0,'Kobold Rogue 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-35-a1.png',0,137,115,64,117,75,124,83,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_8")
+			+ std::string(R"SHR427_9(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(60240,6,2,40,0,9,2,1152,0,1113,0,0,'Kobold Rogue 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-40-a1.png',0,140,120,66,121,77,127,85,1,NULL),
+(60245,6,2,45,0,9,2,1349,0,1351,0,0,'Kobold Rogue 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-45-a1.png',0,143,123,69,129,79,131,87,1,NULL),
+(60250,6,2,50,0,9,2,1730,0,1718,0,0,'Kobold Rogue 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-50-a1.png',0,150,135,70,134,83,136,90,1,NULL),
+(60255,6,2,55,0,9,2,2116,0,2203,0,0,'Kobold Rogue 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-55-a1.png',0,165,155,76,155,88,151,95,1,NULL),
+(60260,6,2,60,0,9,2,2528,0,2681,0,0,'Kobold Rogue 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-60-a1.png',0,176,166,78,173,94,161,99,1,NULL),
+(60265,6,2,65,0,9,2,2992,0,3418,0,0,'Kobold Rogue 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-65-a2.png',0,202,185,82,210,104,180,108,1,NULL),
+(60270,6,2,70,0,9,2,3817,0,4420,0,0,'Kobold Rogue 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Kobold Rogue',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-kobold-rogue-70-a1.png',0,245,250,96,289,165,238,174,1,NULL),
+(60405,6,4,5,0,16,2,143,0,117,0,0,'Minotaur Berserker 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-05-a1.png',0,129,94,52,81,55,85,68,1,NULL),
+(60410,6,4,10,0,16,2,286,0,242,0,0,'Minotaur Berserker 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(60415,6,4,15,0,16,2,435,0,378,0,0,'Minotaur Berserker 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-15-a1.png',0,142,107,54,93,58,92,73,1,NULL),
+(60420,6,4,20,0,16,2,620,0,544,0,0,'Minotaur Berserker 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-20-a1.png',0,152,122,58,104,62,100,78,1,NULL),
+(60425,6,4,25,0,16,2,779,0,699,0,0,'Minotaur Berserker 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(60430,6,4,30,0,16,2,999,0,857,0,0,'Minotaur Berserker 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(60435,6,4,35,0,16,2,1174,0,1026,0,0,'Minotaur Berserker 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-35-a2.png',0,169,132,58,117,65,105,82,1,NULL),
+(60440,6,4,40,0,16,2,1433,0,1209,0,0,'Minotaur Berserker 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-40-a2.png',0,173,137,59,122,67,108,84,1,NULL),
+(60445,6,4,45,0,16,2,1674,0,1467,0,0,'Minotaur Berserker 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-45-a1.png',0,177,141,62,129,68,112,86,1,NULL),
+(60450,6,4,50,0,16,2,2142,0,1867,0,0,'Minotaur Berserker 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(60455,6,4,55,0,16,2,2603,0,2372,0,0,'Minotaur Berserker 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-55-a2.png',0,203,176,69,155,76,129,94,1,NULL),
+(60460,6,4,60,0,16,2,3259,0,2970,0,0,'Minotaur Berserker 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-60-a1.png',0,217,190,71,173,81,137,98,1,NULL),
+(60465,6,4,65,0,16,2,3894,0,3749,0,0,'Minotaur Berserker 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-65-a1.png',0,249,211,74,210,89,154,107,1,NULL),
+(60470,6,4,70,0,16,2,4850,0,4778,0,0,'Minotaur Berserker 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Berserker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-berserker-70-a1.png',0,302,285,87,289,142,203,172,1,NULL),
+(60305,6,3,5,0,1,2,156,0,113,0,0,'Minotaur Brute 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-05-a1.png',0,113,84,51,80,66,91,68,1,NULL),
+(60310,6,3,10,0,1,2,312,0,231,0,0,'Minotaur Brute 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-10-a1.png',0,119,90,52,86,68,95,70,1,NULL),
+(60315,6,3,15,0,1,2,474,0,356,0,0,'Minotaur Brute 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-15-a1.png',0,125,96,53,92,70,98,73,1,NULL),
+(60320,6,3,20,0,1,2,673,0,513,0,0,'Minotaur Brute 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-20-a1.png',0,133,109,57,103,75,106,77,1,NULL),
+(60325,6,3,25,0,1,2,847,0,659,0,0,'Minotaur Brute 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-25-a2.png',0,138,112,57,107,76,109,78,1,NULL),
+(60330,6,3,30,0,1,2,1087,0,814,0,0,'Minotaur Brute 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-30-a1.png',0,143,115,57,112,76,110,79,1,NULL),
+(60335,6,3,35,0,1,2,1276,0,968,0,0,'Minotaur Brute 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-35-a1.png',0,148,118,57,116,78,112,81,1,NULL),
+(60340,6,3,40,0,1,2,1558,0,1137,0,0,'Minotaur Brute 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-40-a1.png',0,152,123,58,120,80,115,83,1,NULL),
+(60345,6,3,45,0,1,2,1817,0,1378,0,0,'Minotaur Brute 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(60350,6,3,50,0,1,2,2327,0,1751,0,0,'Minotaur Brute 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-50-a1.png',0,162,138,62,132,86,123,88,1,NULL),
+(60355,6,3,55,0,1,2,2826,0,2239,0,0,'Minotaur Brute 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-55-a1.png',0,178,158,67,153,91,137,93,1,NULL),
+(60360,6,3,60,0,1,2,3376,0,2721,0,0,'Minotaur Brute 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(60365,6,3,65,0,1,2,4160,0,3547,0,0,'Minotaur Brute 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-65-a1.png',0,218,189,72,207,107,163,106,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_9")
+			+ std::string(R"SHR427_10(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(60370,6,3,70,0,1,2,5291,0,4593,0,0,'Minotaur Brute 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Humanoid','Minotaur Brute',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-humanoid-minotaur-brute-70-a1.png',0,265,255,85,285,170,215,170,1,NULL),
+(70405,7,4,5,0,2,2,98,149,105,0,0,'Fairy Cleric 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-05-a2.png',0,71,66,61,70,85,77,135,1,NULL),
+(70410,7,4,10,0,2,2,196,306,215,0,0,'Fairy Cleric 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-10-a1.png',0,75,71,62,76,87,81,139,1,NULL),
+(70415,7,4,15,0,2,2,297,476,326,0,0,'Fairy Cleric 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-15-a1.png',0,79,76,63,81,90,83,145,1,NULL),
+(70420,7,4,20,0,2,2,423,666,448,0,0,'Fairy Cleric 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-20-a1.png',0,84,86,68,91,96,90,153,1,NULL),
+(70425,7,4,25,0,2,2,533,841,565,0,0,'Fairy Cleric 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-25-a1.png',0,87,89,68,94,97,93,155,1,NULL),
+(70430,7,4,30,0,2,2,681,1021,686,0,0,'Fairy Cleric 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-30-a1.png',0,90,91,68,99,97,93,157,1,NULL),
+(70435,7,4,35,0,2,2,801,1217,808,0,0,'Fairy Cleric 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-35-a1.png',0,93,94,68,102,100,95,161,1,NULL),
+(70440,7,4,40,0,2,2,977,1422,933,0,0,'Fairy Cleric 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-40-a1.png',0,96,98,69,106,103,98,165,1,NULL),
+(70445,7,4,45,0,2,2,1142,1727,1108,0,0,'Fairy Cleric 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-45-a2.png',0,98,100,73,112,105,101,168,1,NULL),
+(70450,7,4,50,0,2,2,1461,2156,1414,0,0,'Fairy Cleric 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-50-a1.png',0,102,109,74,116,110,105,174,1,NULL),
+(70455,7,4,55,0,2,2,1784,2606,1792,0,0,'Fairy Cleric 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-55-a1.png',0,113,125,80,135,117,116,184,1,NULL),
+(70460,7,4,60,0,2,2,2137,3069,2169,0,0,'Fairy Cleric 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-60-a1.png',0,120,135,83,151,124,124,192,1,NULL),
+(70465,7,4,65,0,2,2,2635,3729,2838,0,0,'Fairy Cleric 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-65-a1.png',0,138,150,86,183,137,139,210,1,NULL),
+(70470,7,4,70,0,2,2,3387,5058,4083,0,0,'Fairy Cleric 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-cleric-70-a1.png',0,168,203,102,252,218,183,305,1,NULL),
+(70105,7,1,5,0,14,2,91,151,99,0,0,'Fairy Trickster 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-05-a1.png',0,57,60,105,62,140,72,81,1,NULL),
+(70110,7,1,10,0,14,2,181,312,202,0,0,'Fairy Trickster 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-10-a1.png',0,60,64,107,66,145,76,83,1,NULL),
+(70115,7,1,15,0,14,2,275,478,307,0,0,'Fairy Trickster 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-15-a1.png',0,63,69,109,71,149,78,87,1,NULL),
+(70120,7,1,20,0,14,2,389,681,421,0,0,'Fairy Trickster 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-20-a1.png',0,67,78,117,80,160,85,92,1,NULL),
+(70125,7,1,25,0,14,2,489,860,530,0,0,'Fairy Trickster 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-25-a2.png',0,69,80,117,83,162,87,93,1,NULL),
+(70130,7,1,30,0,14,2,630,1032,643,0,0,'Fairy Trickster 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(70135,7,1,35,0,14,2,738,1230,755,0,0,'Fairy Trickster 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(70140,7,1,40,0,14,2,899,1437,873,0,0,'Fairy Trickster 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-40-a1.png',0,76,88,119,93,170,92,99,1,NULL),
+(70145,7,1,45,0,14,2,1047,1756,1025,0,0,'Fairy Trickster 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-45-a1.png',0,78,90,125,98,174,95,101,1,NULL),
+(70150,7,1,50,0,14,2,1343,2222,1268,0,0,'Fairy Trickster 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-50-a1.png',0,81,99,127,102,183,98,105,1,NULL),
+(70155,7,1,55,0,14,2,1635,2701,1573,0,0,'Fairy Trickster 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-55-a1.png',0,90,114,138,119,194,109,111,1,NULL),
+(70160,7,1,60,0,14,2,1949,3191,1901,0,0,'Fairy Trickster 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(70165,7,1,65,0,14,2,2299,3755,2405,0,0,'Fairy Trickster 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Trickster',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-65-a2.png',0,110,136,148,161,228,130,126,1,NULL),
+(70170,7,1,70,473,14,2,2900,4885,3482,0,0,'Fairy Trickster 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Nature Spirits','Fairy Trickster',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-trickster-70-a2.png',104,134,184,175,222,305,172,203,1,2.0312497615814),
+(70205,7,2,5,0,12,2,95,155,103,0,0,'Fairy Wizard 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-05-a1.png',0,58,69,67,66,143,80,81,1,NULL),
+(70210,7,2,10,0,12,2,191,318,210,0,0,'Fairy Wizard 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(70215,7,2,15,0,12,2,289,492,319,0,0,'Fairy Wizard 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-15-a1.png',0,64,79,69,76,152,86,87,1,NULL),
+(70220,7,2,20,0,12,2,411,694,438,0,0,'Fairy Wizard 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-20-a1.png',0,69,90,75,85,162,93,92,1,NULL),
+(70225,7,2,25,0,12,2,516,881,551,0,0,'Fairy Wizard 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-25-a1.png',0,71,92,75,89,165,95,93,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_10")
+			+ std::string(R"SHR427_11(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(70230,7,2,30,0,12,2,663,1057,668,0,0,'Fairy Wizard 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-30-a1.png',0,74,95,75,93,165,96,94,1,NULL),
+(70235,7,2,35,0,12,2,777,1260,784,0,0,'Fairy Wizard 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(70240,7,2,40,0,12,2,950,1470,909,0,0,'Fairy Wizard 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-40-a1.png',0,78,102,76,99,173,101,99,1,NULL),
+(70245,7,2,45,0,12,2,1109,1808,1069,0,0,'Fairy Wizard 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-45-a2.png',0,80,104,80,105,178,104,101,1,NULL),
+(70250,7,2,50,0,12,2,1421,2275,1339,0,0,'Fairy Wizard 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(70255,7,2,55,0,12,2,1735,2756,1706,0,0,'Fairy Wizard 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(70260,7,2,60,0,12,2,2074,3241,2071,0,0,'Fairy Wizard 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-60-a1.png',0,98,141,90,142,210,128,115,1,NULL),
+(70265,7,2,65,0,12,2,2447,3811,2630,0,0,'Fairy Wizard 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-65-a2.png',0,113,156,94,172,232,143,126,1,NULL),
+(70270,7,2,70,0,12,2,3232,5001,3876,0,0,'Fairy Wizard 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Fairy Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-fairy-wizard-70-a1.png',0,137,211,111,237,305,189,203,1,NULL),
+(70505,7,5,5,0,2,2,100,151,107,0,0,'Sporali Cleric 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-05-a1.png',0,71,66,61,70,85,77,135,1,NULL),
+(70510,7,5,10,0,2,2,199,309,218,0,0,'Sporali Cleric 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-10-a2.png',0,75,71,62,76,87,81,139,1,NULL),
+(70515,7,5,15,0,2,2,301,481,331,0,0,'Sporali Cleric 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-15-a1.png',0,79,76,63,81,90,83,145,1,NULL),
+(70520,7,5,20,0,2,2,428,672,454,0,0,'Sporali Cleric 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-20-a2.png',0,84,86,68,91,96,90,153,1,NULL),
+(70525,7,5,25,0,2,2,539,849,573,0,0,'Sporali Cleric 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-25-a1.png',0,87,89,68,94,97,93,155,1,NULL),
+(70530,7,5,30,0,2,2,690,1030,695,0,0,'Sporali Cleric 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-30-a2.png',0,90,91,68,99,97,93,157,1,NULL),
+(70535,7,5,35,0,2,2,812,1228,819,0,0,'Sporali Cleric 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-35-a1.png',0,93,94,68,102,100,95,161,1,NULL),
+(70540,7,5,40,0,2,2,990,1434,945,0,0,'Sporali Cleric 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-40-a1.png',0,96,98,69,106,103,98,165,1,NULL),
+(70545,7,5,45,0,2,2,1157,1741,1122,0,0,'Sporali Cleric 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-45-a2.png',0,98,100,73,112,105,101,168,1,NULL),
+(70550,7,5,50,0,2,2,1480,2173,1431,0,0,'Sporali Cleric 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-50-a1.png',0,102,109,74,116,110,105,174,1,NULL),
+(70555,7,5,55,0,2,2,1805,2624,1810,0,0,'Sporali Cleric 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-55-a1.png',0,113,125,80,135,117,116,184,1,NULL),
+(70560,7,5,60,0,2,2,2259,3168,2268,0,0,'Sporali Cleric 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-60-a1.png',0,120,135,83,151,124,124,192,1,NULL),
+(70565,7,5,65,0,2,2,2703,3783,2892,0,0,'Sporali Cleric 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-65-a1.png',0,138,150,86,183,137,139,210,1,NULL),
+(70570,7,5,70,0,2,2,3463,5116,4141,0,0,'Sporali Cleric 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Cleric',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-cleric-70-a1.png',0,168,203,102,252,218,183,305,1,NULL),
+(70305,7,3,5,0,14,2,93,154,98,0,0,'Sporali Spore Wielder 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-05-a1.png',0,57,60,105,62,140,72,81,1,NULL),
+(70310,7,3,10,0,14,2,186,318,199,0,0,'Sporali Spore Wielder 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-10-a1.png',0,60,64,107,66,145,76,83,1,NULL),
+(70315,7,3,15,0,14,2,283,487,303,0,0,'Sporali Spore Wielder 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-15-a2.png',0,63,69,109,71,149,78,87,1,NULL),
+(70320,7,3,20,0,14,2,400,693,415,0,0,'Sporali Spore Wielder 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-20-a2.png',0,67,78,117,80,160,85,92,1,NULL),
+(70325,7,3,25,0,14,2,503,875,523,0,0,'Sporali Spore Wielder 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-25-a1.png',0,69,80,117,83,162,87,93,1,NULL),
+(70330,7,3,30,0,14,2,648,1050,634,0,0,'Sporali Spore Wielder 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(70335,7,3,35,0,14,2,759,1251,745,0,0,'Sporali Spore Wielder 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(70340,7,3,40,0,14,2,925,1461,861,0,0,'Sporali Spore Wielder 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-40-a2.png',0,76,88,119,93,170,92,99,1,NULL),
+(70345,7,3,45,0,14,2,1076,1783,1012,0,0,'Sporali Spore Wielder 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-45-a1.png',0,78,90,125,98,174,95,101,1,NULL),
+(70350,7,3,50,0,14,2,1380,2255,1252,0,0,'Sporali Spore Wielder 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-50-a1.png',0,81,99,127,102,183,98,105,1,NULL),
+(70355,7,3,55,0,14,2,1677,2737,1537,0,0,'Sporali Spore Wielder 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-55-a2.png',0,90,114,138,119,194,109,111,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_11")
+			+ std::string(R"SHR427_12(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(70360,7,3,60,0,14,2,1998,3231,1842,0,0,'Sporali Spore Wielder 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(70365,7,3,65,0,14,2,2464,3884,2320,0,0,'Sporali Spore Wielder 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-65-a1.png',0,110,136,148,161,228,130,126,1,NULL),
+(70370,7,3,70,0,14,2,3128,5058,3367,0,0,'Sporali Spore Wielder 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Nature Spirits','Sporali Spore Wielder',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-nature-spirits-sporali-spore-wielder-70-a1.png',0,134,184,175,222,305,172,203,1,NULL),
+(80105,8,1,5,0,16,2,136,0,111,0,0,'Basilisk Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-05-a1.png',0,129,94,52,81,55,85,68,1,NULL),
+(80110,8,1,10,0,16,2,271,0,230,0,0,'Basilisk Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(80115,8,1,15,0,16,2,412,0,360,0,0,'Basilisk Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-15-a1.png',0,142,107,54,93,58,92,73,1,NULL),
+(80120,8,1,20,0,16,2,587,0,520,0,0,'Basilisk Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-20-a1.png',0,152,122,58,104,62,100,78,1,NULL),
+(80125,8,1,25,0,16,2,738,0,669,0,0,'Basilisk Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(80130,8,1,30,0,16,2,946,0,821,0,0,'Basilisk Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(80135,8,1,35,0,16,2,1112,0,984,0,0,'Basilisk Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-35-a1.png',0,169,132,58,117,65,105,82,1,NULL),
+(80140,8,1,40,0,16,2,1356,0,1161,0,0,'Basilisk Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(80145,8,1,45,0,16,2,1587,0,1413,0,0,'Basilisk Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-45-a1.png',0,177,141,62,129,68,112,86,1,NULL),
+(80150,8,1,50,0,16,2,2032,0,1801,0,0,'Basilisk Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(80155,8,1,55,0,16,2,2446,0,2282,0,0,'Basilisk Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(80160,8,1,60,0,16,2,2896,0,2772,0,0,'Basilisk Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-60-a2.png',0,217,190,71,173,81,137,98,1,NULL),
+(80165,8,1,65,0,16,2,3385,0,3481,0,0,'Basilisk Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Basilisk Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-65-a1.png',0,249,211,74,210,89,154,107,1,NULL),
+(80170,8,1,70,436,16,2,4173,0,4432,0,0,'Basilisk Beast 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Reptiles','Basilisk Beast',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-reptiles-basilisk-beast-70-a1.png',104,302,285,87,289,142,203,172,1,1.7502330541611),
+(80305,8,3,5,0,16,2,142,0,115,0,0,'Raptor Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-05-a1.png',0,129,94,52,81,55,85,68,1,NULL),
+(80310,8,3,10,0,16,2,283,0,239,0,0,'Raptor Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(80315,8,3,15,0,16,2,430,0,373,0,0,'Raptor Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-15-a1.png',0,142,107,54,93,58,92,73,1,NULL),
+(80320,8,3,20,0,16,2,611,0,538,0,0,'Raptor Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-20-a1.png',0,152,122,58,104,62,100,78,1,NULL),
+(80325,8,3,25,0,16,2,769,0,691,0,0,'Raptor Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(80330,8,3,30,0,16,2,986,0,848,0,0,'Raptor Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(80335,8,3,35,0,16,2,1159,0,1015,0,0,'Raptor Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-35-a1.png',0,169,132,58,117,65,105,82,1,NULL),
+(80340,8,3,40,0,16,2,1414,0,1197,0,0,'Raptor Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(80345,8,3,45,0,16,2,1652,0,1453,0,0,'Raptor Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-45-a1.png',0,177,141,62,129,68,112,86,1,NULL),
+(80350,8,3,50,0,16,2,2115,0,1850,0,0,'Raptor Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-50-a1.png',0,185,154,63,134,72,116,89,1,NULL),
+(80355,8,3,55,0,16,2,2572,0,2354,0,0,'Raptor Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(80360,8,3,60,0,16,2,3077,0,2871,0,0,'Raptor Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-60-a2.png',0,217,190,71,173,81,137,98,1,NULL),
+(80365,8,3,65,0,16,2,3792,0,3695,0,0,'Raptor Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-65-a1.png',0,249,211,74,210,89,154,107,1,NULL),
+(80370,8,3,70,0,16,2,4737,0,4720,0,0,'Raptor Beast 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Raptor Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-raptor-beast-70-a2.png',0,302,285,87,289,142,203,172,1,NULL),
+(80205,8,2,5,0,16,2,140,0,114,0,0,'Scaled Wolf Beast 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-05-a1.png',0,129,94,52,81,55,85,68,1,NULL),
+(80210,8,2,10,0,16,2,279,0,236,0,0,'Scaled Wolf Beast 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-10-a1.png',0,136,100,53,87,57,89,70,1,NULL),
+(80215,8,2,15,0,16,2,424,0,369,0,0,'Scaled Wolf Beast 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-15-a1.png',0,142,107,54,93,58,92,73,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_12")
+			+ std::string(R"SHR427_13(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(80220,8,2,20,0,16,2,603,0,532,0,0,'Scaled Wolf Beast 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-20-a1.png',0,152,122,58,104,62,100,78,1,NULL),
+(80225,8,2,25,0,16,2,759,0,684,0,0,'Scaled Wolf Beast 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-25-a1.png',0,157,125,58,108,63,103,79,1,NULL),
+(80230,8,2,30,0,16,2,972,0,839,0,0,'Scaled Wolf Beast 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-30-a1.png',0,163,128,58,113,63,103,80,1,NULL),
+(80235,8,2,35,0,16,2,1143,0,1005,0,0,'Scaled Wolf Beast 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-35-a2.png',0,169,132,58,117,65,105,82,1,NULL),
+(80240,8,2,40,0,16,2,1394,0,1185,0,0,'Scaled Wolf Beast 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-40-a1.png',0,173,137,59,122,67,108,84,1,NULL),
+(80245,8,2,45,0,16,2,1631,0,1440,0,0,'Scaled Wolf Beast 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-45-a1.png',0,177,141,62,129,68,112,86,1,NULL),
+(80250,8,2,50,0,16,2,2087,0,1834,0,0,'Scaled Wolf Beast 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-50-a2.png',0,185,154,63,134,72,116,89,1,NULL),
+(80255,8,2,55,0,16,2,2541,0,2336,0,0,'Scaled Wolf Beast 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-55-a1.png',0,203,176,69,155,76,129,94,1,NULL),
+(80260,8,2,60,0,16,2,3041,0,2851,0,0,'Scaled Wolf Beast 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-60-a1.png',0,217,190,71,173,81,137,98,1,NULL),
+(80265,8,2,65,0,16,2,3589,0,3588,0,0,'Scaled Wolf Beast 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-65-a2.png',0,249,211,74,210,89,154,107,1,NULL),
+(80270,8,2,70,0,16,2,4625,0,4663,0,0,'Scaled Wolf Beast 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Reptiles','Scaled Wolf Beast',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-reptiles-scaled-wolf-beast-70-a1.png',0,302,285,87,289,142,203,172,1,NULL),
+(90305,9,3,5,0,14,2,91,151,99,0,0,'Scarecrow Mind Bender 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-05-a1.png',0,57,60,105,62,140,72,81,1,NULL),
+(90310,9,3,10,0,14,2,181,312,202,0,0,'Scarecrow Mind Bender 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-10-a1.png',0,60,64,107,66,145,76,83,1,NULL),
+(90315,9,3,15,0,14,2,275,478,307,0,0,'Scarecrow Mind Bender 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-15-a1.png',0,63,69,109,71,149,78,87,1,NULL),
+(90320,9,3,20,0,14,2,389,681,421,0,0,'Scarecrow Mind Bender 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-20-a1.png',0,67,78,117,80,160,85,92,1,NULL),
+(90325,9,3,25,0,14,2,489,860,530,0,0,'Scarecrow Mind Bender 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-25-a2.png',0,69,80,117,83,162,87,93,1,NULL),
+(90330,9,3,30,0,14,2,630,1032,643,0,0,'Scarecrow Mind Bender 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-30-a1.png',0,72,83,117,87,162,88,94,1,NULL),
+(90335,9,3,35,0,14,2,738,1230,755,0,0,'Scarecrow Mind Bender 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-35-a1.png',0,74,85,117,90,166,89,97,1,NULL),
+(90340,9,3,40,0,14,2,899,1437,873,0,0,'Scarecrow Mind Bender 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-40-a1.png',0,76,88,119,93,170,92,99,1,NULL),
+(90345,9,3,45,0,14,2,1047,1756,1025,0,0,'Scarecrow Mind Bender 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-45-a1.png',0,78,90,125,98,174,95,101,1,NULL),
+(90350,9,3,50,0,14,2,1343,2222,1268,0,0,'Scarecrow Mind Bender 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-50-a2.png',0,81,99,127,102,183,98,105,1,NULL),
+(90355,9,3,55,0,14,2,1635,2701,1573,0,0,'Scarecrow Mind Bender 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-55-a2.png',0,90,114,138,119,194,109,111,1,NULL),
+(90360,9,3,60,0,14,2,1949,3191,1901,0,0,'Scarecrow Mind Bender 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-60-a1.png',0,96,122,142,133,206,117,116,1,NULL),
+(90365,9,3,65,0,14,2,2299,3755,2405,0,0,'Scarecrow Mind Bender 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-65-a2.png',0,110,136,148,161,228,130,126,1,NULL),
+(90370,9,3,70,0,14,2,2900,4885,3482,0,0,'Scarecrow Mind Bender 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Scarecrow Mind Bender',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-scarecrow-mind-bender-70-a1.png',0,134,184,175,222,305,172,203,1,NULL),
+(90105,9,1,5,0,12,2,96,156,104,0,0,'Skeleton Wizard 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-05-a1.png',0,58,69,67,66,143,80,81,1,NULL),
+(90110,9,1,10,0,12,2,193,321,213,0,0,'Skeleton Wizard 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(90115,9,1,15,0,12,2,293,496,323,0,0,'Skeleton Wizard 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-15-a1.png',0,64,79,69,76,152,86,87,1,NULL),
+(90120,9,1,20,0,12,2,416,700,444,0,0,'Skeleton Wizard 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-20-a1.png',0,69,90,75,85,162,93,92,1,NULL),
+(90125,9,1,25,0,12,2,523,888,558,0,0,'Skeleton Wizard 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(90130,9,1,30,0,12,2,672,1066,677,0,0,'Skeleton Wizard 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-30-a2.png',0,74,95,75,93,165,96,94,1,NULL),
+(90135,9,1,35,0,12,2,787,1270,794,0,0,'Skeleton Wizard 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(90140,9,1,40,0,12,2,963,1482,921,0,0,'Skeleton Wizard 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-40-a1.png',0,78,102,76,99,173,101,99,1,NULL),
+(90145,9,1,45,0,12,2,1123,1821,1082,0,0,'Skeleton Wizard 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-45-a2.png',0,80,104,80,105,178,104,101,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_13")
+			+ std::string(R"SHR427_14(
+INSERT INTO spirit_shroud_templates (`id`,`progression_id`,`branch_id`,`level`,`race`,`class_id`,`gender`,`hp`,`mana`,`endurance`,`base_stat`,`unlock_xp`,`name`,`description`,`progression_name`,`branch_name`,`enabled`,`content_version`,`verified`,`test_only`,`evidence_ref`,`monster_points`,`stat_str`,`stat_sta`,`stat_cha`,`stat_dex`,`stat_int`,`stat_agi`,`stat_wis`,`resource_maxima`,`model_size`) VALUES
+(90150,9,1,50,0,12,2,1440,2291,1355,0,0,'Skeleton Wizard 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(90155,9,1,55,0,12,2,1756,2774,1724,0,0,'Skeleton Wizard 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-55-a1.png',0,92,131,88,127,197,120,111,1,NULL),
+(90160,9,1,60,0,12,2,2099,3261,2091,0,0,'Skeleton Wizard 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-60-a1.png',0,98,141,90,142,210,128,115,1,NULL),
+(90165,9,1,65,0,12,2,2584,3918,2737,0,0,'Skeleton Wizard 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Skeleton Wizard',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-65-a1.png',0,113,156,94,172,232,143,126,1,NULL),
+(90170,9,1,70,367,12,2,3308,5058,3933,0,0,'Skeleton Wizard 70','Modern Live captured resources and free powers; quantified first purchases only; emulator combat/skills.','Undead','Skeleton Wizard',1,2026102402,1,0,'Live2026-10-24: screenshots/catalog-undead-skeleton-wizard-70-a1.png',104,137,211,111,237,305,189,203,1,3.7499997615814),
+(90405,9,4,5,0,12,2,98,158,100,0,0,'Spectre Ethereal Stalker 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-05-a1.png',0,58,69,67,66,143,80,81,1,NULL),
+(90410,9,4,10,0,12,2,196,324,204,0,0,'Spectre Ethereal Stalker 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-10-a1.png',0,61,74,68,71,147,83,83,1,NULL),
+(90415,9,4,15,0,12,2,297,501,310,0,0,'Spectre Ethereal Stalker 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-15-a2.png',0,64,79,69,76,152,86,87,1,NULL),
+(90420,9,4,20,0,12,2,422,706,426,0,0,'Spectre Ethereal Stalker 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-20-a1.png',0,69,90,75,85,162,93,92,1,NULL),
+(90425,9,4,25,0,12,2,530,896,536,0,0,'Spectre Ethereal Stalker 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-25-a1.png',0,71,92,75,89,165,95,93,1,NULL),
+(90430,9,4,30,0,12,2,681,1075,650,0,0,'Spectre Ethereal Stalker 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-30-a2.png',0,74,95,75,93,165,96,94,1,NULL),
+(90435,9,4,35,0,12,2,798,1281,763,0,0,'Spectre Ethereal Stalker 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-35-a1.png',0,76,97,75,96,169,98,96,1,NULL),
+(90440,9,4,40,0,12,2,976,1494,885,0,0,'Spectre Ethereal Stalker 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-40-a2.png',0,78,102,76,99,173,101,99,1,NULL),
+(90445,9,4,45,0,12,2,1138,1835,1042,0,0,'Spectre Ethereal Stalker 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-45-a2.png',0,80,104,80,105,178,104,101,1,NULL),
+(90450,9,4,50,0,12,2,1458,2308,1306,0,0,'Spectre Ethereal Stalker 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-50-a1.png',0,84,114,81,109,186,108,105,1,NULL),
+(90455,9,4,55,0,12,2,1777,2792,1652,0,0,'Spectre Ethereal Stalker 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-55-a2.png',0,92,131,88,127,197,120,111,1,NULL),
+(90460,9,4,60,0,12,2,2221,3360,1992,0,0,'Spectre Ethereal Stalker 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-60-a1.png',0,98,141,90,142,210,128,115,1,NULL),
+(90465,9,4,65,0,12,2,2652,3972,2523,0,0,'Spectre Ethereal Stalker 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-65-a2.png',0,113,156,94,172,232,143,126,1,NULL),
+(90470,9,4,70,0,12,2,3384,5116,3645,0,0,'Spectre Ethereal Stalker 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Spectre Ethereal Stalker',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-spectre-ethereal-stalker-70-a1.png',0,137,211,111,237,305,189,203,1,NULL),
+(90205,9,2,5,0,1,2,154,0,112,0,0,'Zombie Fighter 5','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-05-a2.png',0,113,84,51,80,66,91,68,1,NULL),
+(90210,9,2,10,0,1,2,307,0,228,0,0,'Zombie Fighter 10','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-10-a1.png',0,119,90,52,86,68,95,70,1,NULL),
+(90215,9,2,15,0,1,2,468,0,352,0,0,'Zombie Fighter 15','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-15-a2.png',0,125,96,53,92,70,98,73,1,NULL),
+(90220,9,2,20,0,1,2,664,0,507,0,0,'Zombie Fighter 20','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-20-a1.png',0,133,109,57,103,75,106,77,1,NULL),
+(90225,9,2,25,0,1,2,836,0,652,0,0,'Zombie Fighter 25','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-25-a1.png',0,138,112,57,107,76,109,78,1,NULL),
+(90230,9,2,30,0,1,2,1072,0,805,0,0,'Zombie Fighter 30','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-30-a1.png',0,143,115,57,112,76,110,79,1,NULL),
+(90235,9,2,35,0,1,2,1259,0,958,0,0,'Zombie Fighter 35','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-35-a2.png',0,148,118,57,116,78,112,81,1,NULL),
+(90240,9,2,40,0,1,2,1537,0,1125,0,0,'Zombie Fighter 40','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-40-a2.png',0,152,123,58,120,80,115,83,1,NULL),
+(90245,9,2,45,0,1,2,1793,0,1365,0,0,'Zombie Fighter 45','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-45-a1.png',0,155,126,61,127,82,119,85,1,NULL),
+(90250,9,2,50,0,1,2,2296,0,1735,0,0,'Zombie Fighter 50','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-50-a1.png',0,162,138,62,132,86,123,88,1,NULL),
+(90255,9,2,55,0,1,2,2791,0,2221,0,0,'Zombie Fighter 55','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-55-a1.png',0,178,158,67,153,91,137,93,1,NULL),
+(90260,9,2,60,0,1,2,3335,0,2701,0,0,'Zombie Fighter 60','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-60-a1.png',0,190,170,69,171,97,146,97,1,NULL),
+(90265,9,2,65,0,1,2,3932,0,3440,0,0,'Zombie Fighter 65','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-65-a2.png',0,218,189,72,207,107,163,106,1,NULL),
+(90270,9,2,70,0,1,2,5165,0,4536,0,0,'Zombie Fighter 70','Disabled preview record: missing active model/size, Monster Point budget or owned loadout. Zero identity values are unknown sentinels.','Undead','Zombie Fighter',0,2026102402,0,0,'Live2026-10-24: screenshots/catalog-undead-zombie-fighter-70-a2.png',0,265,255,85,285,170,215,170,1,NULL)
+ON DUPLICATE KEY UPDATE `id`=VALUES(`id`);)SHR427_14")
+			+ std::string(R"SHR427_15(INSERT INTO spirit_shroud_abilities (`template_id`,`rank_id`,`free_grant`,`display_rank`,`display_max_rank`,`display_total_cost`) VALUES
+(20170,48100,1,1,1,0),
+(20170,48101,1,14,14,0),
+(20170,48137,1,1,1,0),
+(20170,48102,1,14,14,0),
+(20170,48152,0,0,0,-1),
+(20170,48144,0,0,0,-1),
+(20170,48150,0,0,0,-1),
+(20170,48147,0,0,0,-1),
+(20170,48143,0,0,0,-1),
+(20170,48154,0,0,0,-1),
+(20170,48145,0,0,0,-1),
+(20170,48146,0,0,0,-1),
+(20170,48142,0,0,0,-1),
+(20170,48151,0,0,0,-1),
+(20170,48156,0,0,0,-1),
+(20170,48157,0,0,0,-1),
+(20170,48133,1,1,1,0),
+(20170,48117,1,1,1,0),
+(20170,48132,1,1,1,0),
+(20170,48134,1,1,1,0),
+(20170,48127,1,5,5,0),
+(20170,48103,1,14,14,0),
+(20170,48140,1,1,1,0),
+(30170,48136,1,10,10,0),
+(30170,48148,0,0,0,-1),
+(30170,48100,1,1,1,0),
+(30170,48109,1,3,3,15),
+(30170,48107,1,2,2,10),
+(30170,48158,0,0,0,-1),
+(30170,48144,0,0,0,-1),
+(30170,48145,0,0,0,-1),
+(30170,48142,0,0,0,-1),
+(30170,48151,0,0,0,-1),
+(30170,48149,0,0,0,-1),
+(30170,48108,1,10,10,55),
+(30170,48122,1,14,14,0),
+(30170,48157,0,0,0,-1),
+(30170,48106,1,1,1,5),
+(30170,48134,1,1,1,0),
+(30170,48129,1,5,5,0),
+(30170,48119,1,3,3,0),
+(30170,48141,1,1,1,0),
+(40170,48136,1,10,10,0),
+(40170,48121,1,3,3,0),
+(40170,48148,0,0,0,-1),
+(40170,48100,1,1,1,0),
+(40170,48109,1,3,3,15),
+(40170,48124,1,6,6,0),
+(40170,48158,0,0,0,-1),
+(40170,48152,0,0,0,-1),
+(40170,48144,0,0,0,-1),
+(40170,48150,0,0,0,-1),
+(40170,48145,0,0,0,-1),
+(40170,48142,0,0,0,-1),
+(40170,48151,0,0,0,-1),
+(40170,48149,0,0,0,-1),
+(40170,48157,0,0,0,-1),
+(40170,48106,1,1,1,5),
+(40170,48133,1,1,1,0),
+(40170,48117,1,1,1,0),
+(40170,48132,1,1,1,0),
+(40170,48134,1,1,1,0),
+(40170,48129,1,5,5,0),
+(40170,48138,1,1,1,0),
+(40170,48141,1,1,1,0),
+(50170,48100,1,1,1,0),
+(50170,48107,1,2,2,10),
+(50170,48158,0,0,0,-1),
+(50170,48152,0,0,0,-1),
+(50170,48150,0,0,0,-1),
+(50170,48145,0,0,0,-1),
+(50170,48146,0,0,0,-1),
+(50170,48142,0,0,0,-1),
+(50170,48108,1,10,10,55),
+(50170,48157,0,0,0,-1),
+(50170,48105,1,10,10,55),
+(50170,48134,1,1,1,0),
+(50170,48138,1,1,1,0),
+(60170,48125,1,10,10,0),
+(60170,48111,1,4,4,0),
+(60170,48128,1,1,1,0),
+(60170,48100,1,1,1,0),
+(60170,48110,1,10,10,55),
+(60170,48104,1,14,14,0),
+(60170,48144,0,0,0,-1),
+(60170,48150,0,0,0,-1),
+(60170,48147,0,0,0,-1),
+(60170,48143,0,0,0,-1),
+(60170,48145,0,0,0,-1),
+(60170,48146,0,0,0,-1),
+(60170,48142,0,0,0,-1),
+(60170,48153,0,0,0,-1),
+(60170,48123,1,14,14,0),
+(60170,48156,0,0,0,-1),
+(60170,48157,0,0,0,-1),
+(60170,48112,1,4,4,0),
+(60170,48134,1,1,1,0),
+(70170,48100,1,1,1,0),
+(70170,48137,1,1,1,0),
+(70170,48135,1,10,10,0),
+(70170,48152,0,0,0,-1),
+(70170,48155,0,0,0,-1),
+(70170,48144,0,0,0,-1),
+(70170,48150,0,0,0,-1),
+(70170,48147,0,0,0,-1),
+(70170,48143,0,0,0,-1),
+(70170,48154,0,0,0,-1),
+(70170,48145,0,0,0,-1),
+(70170,48146,0,0,0,-1),
+(70170,48142,0,0,0,-1),
+(70170,48115,1,1,1,0),
+(70170,48116,1,5,5,0),
+(70170,48113,1,1,1,0),
+(70170,48126,1,5,5,0),
+(70170,48123,1,14,14,0),
+(70170,48157,0,0,0,-1),
+(70170,48139,1,10,10,0),
+(70170,48114,1,5,5,0),
+(70170,48134,1,1,1,0),
+(70170,48118,1,10,10,0),
+(70170,48140,1,1,1,0),
+(70170,48141,1,1,1,0),
+(80170,48136,1,10,10,0),
+(80170,48100,1,1,1,0),
+(80170,48107,1,2,2,10),
+(80170,48158,0,0,0,-1),
+(80170,48152,0,0,0,-1),
+(80170,48150,0,0,0,-1),
+(80170,48145,0,0,0,-1),
+(80170,48146,0,0,0,-1),
+(80170,48142,0,0,0,-1),
+(80170,48151,0,0,0,-1),
+(80170,48108,1,10,10,55),
+(80170,48122,1,14,14,0),
+(80170,48157,0,0,0,-1),
+(80170,48134,1,1,1,0),
+(80170,48138,1,1,1,0),
+(80170,48120,1,3,3,0),
+(80170,48141,1,1,1,0),
+(90170,48130,1,7,7,0),
+(90170,48131,1,7,7,0),
+(90170,48100,1,1,1,0),
+(90170,48101,1,14,14,0),
+(90170,48137,1,1,1,0),
+(90170,48102,1,14,14,0),
+(90170,48152,0,0,0,-1),
+(90170,48144,0,0,0,-1),
+(90170,48150,0,0,0,-1),
+(90170,48147,0,0,0,-1),
+(90170,48143,0,0,0,-1),
+(90170,48154,0,0,0,-1),
+(90170,48145,0,0,0,-1),
+(90170,48146,0,0,0,-1),
+(90170,48142,0,0,0,-1),
+(90170,48151,0,0,0,-1),
+(90170,48156,0,0,0,-1),
+(90170,48157,0,0,0,-1),
+(90170,48133,1,1,1,0),
+(90170,48117,1,1,1,0),
+(90170,48132,1,1,1,0),
+(90170,48134,1,1,1,0),
+(90170,48127,1,5,5,0),
+(90170,48103,1,14,14,0),
+(90170,48140,1,1,1,0) ON DUPLICATE KEY UPDATE `rank_id`=VALUES(`rank_id`);
+
+INSERT INTO spirit_shroud_starter_equipment (`template_id`,`slot_id`,`item_id`) VALUES
+(20170,13,94127),
+(20170,23,94074),
+(30170,23,94074),
+(40170,23,94074),
+(50170,13,94113),
+(50170,14,94112),
+(50170,23,94074),
+(60170,13,94127),
+(60170,23,94074),
+(70170,13,94127),
+(70170,23,94074),
+(80170,23,94074),
+(90170,13,94113),
+(90170,23,94074) ON DUPLICATE KEY UPDATE `item_id`=VALUES(`item_id`);)SHR427_15"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v428 (2026-11-15) -- tutoriala unlock, converging the v424 mistake.
+	// v424 was authored with .condition = "empty" on a check that returns a row
+	// exactly when the zone IS locked, so the first boot past 424 skipped it and
+	// advanced db_version to 424. v424's condition is corrected in place for
+	// trees that have not reached it; this repeats the same single UPDATE for
+	// those that have. Cosmetic either way (no zone_points reach tutoriala).
+	// Twin: utils/sql/20261115_tutorial_zone_unlock_v428.sql (keep in sync).
+	// Rollback: utils/sql/20261115_tutorial_zone_unlock_v428_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 428,
+		.description = "20261115_tutorial_zone_unlock_v428",
+		.check = "SELECT zoneidnumber FROM zone WHERE zoneidnumber = 188 AND short_name = 'tutoriala' AND min_status = 255",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"TUT428(
+-- v428 (2026-11-15) -- tutorial zone unlock, second attempt (v424 condition was inverted).
+--
+-- v424 shipped with .condition = "empty" against the check
+--   SELECT zoneidnumber FROM zone WHERE zoneidnumber = 188 ... AND min_status = 255
+-- which is true exactly when the row IS locked -- the opposite of what "empty" selects
+-- (ShouldRunMigration, database_update.cpp:127: "empty" runs when the query returns no
+-- rows). The first world boot after the gate reached 424 therefore walked past v424
+-- without running it and advanced db_version to 424, so v424 can never fire again.
+--
+-- v424's condition is corrected in place for databases that have not reached it yet; this
+-- file converges the ones that have. Both are the same single UPDATE and both are
+-- idempotent, so a tree that applies both changes the row once.
+--
+-- Cosmetic: tutoriala has one spawn2 row and no zone_points to or from it, so nothing
+-- becomes reachable either way. It exists so nms_content_health_check.sql's
+-- "v40 eras<=14 still locked at 255 (expect 0)" assertion can tell the truth.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_tutorial_zone_unlock_v428_rollback.sql
+
+UPDATE `zone`
+   SET `min_status` = 0
+ WHERE `zoneidnumber` = 188
+   AND `short_name` = 'tutoriala'
+   AND `version` = 0
+   AND `min_status` = 255;
+)TUT428",
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v429 (2026-11-15) -- Tradeskill recipes: the four reconstruction
+	// packages whose content is entirely absent from peq (RRC009, RRC035,
+	// RRC061, RRC175): 220 recipes and 1,056 entries, remapped from their
+	// 3.09x/3.10x id blocks into 9,000,001-9,000,220 (their own ids collide:
+	// 3,041,024/025 are live here as Wolf Canine Bead / Snake Fang Bead).
+	// Excludes the 53 packages gated on native actors we do not have, and
+	// RRC269/RRC305 which the gap report named but which are in that held set.
+	// Container tokens 20/21/22 are copied as-is: this database already uses
+	// item_id 10-27 with iscontainer=1 in 8,050 entries.
+	// Twin: utils/sql/20261115_tradeskill_missing_four_v429.sql (keep in sync).
+	// Rollback: utils/sql/20261115_tradeskill_missing_four_v429_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 429,
+		.description = "20261115_tradeskill_missing_four_v429",
+		.check = "SELECT 1 FROM (SELECT 1) x WHERE (SELECT COUNT(*) FROM `tradeskill_recipe` WHERE `id` BETWEEN 9000001 AND 9000220) < 220",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"TS429_0(-- v429 (2026-11-15) -- Tradeskill recipes: four reconstruction packages that are entirely absent.
+--
+-- Source: nightstalker6669/EQEmu-Database migrations/tradeskills/recipes/{RRC009, RRC035,
+-- RRC061, RRC175} (batch.json payloads), the four packages among the 46 plain-proposal
+-- packages whose recipes are 0/N present in peq.
+--
+-- Numbers: 220 recipes and 1,056 entries. RRC009 28/127, RRC035 147/609, RRC061 24/130,
+-- RRC175 21/190 (the last is status ..._LABELLED_RECONSTRUCTION and is labelled as such in
+-- its own notes column).
+--
+-- Why these four and not the others: of the 310 RRC packages, 135 are already 100% present
+-- in peq (the PEQ dump carried them), 46 are entirely missing but 53 packages are gated on
+-- native actors we do not have (world loom13, tannan forge28, finite charges, recharge8,
+-- fletch5, ogre tailoring book, book-role policy) -- importing those would point recipes at
+-- containers that do not exist here. RRC269 and RRC305, which the gap report also named,
+-- fall into that held bucket (PENDING_EXPLICIT_BOOK_ROLE_POLICY and ..._SQL_HOLD) and are
+-- deliberately excluded.
+--
+-- Ids: remapped from their 3,09x,xxx/3,10x,xxx blocks into 9,000,001-9,000,220, which is
+-- empty in tradeskill_recipe (our 9M rows start at 30,752,001). Their own ids are NOT used
+-- because 3,041,024/3,041,025 are already live here as Wolf Canine Bead / Snake Fang Bead.
+--
+-- Items: every referenced item id except 20/21/22 exists in peq.items. Those three are
+-- container TOKENS, not items -- the convention this database already uses (8,050 existing
+-- entries carry item_id 10-27 with iscontainer=1 and no matching items row), so they are
+-- copied through unchanged.
+--
+-- Scope note: their status is PROPOSAL, not rehearsed against a live combine. Trivial
+-- levels and yields are taken verbatim; min_expansion 19 (RoF) is kept, and our
+-- World:ExpansionSettings is 524287 (all bits), so the recipes are craftable.
+--
+-- Idempotent: recipe rows INSERT IGNORE on the primary key; each entry batch is guarded on
+-- its recipe having no entries yet.
+--
+-- Twin (source of truth for the manifest copy): this file.
+-- Rollback: utils/sql/20261115_tradeskill_missing_four_v429_rollback.sql
+
+-- 1.1 of 6 -- recipe rows 1-40.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000001,'Regal Axe Head Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000002,'Unfired Regal Axe Head Shaped Mold',69,0,284,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000003,'Regal Blade Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000004,'Unfired Regal Blade Shaped Mold',69,0,283,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000005,'Regal Hammer Head Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000006,'Unfired Regal Hammer Head Shaped Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000007,'Regal Heavy Blade Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000008,'Unfired Regal Heavy Blade Shaped Mold',69,0,283,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000009,'Regal Hilt Casting Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000010,'Unfired Regal Hilt Casting Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000011,'Regal Large Axe Head Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000012,'Unfired Regal Large Axe Head Shaped Mold',69,0,287,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000013,'Regal Large Blade Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000014,'Unfired Regal Large Blade Shaped Mold',69,0,284,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000015,'Regal Large Hilt Casting Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000016,'Unfired Regal Large Hilt Casting Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000017,'Regal Mace Head Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000018,'Unfired Regal Mace Head Shaped Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000019,'Regal Metal Wrap Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000020,'Unfired Regal Metal Wrap Shaped Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000021,'Regal Small Blade Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000022,'Unfired Regal Small Blade Shaped Mold',69,0,283,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000023,'Regal Small Hilt Casting Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000024,'Unfired Regal Small Hilt Casting Mold',69,0,282,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000025,'Regal Spear Head Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000026,'Unfired Regal Spear Head Shaped Mold',69,0,283,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000027,'Regal Ulak Blade Shaped Mold',69,0,17,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000028,'Unfired Regal Ulak Blade Shaped Mold',69,0,283,0,0,'RoF; EQTC article564; Regal mold components; RRC009.',0,0,0,1,19,-1,NULL,NULL),
+(9000029,'Half-Moon Cut Harmonagate',68,0,418,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000030,'Half-Moon Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000031,'Half-Moon Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000032,'Half-Moon Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000033,'Half-Moon Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000034,'Half-Moon Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000035,'Half-Moon Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000036,'Half-Moon Cut Prestidigitase',68,0,351,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000037,'Half-Moon Cut Staurolite',68,0,284,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000038,'Marquise Cut Harmonagate',68,0,426,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000039,'Marquise Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000040,'Marquise Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL);)TS429_0")
+			+ std::string(R"TS429_1(
+-- 1.2 of 6 -- recipe rows 41-80.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000041,'Marquise Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000042,'Marquise Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000043,'Marquise Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000044,'Marquise Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000045,'Marquise Cut Prestidigitase',68,0,359,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000046,'Marquise Cut Staurolite',68,0,292,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000047,'Oval Cut Harmonagate',68,0,420,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000048,'Oval Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000049,'Oval Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000050,'Oval Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000051,'Oval Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000052,'Oval Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000053,'Oval Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000054,'Oval Cut Prestidigitase',68,0,354,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000055,'Oval Cut Staurolite',68,0,287,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000056,'Pear Cut Harmonagate',68,0,423,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000057,'Pear Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000058,'Pear Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000059,'Pear Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000060,'Pear Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000061,'Pear Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000062,'Pear Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000063,'Pear Cut Prestidigitase',68,0,356,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000064,'Pear Cut Staurolite',68,0,290,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000065,'Round Cut Harmonagate',68,0,428,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000066,'Round Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000067,'Round Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000068,'Round Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000069,'Round Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000070,'Round Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000071,'Round Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000072,'Round Cut Prestidigitase',68,0,362,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000073,'Round Cut Staurolite',68,0,295,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000074,'Square Cut Harmonagate',68,0,412,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000075,'Square Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000076,'Square Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000077,'Square Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000078,'Square Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000079,'Square Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000080,'Square Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL);
+
+-- 1.3 of 6 -- recipe rows 81-120.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000081,'Square Cut Prestidigitase',68,0,346,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000082,'Square Cut Staurolite',68,0,279,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000083,'Trillion Cut Harmonagate',68,0,415,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000084,'Trillion Mount Electrum Earring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000085,'Trillion Mount Gold Earring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000086,'Trillion Mount Palladium Earring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000087,'Trillion Mount Platinum Earring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000088,'Trillion Mount Silver Earring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000089,'Trillion Mount Velium Earring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000090,'Trillion Cut Prestidigitase',68,0,348,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000091,'Trillion Cut Staurolite',68,0,282,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000092,'Half-Moon Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000093,'Half-Moon Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000094,'Half-Moon Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000095,'Half-Moon Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000096,'Half-Moon Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000097,'Half-Moon Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000098,'Marquise Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000099,'Marquise Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000100,'Marquise Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000101,'Marquise Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000102,'Marquise Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000103,'Marquise Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000104,'Oval Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000105,'Oval Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000106,'Oval Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000107,'Oval Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000108,'Oval Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000109,'Oval Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000110,'Pear Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000111,'Pear Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000112,'Pear Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000113,'Pear Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000114,'Pear Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000115,'Pear Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000116,'Round Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000117,'Round Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000118,'Round Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000119,'Round Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000120,'Round Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL);)TS429_1")
+			+ std::string(R"TS429_2(
+-- 1.4 of 6 -- recipe rows 121-160.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000121,'Round Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000122,'Square Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000123,'Square Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000124,'Square Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000125,'Square Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000126,'Square Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000127,'Square Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000128,'Trillion Mount Electrum Pendant',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000129,'Trillion Mount Gold Pendant',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000130,'Trillion Mount Palladium Pendant',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000131,'Trillion Mount Platinum Pendant',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000132,'Trillion Mount Silver Pendant',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000133,'Trillion Mount Velium Pendant',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000134,'Half-Moon Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000135,'Half-Moon Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000136,'Half-Moon Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000137,'Half-Moon Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000138,'Half-Moon Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000139,'Half-Moon Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000140,'Marquise Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000141,'Marquise Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000142,'Marquise Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000143,'Marquise Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000144,'Marquise Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000145,'Marquise Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000146,'Oval Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000147,'Oval Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000148,'Oval Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000149,'Oval Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000150,'Oval Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000151,'Oval Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000152,'Pear Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000153,'Pear Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000154,'Pear Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000155,'Pear Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000156,'Pear Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000157,'Pear Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000158,'Round Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000159,'Round Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000160,'Round Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL);)TS429_2")
+			+ std::string(R"TS429_3(
+-- 1.5 of 6 -- recipe rows 161-200.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000161,'Round Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000162,'Round Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000163,'Round Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000164,'Square Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000165,'Square Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000166,'Square Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000167,'Square Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000168,'Square Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000169,'Square Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000170,'Trillion Mount Electrum Ring',68,0,74,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000171,'Trillion Mount Gold Ring',68,0,102,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000172,'Trillion Mount Palladium Ring',68,0,202,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000173,'Trillion Mount Platinum Ring',68,0,122,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000174,'Trillion Mount Silver Ring',68,0,17,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000175,'Trillion Mount Velium Ring',68,0,142,0,0,'PoR manufacturing chain; EQTC direct primary item rows; RRC035.',0,0,0,1,11,-1,NULL,NULL),
+(9000176,'Dragon Runed Formed Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000177,'Unfired Dragon Runed Formed Potion Vial Set',69,0,138,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000178,'Dragon Runed Friable Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000179,'Unfired Dragon Runed Friable Potion Vial Set',69,0,130,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000180,'Dragon Runed Shaped Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000181,'Unfired Dragon Runed Shaped Potion Vial Set',69,0,135,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000182,'Dragon Runed Worked Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000183,'Unfired Dragon Runed Worked Potion Vial Set',69,0,132,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000184,'Gold Embossed Formed Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000185,'Unfired Gold Embossed Formed Potion Vial Set',69,0,111,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000186,'Gold Embossed Friable Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000187,'Unfired Gold Embossed Friable Potion Vial Set',69,0,103,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000188,'Gold Embossed Shaped Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000189,'Unfired Gold Embossed Shaped Potion Vial Set',69,0,108,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000190,'Gold Embossed Worked Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000191,'Unfired Gold Embossed Worked Potion Vial Set',69,0,106,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000192,'Platinum Embossed Formed Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000193,'Unfired Platinum Embossed Formed Potion Vial Set',69,0,124,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000194,'Platinum Embossed Friable Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000195,'Unfired Platinum Embossed Friable Potion Vial Set',69,0,116,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000196,'Platinum Embossed Shaped Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000197,'Unfired Platinum Embossed Shaped Potion Vial Set',69,0,122,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000198,'Platinum Embossed Worked Potion Vial',69,0,17,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000199,'Unfired Platinum Embossed Worked Potion Vial Set',69,0,119,0,0,'SoF maintained primary potion-vial formula; RRC061.',0,0,0,1,14,-1,NULL,NULL),
+(9000200,'Vanilla Ice Cream (Ice of Velious)',60,0,68,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL);)TS429_3")
+			+ std::string(R"TS429_4(
+-- 1.6 of 6 -- recipe rows 201-220.
+INSERT IGNORE INTO `tradeskill_recipe` (`id`,`name`,`tradeskill`,`skillneeded`,`trivial`,`nofail`,`replace_container`,`notes`,`must_learn`,`learned_by_item_id`,`quest`,`enabled`,`min_expansion`,`max_expansion`,`content_flags`,`content_flags_disabled`)
+VALUES
+(9000201,'Caynar Nut Ice Cream (Ice of Velious)',60,0,82,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000202,'Cherry Caynar Ice Cream (Ice of Velious)',60,0,95,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000203,'Lemon Caynar Ice Cream (Ice of Velious)',60,0,102,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000204,'Coconut Caynar Ice Cream (Ice of Velious)',60,0,115,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000205,'Walnut Ice Cream (Ice of Velious)',60,0,82,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000206,'Coffee Walnut Ice Cream (Ice of Velious)',60,0,108,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000207,'Coconut Walnut Ice Cream (Ice of Velious)',60,0,115,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000208,'Kiola Nut Ice Cream (Ice of Velious)',60,0,82,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000209,'Cherry Kiola Ice Cream (Ice of Velious)',60,0,95,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000210,'Lemon Kiola Ice Cream (Ice of Velious)',60,0,102,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000211,'Coffee Kiola Ice Cream (Ice of Velious)',60,0,108,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000212,'Coconut Kiola Ice Cream (Ice of Velious)',60,0,115,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000213,'Cherry Golanda Ice Cream (Ice of Velious)',60,0,95,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000214,'Lemon Golanda Ice Cream (Ice of Velious)',60,0,102,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000215,'Coffee Golanda Ice Cream (Ice of Velious)',60,0,108,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000216,'Berry Caynar Ice Cream (Ice of Velious)',60,0,88,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000217,'Chocolate Mint Walnut Ice Cream (Ice of Velious)',60,0,82,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000218,'Chocolate Mint Kiola Ice Cream (Ice of Velious)',60,0,82,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000219,'Berry Kiola Ice Cream (Ice of Velious)',60,0,88,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL),
+(9000220,'Berry Golanda Ice Cream (Ice of Velious)',60,0,88,0,0,'Maintained-primary Ice-of-Velious input reconstruction; RRC175.',0,0,0,1,13,-1,NULL,NULL);
+
+-- 2.1 -- entries for remapped recipe 9000001.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000001 AS c0, 135447 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000001 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000001 AS c0, 135570 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000001 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000001);
+
+-- 2.2 -- entries for remapped recipe 9000002.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000002 AS c0, 135570 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000002 AS c0, 48898 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000002 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000002 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000002 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000002);
+
+-- 2.3 -- entries for remapped recipe 9000003.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000003 AS c0, 135445 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000003 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000003 AS c0, 135568 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000003 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000003);
+
+-- 2.4 -- entries for remapped recipe 9000004.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000004 AS c0, 135568 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000004 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000004 AS c0, 48896 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000004 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000004 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000004);)TS429_4")
+			+ std::string(R"TS429_5(
+-- 2.5 -- entries for remapped recipe 9000005.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000005 AS c0, 135451 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000005 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000005 AS c0, 135574 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000005 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000005);
+
+-- 2.6 -- entries for remapped recipe 9000006.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000006 AS c0, 135574 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000006 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000006 AS c0, 48902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000006 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000006 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000006);
+
+-- 2.7 -- entries for remapped recipe 9000007.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000007 AS c0, 135446 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000007 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000007 AS c0, 135569 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000007 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000007);
+
+-- 2.8 -- entries for remapped recipe 9000008.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000008 AS c0, 135569 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000008 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000008 AS c0, 48897 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000008 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000008 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000008);
+
+-- 2.9 -- entries for remapped recipe 9000009.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000009 AS c0, 135443 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000009 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000009 AS c0, 135566 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000009 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000009);
+
+-- 2.10 -- entries for remapped recipe 9000010.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000010 AS c0, 135566 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000010 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000010 AS c0, 48894 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000010 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000010 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000010);
+
+-- 2.11 -- entries for remapped recipe 9000011.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000011 AS c0, 135455 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000011 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000011 AS c0, 135578 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000011 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000011);
+
+-- 2.12 -- entries for remapped recipe 9000012.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000012 AS c0, 135578 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000012 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000012 AS c0, 48906 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000012 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 4 AS c4, 4 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000012 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000012);
+
+-- 2.13 -- entries for remapped recipe 9000013.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000013 AS c0, 135454 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000013 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000013 AS c0, 135577 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000013 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000013);)TS429_5")
+			+ std::string(R"TS429_6(
+-- 2.14 -- entries for remapped recipe 9000014.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000014 AS c0, 135577 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000014 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000014 AS c0, 48905 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000014 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 4 AS c4, 4 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000014 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000014);
+
+-- 2.15 -- entries for remapped recipe 9000015.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000015 AS c0, 135444 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000015 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000015 AS c0, 135567 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000015 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000015);
+
+-- 2.16 -- entries for remapped recipe 9000016.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000016 AS c0, 135567 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000016 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000016 AS c0, 16901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000016 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000016 AS c0, 48895 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000016 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000016);
+
+-- 2.17 -- entries for remapped recipe 9000017.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000017 AS c0, 135450 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000017 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000017 AS c0, 135573 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000017 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000017);
+
+-- 2.18 -- entries for remapped recipe 9000018.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000018 AS c0, 135573 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000018 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000018 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000018 AS c0, 48901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000018 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000018);
+
+-- 2.19 -- entries for remapped recipe 9000019.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000019 AS c0, 135452 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000019 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000019 AS c0, 135575 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000019 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000019);
+
+-- 2.20 -- entries for remapped recipe 9000020.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000020 AS c0, 135575 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000020 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000020 AS c0, 16901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000020 AS c0, 48903 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000020 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000020);
+
+-- 2.21 -- entries for remapped recipe 9000021.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000021 AS c0, 135448 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000021 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000021 AS c0, 135571 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000021 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000021);
+
+-- 2.22 -- entries for remapped recipe 9000022.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000022 AS c0, 135571 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000022 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000022 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000022 AS c0, 48899 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000022 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000022);)TS429_6")
+			+ std::string(R"TS429_7(
+-- 2.23 -- entries for remapped recipe 9000023.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000023 AS c0, 135442 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000023 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000023 AS c0, 135565 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000023 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000023);
+
+-- 2.24 -- entries for remapped recipe 9000024.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000024 AS c0, 135565 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000024 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000024 AS c0, 16901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000024 AS c0, 48893 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000024 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000024);
+
+-- 2.25 -- entries for remapped recipe 9000025.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000025 AS c0, 135449 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000025 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000025 AS c0, 135572 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000025 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000025);
+
+-- 2.26 -- entries for remapped recipe 9000026.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000026 AS c0, 135572 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000026 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000026 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000026 AS c0, 48900 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000026 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000026);
+
+-- 2.27 -- entries for remapped recipe 9000027.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000027 AS c0, 135453 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000027 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000027 AS c0, 135576 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000027 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000027);
+
+-- 2.28 -- entries for remapped recipe 9000028.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000028 AS c0, 135576 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000028 AS c0, 134653 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000028 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000028 AS c0, 48904 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000028 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000028);
+
+-- 2.29 -- entries for remapped recipe 9000029.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000029 AS c0, 95798 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000029 AS c0, 95829 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000029 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000029 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000029 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000029);
+
+-- 2.30 -- entries for remapped recipe 9000030.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000030 AS c0, 95716 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000030 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000030 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000030 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000030);
+
+-- 2.31 -- entries for remapped recipe 9000031.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000031 AS c0, 95717 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000031 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000031 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000031 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000031);)TS429_7")
+			+ std::string(R"TS429_8(
+-- 2.32 -- entries for remapped recipe 9000032.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000032 AS c0, 95720 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000032 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000032 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000032 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000032);
+
+-- 2.33 -- entries for remapped recipe 9000033.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000033 AS c0, 95718 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000033 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000033 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000033 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000033);
+
+-- 2.34 -- entries for remapped recipe 9000034.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000034 AS c0, 95715 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000034 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000034 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000034 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000034);
+
+-- 2.35 -- entries for remapped recipe 9000035.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000035 AS c0, 95719 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000035 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000035 AS c0, 95815 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000035 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000035);
+
+-- 2.36 -- entries for remapped recipe 9000036.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000036 AS c0, 95784 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000036 AS c0, 95829 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000036 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000036 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000036 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000036);
+
+-- 2.37 -- entries for remapped recipe 9000037.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000037 AS c0, 95791 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000037 AS c0, 95829 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000037 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000037 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000037 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000037);
+
+-- 2.38 -- entries for remapped recipe 9000038.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000038 AS c0, 95801 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000038 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000038 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000038 AS c0, 95832 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000038 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000038);
+
+-- 2.39 -- entries for remapped recipe 9000039.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000039 AS c0, 95734 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000039 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000039 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000039 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000039);
+
+-- 2.40 -- entries for remapped recipe 9000040.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000040 AS c0, 95735 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000040 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000040 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000040 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000040);)TS429_8")
+			+ std::string(R"TS429_9(
+-- 2.41 -- entries for remapped recipe 9000041.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000041 AS c0, 95738 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000041 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000041 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000041 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000041);
+
+-- 2.42 -- entries for remapped recipe 9000042.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000042 AS c0, 95736 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000042 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000042 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000042 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000042);
+
+-- 2.43 -- entries for remapped recipe 9000043.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000043 AS c0, 95733 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000043 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000043 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000043 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000043);
+
+-- 2.44 -- entries for remapped recipe 9000044.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000044 AS c0, 95737 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000044 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000044 AS c0, 95818 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000044 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000044);
+
+-- 2.45 -- entries for remapped recipe 9000045.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000045 AS c0, 95787 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000045 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000045 AS c0, 95832 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000045 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000045 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000045);
+
+-- 2.46 -- entries for remapped recipe 9000046.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000046 AS c0, 95794 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000046 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000046 AS c0, 95832 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000046 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000046 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000046);
+
+-- 2.47 -- entries for remapped recipe 9000047.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000047 AS c0, 95797 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000047 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000047 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000047 AS c0, 95828 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000047 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000047);
+
+-- 2.48 -- entries for remapped recipe 9000048.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000048 AS c0, 95710 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000048 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000048 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000048 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000048);
+
+-- 2.49 -- entries for remapped recipe 9000049.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000049 AS c0, 95711 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000049 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000049 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000049 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000049);)TS429_9")
+			+ std::string(R"TS429_10(
+-- 2.50 -- entries for remapped recipe 9000050.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000050 AS c0, 95714 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000050 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000050 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000050 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000050);
+
+-- 2.51 -- entries for remapped recipe 9000051.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000051 AS c0, 95712 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000051 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000051 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000051 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000051);
+
+-- 2.52 -- entries for remapped recipe 9000052.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000052 AS c0, 95709 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000052 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000052 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000052 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000052);
+
+-- 2.53 -- entries for remapped recipe 9000053.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000053 AS c0, 95713 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000053 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000053 AS c0, 95814 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000053 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000053);
+
+-- 2.54 -- entries for remapped recipe 9000054.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000054 AS c0, 95783 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000054 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000054 AS c0, 95828 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000054 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000054 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000054);
+
+-- 2.55 -- entries for remapped recipe 9000055.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000055 AS c0, 95790 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000055 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000055 AS c0, 95828 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000055 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000055 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000055);
+
+-- 2.56 -- entries for remapped recipe 9000056.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000056 AS c0, 95800 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000056 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000056 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000056 AS c0, 95831 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000056 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000056);
+
+-- 2.57 -- entries for remapped recipe 9000057.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000057 AS c0, 95728 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000057 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000057 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000057 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000057);
+
+-- 2.58 -- entries for remapped recipe 9000058.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000058 AS c0, 95729 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000058 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000058 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000058 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000058);)TS429_10")
+			+ std::string(R"TS429_11(
+-- 2.59 -- entries for remapped recipe 9000059.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000059 AS c0, 95732 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000059 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000059 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000059 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000059);
+
+-- 2.60 -- entries for remapped recipe 9000060.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000060 AS c0, 95730 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000060 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000060 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000060 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000060);
+
+-- 2.61 -- entries for remapped recipe 9000061.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000061 AS c0, 95727 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000061 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000061 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000061 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000061);
+
+-- 2.62 -- entries for remapped recipe 9000062.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000062 AS c0, 95731 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000062 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000062 AS c0, 95817 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000062 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000062);
+
+-- 2.63 -- entries for remapped recipe 9000063.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000063 AS c0, 95786 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000063 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000063 AS c0, 95831 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000063 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000063 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000063);
+
+-- 2.64 -- entries for remapped recipe 9000064.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000064 AS c0, 95793 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000064 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000064 AS c0, 95831 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000064 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000064 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000064);
+
+-- 2.65 -- entries for remapped recipe 9000065.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000065 AS c0, 95796 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000065 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000065 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000065 AS c0, 95827 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000065 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000065);
+
+-- 2.66 -- entries for remapped recipe 9000066.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000066 AS c0, 95704 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000066 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000066 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000066 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000066);
+
+-- 2.67 -- entries for remapped recipe 9000067.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000067 AS c0, 95705 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000067 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000067 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000067 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000067);)TS429_11")
+			+ std::string(R"TS429_12(
+-- 2.68 -- entries for remapped recipe 9000068.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000068 AS c0, 95708 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000068 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000068 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000068 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000068);
+
+-- 2.69 -- entries for remapped recipe 9000069.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000069 AS c0, 95706 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000069 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000069 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000069 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000069);
+
+-- 2.70 -- entries for remapped recipe 9000070.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000070 AS c0, 95703 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000070 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000070 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000070 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000070);
+
+-- 2.71 -- entries for remapped recipe 9000071.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000071 AS c0, 95707 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000071 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000071 AS c0, 95813 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000071 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000071);
+
+-- 2.72 -- entries for remapped recipe 9000072.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000072 AS c0, 95782 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000072 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000072 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000072 AS c0, 95827 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000072 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000072);
+
+-- 2.73 -- entries for remapped recipe 9000073.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000073 AS c0, 95789 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000073 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000073 AS c0, 95827 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000073 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000073 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000073);
+
+-- 2.74 -- entries for remapped recipe 9000074.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000074 AS c0, 95795 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000074 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000074 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000074 AS c0, 95826 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000074 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000074);
+
+-- 2.75 -- entries for remapped recipe 9000075.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000075 AS c0, 95698 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000075 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000075 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000075 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000075);
+
+-- 2.76 -- entries for remapped recipe 9000076.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000076 AS c0, 95699 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000076 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000076 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000076 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000076);)TS429_12")
+			+ std::string(R"TS429_13(
+-- 2.77 -- entries for remapped recipe 9000077.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000077 AS c0, 95702 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000077 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000077 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000077 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000077);
+
+-- 2.78 -- entries for remapped recipe 9000078.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000078 AS c0, 95700 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000078 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000078 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000078 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000078);
+
+-- 2.79 -- entries for remapped recipe 9000079.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000079 AS c0, 95697 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000079 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000079 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000079 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000079);
+
+-- 2.80 -- entries for remapped recipe 9000080.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000080 AS c0, 95701 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000080 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000080 AS c0, 95812 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000080 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000080);
+
+-- 2.81 -- entries for remapped recipe 9000081.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000081 AS c0, 95781 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000081 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000081 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000081 AS c0, 95826 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000081 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000081);
+
+-- 2.82 -- entries for remapped recipe 9000082.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000082 AS c0, 95788 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000082 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000082 AS c0, 95826 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000082 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000082 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000082);
+
+-- 2.83 -- entries for remapped recipe 9000083.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000083 AS c0, 95799 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000083 AS c0, 97003 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000083 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000083 AS c0, 95830 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000083 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000083);
+
+-- 2.84 -- entries for remapped recipe 9000084.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000084 AS c0, 95722 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000084 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000084 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000084 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000084);
+
+-- 2.85 -- entries for remapped recipe 9000085.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000085 AS c0, 95723 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000085 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000085 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000085 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000085);)TS429_13")
+			+ std::string(R"TS429_14(
+-- 2.86 -- entries for remapped recipe 9000086.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000086 AS c0, 95726 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000086 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000086 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000086 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000086);
+
+-- 2.87 -- entries for remapped recipe 9000087.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000087 AS c0, 95724 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000087 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000087 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000087 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000087);
+
+-- 2.88 -- entries for remapped recipe 9000088.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000088 AS c0, 95721 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000088 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000088 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000088 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000088);
+
+-- 2.89 -- entries for remapped recipe 9000089.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000089 AS c0, 95725 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000089 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000089 AS c0, 95816 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000089 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000089);
+
+-- 2.90 -- entries for remapped recipe 9000090.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000090 AS c0, 95785 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000090 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000090 AS c0, 97001 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000090 AS c0, 95830 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000090 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000090);
+
+-- 2.91 -- entries for remapped recipe 9000091.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000091 AS c0, 95792 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000091 AS c0, 95833 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000091 AS c0, 97002 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000091 AS c0, 95830 AS c1, 1 AS c2, 1 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000091 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000091);
+
+-- 2.92 -- entries for remapped recipe 9000092.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000092 AS c0, 95758 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000092 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000092 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000092 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000092);
+
+-- 2.93 -- entries for remapped recipe 9000093.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000093 AS c0, 95759 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000093 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000093 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000093 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000093);
+
+-- 2.94 -- entries for remapped recipe 9000094.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000094 AS c0, 95762 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000094 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000094 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000094 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000094);)TS429_14")
+			+ std::string(R"TS429_15(
+-- 2.95 -- entries for remapped recipe 9000095.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000095 AS c0, 95760 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000095 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000095 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000095 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000095);
+
+-- 2.96 -- entries for remapped recipe 9000096.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000096 AS c0, 95757 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000096 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000096 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000096 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000096);
+
+-- 2.97 -- entries for remapped recipe 9000097.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000097 AS c0, 95761 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000097 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000097 AS c0, 95822 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000097 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000097);
+
+-- 2.98 -- entries for remapped recipe 9000098.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000098 AS c0, 95776 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000098 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000098 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000098 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000098);
+
+-- 2.99 -- entries for remapped recipe 9000099.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000099 AS c0, 95777 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000099 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000099 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000099 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000099);
+
+-- 2.100 -- entries for remapped recipe 9000100.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000100 AS c0, 95780 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000100 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000100 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000100 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000100);
+
+-- 2.101 -- entries for remapped recipe 9000101.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000101 AS c0, 95778 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000101 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000101 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000101 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000101);
+
+-- 2.102 -- entries for remapped recipe 9000102.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000102 AS c0, 95775 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000102 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000102 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000102 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000102);
+
+-- 2.103 -- entries for remapped recipe 9000103.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000103 AS c0, 95779 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000103 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000103 AS c0, 95825 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000103 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000103);
+
+-- 2.104 -- entries for remapped recipe 9000104.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000104 AS c0, 95752 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000104 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000104 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000104 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000104);)TS429_15")
+			+ std::string(R"TS429_16(
+-- 2.105 -- entries for remapped recipe 9000105.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000105 AS c0, 95753 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000105 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000105 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000105 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000105);
+
+-- 2.106 -- entries for remapped recipe 9000106.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000106 AS c0, 95756 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000106 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000106 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000106 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000106);
+
+-- 2.107 -- entries for remapped recipe 9000107.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000107 AS c0, 95754 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000107 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000107 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000107 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000107);
+
+-- 2.108 -- entries for remapped recipe 9000108.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000108 AS c0, 95751 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000108 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000108 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000108 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000108);
+
+-- 2.109 -- entries for remapped recipe 9000109.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000109 AS c0, 95755 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000109 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000109 AS c0, 95821 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000109 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000109);
+
+-- 2.110 -- entries for remapped recipe 9000110.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000110 AS c0, 95770 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000110 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000110 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000110 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000110);
+
+-- 2.111 -- entries for remapped recipe 9000111.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000111 AS c0, 95771 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000111 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000111 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000111 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000111);
+
+-- 2.112 -- entries for remapped recipe 9000112.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000112 AS c0, 95774 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000112 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000112 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000112 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000112);
+
+-- 2.113 -- entries for remapped recipe 9000113.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000113 AS c0, 95772 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000113 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000113 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000113 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000113);
+
+-- 2.114 -- entries for remapped recipe 9000114.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000114 AS c0, 95769 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000114 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000114 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000114 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000114);)TS429_16")
+			+ std::string(R"TS429_17(
+-- 2.115 -- entries for remapped recipe 9000115.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000115 AS c0, 95773 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000115 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000115 AS c0, 95824 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000115 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000115);
+
+-- 2.116 -- entries for remapped recipe 9000116.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000116 AS c0, 95746 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000116 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000116 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000116 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000116);
+
+-- 2.117 -- entries for remapped recipe 9000117.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000117 AS c0, 95747 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000117 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000117 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000117 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000117);
+
+-- 2.118 -- entries for remapped recipe 9000118.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000118 AS c0, 95750 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000118 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000118 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000118 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000118);
+
+-- 2.119 -- entries for remapped recipe 9000119.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000119 AS c0, 95748 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000119 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000119 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000119 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000119);
+
+-- 2.120 -- entries for remapped recipe 9000120.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000120 AS c0, 95745 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000120 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000120 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000120 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000120);
+
+-- 2.121 -- entries for remapped recipe 9000121.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000121 AS c0, 95749 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000121 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000121 AS c0, 95820 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000121 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000121);
+
+-- 2.122 -- entries for remapped recipe 9000122.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000122 AS c0, 95740 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000122 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000122 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000122 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000122);
+
+-- 2.123 -- entries for remapped recipe 9000123.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000123 AS c0, 95741 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000123 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000123 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000123 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000123);
+
+-- 2.124 -- entries for remapped recipe 9000124.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000124 AS c0, 95744 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000124 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000124 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000124 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000124);)TS429_17")
+			+ std::string(R"TS429_18(
+-- 2.125 -- entries for remapped recipe 9000125.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000125 AS c0, 95742 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000125 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000125 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000125 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000125);
+
+-- 2.126 -- entries for remapped recipe 9000126.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000126 AS c0, 95739 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000126 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000126 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000126 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000126);
+
+-- 2.127 -- entries for remapped recipe 9000127.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000127 AS c0, 95743 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000127 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000127 AS c0, 95819 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000127 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000127);
+
+-- 2.128 -- entries for remapped recipe 9000128.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000128 AS c0, 95764 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000128 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000128 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000128 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000128);
+
+-- 2.129 -- entries for remapped recipe 9000129.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000129 AS c0, 95765 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000129 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000129 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000129 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000129);
+
+-- 2.130 -- entries for remapped recipe 9000130.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000130 AS c0, 95768 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000130 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000130 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000130 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000130);
+
+-- 2.131 -- entries for remapped recipe 9000131.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000131 AS c0, 95766 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000131 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000131 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000131 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000131);
+
+-- 2.132 -- entries for remapped recipe 9000132.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000132 AS c0, 95763 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000132 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000132 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000132 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000132);
+
+-- 2.133 -- entries for remapped recipe 9000133.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000133 AS c0, 95767 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000133 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000133 AS c0, 95823 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000133 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000133);
+
+-- 2.134 -- entries for remapped recipe 9000134.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000134 AS c0, 95674 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000134 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000134 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000134 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000134);)TS429_18")
+			+ std::string(R"TS429_19(
+-- 2.135 -- entries for remapped recipe 9000135.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000135 AS c0, 95675 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000135 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000135 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000135 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000135);
+
+-- 2.136 -- entries for remapped recipe 9000136.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000136 AS c0, 95678 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000136 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000136 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000136 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000136);
+
+-- 2.137 -- entries for remapped recipe 9000137.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000137 AS c0, 95676 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000137 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000137 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000137 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000137);
+
+-- 2.138 -- entries for remapped recipe 9000138.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000138 AS c0, 95673 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000138 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000138 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000138 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000138);
+
+-- 2.139 -- entries for remapped recipe 9000139.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000139 AS c0, 95677 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000139 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000139 AS c0, 95808 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000139 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000139);
+
+-- 2.140 -- entries for remapped recipe 9000140.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000140 AS c0, 95692 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000140 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000140 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000140 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000140);
+
+-- 2.141 -- entries for remapped recipe 9000141.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000141 AS c0, 95693 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000141 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000141 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000141 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000141);
+
+-- 2.142 -- entries for remapped recipe 9000142.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000142 AS c0, 95696 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000142 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000142 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000142 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000142);
+
+-- 2.143 -- entries for remapped recipe 9000143.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000143 AS c0, 95694 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000143 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000143 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000143 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000143);
+
+-- 2.144 -- entries for remapped recipe 9000144.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000144 AS c0, 95691 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000144 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000144 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000144 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000144);)TS429_19")
+			+ std::string(R"TS429_20(
+-- 2.145 -- entries for remapped recipe 9000145.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000145 AS c0, 95695 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000145 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000145 AS c0, 95811 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000145 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000145);
+
+-- 2.146 -- entries for remapped recipe 9000146.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000146 AS c0, 95668 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000146 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000146 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000146 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000146);
+
+-- 2.147 -- entries for remapped recipe 9000147.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000147 AS c0, 95669 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000147 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000147 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000147 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000147);
+
+-- 2.148 -- entries for remapped recipe 9000148.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000148 AS c0, 95672 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000148 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000148 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000148 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000148);
+
+-- 2.149 -- entries for remapped recipe 9000149.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000149 AS c0, 95670 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000149 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000149 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000149 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000149);
+
+-- 2.150 -- entries for remapped recipe 9000150.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000150 AS c0, 95667 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000150 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000150 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000150 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000150);
+
+-- 2.151 -- entries for remapped recipe 9000151.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000151 AS c0, 95671 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000151 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000151 AS c0, 95807 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000151 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000151);
+
+-- 2.152 -- entries for remapped recipe 9000152.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000152 AS c0, 95686 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000152 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000152 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000152 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000152);
+
+-- 2.153 -- entries for remapped recipe 9000153.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000153 AS c0, 95687 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000153 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000153 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000153 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000153);
+
+-- 2.154 -- entries for remapped recipe 9000154.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000154 AS c0, 95690 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000154 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000154 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000154 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000154);)TS429_20")
+			+ std::string(R"TS429_21(
+-- 2.155 -- entries for remapped recipe 9000155.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000155 AS c0, 95688 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000155 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000155 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000155 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000155);
+
+-- 2.156 -- entries for remapped recipe 9000156.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000156 AS c0, 95685 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000156 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000156 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000156 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000156);
+
+-- 2.157 -- entries for remapped recipe 9000157.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000157 AS c0, 95689 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000157 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000157 AS c0, 95810 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000157 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000157);
+
+-- 2.158 -- entries for remapped recipe 9000158.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000158 AS c0, 95662 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000158 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000158 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000158 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000158);
+
+-- 2.159 -- entries for remapped recipe 9000159.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000159 AS c0, 95663 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000159 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000159 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000159 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000159);
+
+-- 2.160 -- entries for remapped recipe 9000160.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000160 AS c0, 95666 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000160 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000160 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000160 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000160);
+
+-- 2.161 -- entries for remapped recipe 9000161.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000161 AS c0, 95664 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000161 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000161 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000161 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000161);
+
+-- 2.162 -- entries for remapped recipe 9000162.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000162 AS c0, 95661 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000162 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000162 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000162 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000162);
+
+-- 2.163 -- entries for remapped recipe 9000163.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000163 AS c0, 95665 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000163 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000163 AS c0, 95806 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000163 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000163);
+
+-- 2.164 -- entries for remapped recipe 9000164.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000164 AS c0, 95656 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000164 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000164 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000164 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000164);)TS429_21")
+			+ std::string(R"TS429_22(
+-- 2.165 -- entries for remapped recipe 9000165.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000165 AS c0, 95657 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000165 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000165 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000165 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000165);
+
+-- 2.166 -- entries for remapped recipe 9000166.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000166 AS c0, 95660 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000166 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000166 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000166 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000166);
+
+-- 2.167 -- entries for remapped recipe 9000167.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000167 AS c0, 95658 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000167 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000167 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000167 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000167);
+
+-- 2.168 -- entries for remapped recipe 9000168.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000168 AS c0, 95655 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000168 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000168 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000168 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000168);
+
+-- 2.169 -- entries for remapped recipe 9000169.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000169 AS c0, 95659 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000169 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000169 AS c0, 95805 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000169 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000169);
+
+-- 2.170 -- entries for remapped recipe 9000170.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000170 AS c0, 95680 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000170 AS c0, 16505 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000170 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000170 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000170);
+
+-- 2.171 -- entries for remapped recipe 9000171.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000171 AS c0, 95681 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000171 AS c0, 16506 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000171 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000171 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000171);
+
+-- 2.172 -- entries for remapped recipe 9000172.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000172 AS c0, 95684 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000172 AS c0, 45892 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000172 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000172 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000172);
+
+-- 2.173 -- entries for remapped recipe 9000173.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000173 AS c0, 95682 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000173 AS c0, 16507 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000173 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000173 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000173);
+
+-- 2.174 -- entries for remapped recipe 9000174.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000174 AS c0, 95679 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000174 AS c0, 16504 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000174 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000174 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000174);)TS429_22")
+			+ std::string(R"TS429_23(
+-- 2.175 -- entries for remapped recipe 9000175.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000175 AS c0, 95683 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000175 AS c0, 22099 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000175 AS c0, 95809 AS c1, 1 AS c2, 0 AS c3, 1 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000175 AS c0, 20 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000175);
+
+-- 2.176 -- entries for remapped recipe 9000176.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000176 AS c0, 35785 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000176 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000176 AS c0, 35956 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000176 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000176);
+
+-- 2.177 -- entries for remapped recipe 9000177.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000177 AS c0, 35956 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 96903 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 35960 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000177 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000177);
+
+-- 2.178 -- entries for remapped recipe 9000178.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000178 AS c0, 35776 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000178 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000178 AS c0, 35947 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000178 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000178);
+
+-- 2.179 -- entries for remapped recipe 9000179.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000179 AS c0, 35947 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000179 AS c0, 96894 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000179 AS c0, 35960 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000179 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000179 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000179 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000179);
+
+-- 2.180 -- entries for remapped recipe 9000180.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000180 AS c0, 35782 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000180 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000180 AS c0, 35953 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000180 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000180);
+
+-- 2.181 -- entries for remapped recipe 9000181.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000181 AS c0, 35953 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000181 AS c0, 96900 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000181 AS c0, 35960 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000181 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000181 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000181 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000181);
+
+-- 2.182 -- entries for remapped recipe 9000182.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000182 AS c0, 35779 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000182 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000182 AS c0, 35950 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000182 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000182);
+
+-- 2.183 -- entries for remapped recipe 9000183.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000183 AS c0, 35950 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000183 AS c0, 96897 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000183 AS c0, 35960 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000183 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000183 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000183);)TS429_23")
+			+ std::string(R"TS429_24(
+-- 2.184 -- entries for remapped recipe 9000184.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000184 AS c0, 35783 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000184 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000184 AS c0, 35954 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000184 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000184);
+
+-- 2.185 -- entries for remapped recipe 9000185.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000185 AS c0, 35954 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 96903 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 16901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 35958 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000185 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000185);
+
+-- 2.186 -- entries for remapped recipe 9000186.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000186 AS c0, 35774 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000186 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000186 AS c0, 35945 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000186 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000186);
+
+-- 2.187 -- entries for remapped recipe 9000187.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000187 AS c0, 35945 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000187 AS c0, 96894 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000187 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000187 AS c0, 35958 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000187 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000187 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000187);
+
+-- 2.188 -- entries for remapped recipe 9000188.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000188 AS c0, 35780 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000188 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000188 AS c0, 35951 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000188 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000188);
+
+-- 2.189 -- entries for remapped recipe 9000189.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000189 AS c0, 35951 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000189 AS c0, 96900 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000189 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000189 AS c0, 35958 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000189 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000189 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000189);
+
+-- 2.190 -- entries for remapped recipe 9000190.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000190 AS c0, 35777 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000190 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000190 AS c0, 35948 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000190 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000190);
+
+-- 2.191 -- entries for remapped recipe 9000191.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000191 AS c0, 35948 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 96897 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 35958 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000191 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000191);)TS429_24")
+			+ std::string(R"TS429_25(
+-- 2.192 -- entries for remapped recipe 9000192.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000192 AS c0, 35784 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000192 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000192 AS c0, 35955 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000192 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000192);
+
+-- 2.193 -- entries for remapped recipe 9000193.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000193 AS c0, 35955 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 96903 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 16901 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 35959 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000193 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000193);
+
+-- 2.194 -- entries for remapped recipe 9000194.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000194 AS c0, 35775 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000194 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000194 AS c0, 35946 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000194 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000194);
+
+-- 2.195 -- entries for remapped recipe 9000195.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000195 AS c0, 35946 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000195 AS c0, 96894 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000195 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000195 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000195 AS c0, 35959 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000195 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000195);
+
+-- 2.196 -- entries for remapped recipe 9000196.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000196 AS c0, 35781 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000196 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000196 AS c0, 35952 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000196 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000196);
+
+-- 2.197 -- entries for remapped recipe 9000197.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000197 AS c0, 35952 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000197 AS c0, 96900 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000197 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000197 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 3 AS c4, 3 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000197 AS c0, 35959 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000197 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000197);
+
+-- 2.198 -- entries for remapped recipe 9000198.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000198 AS c0, 35778 AS c1, 3 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000198 AS c0, 16908 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000198 AS c0, 35949 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000198 AS c0, 22 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000198);
+
+-- 2.199 -- entries for remapped recipe 9000199.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000199 AS c0, 35949 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 96897 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 35957 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 96904 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 38340 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 16902 AS c1, 0 AS c2, 0 AS c3, 2 AS c4, 2 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 35959 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000199 AS c0, 21 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000199);)TS429_25")
+			+ std::string(R"TS429_26(
+-- 2.200 -- entries for remapped recipe 9000200.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000200 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 72090 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 75005 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000200 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000200);
+
+-- 2.201 -- entries for remapped recipe 9000201.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000201 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 14938 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 72090 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 75011 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000201 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000201);
+
+-- 2.202 -- entries for remapped recipe 9000202.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000202 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 14938 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 14969 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 75013 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000202 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000202);
+
+-- 2.203 -- entries for remapped recipe 9000203.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000203 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 14938 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 58281 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 75014 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000203 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000203);
+
+-- 2.204 -- entries for remapped recipe 9000204.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000204 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 12791 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 14938 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 75016 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000204 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000204);
+
+-- 2.205 -- entries for remapped recipe 9000205.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000205 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 29793 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 72090 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 75017 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000205 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000205);)TS429_26")
+			+ std::string(R"TS429_27(
+-- 2.206 -- entries for remapped recipe 9000206.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000206 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 29793 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 60294 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 75021 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000206 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000206);
+
+-- 2.207 -- entries for remapped recipe 9000207.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000207 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 12791 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 29793 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 75022 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000207 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000207);
+
+-- 2.208 -- entries for remapped recipe 9000208.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000208 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 72090 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 75023 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000208 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000208);
+
+-- 2.209 -- entries for remapped recipe 9000209.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000209 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 14969 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 75025 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000209 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000209);
+
+-- 2.210 -- entries for remapped recipe 9000210.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000210 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 58281 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 75026 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000210 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000210);
+
+-- 2.211 -- entries for remapped recipe 9000211.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000211 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 60294 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 75027 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000211 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000211);)TS429_27")
+			+ std::string(R"TS429_28(
+-- 2.212 -- entries for remapped recipe 9000212.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000212 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 12791 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 75028 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000212 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000212);
+
+-- 2.213 -- entries for remapped recipe 9000213.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000213 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 14969 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 62610 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 75031 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000213 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000213);
+
+-- 2.214 -- entries for remapped recipe 9000214.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000214 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 58281 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 62610 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 75032 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000214 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000214);
+
+-- 2.215 -- entries for remapped recipe 9000215.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000215 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 60294 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 62610 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 75033 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000215 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000215);
+
+-- 2.216 -- entries for remapped recipe 9000216.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000216 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 13045 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 14938 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 75820 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000216 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000216);
+
+-- 2.217 -- entries for remapped recipe 9000217.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000217 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 25759 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 29793 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 58683 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 75821 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000217 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000217);)TS429_28")
+			+ std::string(R"TS429_29(-- 2.218 -- entries for remapped recipe 9000218.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000218 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 25759 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 58683 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 75823 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000218 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000218);
+
+-- 2.219 -- entries for remapped recipe 9000219.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000219 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 13045 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 13340 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 75824 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000219 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000219);
+
+-- 2.220 -- entries for remapped recipe 9000220.
+INSERT INTO `tradeskill_recipe_entries` (`recipe_id`,`item_id`,`successcount`,`failcount`,`componentcount`,`salvagecount`,`iscontainer`)
+SELECT * FROM (
+  SELECT  9000220 AS c0, 9726 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 11789 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 13045 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 13087 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 15961 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 62610 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 75826 AS c1, 1 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 75856 AS c1, 0 AS c2, 0 AS c3, 1 AS c4, 1 AS c5, 0 AS c6
+  UNION ALL
+  SELECT  9000220 AS c0, 72502 AS c1, 0 AS c2, 0 AS c3, 0 AS c4, 0 AS c5, 1 AS c6
+) e
+ WHERE NOT EXISTS (SELECT 1 FROM `tradeskill_recipe_entries` WHERE `recipe_id` = 9000220);)TS429_29"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v430 (2026-11-15) -- Spirit shroud catalog backport to the native engine.
+	// Twin: utils/sql/20261115_spirit_shroud_backport_v430.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 430,
+		.description = "20261115_spirit_shroud_backport_v430",
+		.check = "SELECT 1 FROM spirit_shroud_progression_definitions WHERE progression_id = 10",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH430(-- v430 (2026-11-15) -- Spirit shroud catalog backport: the four legacy-only branches.
+--
+-- The legacy quest engine (Custom:ShroudsEnabled) and the native spirit-shroud
+-- engine (Custom:EnableSpiritShrouds) carry the same eight progressions and
+-- thirty-four branches at fourteen levels each. The legacy catalog is the
+-- superset: it also has four extra branches that no native template covers --
+--
+--   Brewing        / Dwarven Keg of Beer   (level 25, race 377, class 14)
+--   Confections    / Birthday Cake        (level 25, race 629, class 14)
+--   Earthenwares   / Clay Golem           (level 25, race  17, class  1)
+--   Runed Gargoyle / Runed Gargoyle       (levels 5-65, race 464, class 16)
+--
+-- This file copies those sixteen forms (and their four progression/branch
+-- definitions) into the native catalog so the new engine can offer everything
+-- the old one does. Template ids follow the native convention
+-- progression_id*10000 + branch_id*100 + level.
+--
+-- Idempotent: every insert is guarded, re-running changes nothing.
+--
+-- NOT included: ability rows. The legacy map (shroud_abilities.aa_id, 126
+-- abilities in the 90k band) is category -1, and EnterNativeShroud rejects any
+-- rank whose ability is not ShroudPassive/ShroudActive (client_spirit_shroud.cpp
+-- "invalid shroud AA definition"), so those ids cannot be referenced directly.
+-- The forms below are enabled=0 placeholders until that mapping is decided.
+
+INSERT INTO spirit_shroud_progression_definitions
+    (progression_id, name, completion_xp, branch_count, definition_version, evidence_ref)
+SELECT v.pid, v.name, NULL, 1, 1, 'legacy shrouds backport'
+  FROM (SELECT 10 AS pid, 'Brewing' AS name
+        UNION ALL SELECT 11, 'Confections'
+        UNION ALL SELECT 12, 'Earthenwares'
+        UNION ALL SELECT 13, 'Runed Gargoyle') v
+ WHERE NOT EXISTS (SELECT 1 FROM spirit_shroud_progression_definitions d WHERE d.progression_id = v.pid);
+
+INSERT INTO spirit_shroud_branch_progression
+    (progression_id, branch_id, unlock_xp, definition_version, evidence_ref)
+SELECT v.pid, 1, NULL, 1, 'legacy shrouds backport'
+  FROM (SELECT 10 AS pid UNION ALL SELECT 11 UNION ALL SELECT 12 UNION ALL SELECT 13) v
+ WHERE NOT EXISTS (SELECT 1 FROM spirit_shroud_branch_progression b
+                    WHERE b.progression_id = v.pid AND b.branch_id = 1);
+
+INSERT INTO spirit_shroud_templates
+    (id, progression_id, branch_id, level, race, class_id, gender, hp, mana, endurance,
+     base_stat, unlock_xp, name, description, progression_name, branch_name,
+     enabled, content_version, verified, test_only, evidence_ref, monster_points,
+     entitlement_key, stat_str, stat_sta, stat_cha, stat_dex, stat_int, stat_agi, stat_wis,
+     resource_maxima, model_size)
+SELECT 10000 * p.pid + 100 + s.level, p.pid, 1, s.level, s.race, s.class, s.gender,
+       s.hp, s.mana, s.endurance, 0, 0,
+       s.name, CONCAT('Legacy shroud form #', s.id, ' carried over from the quest catalog.'),
+       s.progression, s.branch,
+       0, 1, 0, 0, CONCAT('shrouds.id=', s.id), 
+       CASE WHEN s.level >= 70 THEN 104 WHEN s.level >= 65 THEN 97 WHEN s.level >= 60 THEN 91
+            WHEN s.level >= 55 THEN 84 WHEN s.level >= 50 THEN 78 WHEN s.level >= 45 THEN 55
+            WHEN s.level >= 40 THEN 50 WHEN s.level >= 35 THEN 45 WHEN s.level >= 30 THEN 40
+            WHEN s.level >= 25 THEN 36 WHEN s.level >= 20 THEN 32 ELSE 10 END,
+       NULL, 0, 0, 0, 0, 0, 0, 0, 0, s.size
+  FROM shrouds s
+  JOIN (SELECT 10 AS pid, 'Brewing' AS prog UNION ALL
+        SELECT 11, 'Confections' UNION ALL
+        SELECT 12, 'Earthenwares' UNION ALL
+        SELECT 13, 'Runed Gargoyle') p
+    ON p.prog = s.progression
+ WHERE s.progression IN ('Brewing', 'Confections', 'Earthenwares', 'Runed Gargoyle')
+   AND NOT EXISTS (SELECT 1 FROM spirit_shroud_templates t
+                    WHERE t.id = 10000 * p.pid + 100 + s.level);)SH430"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v431 (2026-11-15) -- Spirit shroud catalog backport to the native engine.
+	// Twin: utils/sql/20261115_spirit_shroud_ability_port_v431.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 431,
+		.description = "20261115_spirit_shroud_ability_port_v431",
+		.check = "SELECT 1 FROM spirit_shroud_abilities WHERE template_id = 130105",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH431(-- v431 (2026-11-15) -- Spirit shroud: backport the legacy ability map to the native engine.
+--
+-- 1. The legacy quest engine's shroud abilities (124 aa_ability rows, ids
+--    90102-92033) sat in category -1. EnterNativeShroud rejects any rank whose
+--    ability is not ShroudPassive (3) or ShroudActive (4) -- it throws
+--    "invalid shroud AA definition" -- so they could not be listed in
+--    spirit_shroud_abilities until they carried the shroud categories. An
+--    ability marked 'active' in any branch becomes ShroudActive, otherwise
+--    ShroudPassive. The legacy engine keys its gating off shroud_abilities
+--    (Client::LoadShroudAbilityCaps) and the client's shroud byte, not this
+--    category, so the live quest path keeps working; the change is one UPDATE.
+--
+-- 2. For every native template that has no ability rows yet, list the rank that
+--    matches the legacy cap: MAX(shroud_abilities.max_rank) over the rows whose
+--    progression/branch match (an empty branch means every branch of that
+--    progression, exactly as LoadShroudAbilityCaps reads it) and whose
+--    min_level <= the template's level; then the rank at that ordinal in the
+--    ability's aa_ranks chain. The nine curated templates keep their authored
+--    48xxx rows untouched.
+--
+-- Idempotent: the UPDATE only touches category -1, the INSERT only fills
+-- templates that still have no rows and only ranks not already listed.
+
+UPDATE `aa_ability` a
+  JOIN (SELECT `aa_id`, MAX(`kind` = 'active') AS is_active
+          FROM `shroud_abilities` GROUP BY `aa_id`) s ON s.`aa_id` = a.`id`
+   SET a.`category` = IF(s.is_active = 1, 4, 3)
+ WHERE a.`category` = -1;
+
+INSERT INTO `spirit_shroud_abilities`
+    (`template_id`, `rank_id`, `free_grant`, `display_rank`, `display_max_rank`, `display_total_cost`)
+WITH RECURSIVE
+chain (`ability_id`, `rank_id`, `ordinal`) AS (
+  SELECT `id`, `first_rank_id`, 1 FROM `aa_ability`
+   WHERE `id` IN (SELECT DISTINCT `aa_id` FROM `shroud_abilities`) AND `first_rank_id` > 0
+  UNION ALL
+  SELECT c.`ability_id`, r.`next_id`, c.`ordinal` + 1
+    FROM chain c JOIN `aa_ranks` r ON r.`id` = c.`rank_id`
+   WHERE r.`next_id` <> -1 AND c.`ordinal` < 40
+),
+need (`template_id`, `aa_id`, `max_rank`) AS (
+  SELECT t.`id`, c.`aa_id`, MAX(c.`max_rank`)
+    FROM `spirit_shroud_templates` t
+    JOIN `shroud_abilities` c
+      ON c.`progression` COLLATE utf8mb4_general_ci = t.`progression_name` COLLATE utf8mb4_general_ci
+     AND (c.`branch` = '' OR c.`branch` COLLATE utf8mb4_general_ci = t.`branch_name` COLLATE utf8mb4_general_ci)
+     AND c.`min_level` <= t.`level`
+   WHERE NOT EXISTS (SELECT 1 FROM `spirit_shroud_abilities` y WHERE y.`template_id` = t.`id`)
+   GROUP BY t.`id`, c.`aa_id`
+)
+SELECT n.`template_id`, ch.`rank_id`, 0, 0, 0, -1
+  FROM need n
+  JOIN chain ch ON ch.`ability_id` = n.`aa_id` AND ch.`ordinal` = n.`max_rank`
+ -- The native engine rejects ranks outside the RoF2 AA window: Validate
+ -- throws on rank_id > 65535 and EnumerableRank/Offered caps at 49999
+ -- (common/shroud/wire.h). The legacy map's ranks are all 90k, so this
+ -- filter leaves the fill inert for legacy-only branches -- they carry an
+ -- empty ability list until an authored line (< 49999, the curated
+ -- 48xxx pattern) exists. v438 evicted the rows the unfiltered fill made.
+ WHERE ch.`rank_id` < 49999
+   AND NOT EXISTS (SELECT 1 FROM `spirit_shroud_abilities` x
+                    WHERE x.`template_id` = n.`template_id` AND x.`rank_id` = ch.`rank_id`);)SH431"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v432 (2026-11-15) -- Shroud form race corrections (Imp/Evil Eye/Goblin/
+	// Basilisk/Tiger). Runs against the main database like the other legacy
+	// `shrouds` migrations (v278/v281/v283/v284/v287); the spirit-template
+	// UPDATEs assume the same connection, as v430's read of `shrouds` already
+	// does. No rollback: re-running is harmless, the pre-state is gone.
+	// Twin: utils/sql/20261115_shroud_race_fixes_v432.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 432,
+		.description = "20261115_shroud_race_fixes_v432",
+		// not_empty: the probe is the pre-state (legacy imps still at the wrong
+		// race). Checks are all evaluated before any migration applies, so an
+		// "empty"-condition post-state probe would wrongly skip this on fresh
+		// installs where the seeds still carry race 130.
+		.check = "SELECT 1 FROM shrouds WHERE branch IN ('Imp Trickster','Imp Wizard') AND race = 130 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SH432(-- v432 (2026-11-15) -- Shroud form race corrections.
+		--
+		-- Several legacy forms pointed at the wrong race id, so the client rendered the
+		-- replacement creature (or a human fallback) instead of the intended model. The
+		-- native templates carried the same mistakes for their branches.
+		--
+		-- Race ids from common/races.h: Imp = 46, EvilEye = 21, Goblin2 = 433,
+		-- Basilisk = 436, Puma2 = 439. Working NPCs of each race were used as the
+		-- texture/helmet reference (imps: texture 0, no helm).
+		UPDATE shrouds SET race = 46,  texture = 0, helmet_texture = 0
+		 WHERE branch IN ('Imp Trickster', 'Imp Wizard') AND race = 130;
+
+		UPDATE shrouds SET race = 433 WHERE branch = 'Goblin Wizard'   AND race = 323;
+		UPDATE shrouds SET race = 436 WHERE branch = 'Basilisk Beast'  AND race = 91;
+		UPDATE shrouds SET race = 439 WHERE branch = 'Tiger Beast'     AND race = 117;
+
+		UPDATE spirit_shroud_templates SET race = 46
+		 WHERE branch_name IN ('Imp Trickster', 'Imp Wizard') AND race = 464;
+
+		UPDATE spirit_shroud_templates SET race = 21
+		 WHERE branch_name IN ('Evil Eye Psion', 'Evil Eye Sorcerer') AND race = 0;
+		)SH432"),
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v433 (2026-11-15) -- Re-home the four McKenzie hallucination forms into
+	// their own legacy progression (undoes the part of v432 that "corrected"
+	// their deliberate prop races; keeps v432's real Imp/Evil Eye fixes).
+	// Main database (legacy `shrouds`). No rollback: re-running is harmless.
+	// Twin: utils/sql/20261115_shroud_hallucination_rehome_v433.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 433,
+		.description = "20261115_shroud_hallucination_rehome_v433",
+		.check = "SELECT 1 FROM shrouds WHERE id = 502 AND progression = 'Hallucinations' LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH433(-- v433 (2026-11-15) -- Re-home the Old Man McKenzie hallucination forms.
+		--
+		-- Four custom shroud forms from the drunken-hallucination questline were parked
+		-- inside creature branches, so they showed up as goblins/tigers/basilisks and
+		-- their deliberate race ids (Boat, DwarfGhost, AnimatedArmor, Alligator) read as
+		-- mistakes. They move to their own progression, and the three races are put back
+		-- exactly as the questline wants them.
+		UPDATE shrouds SET race = 141, progression = 'Hallucinations', branch = 'Rusty Steamboat' WHERE id = 502;
+		UPDATE shrouds SET race = 436, progression = 'Hallucinations', branch = 'Western Moorwalker' WHERE id = 503;
+		UPDATE shrouds SET race = 117, progression = 'Hallucinations', branch = 'Dwarven Ghost' WHERE id = 504;
+		UPDATE shrouds SET race = 323, progression = 'Hallucinations', branch = 'Wizard Armor' WHERE id = 505;
+		)SH433"),
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v434 (2026-11-15) -- Tradeskill mission forms on the spirit-shroud
+	// engine: starter gear copied from same-class templates and the
+	// enable/verify flip for the three mission props plus the Runed Gargoyle
+	// branch. Content database (spirit_shroud_* family, v430/v431 precedent);
+	// the rule_values flip assumes the content connection sees game tables,
+	// which holds wherever this tree ships.
+	// Twin: utils/sql/20261115_shroud_mission_gear_v434.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 434,
+		.description = "20261115_shroud_mission_gear_v434",
+		.check = "SELECT 1 FROM spirit_shroud_templates WHERE id IN (100125,110125,120125) AND enabled = 1 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH434(-- v434 (2026-11-15) -- Tradeskill mission forms on the spirit-shroud engine.
+		--
+		-- The three mission props (cake, keg, clay golem) and the Runed Gargoyle branch
+		-- are spirit-shroud templates now, so they carry their own starter loadout the
+		-- way the other forms do. Gear is copied from a same-class template until each
+		-- form has authored props of its own:
+		--   cake 110125 (bard, 14)   <- Fairy Trickster 70170
+		--   keg  100125 (bard, 14)   <- Fairy Trickster 70170
+		--   golem 120125 (warrior,1) <- Earth Elemental Fighter 40170
+		--   gargoyle 130105-165 (16) <- Basilisk Beast 80170
+		--
+		-- The rule flip is part of the same change: the keepers and the mission
+		-- controllers drive the spirit engine now.
+		UPDATE rule_values SET rule_value = 'true' WHERE rule_name = 'Custom:EnableSpiritShrouds';
+
+		DELETE FROM spirit_shroud_starter_equipment WHERE template_id IN (110125, 100125, 120125);
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 110125, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 70170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 100125, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 70170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 120125, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 40170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT t.id, e.slot_id, e.item_id FROM spirit_shroud_templates t
+		    JOIN spirit_shroud_starter_equipment e ON e.template_id = 80170
+		   WHERE t.progression_id = 13
+		     AND NOT EXISTS (SELECT 1 FROM spirit_shroud_starter_equipment x
+		                      WHERE x.template_id = t.id AND x.slot_id = e.slot_id);
+
+		UPDATE spirit_shroud_templates SET enabled = 1, verified = 1, test_only = 0
+		 WHERE id IN (100125, 110125, 120125) OR progression_id = 13;
+		)SH434"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v435 (2026-11-15) -- Keeper entitlement keys for the three mission
+	// forms: an entitlement_key makes Offered() require a
+	// spirit_shroud_entitlements row, so keepers never list them; the mission
+	// windows carry the ids themselves. Content database.
+	// Twin: utils/sql/20261115_shroud_keeper_entitlements_v435.sql (keep in sync).
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 435,
+		.description = "20261115_shroud_keeper_entitlements_v435",
+		.check = "SELECT 1 FROM spirit_shroud_templates WHERE id IN (100125,110125,120125) AND entitlement_key <> '' LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH435(-- v435 (2026-11-15) -- Keeper entitlements for the mission forms.
+		--
+		-- The cake, keg and clay golem templates are enabled so their missions can hand
+		-- them out, but they must not appear in a keeper's spirit catalog.
+		UPDATE spirit_shroud_templates SET entitlement_key = 'mission:cake_defense'  WHERE id = 110125;
+		UPDATE spirit_shroud_templates SET entitlement_key = 'mission:keg_wedding'   WHERE id = 100125;
+		UPDATE spirit_shroud_templates SET entitlement_key = 'mission:pottery_trial' WHERE id = 120125;
+		)SH435"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v436 (2026-11-15) -- Make the v430 backport templates pass the catalog
+	// validator: resource_maxima = 1 (derive resources from base_data, the
+	// same answer every native template gives) and unlock_xp = 0 (a NULL
+	// threshold reads as "branch locked"). Fixes the
+	// "incomplete verified shroud definition" catalog death.
+	// Content database.
+	// Twin: utils/sql/20261115_shroud_resource_fix_v436.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_resource_fix_v436_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 436,
+		.description = "20261115_shroud_resource_fix_v436",
+		.check = "SELECT 1 FROM spirit_shroud_templates WHERE progression_id IN (10,11,12,13) AND resource_maxima = 0 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH436(-- v436 (2026-11-15) -- Make the v430 backport templates pass VerifyShroud.
+		--
+		-- The v430 backport inserted its 16 templates without native baseline columns
+		-- and with resource_maxima = 0, and v434 later flipped them to verified = 1.
+		-- The catalog loader rejects any verified template that has neither native
+		-- stats nor native resources ("incomplete verified shroud definition"), so the
+		-- first backport row threw and the whole keeper/mission catalog died.
+		-- resource_maxima = 1 makes the loader derive HP/mana/endurance from base_data.
+		--
+		-- Second half: v430 left branch_progression.unlock_xp NULL for progressions
+		-- 10-13, and Offered() treats a NULL threshold as "branch not unlocked".
+		UPDATE spirit_shroud_templates
+		   SET resource_maxima = 1
+		 WHERE progression_id IN (10, 11, 12, 13)
+		   AND resource_maxima = 0;
+
+		UPDATE spirit_shroud_branch_progression
+		   SET unlock_xp = 0
+		 WHERE progression_id IN (10, 11, 12, 13)
+		   AND unlock_xp IS NULL;
+		)SH436"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v437 (2026-11-15) -- McKenzie hallucination props on the spirit engine:
+	// progression 14 with four templates copied from the legacy shrouds rows
+	// (boat 140140, moorwalker 140240, ghost 140340, armour 140440), their
+	// entitlement keys, and starter gear copied from same-class curated
+	// templates. Also adds texture/helmet_texture to the template schema so
+	// the native engine can carry the legacy hulls (the ghost is texture 3).
+	// Content database.
+	// Twin: utils/sql/20261115_hallucination_forms_v437.sql (keep in sync).
+	// Rollback: utils/sql/20261115_hallucination_forms_v437_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 437,
+		.description = "20261115_hallucination_forms_v437",
+		.check = "SELECT 1 FROM spirit_shroud_templates WHERE id = 140140 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH437(-- v437 (2026-11-15) -- McKenzie hallucination props on the spirit-shroud engine.
+		--
+		-- Boat 140140 / Western Moorwalker 140240 / Dwarven Ghost 140340 / Master
+		-- Officer armor 140440, copied from legacy shrouds 502-505 (progression
+		-- 'Hallucinations', re-homed by v433). Texture/helmet_texture are added to
+		-- the template schema; the three already-ported mission forms need no
+		-- backfill (their legacy rows carry 0/255, the new defaults). Starter gear
+		-- copied from same-class curated templates. No ability rows: the props
+		-- fight with their own hands (v287 precedent).
+		ALTER TABLE spirit_shroud_templates
+		  ADD COLUMN IF NOT EXISTS `texture` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+		  ADD COLUMN IF NOT EXISTS `helmet_texture` SMALLINT UNSIGNED NOT NULL DEFAULT 255;
+
+		INSERT INTO spirit_shroud_progression_definitions
+		    (progression_id, name, completion_xp, branch_count, definition_version, evidence_ref)
+		SELECT 14, 'Hallucinations', NULL, 4, 1, 'legacy shrouds backport'
+		 WHERE NOT EXISTS (SELECT 1 FROM spirit_shroud_progression_definitions WHERE progression_id = 14);
+
+		INSERT INTO spirit_shroud_branch_progression
+		    (progression_id, branch_id, unlock_xp, definition_version, evidence_ref)
+		SELECT 14, b.bid, 0, 1, 'legacy shrouds backport'
+		  FROM (SELECT 1 AS bid UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4) b
+		 WHERE NOT EXISTS (SELECT 1 FROM spirit_shroud_branch_progression x
+		                    WHERE x.progression_id = 14 AND x.branch_id = b.bid);
+
+		INSERT INTO spirit_shroud_templates
+		    (id, progression_id, branch_id, level, race, class_id, gender, hp, mana, endurance,
+		     base_stat, unlock_xp, name, description, progression_name, branch_name,
+		     enabled, content_version, verified, test_only, evidence_ref, monster_points,
+		     entitlement_key, stat_str, stat_sta, stat_cha, stat_dex, stat_int, stat_agi, stat_wis,
+		     resource_maxima, model_size, texture, helmet_texture)
+		SELECT 10000 * m.pid + 100 * m.bid + s.level, m.pid, m.bid, s.level, s.race, s.class, s.gender,
+		       s.hp, s.mana, s.endurance, 0, 0,
+		       s.name, CONCAT('McKenzie hallucination form #', s.id, ' carried over from the quest catalog.'),
+		       s.progression, s.branch,
+		       1, 1, 1, 0, CONCAT('shrouds.id=', s.id), 50,
+		       m.entitlement_key, 0, 0, 0, 0, 0, 0, 0, 1, s.size, s.texture, s.helmet_texture
+		  FROM shrouds s
+		  JOIN (SELECT 502 AS sid, 14 AS pid, 1 AS bid, 'mission:boat_lesson' AS entitlement_key UNION ALL
+		        SELECT 503, 14, 2, 'mission:king_of_the_monsters' UNION ALL
+		        SELECT 504, 14, 3, 'mission:midnight_snack' UNION ALL
+		        SELECT 505, 14, 4, 'mission:derelict_space_station') m
+		    ON m.sid = s.id
+		 WHERE NOT EXISTS (SELECT 1 FROM spirit_shroud_templates t
+		                    WHERE t.id = 10000 * m.pid + 100 * m.bid + s.level);
+
+		DELETE FROM spirit_shroud_starter_equipment WHERE template_id IN (140140, 140240, 140340, 140440);
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 140140, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 20170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 140240, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 80170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 140340, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 80170;
+		INSERT INTO spirit_shroud_starter_equipment (template_id, slot_id, item_id)
+		  SELECT 140440, slot_id, item_id FROM spirit_shroud_starter_equipment WHERE template_id = 90170;
+		)SH437"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v438 (2026-11-15) -- Evict the legacy 90k rank band from the native
+	// catalog: the v431 fill wrote 8921 rows with rank_id > 65535, which
+	// Validate rejects ("invalid shroud ability set") and the RoF2 AA window
+	// (EnumerableRank < 49999) cannot display anyway. The nine curated
+	// branches' authored 48xxx lines survive; every other template carries an
+	// empty ability list until it gets an authored line. The v431 entry above
+	// was corrected with the same filter, so fresh installs never recreate
+	// them; this migration cleans databases that ran the unfiltered fill.
+	// Content database.
+	// Twin: utils/sql/20261115_shroud_rank_band_v438.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_rank_band_v438_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 438,
+		.description = "20261115_shroud_rank_band_v438",
+		// not_empty: the probe is the bad state (illegal ranks present).
+		// Checks are evaluated before any migration applies, so on a fresh
+		// install the table does not exist yet (error reads as empty), which
+		// correctly skips; with the corrected v431 the rows are never made.
+		.check = "SELECT 1 FROM spirit_shroud_abilities WHERE rank_id = 0 OR rank_id >= 49999 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SH438(-- v438 (2026-11-15) -- Evict the legacy rank band from the native catalog.
+		--
+		-- The v431 ability port filled every template that had no ability rows with
+		-- the legacy quest-engine caps, whose ranks live in the 90k band. Validate
+		-- rejects any rank > 65535 and the RoF2 AA window enumerates [0,49999), so
+		-- those rows could never load ("invalid shroud ability set"). The quest
+		-- engine's own map (shroud_abilities, aa 90k) is untouched.
+		DELETE FROM spirit_shroud_abilities WHERE rank_id = 0 OR rank_id >= 49999;
+		)SH438"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v440 (2026-11-15) -- Zero the captured monster stats on the v439 ladder
+	// rows. The previews carried live-captured stats (stat_int 305 on the
+	// level-70 casters) and with resource_maxima = 1 the loader throws
+	// "shroud resource maximum below class stat contribution" when the
+	// captured mana is below the mind contribution through the RoF2 half-stat
+	// curve (305 -> 482 * 7.5 = 3615 > mana 2062) -- the first such row killed
+	// the keeper catalog again. The legacy quest engine never applied stats to
+	// a form, so zero is the faithful port; the nine curated branches keep
+	// their authored stats (their evidence_ref is a screenshot path, not
+	// shrouds.id). The v439 entry above was folded to set the stat columns so
+	// fresh installs never create the violation.
+	// Content database.
+	// Twin: utils/sql/20261115_shroud_ladder_stats_v440.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_ladder_stats_v440_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 440,
+		.description = "20261115_shroud_ladder_stats_v440",
+		// not_empty: the probe is the bad state (ladder rows with nonzero
+		// stats). Fresh installs: the table does not exist at check time
+		// (error reads as empty), which correctly skips; the folded v439 then
+		// creates the rows with zero stats.
+		.check = "SELECT 1 FROM spirit_shroud_templates WHERE enabled = 1 AND evidence_ref LIKE 'shrouds.id=%' AND (stat_str > 0 OR stat_sta > 0 OR stat_cha > 0 OR stat_dex > 0 OR stat_int > 0 OR stat_agi > 0 OR stat_wis > 0) LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SH440(-- v440 (2026-11-15) -- Zero the captured monster stats on the ladder rows.
+		--
+		-- The v439 ladder backport enabled preview rows whose stat columns carry
+		-- live-captured monster stats; with resource_maxima = 1 the derivation
+		-- throws when the captured mana is below the mind contribution. Zero
+		-- stats make every term trivial (hp floor 5, mana 0, endurance 0).
+		UPDATE spirit_shroud_templates
+		   SET stat_str = 0, stat_sta = 0, stat_cha = 0, stat_dex = 0,
+		       stat_int = 0, stat_agi = 0, stat_wis = 0
+		 WHERE enabled = 1
+		   AND evidence_ref LIKE 'shrouds.id=%';
+		)SH440"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v439 (2026-11-15) -- Backport the legacy ladder into the native catalog:
+	// fill every v427 preview row that has an exact legacy twin
+	// (progression/branch/level, the v431 join pattern) with the shrouds-row
+	// values and enable it. 439 of 467 previews matched; the 28 without a
+	// legacy twin stay disabled. The curated nine, mission forms and gargoyles
+	// are untouched (never matched the enabled=0 AND race=0 probe). Non-GM
+	// players still gate on the branch unlock_xp thresholds.
+	// Content database.
+	// Twin: utils/sql/20261115_shroud_ladder_backport_v439.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_ladder_backport_v439_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 439,
+		.description = "20261115_shroud_ladder_backport_v439",
+		// not_empty: the probe is the pre-state (disabled zero-race previews
+		// with a legacy twin still present). Checks evaluate before any
+		// migration applies, so on a fresh install the table does not exist
+		// yet (error reads as empty), which correctly skips; the v427 seed
+		// then creates the previews and this migration fills them.
+		.check = "SELECT 1 FROM spirit_shroud_templates t JOIN shrouds s ON s.progression COLLATE utf8mb4_general_ci = t.progression_name COLLATE utf8mb4_general_ci AND s.branch COLLATE utf8mb4_general_ci = t.branch_name COLLATE utf8mb4_general_ci AND s.level = t.level WHERE t.enabled = 0 AND t.race = 0 LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SH439(-- v439 (2026-11-15) -- Backport the legacy ladder into the native catalog.
+		--
+		-- Fill every preview row that has an exact legacy twin with the shrouds-row
+		-- values and enable it. resource_maxima = 1 (base_data covers every matched
+		-- class/level pair). The seven stat columns are zeroed: the previews carried
+		-- live-captured monster stats whose mana contribution exceeds the captured
+		-- mana totals (v440's "resource maximum below class stat contribution"
+		-- throw), and the legacy quest engine never applied stats to a form. No
+		-- ability rows and no starter equipment: the ladder forms fight with their
+		-- own hands until authored lines exist.
+		UPDATE spirit_shroud_templates t
+		  JOIN shrouds s
+		    ON s.progression COLLATE utf8mb4_general_ci = t.progression_name COLLATE utf8mb4_general_ci
+		   AND s.branch COLLATE utf8mb4_general_ci = t.branch_name COLLATE utf8mb4_general_ci
+		   AND s.level = t.level
+		   SET t.race             = s.race,
+		       t.gender           = s.gender,
+		       t.class_id         = s.class,
+		       t.hp               = s.hp,
+		       t.mana             = s.mana,
+		       t.endurance        = s.endurance,
+		       t.name             = s.name,
+		       t.description      = CONCAT('Legacy ladder form #', s.id, ' carried over from the quest catalog.'),
+		       t.evidence_ref     = CONCAT('shrouds.id=', s.id),
+		       t.verified         = 1,
+		       t.test_only        = 0,
+		       t.enabled          = 1,
+		       t.monster_points   = CASE WHEN s.level >= 70 THEN 104 WHEN s.level >= 65 THEN 97
+		                                 WHEN s.level >= 60 THEN 91 WHEN s.level >= 55 THEN 84
+		                                 WHEN s.level >= 50 THEN 78 WHEN s.level >= 45 THEN 55
+		                                 WHEN s.level >= 40 THEN 50 WHEN s.level >= 35 THEN 45
+		                                 WHEN s.level >= 30 THEN 40 WHEN s.level >= 25 THEN 36
+		                                 WHEN s.level >= 20 THEN 32 ELSE 10 END,
+		       t.resource_maxima  = 1,
+		       t.model_size       = s.size,
+		       t.texture          = s.texture,
+		       t.helmet_texture   = s.helmet_texture,
+		       t.stat_str         = 0,
+		       t.stat_sta         = 0,
+		       t.stat_cha         = 0,
+		       t.stat_dex         = 0,
+		       t.stat_int         = 0,
+		       t.stat_agi         = 0,
+		       t.stat_wis         = 0
+		 WHERE t.enabled = 0
+		   AND t.race = 0;
+		)SH439"),
+		.content_schema_update = true,
+	},
+
+	// ------------------------------------------------------------------
+	// v441 (2026-11-15) -- Ability coverage for the rowless enabled templates.
+	// The AA-window replacement renders only rows in the form's ability list,
+	// and the shroud window reads the same list, so templates without rows had
+	// neither. This fills every enabled template that still has no ability
+	// rows with the authored band's ranks it could legally own: category 3/4,
+	// class mask matching the template's class (the engine's own enter-check
+	// idiom), level_req <= template level; the lowest eligible rank of each
+	// line granted free. Max coverage 19 rows (cap 300); 82 templates matched.
+	// Content database.
+	// Twin: utils/sql/20261115_shroud_ability_coverage_v441.sql (keep in sync).
+	// Rollback: utils/sql/20261115_shroud_ability_coverage_v441_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 441,
+		.description = "20261115_shroud_ability_coverage_v441",
+		// not_empty: the probe is the pre-state (an enabled template with no
+		// ability rows). Fresh installs skip correctly (table absent at check
+		// time); the curated ten always have rows, so the probe is false for
+		// them.
+		.check = "SELECT 1 FROM spirit_shroud_templates t WHERE t.enabled = 1 AND NOT EXISTS (SELECT 1 FROM spirit_shroud_abilities x WHERE x.template_id = t.id) LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = std::string(R"SH441(-- v441 (2026-11-15) -- Ability coverage for the rowless enabled templates.
+		--
+		-- Authored-band ranks by class mask and level, lowest rank of each line
+		-- free; see the twin for the full rationale.
+		INSERT INTO spirit_shroud_abilities
+		    (template_id, rank_id, free_grant, display_rank, display_max_rank, display_total_cost)
+		WITH RECURSIVE chain (ability_id, rank_id, ordinal, classes) AS (
+		  SELECT a.id, a.first_rank_id, 1, a.classes
+		    FROM aa_ability a
+		   WHERE a.category IN (3, 4) AND a.first_rank_id > 0
+		  UNION ALL
+		  SELECT c.ability_id, r.next_id, c.ordinal + 1, c.classes
+		    FROM chain c
+		    JOIN aa_ranks r ON r.id = c.rank_id
+		   WHERE r.next_id <> -1 AND c.ordinal < 40
+		),
+		cand AS (
+		  SELECT t.id AS template_id, ch.rank_id AS rank_id, ch.ability_id AS ability_id,
+		         ROW_NUMBER() OVER (PARTITION BY t.id, ch.ability_id
+		                            ORDER BY rr.level_req, ch.rank_id) AS rn
+		    FROM spirit_shroud_templates t
+		    JOIN chain ch ON (ch.classes & (1 << t.class_id)) <> 0
+		    JOIN aa_ranks rr ON rr.id = ch.rank_id
+		   WHERE t.enabled = 1
+		     AND ch.rank_id BETWEEN 1 AND 49998
+		     AND rr.level_req <= t.level
+		     AND NOT EXISTS (SELECT 1 FROM spirit_shroud_abilities x WHERE x.template_id = t.id)
+		)
+		SELECT template_id, rank_id, CASE WHEN rn = 1 THEN 1 ELSE 0 END, 0, 0, -1
+		  FROM cand;
+		)SH441"),
+		.content_schema_update = true,
+	},
+	// ------------------------------------------------------------------
+	// v442 (2026-11-17) -- Map the legacy homecrafted monster AAs onto the
+	// spirit-shroud model. The legacy catalog lives at 90100-93000, which the
+	// RoF2 AA window cannot enumerate, and is bound branch-wide; this re-bases
+	// every referenced ability into 46000-46999 with ranks in 47000-47999,
+	// derives the class mask from the forms that bind it, carries the effects
+	// and prereqs, and rebuilds the per-template bindings from shroud_abilities.
+	// The five mission props (clay golem, boat, moorwalker, ghost, armour) have
+	// no rows of their own and borrow their creature's set.
+	// Content database.
+	// Twin: utils/sql/20261117_shroud_aa_mapping_v442.sql (keep in sync).
+	// Rollback: utils/sql/20261117_shroud_aa_mapping_v442_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 442,
+		.description = "20261117_shroud_aa_mapping_v442",
+		// Pre-state probe: the ported band is absent until this runs. "empty" is
+		// correct here because the probe is true BEFORE the migration and false
+		// after it (fresh install runs, an applied database skips).
+		.check = "SELECT 1 FROM aa_ability WHERE id BETWEEN 46000 AND 46199 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = std::string(R"SH442(-- v442 (2026-11-17) -- map the legacy monster AAs onto the spirit-shroud model.
+DELETE FROM spirit_shroud_abilities WHERE template_id <> 20105;
+DELETE FROM aa_rank_prereqs WHERE rank_id BETWEEN 47000 AND 47999;
+DELETE FROM aa_rank_effects WHERE rank_id BETWEEN 47000 AND 47999;
+DELETE FROM aa_ranks WHERE id BETWEEN 47000 AND 47999;
+DELETE FROM aa_ability WHERE id BETWEEN 46000 AND 46199;
+CREATE TABLE IF NOT EXISTS shroud_original_character_alternate_abilities LIKE character_alternate_abilities;
+CREATE TABLE IF NOT EXISTS shroud_original_inventory LIKE inventory;
+
+DROP TEMPORARY TABLE IF EXISTS tmp_eff;
+CREATE TEMPORARY TABLE tmp_eff (template_id INT PRIMARY KEY, level INT, prog VARCHAR(64), branch VARCHAR(64), class_id INT);
+INSERT INTO tmp_eff SELECT t.id, t.level, t.progression_name, t.branch_name, t.class_id
+  FROM spirit_shroud_templates t WHERE t.enabled = 1;
+UPDATE tmp_eff SET prog='Aberrations', branch='Gargoyle Fighter', level=25 WHERE template_id=120125;
+UPDATE tmp_eff SET prog='Aberrations', branch='Imp Wizard', level=40 WHERE template_id IN (140140,140440);
+UPDATE tmp_eff SET prog='Reptiles', branch='Basilisk Beast', level=40 WHERE template_id=140240;
+UPDATE tmp_eff SET prog='Animals', branch='Bear Beast', level=40 WHERE template_id=140340;
+
+DROP TEMPORARY TABLE IF EXISTS tmp_ab;
+CREATE TEMPORARY TABLE tmp_ab (old_id INT PRIMARY KEY, new_id INT, name VARCHAR(255), cat INT, first_old INT, cls BIGINT DEFAULT 0);
+INSERT INTO tmp_ab (old_id,new_id,name,cat,first_old)
+SELECT a.id, 46000 + ROW_NUMBER() OVER (ORDER BY a.id) - 1, a.name,
+       CASE WHEN a.category IN (3,4) THEN a.category
+            WHEN (SELECT COUNT(*) FROM shroud_abilities s WHERE s.aa_id=a.id AND s.kind='active') > 0 THEN 4
+            ELSE 3 END,
+       a.first_rank_id
+  FROM aa_ability a
+ WHERE a.enabled = 1 AND a.id IN (SELECT aa_id FROM shroud_abilities);
+
+DROP TEMPORARY TABLE IF EXISTS tmp_rank;
+CREATE TEMPORARY TABLE tmp_rank (old_id INT PRIMARY KEY, new_id INT, ab_old INT, ordinal INT);
+INSERT INTO tmp_rank
+WITH RECURSIVE ch AS (
+  SELECT a.old_id AS ab_old, a.first_old AS old_id, 1 AS ord FROM tmp_ab a
+  UNION ALL
+  SELECT c.ab_old, r.next_id, c.ord + 1 FROM ch c JOIN aa_ranks r ON r.id = c.old_id
+   WHERE r.next_id <> -1 AND c.ord < 60)
+SELECT old_id, 47000 + ROW_NUMBER() OVER (ORDER BY ab_old, ord) - 1, ab_old, ord FROM ch;
+
+DROP TEMPORARY TABLE IF EXISTS tmp_cap;
+CREATE TEMPORARY TABLE tmp_cap (template_id INT, ab_old INT, cap INT, PRIMARY KEY(template_id,ab_old));
+INSERT INTO tmp_cap
+SELECT e.template_id, s.aa_id, MAX(s.max_rank)
+  FROM tmp_eff e
+  JOIN shroud_abilities s
+    ON s.progression = e.prog COLLATE utf8mb4_general_ci
+   AND (s.branch = '' OR s.branch = e.branch COLLATE utf8mb4_general_ci)
+   AND s.min_level <= e.level
+ GROUP BY e.template_id, s.aa_id;
+
+DROP TEMPORARY TABLE IF EXISTS tmp_bind;
+CREATE TEMPORARY TABLE tmp_bind (template_id INT, rank_old INT, PRIMARY KEY(template_id,rank_old));
+INSERT INTO tmp_bind
+SELECT c.template_id, r.old_id
+  FROM tmp_cap c
+  JOIN tmp_rank r ON r.ab_old = c.ab_old
+  JOIN aa_ranks rr ON rr.id = r.old_id
+  JOIN tmp_eff e ON e.template_id = c.template_id
+ WHERE rr.level_req <= e.level AND (c.cap = 0 OR r.ordinal <= c.cap);
+
+UPDATE tmp_ab a
+  JOIN (SELECT r.ab_old, BIT_OR(1 << (e.class_id - 1)) m
+          FROM tmp_bind b
+          JOIN tmp_rank r ON r.old_id = b.rank_old
+          JOIN tmp_eff e ON e.template_id = b.template_id
+         GROUP BY r.ab_old) x ON x.ab_old = a.old_id
+   SET a.cls = x.m;
+UPDATE tmp_ab a JOIN aa_ability o ON o.id = a.old_id SET a.cls = o.classes WHERE a.cls = 0;
+
+INSERT INTO aa_ability (id,name,category,classes,races,deities,drakkin_heritage,status,type,charges,grant_only,first_rank_id,enabled,reset_on_death,auto_grant_enabled)
+SELECT a.new_id, a.name, a.cat, a.cls, o.races, o.deities, o.drakkin_heritage, o.status, o.type, o.charges,
+       o.grant_only, r.new_id, o.enabled, o.reset_on_death, o.auto_grant_enabled
+  FROM tmp_ab a JOIN aa_ability o ON o.id = a.old_id
+  JOIN tmp_rank r ON r.ab_old = a.old_id AND r.ordinal = 1;
+
+INSERT INTO aa_ranks (id,upper_hotkey_sid,lower_hotkey_sid,title_sid,desc_sid,cost,level_req,spell,spell_type,recast_time,expansion,prev_id,next_id)
+SELECT r.new_id, o.upper_hotkey_sid, o.lower_hotkey_sid, o.title_sid, o.desc_sid, o.cost, o.level_req,
+       o.spell, o.spell_type, o.recast_time, o.expansion,
+       COALESCE(p.new_id,-1), COALESCE(n.new_id,-1)
+  FROM tmp_rank r JOIN aa_ranks o ON o.id = r.old_id
+  LEFT JOIN tmp_rank p ON p.ab_old = r.ab_old AND p.ordinal = r.ordinal - 1
+  LEFT JOIN tmp_rank n ON n.ab_old = r.ab_old AND n.ordinal = r.ordinal + 1;
+
+INSERT INTO aa_rank_effects (rank_id,slot,effect_id,base1,base2)
+SELECT r.new_id, e.slot, e.effect_id, e.base1, e.base2
+  FROM aa_rank_effects e JOIN tmp_rank r ON r.old_id = e.rank_id;
+
+INSERT INTO aa_rank_prereqs (rank_id,aa_id,points)
+SELECT r.new_id, m.new_id, p.points
+  FROM aa_rank_prereqs p JOIN tmp_rank r ON r.old_id = p.rank_id JOIN tmp_ab m ON m.old_id = p.aa_id;
+
+INSERT INTO spirit_shroud_abilities (template_id,rank_id,free_grant)
+SELECT b.template_id, r.new_id, 0 FROM tmp_bind b JOIN tmp_rank r ON r.old_id = b.rank_old;
+
+UPDATE aa_ability SET category = IF(id=48000,3,4) WHERE id BETWEEN 48000 AND 48006;
+DROP TEMPORARY TABLE IF EXISTS tmp_bind;
+DROP TEMPORARY TABLE IF EXISTS tmp_cap;
+DROP TEMPORARY TABLE IF EXISTS tmp_rank;
+DROP TEMPORARY TABLE IF EXISTS tmp_ab;
+DROP TEMPORARY TABLE IF EXISTS tmp_eff;)SH442"),
+		.content_schema_update = true,
+	},
+	// ------------------------------------------------------------------
+	// SoD Phase A completion (v443): fill the two empty SoD arc reward
+	// lists and wire the three criteria-less SoD achievements. Upstream
+	// peq-rof2-2026-11-07 has the components but NO criteria rows and NO
+	// task rows for the 16 mirrored SoD tasks, so membership follows the
+	// components our DB already carries and objective deepening is
+	// deferred (there are no upstream objective sets to copy).
+	// Dormant until the version gate passes 442 (shroud aa mapping owns
+	// v442; the runner applies exact versions in (db_version, gate]).
+	// Twin: utils/sql/20261117_sod_task_completion_v443.sql (keep in sync).
+	// Rollback: utils/sql/20261117_sod_task_completion_v443_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 443,
+		.description = "20261117_sod_task_completion_v443",
+		.check = "SELECT 1 FROM achievement_criteria WHERE achievement_id IN (1645630,1645640,1646630) LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"SOD443(
+-- 20261117_sod_task_completion_v443 -- SoD Phase A completion pass.
+-- Rewards: 303004 A Dread Challenger -> 42868 Timeshear Purple Fragment
+-- Heda (same fragment as its Hero-pair mission 303003; all eight purple
+-- fragments 42861-42868 are assigned 1:1 and both tasks are one-shot).
+-- 303010 Rain of Ruin -> 42753 Blood of Oblivion (Kithicor Blood-of
+-- pattern; Lanys T`Vyl / Army of Obliteration; 42753 was unassigned).
+-- Criteria: 1645630 Hero of Bloody Kithicor = 303011 + 303012;
+-- 1645640 Conqueror of Bloody Kithicor = raid 303061 Fall of General
+-- Bahgresh; 1646630 Hero of Oceangreen Hills = 303003 + 303004.
+SET NAMES utf8mb4;
+START TRANSACTION;
+UPDATE `tasks` SET `reward_id_list` = '42868' WHERE `id` = 303004 AND `reward_id_list` = '';
+UPDATE `tasks` SET `reward_id_list` = '42753' WHERE `id` = 303010 AND `reward_id_list` = '';
+INSERT INTO achievement_criteria (achievement_id, component_type, component_sequence, component_id, event_type, progress_mode, behavior, target_id, target_id2, target_value, required_count, enabled) VALUES
+  (1645630, 1, 1, 1645630, 4, 3, 0, 303011, 0, 0, 1, 1),
+  (1645630, 1, 2, 1645631, 4, 3, 0, 303012, 0, 0, 1, 1),
+  (1645640, 1, 1, 1645640, 4, 3, 0, 303061, 0, 0, 1, 1),
+  (1646630, 1, 1, 1646630, 4, 3, 0, 303003, 0, 0, 1, 1),
+  (1646630, 1, 2, 1646631, 4, 3, 0, 303004, 0, 0, 1, 1)
+ON DUPLICATE KEY UPDATE progress_mode=VALUES(progress_mode), behavior=VALUES(behavior), target_value=VALUES(target_value), required_count=VALUES(required_count), enabled=VALUES(enabled);
+COMMIT;
+)SOD443",
+		.content_schema_update = false,
+	},
+
+	// ------------------------------------------------------------------
+	// v444 (2026-11-17) -- Evolving-items pilot: native evolving chain 201 on
+	// the Spectral Loop of Spirit family (7847 / 1007847 / 2007847), three
+	// stages; stages 1-2 count level-30+ kills (type 2, sub_type 30), stage 3
+	// tops out on shared exp (type 1). Pilot validated in-game 2026-11-17
+	// (Markers A/B passed; see Release-NMS-Deploy/evolving-pilot-report-2026-11-17.md).
+	// GUARDED on purpose: the pilot was applied manually the same day, so the
+	// chain-201 rows already exist and the "empty" condition skips this entry
+	// on the live DB; fresh installs apply it cleanly.
+	// Twin: utils/sql/20261117_evolving_pilot_chain201_v444.sql (keep in sync).
+	// Rollback: utils/sql/20261117_evolving_pilot_chain201_v444_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 444,
+		.description = "20261117_evolving_pilot_chain201_v444",
+		.check = "SELECT 1 FROM items_evolving_details WHERE item_evo_id=201 LIMIT 1",
+		.condition = "empty",
+		.match = "",
+		.sql = R"EVOD444(
+UPDATE items SET evoitem=1, evoid=201, evolvinglevel=1, evomax=3 WHERE id=7847;
+UPDATE items SET evoitem=1, evoid=201, evolvinglevel=2, evomax=3 WHERE id=1007847;
+UPDATE items SET evoitem=1, evoid=201, evolvinglevel=3, evomax=3 WHERE id=2007847;
+
+INSERT INTO items_evolving_details
+ (item_evo_id,item_evolve_level,item_id,type,sub_type,required_amount) VALUES
+ (201,1,   7847,2,'30', 500),
+ (201,2,1007847,2,'30',1500),
+ (201,3,2007847,1,'1',2000000);
+)EVOD444",
+		.content_schema_update = true,
+	},
+	// ------------------------------------------------------------------
+	// v445 (2026-11-17) -- AA orphan cleanup: rows pointing at ranks that do not exist.
+	// 60 aa_rank_prereqs rows (survivors of pruned stock ranks, ids 263..33775) and one
+	// aa_rank_effects row (rank 49999, our leftover from the shroud AA band move to 48000-48006).
+	// Both deletes are driven by the missing-rank join, so re-running removes nothing.
+	// Twin: utils/sql/20261117_orphan_aa_cleanup_v445.sql (keep in sync).
+	// Rollback: utils/sql/20261117_orphan_aa_cleanup_v445_rollback.sql
+	// ------------------------------------------------------------------
+	ManifestEntry{
+		.version = 445,
+		.description = "20261117_orphan_aa_cleanup_v445",
+		.check = "SELECT 1 FROM aa_rank_prereqs p LEFT JOIN aa_ranks r ON r.id = p.rank_id WHERE r.id IS NULL UNION ALL SELECT 1 FROM aa_rank_effects e LEFT JOIN aa_ranks r ON r.id = e.rank_id WHERE r.id IS NULL LIMIT 1",
+		.condition = "not_empty",
+		.match = "",
+		.sql = R"AAORPH445(
+DELETE p FROM `aa_rank_prereqs` p
+ LEFT JOIN `aa_ranks` r ON r.id = p.`rank_id`
+ WHERE r.id IS NULL;
+
+DELETE e FROM `aa_rank_effects` e
+ LEFT JOIN `aa_ranks` r ON r.id = e.`rank_id`
+ WHERE r.id IS NULL;
+)AAORPH445",
+		.content_schema_update = true,
 	},
 };

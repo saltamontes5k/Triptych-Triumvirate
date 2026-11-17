@@ -4,7 +4,9 @@
 //   - no common/modules.h: the NMS loot-buff upgrade (DoUpgradeLoot) is unconditionally
 //     available in this tree, so ApplyLootBuffToRolled is not #ifdef'd
 //   - ExpireOffers delivers expired-but-claimable offers instead of deleting them
-//   - corpse emptying requires every recipient to be offer-capable (mixed groups keep loot)
+//   - Custom:LootSystem (v415) picks the distribution: 0 native corpse looting, 1 these
+//     offers, 2 roll-off, 3 random recipient per item, 4 one looter. Corpse emptying keys on
+//     the recipient count alone (the offer-capability gate was dropped 2026-11-12, a0a64bb04).
 
 #include "../common/global_define.h"
 #include "nms_loot_offers.h"
@@ -37,6 +39,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <utility>
 #include <fmt/format.h>
 
 extern ZoneDatabase database;
@@ -132,21 +135,23 @@ namespace {
 	// countdown says "until the server delivers it anyway"). An expired offer drops into the
 	// player's bags when they are in the offer's zone; offers from other zones (invisible since
 	// they left) and rows of offline characters are reclaimed by the plain DELETE.
-	void ExpireOffers(Client *c)
+	// Returns how many expired offers were delivered into bags (0 when there was nothing to do).
+	int ExpireOffers(Client *c)
 	{
 		if (!EnsureTables()) {
-			return;
+			return 0;
 		}
+		int delivered = 0;
 		const uint32 character_id = c ? c->CharacterID() : 0;
 		if (!character_id) {
-			return;
+			return 0;
 		}
-		if (!c || !NmsLootOffersEnabled() || !zone) {
+		if (!c || !zone) {
 			database.QueryDatabase(fmt::format(
 				"DELETE FROM character_nms_loot_offers WHERE character_id = {} AND expires_at < NOW()",
 				character_id
 			));
-			return;
+			return 0;
 		}
 
 		auto expired = database.QueryDatabase(fmt::format(
@@ -167,6 +172,7 @@ namespace {
 					continue;
 				}
 				if (NmsLootOfferApply(c, offer, NmsLootAction::Keep, "")) {
+					++delivered;
 					continue; // delivered
 				}
 				// Could not deliver (lore conflict, full bags...). Keep the offer alive briefly;
@@ -180,6 +186,7 @@ namespace {
 			"DELETE FROM character_nms_loot_offers WHERE character_id = {} AND expires_at < NOW() - INTERVAL 1 SECOND",
 			character_id
 		));
+		return delivered;
 	}
 
 	bool DeleteOffer(uint32 character_id, uint32 offer_id)
@@ -481,7 +488,8 @@ namespace {
 		auto outapp = new EQApplicationPacket(OP_PersonalLootSettings, sizeof(PersonalLootSettings_Struct));
 		memset(outapp->pBuffer, 0, outapp->size);
 		auto *s = reinterpret_cast<PersonalLootSettings_Struct *>(outapp->pBuffer);
-		s->flags = NmsLootOffersEnabled() ? 1 : 0;
+		// The Hailstone window's "offers on" flag follows the mode: only mode 1 has a list to show.
+		s->flags = NmsLootSystemMode() == 1 ? 1 : 0;
 		s->timeout_seconds = static_cast<uint32>(std::max(0, RuleI(Custom, NmsLootOfferExpireSeconds)));
 		c->QueuePacket(outapp);
 		safe_delete(outapp);
@@ -736,7 +744,8 @@ void NmsLootOfferForgetCorpseItem(uint32 character_id, uint32 corpse_id, uint64 
 	// rule is off. Rows written while the rule was on are left behind deliberately: they
 	// carry expires_at and are reclaimed by ExpireOffers, and no offer is sent or
 	// actioned while the rule is off, so a stale row is inert.
-	if (!NmsLootOffersEnabled() || !EnsureTables() || !zone || !character_id || !corpse_id || !item || !item->item_id) {
+	// Only mode 1 ties offers to corpse items, so the per-loot DELETE is unnecessary elsewhere.
+	if (NmsLootSystemMode() != 1 || !EnsureTables() || !zone || !character_id || !corpse_id || !item || !item->item_id) {
 		return;
 	}
 	// corpse_id alone is not a key: entity ids are recycled within a zone and repeat across
@@ -761,9 +770,9 @@ void NmsLootOfferForgetCorpseItem(uint32 character_id, uint32 corpse_id, uint64 
 	));
 }
 
-bool NmsLootOffersEnabled()
+int NmsLootSystemMode()
 {
-	return RuleB(Custom, NmsLootOffers);
+	return RuleI(Custom, LootSystem);
 }
 
 bool NmsLootOfferTablesReady()
@@ -773,7 +782,7 @@ bool NmsLootOfferTablesReady()
 
 void NmsLootOfferOnCorpseOpen(Client *c, Corpse *corpse)
 {
-	if (!c || !corpse || !NmsLootOffersEnabled() || !EnsureTables() || !zone) {
+	if (!c || !corpse || !EnsureTables() || !zone) {
 		return;
 	}
 	if (!corpse->IsBeingLootedBy(c)) {
@@ -799,17 +808,6 @@ static bool EmptiesCorpseFor(size_t recipients)
 {
 	return (recipients >= 2 && RuleB(Custom, NmsLootEmptyGroupCorpse)) ||
 		(recipients == 1 && RuleB(Custom, NmsLootEmptySoloCorpse));
-}
-
-// True when NmsLootOfferOnCorpseCreated will strip the corpse's loot-table items for this kill
-bool NmsLootOfferEmptiesCorpse(Client *credit)
-{
-	if (!credit || !NmsLootOffersEnabled() || !EnsureTables() || !zone) {
-		return false;
-	}
-	std::vector<Client *> recipients;
-	CollectPartyClientsInZone(credit, recipients);
-	return EmptiesCorpseFor(recipients.size());
 }
 
 // Remove the corpse's loot-table items and return an exact copy of every item that
@@ -850,17 +848,442 @@ LootItems RemoveCorpseLootTableItems(Corpse *corpse)
 	return removed;
 }
 
+// ---------------------------------------------------------------------------
+// Modes 2-4 (Custom:LootSystem, migration v415): strip the corpse, then distribute.
+// ---------------------------------------------------------------------------
+
+namespace {
+
+	enum LootMode : int {
+		LootModeOff          = 0, // native corpse looting
+		LootModeOffers       = 1, // /nmsloot personal offers
+		LootModeRollOff      = 2, // 1-100 roll per item; the winner is offered it
+		LootModeRandom       = 3, // random recipient per item, straight to bags
+		LootModeSingleLooter = 4  // leader takes everything, straight to bags
+	};
+
+	void BroadcastTo(const std::vector<Client *> &pool, const std::string &line)
+	{
+		for (auto *c : pool) {
+			if (c) {
+				c->Message(Chat::Yellow, "%s", line.c_str());
+			}
+		}
+	}
+
+	// Raid loot policy - the AllowPlayerLoot matrix in attack.cpp - plus the credited killer,
+	// who can always loot the corpse natively (attack.cpp grants them unconditionally) and so
+	// must never be dropped from a roll. Groups and solos get the party set.
+	void CollectLootPolicyRecipients(Client *credit, std::vector<Client *> &out)
+	{
+		out.clear();
+		if (!credit) {
+			return;
+		}
+
+		std::set<Client *> unique;
+		auto add = [&](Client *c) {
+			if (c) {
+				unique.insert(c);
+			}
+		};
+
+		add(credit);
+		if (auto *r = credit->GetRaid()) {
+			for (const auto &m : r->members) {
+				if (m.is_bot || !m.member || !m.member->IsClient()) {
+					continue;
+				}
+				Client *mc = m.member->CastToClient();
+				switch (r->GetLootType()) {
+					case RaidLootType::LeaderOnly:
+						if (m.is_raid_leader) {
+							add(mc);
+						}
+						break;
+					case RaidLootType::LeaderAndGroupLeadersOnly:
+						if (m.is_raid_leader || m.is_group_leader) {
+							add(mc);
+						}
+						break;
+					case RaidLootType::LeaderSelected:
+						if (m.is_looter) {
+							add(mc);
+						}
+						break;
+					case RaidLootType::EntireRaid:
+					default:
+						add(mc);
+						break;
+				}
+			}
+		}
+		else if (auto *g = credit->GetGroup()) {
+			for (const auto &m : g->members) {
+				if (m && m->IsClient()) {
+					add(m->CastToClient());
+				}
+			}
+		}
+
+		out.assign(unique.begin(), unique.end());
+	}
+
+	// Mode 4 designation: raid leader, then a LeaderSelected looter, then the group leader, then
+	// the credited player. A raid member also sits in a group, so the raid level is checked first
+	// - otherwise a sub-group leader would take the whole raid's loot.
+	Client *DesignateSingleLooter(Client *credit, const std::vector<Client *> &policy)
+	{
+		auto in_policy = [&](Client *c) {
+			return c && std::find(policy.begin(), policy.end(), c) != policy.end();
+		};
+
+		if (auto *r = credit->GetRaid()) {
+			if (auto *leader = r->GetLeader(); leader && in_policy(leader)) {
+				return leader;
+			}
+			if (r->GetLootType() == RaidLootType::LeaderSelected) {
+				for (const auto &m : r->members) {
+					if (m.is_bot || !m.member || !m.member->IsClient()) {
+						continue;
+					}
+					Client *mc = m.member->CastToClient();
+					if (m.is_looter && in_policy(mc)) {
+						return mc;
+					}
+				}
+			}
+		}
+		if (auto *g = credit->GetGroup()) {
+			if (auto *leader = g->GetLeader(); leader && leader->IsClient() && in_policy(leader->CastToClient())) {
+				return leader->CastToClient();
+			}
+		}
+		return credit;
+	}
+
+	enum class BagApply : uint8 { None, Partial, Full };
+
+	// Puts up to qty charges of this loot item into the character's bags (cursor last, exactly
+	// like the Keep path) and reports what actually moved. A partial stack merge must be reported
+	// as Partial: the Keep path returns true there, which would duplicate the remainder if reused.
+	BagApply ApplyItemToBags(Client *c, const LootItem *item, int16 &qty)
+	{
+		if (!c || !item || !item->item_id || qty <= 0) {
+			return BagApply::None;
+		}
+		const auto *data = database.GetItem(item->item_id);
+		if (!data) {
+			return BagApply::None;
+		}
+		if (c->CheckLoreConflict(data)) {
+			return BagApply::None;
+		}
+
+		auto *inst = database.CreateItem(
+			item->item_id,
+			qty,
+			item->aug_1, item->aug_2, item->aug_3,
+			item->aug_4, item->aug_5, item->aug_6
+		);
+		if (!inst) {
+			return BagApply::None;
+		}
+		// The offer model has no room for these fields and they cannot be rebuilt from the item
+		// id, so carry them by hand or an attuned/ornamented drop silently changes identity.
+		inst->SetAttuned(item->attuned);
+		if (!item->custom_data.empty()) {
+			inst->SetCustomDataString(item->custom_data);
+		}
+		inst->SetOrnamentIcon(item->ornamenticon);
+		inst->SetOrnamentationIDFile(item->ornamentidfile);
+		inst->SetOrnamentHeroModel(item->ornament_hero_model);
+
+		const int16 before = qty;
+		const bool cursor_ok = c->GetInv().CursorSize() < EQ::invbag::CURSOR_BAG_COUNT;
+		// The return value is the success signal: a non-stackable item keeps its charge count on
+		// the source instance, so charges alone cannot tell "placed" from "nothing moved".
+		const bool placed = c->AutoPutLootInInventory(*inst, false, cursor_ok);
+		const int16 left = inst->GetCharges();
+		safe_delete(inst);
+
+		if (placed) {
+			DiscoverOfferItem(c, item->item_id);
+			qty = 0;
+			return BagApply::Full;
+		}
+		if (left >= before) {
+			return BagApply::None; // bags and cursor full: nothing moved
+		}
+		DiscoverOfferItem(c, item->item_id);
+		qty = left;
+		return left > 0 ? BagApply::Partial : BagApply::Full;
+	}
+
+	// Hands the item to the first candidate that can take it. Returns the charges still
+	// undelivered (0 = fully delivered); delivered_to names the last recipient that took any.
+	int16 DeliverItem(const std::vector<Client *> &candidates, const LootItem *item, std::string &delivered_to)
+	{
+		int16 left = item->charges > 0 ? static_cast<int16>(item->charges) : 1;
+		for (auto *c : candidates) {
+			if (left <= 0) {
+				break;
+			}
+			if (!c) {
+				continue;
+			}
+			if (ApplyItemToBags(c, item, left) == BagApply::None) {
+				continue;
+			}
+			delivered_to = c->GetName();
+		}
+		return left;
+	}
+
+	// Overflow goes back on the corpse as a quest-style item (Corpse::AddItem stamps
+	// lootdrop_id 0), so a later strip never touches it again and it stays lootable by hand.
+	void ReturnItemToCorpse(Corpse *corpse, const LootItem *item, int16 charges)
+	{
+		if (!corpse || !item || !item->item_id || charges <= 0) {
+			return;
+		}
+		corpse->AddItem(
+			item->item_id,
+			static_cast<uint16>(charges),
+			item->equip_slot,
+			item->aug_1, item->aug_2, item->aug_3,
+			item->aug_4, item->aug_5, item->aug_6,
+			item->attuned,
+			item->custom_data,
+			item->ornamenticon,
+			item->ornamentidfile,
+			item->ornament_hero_model
+		);
+	}
+
+	// Mode 2: one roll per eligible player per item, highest wins (ties broken at random), one
+	// chat line per item. The winner receives a normal single-item offer, so Keep/Sell/Bank/Pass
+	// all still work and an unclaimed offer still expires into their bags.
+	void DistributeByRoll(Corpse *corpse, const std::vector<Client *> &policy, const LootItems &items)
+	{
+		if (policy.empty()) {
+			return;
+		}
+
+		std::map<Client *, LootItems> won;
+		for (auto *item : items) {
+			if (!item || !item->item_id) {
+				continue;
+			}
+			const auto *data = database.GetItem(item->item_id);
+			if (!data) {
+				continue;
+			}
+
+			std::vector<std::pair<Client *, int>> ranked;
+			ranked.reserve(policy.size());
+			for (auto *c : policy) {
+				ranked.emplace_back(c, zone->random.Int(1, 100));
+			}
+			std::stable_sort(
+				ranked.begin(), ranked.end(),
+				[](const std::pair<Client *, int> &a, const std::pair<Client *, int> &b) {
+					return a.second > b.second;
+				}
+			);
+
+			const int top_roll = ranked.front().second;
+			size_t tied = 1;
+			while (tied < ranked.size() && ranked[tied].second == top_roll) {
+				++tied;
+			}
+			Client *winner = tied > 1
+				? ranked[static_cast<size_t>(zone->random.Int(0, static_cast<int>(tied) - 1))].first
+				: ranked.front().first;
+
+			// A 40-man roll list does not fit a client chat line: winner, two runners-up, count.
+			std::string runners;
+			size_t shown = 0;
+			for (const auto &entry : ranked) {
+				if (entry.first == winner || shown == 2) {
+					continue;
+				}
+				runners += fmt::format("{}{} {}", shown ? ", " : "", entry.first->GetName(), entry.second);
+				++shown;
+			}
+			const size_t others = ranked.size() > shown + 1 ? ranked.size() - shown - 1 : 0;
+
+			std::string line = fmt::format("[NMS] {}: {} wins the roll ({})", data->Name, winner->GetName(), top_roll);
+			if (!runners.empty()) {
+				line += fmt::format(" -- {}", runners);
+			}
+			if (others) {
+				line += fmt::format(" and {} more", others);
+			}
+			BroadcastTo(policy, line);
+
+			won[winner].push_back(item);
+		}
+
+		// One CreateOffersFromItems call per winner: each call re-reads the whole pending list and
+		// re-sends the window, so a per-item call would be 30 round trips for a 30-item corpse.
+		for (auto &entry : won) {
+			CreateOffersFromItems(entry.first, corpse, entry.second);
+		}
+	}
+
+	// Mode 3: uniform random recipient per item. The shuffled order doubles as the fallback
+	// chain, so a recipient who cannot hold it passes it down rather than losing it.
+	void DistributeRandomly(Corpse *corpse, const std::vector<Client *> &policy, const LootItems &items)
+	{
+		if (policy.empty()) {
+			return;
+		}
+
+		for (auto *item : items) {
+			if (!item || !item->item_id) {
+				continue;
+			}
+			const auto *data = database.GetItem(item->item_id);
+			const std::string name = data ? data->Name : fmt::format("item {}", item->item_id);
+
+			std::vector<Client *> order = policy;
+			for (size_t i = order.size(); i > 1; --i) {
+				const size_t j = static_cast<size_t>(zone->random.Int(0, static_cast<int>(i) - 1));
+				std::swap(order[i - 1], order[j]);
+			}
+
+			std::string delivered_to;
+			const int16 left = DeliverItem(order, item, delivered_to);
+			if (!delivered_to.empty()) {
+				BroadcastTo(policy, fmt::format("[NMS] {} went to {}.", name, delivered_to));
+			}
+			if (left > 0) {
+				ReturnItemToCorpse(corpse, item, left);
+				BroadcastTo(policy, fmt::format("[NMS] {} stayed on the corpse - no one could hold it.", name));
+			}
+		}
+	}
+
+	// Mode 4: the designated looter takes everything. The fallback chain is designated looter,
+	// then the credited player, then the rest of the policy set.
+	void DistributeToOneLooter(Corpse *corpse, Client *credit, const std::vector<Client *> &policy, const LootItems &items)
+	{
+		std::vector<Client *> order;
+		auto add = [&](Client *c) {
+			if (c && std::find(order.begin(), order.end(), c) == order.end()) {
+				order.push_back(c);
+			}
+		};
+		add(DesignateSingleLooter(credit, policy));
+		add(credit);
+		for (auto *c : policy) {
+			add(c);
+		}
+		if (order.empty()) {
+			return;
+		}
+
+		for (auto *item : items) {
+			if (!item || !item->item_id) {
+				continue;
+			}
+			const auto *data = database.GetItem(item->item_id);
+			const std::string name = data ? data->Name : fmt::format("item {}", item->item_id);
+
+			std::string delivered_to;
+			const int16 left = DeliverItem(order, item, delivered_to);
+			if (!delivered_to.empty()) {
+				BroadcastTo(order, fmt::format("[NMS] {} went to {}.", name, delivered_to));
+			}
+			if (left > 0) {
+				ReturnItemToCorpse(corpse, item, left);
+				BroadcastTo(order, fmt::format("[NMS] {} stayed on the corpse - no one could hold it.", name));
+			}
+		}
+	}
+
+	// The loot window has no coin: split the corpse's money among the group/raid in this zone
+	// (the remainder goes to the credited player) so nobody has to open the corpse for it.
+	void SplitCorpseCoin(Corpse *corpse, Client *credit, const std::vector<Client *> &recipients)
+	{
+		const uint64 coin = static_cast<uint64>(corpse->GetCopper()) + corpse->GetSilver() * 10ull +
+			corpse->GetGold() * 100ull + corpse->GetPlatinum() * 1000ull;
+		if (!coin || recipients.empty()) {
+			return;
+		}
+		const uint64 share = coin / recipients.size();
+		const uint64 extra = coin % recipients.size();
+		for (auto *c : recipients) {
+			const uint64 amount = share + (c == credit ? extra : 0);
+			if (!amount) {
+				continue;
+			}
+			c->AddMoneyToPP(amount, true);
+			c->Message(
+				Chat::Yellow,
+				fmt::format(
+					"[NMS] You receive {}p {}g {}s {}c as your share of the coin.",
+					amount / 1000, (amount / 100) % 10, (amount / 10) % 10, amount % 10
+				).c_str()
+			);
+		}
+		corpse->RemoveCash();
+	}
+
+} // namespace
+
 void NmsLootOfferOnCorpseCreated(Corpse *corpse, Client *credit, NPC *source)
 {
-	if (!corpse || !credit || !source || !NmsLootOffersEnabled() || !EnsureTables() || !zone) {
+	if (!corpse || !credit || !source || !zone) {
 		return;
 	}
 	if (corpse->IsPlayerCorpse()) {
 		return;
 	}
 
+	// Mode 0 is native corpse looting. Modes 1 and 2 need the offers table (mode 2 hands the
+	// winner a normal offer); 3 and 4 deliver straight to bags and never touch it, so a missing
+	// table must not disable them.
+	const int mode = NmsLootSystemMode();
+	if (mode < LootModeOffers || mode > LootModeSingleLooter) {
+		return;
+	}
+	if (mode <= LootModeRollOff && !EnsureTables()) {
+		return;
+	}
+
 	std::vector<Client *> recipients;
 	CollectPartyClientsInZone(credit, recipients);
+	if (recipients.empty()) {
+		return;
+	}
+
+	if (mode != LootModeOffers) {
+		LootItems stripped = RemoveCorpseLootTableItems(corpse);
+		LogInfo(
+			"NmsLootOffers: mode [{}] stripped [{}] loot-table item(s) from corpse [{}]",
+			mode,
+			stripped.size(),
+			corpse->GetID()
+		);
+
+		std::vector<Client *> policy;
+		CollectLootPolicyRecipients(credit, policy);
+		if (mode == LootModeRollOff) {
+			DistributeByRoll(corpse, policy, stripped);
+		}
+		else if (mode == LootModeRandom) {
+			DistributeRandomly(corpse, policy, stripped);
+		}
+		else {
+			DistributeToOneLooter(corpse, credit, policy, stripped);
+		}
+		FreeLootItems(stripped);
+		SplitCorpseCoin(corpse, credit, recipients);
+		return;
+	}
+
 	const bool empties = EmptiesCorpseFor(recipients.size());
 
 	// When the rule is on, take the actual loot-table items off the corpse first and
@@ -890,35 +1313,12 @@ void NmsLootOfferOnCorpseCreated(Corpse *corpse, Client *credit, NPC *source)
 		}
 	}
 	FreeLootItems(removed);
-
-	// The loot window has no coin: split the corpse's money among the group/raid in this zone (the
-	// remainder goes to the credited player) so nobody has to open the corpse for it
-	const uint64 coin = static_cast<uint64>(corpse->GetCopper()) + corpse->GetSilver() * 10ull +
-		corpse->GetGold() * 100ull + corpse->GetPlatinum() * 1000ull;
-	if (coin && !recipients.empty()) {
-		const uint64 share = coin / recipients.size();
-		const uint64 extra = coin % recipients.size();
-		for (auto *c : recipients) {
-			const uint64 amount = share + (c == credit ? extra : 0);
-			if (!amount) {
-				continue;
-			}
-			c->AddMoneyToPP(amount, true);
-			c->Message(
-				Chat::Yellow,
-				fmt::format(
-					"[NMS] You receive {}p {}g {}s {}c as your share of the coin.",
-					amount / 1000, (amount / 100) % 10, (amount / 10) % 10, amount % 10
-				).c_str()
-			);
-		}
-		corpse->RemoveCash();
-	}
+	SplitCorpseCoin(corpse, credit, recipients);
 }
 
 void NmsLootOfferRestoreOnZoneIn(Client *c)
 {
-	if (!c || !NmsLootOffersEnabled() || !EnsureTables() || !zone) {
+	if (!c || !zone) {
 		return;
 	}
 
@@ -943,12 +1343,34 @@ void NmsLootOfferRestoreOnZoneIn(Client *c)
 	);
 }
 
+// Slow poll (client_process). Replaces the old behaviour where the zone-in restore ran every
+// 3s: Timer::Check() re-arms itself, so RestoreOnZoneIn re-sent the list and repeated its
+// message forever while an offer was pending, and the client window re-opened each time.
+void NmsLootOfferPoll(Client *c)
+{
+	if (!c || !zone) {
+		return;
+	}
+	if (ExpireOffers(c) <= 0) {
+		return; // nothing was delivered: leave the window alone
+	}
+
+	if (c->GetNmsPersonalLootWindow()) {
+		SendPersonalLootList(c, 0);
+		return;
+	}
+	auto offers = LoadOffers(c->CharacterID(), zone->GetZoneID(), 0, 0);
+	if (!offers.empty()) {
+		SendOffers(c, offers, offers.front().corpse_id);
+	}
+}
+
 void NmsLootOfferSweepExpired()
 {
 	// Zone boot insurance: rows whose owner never came back have nobody to deliver to, so
 	// reclaim them. In-zone expiry delivers instead (ExpireOffers), so this only ever deletes
 	// offers that expired while the character was offline or in another zone.
-	if (!NmsLootOffersEnabled() || !EnsureTables()) {
+	if (!EnsureTables()) {
 		return;
 	}
 	database.QueryDatabase("DELETE FROM character_nms_loot_offers WHERE expires_at < NOW()");
@@ -980,7 +1402,7 @@ static bool DecideOffer(Client *c, NmsLootOffer match, NmsLootAction action, con
 
 void NmsLootOfferHandleDecision(Client *c, const EQApplicationPacket *app)
 {
-	if (!c || !app || !NmsLootOffersEnabled() || !EnsureTables() || !zone) {
+	if (!c || !app || !EnsureTables() || !zone) {
 		return;
 	}
 	if (app->size != sizeof(NmsLootDecision_Struct)) {
@@ -1053,7 +1475,9 @@ void NmsLootOfferHandlePersonalLootAction(Client *c, const EQApplicationPacket *
 	}
 
 	const auto *in = reinterpret_cast<const PersonalLootAction_Struct *>(app->pBuffer);
-	const bool enabled = NmsLootOffersEnabled() && EnsureTables() && zone;
+	// Servicing is mode-independent on purpose: an offer created in mode 1 or 2 must stay
+	// claimable after Custom:LootSystem flips to 0/3/4, because the rows outlive the mode.
+	const bool enabled = EnsureTables() && zone != nullptr;
 	switch (in->action) {
 	case kPersonalLootHello:
 		// Once per zone, a few seconds in: from now on this client gets OP_PersonalLootList, not OP_NmsLootOffer

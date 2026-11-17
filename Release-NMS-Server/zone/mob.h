@@ -369,6 +369,7 @@ public:
 	bool NegateSpellEffect(uint16 spell_id, int effect_id);
 	float GetActSpellRange(uint16 spell_id, float range);
 	int64 GetActSpellDamage(uint16 spell_id, int64 value, Mob* target = nullptr);
+	int GetHeroicSpellDamagePct() const;
 
 	int GetSharedSpellDamage();
 	int GetSharedHealAmount();
@@ -926,6 +927,7 @@ public:
 
 	// aura functions
 	void MakeAura(uint16 spell_id);
+	void MakeAura(uint16 spell_id, const glm::vec4 *position);
 	inline int GetAuraSlots() { return 1 + aabonuses.aura_slots + itembonuses.aura_slots + spellbonuses.aura_slots; }
 	inline int GetTrapSlots() { return 1 + aabonuses.trap_slots + itembonuses.trap_slots + spellbonuses.trap_slots; }
 	inline bool HasFreeAuraSlots() { return aura_mgr.count < GetAuraSlots(); }
@@ -965,6 +967,8 @@ public:
 	bool GetFollowCanRun() const { return follow_run; }
 	inline bool IsRareSpawn() const { return rare_spawn; }
 	inline void SetRareSpawn(bool in) { rare_spawn = in; }
+	inline bool IsRareCreature() const { return rare_creature; }
+	inline void SetRareCreature(bool in) { rare_creature = in; }
 
 	virtual void Message(uint32 type, const char* message, ...) { }
 	virtual void MessageString(uint32 type, uint32 string_id, uint32 distance = 0) { }
@@ -1285,6 +1289,7 @@ public:
  		qglobal                     = in.qglobal;
  		spawned                     = in.spawned;
  		rare_spawn                  = in.rare_spawn;
+ 		rare_creature               = in.rare_creature;
  		always_aggro                = in.always_aggro;
  		heroic_strikethrough        = in.heroic_strikethrough;
  		keeps_sold_items            = in.keeps_sold_items;
@@ -1791,6 +1796,7 @@ protected:
 	bool follow_run;
 	bool no_target_hotkey;
 	bool rare_spawn;
+	bool rare_creature;
 	int32 heroic_strikethrough;
 	bool keeps_sold_items;
 	uint32 m_npc_tint_id;

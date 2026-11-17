@@ -41,16 +41,9 @@ namespace RoF2
 	extern void Register(EQStreamIdentifier &into);
 	extern void Reload();
 
-	// Native Spirit Shroud serializers (RoF2 May 2013 protocol): one-packet
-	// captures of the ordinary struct strategy encoders.
-	std::optional<std::vector<uint8_t>> SerializeShroudSpawn(const Spawn_Struct&);
-	std::optional<std::vector<uint8_t>> SerializeShroudNormalProfile(const PlayerProfile_Struct&);
-	std::optional<std::vector<uint8_t>> SerializeShroudInventory(const std::vector<std::pair<int16_t, const EQ::ItemInstance*>>&);
 	// Shroud inspection cache entry: native ItemPtr without an ItemPacket type
 	// or inventory count.
 	std::optional<std::vector<uint8_t>> SerializeShroudPreviewItem(const EQ::ItemInstance &instance);
-	// Fully encoded normal ItemPacketTrade for a prepared shroud-bank tree.
-	std::optional<std::vector<uint8_t>> SerializeShroudBankItem(const EQ::ItemInstance&, int16_t server_slot);
 
 
 

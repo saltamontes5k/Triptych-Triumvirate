@@ -478,31 +478,46 @@ int command_realdispatch(Client *c, std::string message, bool ignore_status)
 
 	const CommandRecord* current_command = commandlist[command];
 
-	bool is_subcommand            = false;
-	bool can_use_subcommand       = false;
-	bool found_subcommand_setting = false;
+	bool is_subcommand      = false;
+	bool can_use_subcommand = false;
 
 	const auto arguments = sep.argnum;
 
-	if (arguments) {
-		const std::string& sub_command = sep.arg[1];
+	// Access is gated against the command's canonical name. An alias-typed
+	// invocation (e.g. #fi for #find item) resolves to the parent command and
+	// the subcommand the alias stands for, so the subcommand access level is
+	// enforced exactly as it is for a directly typed subcommand.
+	std::string gate_command     = command;
+	std::string gate_sub_command = arguments > 1 ? sep.arg[1] : "";
+
+	if (const auto alias = commandaliases.find(command); alias != commandaliases.end() && alias->second != command) {
+		gate_command = alias->second;
+		gate_sub_command.clear();
 
 		for (const auto &e : command_subsettings) {
-			if (e.parent_command == command && e.sub_command == sub_command) {
-				can_use_subcommand       = c->Admin() >= static_cast<int16>(e.access_level);
-				is_subcommand            = true;
-				found_subcommand_setting = true;
+			if (e.parent_command != gate_command) {
+				continue;
+			}
+
+			for (const auto &a : Strings::Split(e.top_level_aliases, "|")) {
+				if (!a.empty() && a == command) {
+					gate_sub_command = e.sub_command;
+					break;
+				}
+			}
+
+			if (!gate_sub_command.empty()) {
 				break;
 			}
 		}
+	}
 
-		if (!found_subcommand_setting) {
-			for (const auto &e: command_subsettings) {
-				if (e.parent_command == command && e.sub_command == sub_command) {
-					can_use_subcommand = c->Admin() >= static_cast<int16>(e.access_level);
-					is_subcommand      = true;
-					break;
-				}
+	if (!gate_sub_command.empty()) {
+		for (const auto &e : command_subsettings) {
+			if (e.parent_command == gate_command && e.sub_command == gate_sub_command) {
+				can_use_subcommand = c->Admin() >= static_cast<int16>(e.access_level);
+				is_subcommand      = true;
+				break;
 			}
 		}
 	}

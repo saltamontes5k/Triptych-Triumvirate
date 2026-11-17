@@ -61,12 +61,15 @@ function event_say(e)
   if e.message:findi('goods') then
     e.other:Message(MT.NPCQuestSay, "Jeweler Imua says 'Wonderful!  Just let me know which you would like, then bring me the materials and my payment.  Hmm, for one such as you...")
     say_price(e)
-    e.other:TaskSelector(task_list)
+    -- Offer through Imua himself: plain TaskSelector records the *client's*
+    -- entity id as the giver, and CanAcceptNewTask CastToNPCs it, so every
+    -- accept fails "accepted task from missing npc" and the task never lands.
+    e.other:TaskSelectorFromNPC(e.self, task_list)
   end
   if e.message:findi('items') then
     e.other:Message(MT.NPCQuestSay, "Jeweler Imua says 'Wonderful!  Just let me know which item you are interested in, then bring me the materials and the payment.  Hmm, for one such as you...")
     say_price(e)
-    e.other:TaskSelector(good_list)
+    e.other:TaskSelectorFromNPC(e.self, good_list)
   end
   if e.message:findi('price') then
     say_price(e)

@@ -302,6 +302,36 @@ has loaded automatic reward entries or a valid selectable set.
 
 ## Runtime policy and authoring boundary
 
+### Shroud exclusion (2026-11-14)
+
+A character wearing a shroud form is a temporary monster: its class, level,
+skills, kills and loot are not the character's. **No achievement progress,
+completion, or reward claim happens while `Client::IsShrouded()` is true**
+(GMs exempt). That is enforced in one place — `AchievementProgressAllowed()` in
+`zone/client_achievements.cpp` — and every entry point calls it:
+
+- the nine `UpdateAchievementFor*` event feeds (kill, level, task, zone, loot,
+  tradeskill, skill, AA) plus the deferred-update drain and the periodic
+  ownership reconcile;
+- `SetAchievementProgress` and `CompleteAchievement`, which the Lua and Perl
+  bindings and the `#achievement` GM command all funnel through;
+- the inventory-ownership reconcile (`FlushAchievementInventoryUpdate`);
+- `ClaimAchievementReward`, so a reward window left over from a legitimate
+  completion waits until the character is itself again.
+
+Why: a Warrior form (Bear Beast 70) fired the class-proficiency lines for the
+form's class *and* the character's multiclass set (Warrior/Bard/Rogue/Berserker
+Proficiency I–III), each paying a Select-a-Reward choice of AA points or
+Triune of Fate. The reward window also offered the currency before the form was
+removed.
+
+The AA-point grant was rolled back by the shroud snapshot restore on unshroud
+(`m_shroud_saved_pp`), but the achievement completions persisted, so the
+exclusion is on the *earning* side. Existing completions earned this way are not
+auto-reverted — remove them deliberately if needed
+(`character_achievements`, `character_achievement_progress`,
+`character_achievement_rewards`, `character_achievement_reward_selections`).
+
 The normalized content tables, character-state tables, criterion values, reward
 types, SQL examples, and Lua/Perl recipes are documented in
 [Achievement content authoring](achievement_authoring.md). The shared reward

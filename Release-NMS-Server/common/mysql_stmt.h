@@ -2,6 +2,7 @@
 
 #include "mysql.h"
 #include <cassert>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <optional>

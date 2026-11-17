@@ -21,7 +21,7 @@
 -- Version 0 Netherbian Lair (the world zone) is untouched.
 
 local STATION_VERSION = 66
-local STATION_SHROUD  = 505
+local STATION_SHROUD  = 140440 -- spirit template (Master Officer armor 40); legacy id was 505
 local NETHERBIAN_ID   = 161 -- zoneidnumber (canonical), not zone.id
 local BREW_ITEM       = 41408 -- McKenzie's Special Brew (alternate_currency 18)
 
@@ -218,7 +218,7 @@ function event_timer(e)
 			local id = client:CharacterID()
 			if client:GetRace() ~= 323 then
 				if seen_unshrouded[id] then
-					client:ApplyShroud(STATION_SHROUD)
+					client:ApplySpiritShroud(STATION_SHROUD)
 					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's
 					-- buffs so nothing rides along into the armor.

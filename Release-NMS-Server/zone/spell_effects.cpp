@@ -3340,7 +3340,17 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 			}
 
 			case SE_PersistentEffect: {
-				MakeAura(spell_id);
+				// A client's ground-target ring aura is created once by the caster, at
+				// the ring; see the TargetRing branch of Mob::SpellFinished. NPC casts
+				// never populate ring coordinates, so they keep the per-target path.
+				const bool client_ring =
+					caster != nullptr &&
+					caster->IsClient() &&
+					spells[spell_id].target_type == ST_Ring;
+
+				if (!client_ring) {
+					MakeAura(spell_id);
+				}
 				break;
 			}
 
@@ -4091,7 +4101,7 @@ bool Mob::IsGroupSuspendableBuff(uint16 spell_id, Buffs_Struct buff) {
 	Client* client = GetOwnerOrSelf()->CastToClient();
 
 	if (caster && client) {
-		if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(client))) {
+		if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
 			if (GetSpellEffectIndex(spell_id, SE_DivineAura) == -1) {
 				if (caster->GetInv().HasClickEffect(spell_id)) {
 					return true;
@@ -4474,7 +4484,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_Invisibility:
 		case SE_InvisVsAnimals:
 		case SE_InvisVsUndead: {
-			if (buff.ticsremaining > 3) {
+			if (buff.ticsremaining > 3 && !IsGroupSuspendableBuff(buff.spellid, buff)) {
 				if (!IsBardSong(buff.spellid)) {
 					double break_chance = 2.0;
 					if (caster) {
@@ -4498,7 +4508,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_Invisibility2:
 		case SE_InvisVsUndead2: {
 			if (!IsBardSong(buff.spellid)) {
-				if (buff.ticsremaining <= 3 && buff.ticsremaining > 1) {
+				if (buff.ticsremaining <= 3 && buff.ticsremaining > 1 && !IsGroupSuspendableBuff(buff.spellid, buff)) {
 					MessageString(Chat::Spells, INVIS_BEGIN_BREAK);
 				}
 			}

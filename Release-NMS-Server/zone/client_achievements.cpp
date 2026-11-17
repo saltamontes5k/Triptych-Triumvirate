@@ -27,6 +27,17 @@
 namespace
 {
 
+// A shroud form is a temporary monster: its class, level, skills, kills and
+// loot are not the character's. Nothing done while wearing one may advance or
+// complete an achievement — the class-proficiency lines fired off the form's
+// class (a Warrior form completed Warrior/Bard/Rogue/Berserker Proficiency) and
+// paid out Triune of Fate and AA points (2026-11-14 exploit report). GMs keep
+// the escape hatch for testing and content verification.
+bool AchievementProgressAllowed(const Client &client)
+{
+	return !client.IsShrouded() || client.GetGM();
+}
+
 uint32_t ParseUInt32(const char *value)
 {
 	return value ? static_cast<uint32_t>(std::strtoul(value, nullptr, 10)) : 0;
@@ -3251,7 +3262,9 @@ void Client::ProcessAchievementRewards()
 	m_achievement_state->ProcessPendingNotifications();
 
 	const auto periodic_ownership_due =
-		Connected() && m_achievement_ownership_reconcile_timer.Check();
+		AchievementProgressAllowed(*this) &&
+		Connected() &&
+		m_achievement_ownership_reconcile_timer.Check();
 	const auto foreground_work_pending =
 		m_achievement_inventory_update_pending ||
 		!m_deferred_achievement_state_updates.empty();
@@ -3294,7 +3307,8 @@ void Client::ProcessPendingAchievementStateUpdates()
 		!m_achievement_pending_state_updates ||
 		!m_achievement_state ||
 		ShouldDeferAchievementStateUpdate() ||
-		!RuleB(Achievements, EnableAchievements)
+		!RuleB(Achievements, EnableAchievements) ||
+		!AchievementProgressAllowed(*this)
 	) {
 		return;
 	}
@@ -3401,6 +3415,11 @@ RewardSelectionDeliveryResult Client::ClaimAchievementReward(
 	uint32 selected_option_id
 )
 {
+	// No achievement economy inside a shroud form: even a legitimately earned,
+	// still-pending reward waits until the character is itself again.
+	if (!AchievementProgressAllowed(*this)) {
+		return RewardSelectionDeliveryResult::RetryableFailure;
+	}
 	return m_achievement_state
 		? m_achievement_state->ClaimReward(
 			pending_reward_id,
@@ -3432,6 +3451,11 @@ bool Client::FlushAchievementInventoryUpdate()
 {
 	if (!m_achievement_state || m_achievement_inventory_transaction_depth) {
 		return false;
+	}
+
+	if (!AchievementProgressAllowed(*this)) {
+		m_achievement_inventory_update_pending = false;
+		return true;
 	}
 
 	if (m_achievement_inventory_update_pending) {
@@ -3513,6 +3537,9 @@ void Client::UpdateAchievementForKill(
 	uint32 zone_id
 )
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({
 			DeferredAchievementStateUpdateType::Kill,
@@ -3539,6 +3566,9 @@ void Client::UpdateAchievementForKill(
 
 void Client::UpdateAchievementForLevel(uint32 level)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({DeferredAchievementStateUpdateType::Level, level});
 		return;
@@ -3555,6 +3585,9 @@ void Client::UpdateAchievementForLevel(uint32 level)
 
 void Client::UpdateAchievementForTask(uint32 task_id)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({DeferredAchievementStateUpdateType::Task, task_id});
 		return;
@@ -3567,6 +3600,9 @@ void Client::UpdateAchievementForTask(uint32 task_id)
 
 void Client::UpdateAchievementForZone(uint32 zone_id)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({DeferredAchievementStateUpdateType::Zone, zone_id});
 		return;
@@ -3579,6 +3615,9 @@ void Client::UpdateAchievementForZone(uint32 zone_id)
 
 void Client::UpdateAchievementForLoot(uint32 item_id, uint32 quantity)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({
 			DeferredAchievementStateUpdateType::Loot,
@@ -3641,6 +3680,9 @@ void Client::EndAchievementInventoryTransaction(bool committed)
 
 void Client::UpdateAchievementForTradeskill(uint32 recipe_id)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({DeferredAchievementStateUpdateType::Tradeskill, recipe_id});
 		return;
@@ -3653,6 +3695,9 @@ void Client::UpdateAchievementForTradeskill(uint32 recipe_id)
 
 void Client::UpdateAchievementForSkill(uint32 skill_id, uint32 value)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({
 			DeferredAchievementStateUpdateType::Skill,
@@ -3678,6 +3723,9 @@ void Client::UpdateAchievementForSkill(uint32 skill_id, uint32 value)
 
 void Client::UpdateAchievementForAA(uint32 spent_points)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return;
+	}
 	if (ShouldDeferAchievementStateUpdate()) {
 		QueueAchievementStateUpdate({
 			DeferredAchievementStateUpdateType::AlternateAdvancement,
@@ -3723,6 +3771,9 @@ bool Client::SetAchievementProgress(
 	bool additive
 )
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return false;
+	}
 	if (
 		component_type > 2 ||
 		!AchievementManager::Instance().FindDefinitionIndex(achievement_id) ||
@@ -3759,6 +3810,9 @@ bool Client::SetAchievementProgress(
 
 bool Client::CompleteAchievement(uint32 achievement_id)
 {
+	if (!AchievementProgressAllowed(*this)) {
+		return false;
+	}
 	if (!AchievementManager::Instance().FindDefinitionIndex(achievement_id)) {
 		return false;
 	}

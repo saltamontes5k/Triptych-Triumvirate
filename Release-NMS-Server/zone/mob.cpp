@@ -290,6 +290,7 @@ Mob::Mob(
 	qglobal              = 0;
 	spawned              = false;
 	rare_spawn           = false;
+	rare_creature        = false;
 	always_aggro         = in_always_aggro;
 	heroic_strikethrough = in_heroic_strikethrough;
 	keeps_sold_items     = in_keeps_sold_items;
