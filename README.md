@@ -6,6 +6,52 @@ LAN-oriented community server. Everything in this repo is tuned for play on a lo
 > **LAN only.** This release is intended for private/local-network play, of course it can be tweaked for network at discretion.
 
 ---
+### This update's changes (11/23)
+
+- Big one: Evolution tab works and now takes over what used to be the duty of the power source slot, you can evolve up to 3 worn items or socketed augs at once, see progress in your evolution tab
+by default evolving items from bags is off but that's an option too and you can use more than 3 by adjusting server rules
+- Some server stability fixes
+- Trophies, mounts on yards, service npcs and pets in, merchants in neighborhood (not for trophies yet)
+- Shrouds significantly less dependent on dll
+- Nautilus vault icon fix
+- Pets now con amiable, mutual friends also con amiable
+- Bards and enchanters can double charm, don't die
+- Retro races, post Kunark races without a no luclin option now have one
+- Another big one; Personal Loot offer system, default 0, has 5 settings
+#rules set Custom:LootSystem 5
+
+## Loot distribution modes (`Custom:LootSystem`)
+
+One setting controls how group loot works. Quest items and scripted drops always stay on the
+corpse in every mode and are looted normally.
+
+**0 — Classic (off):** No changes. Loot drops on the corpse exactly like stock EverQuest —
+open the corpse and take what you want.
+
+**1 — Personal offers (/nmsloot):** Loot goes to your /nmsloot window instead of the corpse.
+Everyone in the party is offered a copy of the same drops — first accept wins — and the corpse
+is emptied of dropped items (quest items stay). Coin is split automatically.
+
+**2 — Roll-off:** Each dropped item is rolled 1-100 among eligible players. The winner is
+offered the item through their loot window. Coin is split automatically.
+
+**3 — Random:** Each dropped item goes to a random eligible player, straight to their bags.
+Coin is split automatically.
+
+**4 — One looter:** All loot goes to one person (raid/party leader by default, with a
+fallback chain), straight to their bags. Coin is split automatically.
+
+**5 — Personal replay rolls:** Every group member gets their **own independent roll**
+of the monster's loot table, as if each of you had killed it — delivered to your /nmsloot
+window. The corpse keeps only quest items and the coin (loot the coin normally). Raids always
+use classic looting. This is the best mode for seeing rares in groups, since nobody competes
+for the same physical drop.
+
+In the window modes (1, 2, 5), unclaimed offers expire after a few minutes, and stackable
+drops that folded together show their total count in the item name (e.g. "Bone Chips (x12)").
+
+
+
 ### This update's changes (11/14)
 
 - Some server stability fixes
@@ -407,12 +453,9 @@ Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: 
 - explorer path scaffold for ldon+ scaffold, only hero available right now
 - more quests for the Blessing of the gods line
 - more 'monster' quests to grind tradeskills, also kill select raidbosses to raise skills ala the old non-graphical MUDs that inspired EQ
-- more functional housing system, explore housing in non-neighborhood zone if possible
 - marriage system with live eq style con ally to spouse
 - nimbus and more illusion prizes
 - unique utility spells/aas
-- consolidate evolving items and our basic-enhanced-legendary scaffold to free up the powersource slot
-- fix the shroud tab and remove shroud dependency on external dll
 
 ## Credits
 
