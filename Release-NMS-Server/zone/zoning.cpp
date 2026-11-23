@@ -1480,7 +1480,11 @@ bool Client::CanEnterZone(const std::string& zone_short_name, int16 instance_ver
 	//only enforce rules here which are serious enough to warrant being kicked from
 	//the zone
 
-	if (Admin() >= RuleI(GM, MinStatusToZoneAnywhere)) {
+	// The GM flag itself is the zone-anywhere pass. Gating this on Admin() alone
+	// still kicked GMs whose status is under GM:MinStatusToZoneAnywhere (250) out
+	// of any zone carrying min_status 255 -- the hard lock on every expansion
+	// past SoF (Korafax/discord among them). No zone is forbidden to a GM.
+	if (GetGM() || Admin() >= RuleI(GM, MinStatusToZoneAnywhere)) {
 		return true;
 	}
 

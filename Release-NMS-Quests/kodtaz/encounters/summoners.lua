@@ -22,7 +22,14 @@ end
 function Trigger_Timer(e)
     if (e.timer == "popevent") then
         eq.stop_timer("popevent");
-        eq.unique_spawn(293212, 0, 0, 591, 746, -460, 150); -- NPC: #Pixtt_Grand_Summoner
+        -- NMS: the Grand Summoner is excluded only from respawning instances.
+        -- Upstream runs this as a non-respawning dz (StaticInstanceVersion 255),
+        -- but Kod'taz is a static zone (version 0) on this server, so allow that
+        -- too or BIC #9 can never obtain the Grand Summoner's Glyph (60151).
+        local zone_version = tostring(eq.get_zone_instance_version())
+        if zone_version == "0" or zone_version == tostring(eq.get_rule("Custom:StaticInstanceVersion")) then
+            eq.unique_spawn(293212, 0, 0, 591, 746, -460, 150); -- NPC: #Pixtt_Grand_Summoner
+        end
         -- Spawn 293213 Pixtt Priest Summoners
         eq.spawn2(293213, 0, 0, 613, 789, -450, 188); -- NPC: #Pixtt_Priest_Summoner
         eq.spawn2(293213, 0, 0, 692, 810, -456, 344); -- NPC: #Pixtt_Priest_Summoner

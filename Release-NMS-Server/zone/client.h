@@ -18,6 +18,8 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include <cstdint>
+
 #define MAXPETS 2
 
 class Client;
@@ -28,6 +30,8 @@ class ExpeditionRequest;
 class Group;
 class ClientAchievementState;
 class NPC;
+class Corpse;
+class InventorySessionLease;
 class Object;
 class Raid;
 class Seperator;
@@ -35,6 +39,14 @@ class ServerPacket;
 struct DynamicZoneLocation;
 enum WaterRegionType : int;
 enum class DynamicZoneMemberStatus;
+
+// RoF2 personal housing trophies (zone/nms_housing_trophies.cpp)
+namespace NmsHousingTrophies {
+void ClientProcess(Client *c);
+void OnSourceRemoved(Client *c, uint32_t item_id);
+void Refresh(Client *c, bool notify);
+void Invalidate(Client *c);
+} // namespace NmsHousingTrophies
 
 namespace SpiritShroud { struct Template; }
 
@@ -583,14 +595,33 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 
 	// Shrouds (server-driven monster shroud system)
 	bool        OpenShroudWindow(Mob* npc);
+	// Offer only the listed form ids. This is the mission-scoped window the live
+	// spirit-shroud UI supported: the caller (a tradeskill quest NPC, a mission
+	// controller) decides the set instead of the whole catalog. An empty list
+	// means the catalog, i.e. the keeper behaviour.
+	bool        OpenShroudWindowFor(Mob* npc, const std::vector<uint32>& ids);
 	void        ApplyShroud(uint32 shroud_id);
 	void        RemoveShroud(bool send_updates = true);
 	void        SaveShroudSnapshot(uint32 shroud_id, bool native_template = false);
 	void        ClearShroudSnapshot();
 	void        LoadAndApplyShroudState();
-	void        ResendShroudState();
+	// Shroud UI packets for a character that logs in already wearing a form.
+	void        SendShroudZoneInState();
+	// Zone-in inventory for a form: only the form's own starter gear is sent, so
+	// the real equipment/bank never reaches the client while transformed. The
+	// unshroud reload sends the real inventory again.
+	void        SendShroudInventoryView();
+	uint32      ShroudInventoryTemplateId() const;
+	// Clears the client's shroud-selection modal before a form change zones it.
+	void        SendShroudSelectComplete();
+	// Zone the client to itself so it rebuilds from the zone-in profile: the
+	// form (or the restored real character) arrives on the wire and no runtime
+	// OP_Shroud transform is sent. Same zone, same instance, same spot.
+	void        ReloadForShroudTransition(const char* why);
 	inline bool IsShrouded() const { return m_shrouded; }
-	inline uint32 GetShroudID() const { return m_shroud_id; }
+	// Quest forms carry m_shroud_id, spirit forms carry the template id; scripts
+	// only ever need "which form is this", so report whichever is set.
+	inline uint32 GetShroudID() const { return m_shroud_id ? m_shroud_id : m_spirit_shroud_template; }
 
 	// Live-like monster points / shroud AAs (see Custom:ShroudLiveMode).
 	inline uint32 GetShroudPoints() const { return m_shroud_points; }
@@ -609,7 +640,6 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool IsShroudAbilityForCurrentForm(uint32 aa_id) const;
 	uint32 ShroudAbilityMaxRank(uint32 aa_id) const;
 	void ShroudPurgeOwnedAAs();
-	void FillShroudTransformExtras(ShroudSelf_Struct *shroud);
 
 	// Native RoF2 Spirit Shroud protocol (Custom:EnableSpiritShrouds; see
 	// zone/client_spirit_shroud.cpp and reference/nsqemu-spirit-shrouds/
@@ -618,14 +648,36 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool IsSpiritShrouded() const { return m_spirit_shroud_template != 0; }
 	const SpiritShroud::Template *SpiritShroudDefinition() const { return m_spirit_shroud_definition.get(); }
 	bool LoadSpiritShroudState();
+
+	// Friendship consider (Custom:FriendConsiderAmiable; zone/nms_friendship.cpp):
+	// the lower-cased /friend list is loaded at zone-in and refreshed on
+	// OP_FriendsWho; player targets on it con Amiably.
+	void LoadFriendState();
+	bool IsFriendName(const char *name) const;
+
 	void OpenSpiritShrouds();
+	// Mission-scoped variant: only the listed template ids are offered (empty =
+	// the whole verified catalog). Same window, same protocol.
+	void OpenSpiritShroudsFor(const std::vector<uint32_t>& only);
+	// Forms the currently open window was allowed to offer (mission scope).
+	std::vector<uint32_t> m_spirit_shroud_scoped;
 	void OpenSpiritShroudBank();
 	void ChangeSpiritShroud(uint32_t template_id);
 	void ReapplyNativeShroud(uint32_t template_id);
-	void EnterNativeShroud(uint32_t template_id);
-	void RestoreNativeShroud();
+	// script_granted: a quest applied the form directly. A quest apply is the
+	// entitlement (quests are the entry points), so the entitlement_key check
+	// is waived the same way a mission-scoped window waives it.
+	void EnterNativeShroud(uint32_t template_id, bool script_granted = false);
+	// send_updates=false: the silent twin used by zone-in/death hooks (the
+	// client rebuilds from spawn data; no reload or form-change messages).
+	void RestoreNativeShroud(bool send_updates = true);
 	void IssueNativeStarterItems(const SpiritShroud::Template &t);
 	void RemoveNativeStarterItems(uint32_t template_id);
+	// The AA window lists a row while shrouded only when the server flags its
+	// per-row shroud byte, which reads m_shroud_ability_caps -- the legacy
+	// loader never runs for native forms, so the native path fills the same map
+	// from the template's own ability list.
+	void SetNativeShroudAbilityCaps(const SpiritShroud::Template &t);
 	void ShroudRebuildAAArray();
 	void ShroudRebuildRanksFromPP();
 	bool HasSpiritShroudRank(uint32_t rank) const;
@@ -645,6 +697,25 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	bool CanAcceptSpiritShroudResurrection(uint32_t corpse_id);
 	bool SettleSpiritShroudResurrection(uint32_t corpse_id, uint32_t spell_id, uint64_t offered_loss, bool &handled);
 	bool ProcessSpiritShroudCompletion();
+	// Fall of Illsalin monster-mission panel (RoF2 native task journal; the four
+	// OP_FallMonster* opcodes). The provider reads the Fall role table and writes
+	// only fall_shroud_choices; it does not enter a form or touch a session.
+	void SendFallOfIllsalinCatalogue();
+	std::optional<uint32_t> FallShroudSelectedTemplate(uint64_t run);
+	bool SelectFallShroudRole(uint64_t run, uint32_t template_id);
+	// Fall 920243 full escrow (sessions + 17 shroud_original_* tables).
+	bool EnterFallEscrow(uint32_t template_id, uint64_t run, uint32_t instance);
+	bool RestoreFallEscrow(bool send_updates);
+	bool HasFallOfIllsalinProfile(uint64_t run, uint32_t instance);
+	bool EnterFallOfIllsalin(NPC &stillpool);
+	bool ExitFallOfIllsalin(uint64_t run, uint32_t instance, NPC &draygun);
+	bool RegisterFallOfIllsalinCommanderCorpse(uint64_t run, uint32_t instance, Corpse &corpse);
+	bool ApplyFallEscrow(uint64_t run, uint32_t template_id);
+	// Inventory admission lease (housing_inventory_sessions). Claimed before the
+	// character profile loads; released only after full Client teardown.
+	bool ClaimInventorySession(uint32 character_id, uint32 account_id, uint32 zone_id, uint16 instance_id);
+	bool HasInventorySessionReservation() const;
+	void ReleaseInventorySession();
 
 	void SetPetCommandState(int button, int state);
 
@@ -722,6 +793,7 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	void BulkSendTraderInventory(uint32 char_id);
 	void SendSingleTraderItem(uint32 character_id, const std::string &serial_number);
 	void BulkSendMerchantInventory(int merchant_id, int npcid);
+	bool PassesMerchantBucket(const MerchantList& ml);
 
 	inline uint8 GetLanguageSkill(uint8 language_id) const { return m_pp.languages[language_id]; }
 
@@ -896,7 +968,9 @@ bool RemoveItemByItemUniqueId(const std::string &item_unique_id, uint32 quantity
 	void SendCrystalCounts();
 
 	float GetItemStatValue(const EQ::ItemData* item);
-	float GetBaseExpValueForKill(int conlevel, int tier, EQ::ItemInstance* upgrade_item);
+	// tier2_rate_floor: -1 keeps the orb curve's Custom:PowerSourceItemTier2RateFloor;
+	// native evolving items pass EvolvingItems:EnergyRateFloorTier2 instead.
+	float GetBaseExpValueForKill(int conlevel, int tier, EQ::ItemInstance* upgrade_item, float tier2_rate_floor = -1.0f);
 	bool AddItemExperience(EQ::ItemInstance* item, int conlevel);
 
 	// Power Source (Energeian orb) purity mechanic
@@ -1152,6 +1226,8 @@ public:
 	// /nmsloot: the client said the Hailstone personal-loot Hello (action 20) in this zone
 	inline bool GetNmsPersonalLootWindow() const { return m_nms_personal_loot_window; }
 	inline void SetNmsPersonalLootWindow(bool value) { m_nms_personal_loot_window = value; }
+	// RoF2 personal housing trophies: the applied hidden stat items (nms_housing_trophies.cpp)
+	inline const std::vector<uint32_t>& GetHousingTrophyStatItems() const { return m_housing_trophy_stat_items; }
 
 	uint16 MaxSkill(EQ::skills::SkillType skill_id, uint16 class_id, uint8 level) const;
 	uint16 MaxSkillOriginal(EQ::skills::SkillType skill_id, uint16 class_id, uint16 level) const;
@@ -1513,6 +1589,7 @@ public:
 	void DoPetBagResync(int class_id);
 	int16 GetActivePetBagSlot(int class_id);
 	void DoPetBagFlush(Mob* pet);
+	std::vector<std::pair<int16, EQ::ItemInstance*>> CollectActivePetBags(int class_id);
 
 	std::vector<NPC*> GetSwarmPets(bool permanent_only = true);
 
@@ -2349,7 +2426,14 @@ public:
 
 	// Evolving Item Info
 	void ProcessEvolvingItem(const uint64 exp, const Mob* mob);
+	void ProcessEvolvingInstance(EQ::ItemInstance* inst, const uint64 exp, const Mob* mob, std::vector<EQ::ItemInstance*>& queue);
 	void SendEvolvingPacket(int8 action, const CharacterEvolvingItemsRepository::CharacterEvolvingItems &item);
+	// Activation cap: only items that can still earn progression are counted
+	// (a final-tier item is dead weight and must not hold a slot).
+	int CountActiveEvolvingItems(uint64 exclude_id = 0);
+	CharacterEvolvingItemsRepository::CharacterEvolvingItems FindLeastProgressedActiveEvolvingItem(uint64 exclude_id);
+	void SetEvolvingItemActivatedForItem(uint32 item_id, bool activated);
+	void NormalizeEvolvingItemActivation();
 	void DoEvolveItemToggle(const EQApplicationPacket* app);
 	void DoEvolveItemDisplayFinalResult(const EQApplicationPacket* app);
 	bool DoEvolveCheckProgression(EQ::ItemInstance &inst);
@@ -2399,6 +2483,11 @@ public:
 
 protected:
 	friend class Mob;
+	// trophy subsystem mutates the m_housing_trophy_* members below
+	friend void NmsHousingTrophies::ClientProcess(Client *c);
+	friend void NmsHousingTrophies::OnSourceRemoved(Client *c, uint32_t item_id);
+	friend void NmsHousingTrophies::Refresh(Client *c, bool notify);
+	friend void NmsHousingTrophies::Invalidate(Client *c);
 	void CalcEdibleBonuses(StatBonuses* newbon);
 	void MakeBuffFadePacket(uint16 spell_id, int slot_id, bool send_message = true);
 	bool client_data_loaded;
@@ -2586,7 +2675,8 @@ private:
 	int sent_inventory;
 
 	Timer m_initial_wc;
-	Timer m_nms_loot_restore_timer; // /nmsloot: delayed pending-offer restore after zone-in
+	Timer m_nms_loot_restore_timer; // /nmsloot: one-shot pending-offer restore after zone-in
+	Timer m_nms_loot_expire_timer;  // /nmsloot: slow poll that delivers expired offers into bags
 	Client::AttackMode m_attack_mode = AttackMode::UNDEFINED;
 
 	// https://github.com/EQEmu/Server/pull/2479
@@ -2596,6 +2686,14 @@ private:
 	bool m_nms_vault_merchant = false;
 	uint32 m_nms_vault_merchant_id = 0;
 	bool m_nms_personal_loot_window = false; // said Hello in this zone: Hailstone's loot window, not OP_NmsLootOffer
+
+	// RoF2 personal housing trophies (zone/nms_housing_trophies.cpp): the applied hidden
+	// stat items (CalcItemBonuses applies them), a dirty flag for the post-zone-in pull,
+	// and whether this client holds a live trophy snapshot to clear on invalidate.
+	std::vector<uint32_t> m_housing_trophy_stat_items;
+	bool m_housing_trophy_dirty = true;
+	bool m_housing_trophy_sent  = false;
+	std::chrono::steady_clock::time_point m_housing_trophy_open_last{};
 public:
 	bool IsLockSavePosition() const;
 	void SetLockSavePosition(bool lock_save_position);
@@ -2744,10 +2842,7 @@ private:
 	uint8                m_shroud_saved_texture      = UINT8_MAX;
 	uint8                m_shroud_saved_helmtexture  = UINT8_MAX;
 	float                m_shroud_saved_size         = -1.0f;
-	// Zone-in re-apply is deferred: an OP_Shroud that arrives while the RoF2
-	// client is still building the zone crashes its self-spawn re-add.
-	bool                 m_shroud_zonein_pending     = false;
-	uint32               m_shroud_zonein_at          = 0;
+
 	// Live-like monster points (Custom:ShroudLiveMode bit 4): a separate pool
 	// granted fresh per shroud apply, spent on shroud AAs only, reset on leave.
 	// Kept out of m_pp so the ShroudPersistGuard never sees it.
@@ -2764,7 +2859,16 @@ private:
 	uint8                m_spirit_shroud_resource_refreshes = 0;
 	std::set<uint32_t>   m_spirit_shroud_aa_ranks;
 	std::shared_ptr<const SpiritShroud::Template> m_spirit_shroud_definition;
+	uint64_t             m_spirit_shroud_session_id = 0;
+	bool                 m_fall_escrow = false;
+	bool                 m_fall_shrouded = false;
+	uint64_t             m_fall_run = 0;
+	uint32_t             m_fall_instance = 0;
+	std::shared_ptr<InventorySessionLease> m_inventory_session_lease;
 	uint32               m_shroud_points_spent       = 0;
+	// Lower-cased /friend list names (friends table, type 1); loaded at zone-in
+	// and refreshed on OP_FriendsWho. Empty when the rule is off.
+	std::set<std::string> m_friend_names;
 
 	bool bZoning;
 	bool tgb;

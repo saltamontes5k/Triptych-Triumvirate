@@ -59,6 +59,15 @@ public:
 	void SetDumpStaticInstanceData(bool b);
 	bool IsDumpStaticInstanceData();
 
+	// Hard wall-clock cap on the dump child (minutes). A wedged child used to stall a
+	// boot forever -- the 2026-11-21 migration-backup hang -- so the wait is bounded.
+	void SetDumpTimeoutMinutes(int minutes);
+	// true (default): dump failures FailDump() -- the operator CLI exits so the caller
+	// sees them. false: dump failures log loudly and the backup is skipped, letting the
+	// caller proceed unbacked -- the boot-time migration path sets this, because the
+	// alternative was the whole login server wedging on a stuck backup.
+	void SetFailOnDumpFailure(bool fail);
+
 private:
 	bool        dump_all_tables             = false;
 	bool        dump_state_tables           = false;
@@ -74,12 +83,15 @@ private:
 	bool        dump_bot_tables             = false;
 	bool        dump_merc_tables            = false;
 	bool        dump_static_instance_data   = false;
+	int         dump_timeout_minutes        = 15;
+	bool        fail_on_dump_failure        = true;
 
 	std::string dump_path;
 	std::string dump_file_name;
 
 	bool IsMySQLInstalled();
 	std::string GetMySQLVersion();
+	std::string ResolveMySQLDumpExecutable();
 	std::string GetBaseMySQLDumpCommand();
 	void FailDump(const std::string &reason);
 	std::string GetPlayerTablesList();

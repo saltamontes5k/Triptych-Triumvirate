@@ -19,6 +19,7 @@ local p20 = false
 local p50 = false
 local p25 = false
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -62,8 +63,13 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
-			eq.set_timer("shatter", 60000)
-			spawn_wave(e, raid.ADD.coresieger, 3)
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- the Core comes in its harder thread!")
+			end
+			eq.set_timer("shatter", hard and 40000 or 60000)
+			spawn_wave(e, raid.ADD.coresieger, hard and 5 or 3)
 			eq.zone_emote(15, "The fouled core pulses -- Rallosian coresiegers breach the chasm!")
 		end
 		eq.stop_timer("resetcheck")
@@ -89,27 +95,27 @@ function event_timer(e)
 	local hp = e.self:GetHPRatio()
 	if not p80 and hp <= 80 then
 		p80 = true
-		spawn_wave(e, raid.ADD.coresieger, 3)
+		spawn_wave(e, raid.ADD.coresieger, hard and 5 or 3)
 		eq.zone_emote(15, "Another Rallosian column storms the core!")
 	elseif not p60 and hp <= 60 then
 		p60 = true
-		spawn_wave(e, raid.ADD.coresieger, 3)
+		spawn_wave(e, raid.ADD.coresieger, hard and 5 or 3)
 		eq.zone_emote(15, "The siege tightens -- more coresiegers pour in!")
 	elseif not p50 and hp <= 50 then
 		p50 = true
-		spawn_wave(e, raid.ADD.shard, 2)
+		spawn_wave(e, raid.ADD.shard, hard and 3 or 2)
 		eq.zone_emote(15, "Shards of the corrupted core split away and attack!")
 	elseif not p40 and hp <= 40 then
 		p40 = true
-		spawn_wave(e, raid.ADD.coresieger, 3)
+		spawn_wave(e, raid.ADD.coresieger, hard and 5 or 3)
 		eq.zone_emote(15, "The Rallosians throw their reserves at the core!")
 	elseif not p25 and hp <= 25 then
 		p25 = true
-		spawn_wave(e, raid.ADD.shard, 2)
+		spawn_wave(e, raid.ADD.shard, hard and 3 or 2)
 		eq.zone_emote(15, "The core fractures -- shards scythe through the ranks!")
 	elseif not p20 and hp <= 20 then
 		p20 = true
-		spawn_wave(e, raid.ADD.coresieger, 3)
+		spawn_wave(e, raid.ADD.coresieger, hard and 5 or 3)
 		eq.zone_emote(15, "A final desperate wave storms the chamber!")
 	end
 end
@@ -117,6 +123,6 @@ end
 function event_death_complete(e)
 	clear_adds()
 	eq.zone_emote(15, "The Crystal Core is cleansed. Korascian's bloom will shine again.")
-	raid.spawn_chest(e, raid.CHEST.CORE)
+	raid.spawn_chest(e, raid.chest_for("CORE", raid.is_hard()))
 	eq.signal(raid.CTRL.CORE, 1)
 end

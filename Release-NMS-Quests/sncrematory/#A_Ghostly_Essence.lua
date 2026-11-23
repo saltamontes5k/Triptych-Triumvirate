@@ -15,9 +15,9 @@ function event_spawn(e)
   e.self:ChangeTexture(1) -- violet
   e.self:TempName("a ghostly essence")
   make_attackable(e.self, false)
+  e.self:SetRunning(true) -- essences must move quickly to their goal
 
   if debugging then
-    e.self:SetRunning(true)
     e.self:SpellFinished(1554, e.self) -- spirit of scale
     e.self:SetCurrentWP(25) -- skip to last waypoint
   end

@@ -25,6 +25,9 @@ void SharedTaskZoneMessaging::HandleWorldMessage(ServerPacket *pack)
 					);
 				c->LoadClientTaskState();
 				c->m_requesting_shared_task = false;
+				if (p->requested_task_id == 920243) {
+					c->SendFallOfIllsalinCatalogue();
+				}
 			}
 
 			break;

@@ -14,6 +14,7 @@ function event_trade(e)
 	local item_lib = require('items');
 	if item_lib.check_turn_in(e.trade, {gold = 25000}) then -- 25000 gold
 		e.other:QuestReward(e.self,0,0,0,0,52181,1000); -- Impression of a Key
+		e.other:Message(MT.NPCQuestSay, "Rorrst says 'Aye, twenty-five thousand gold, counted and all yours in return. Take the copy of the key and mind you keep it close. It cost you dearly, after all.'");
 	end
 	item_lib.return_items(e.self, e.other, e.trade);
 end

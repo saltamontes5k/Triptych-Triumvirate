@@ -12,6 +12,7 @@ local tablet_activity = {
 }
 
 local function offer_nro(c, npc)
+	if not por.can_offer(c, npc, 34, 392045, 105817, 70) then return end
 	if not c:IsTaskCompleted(por.tasks.key_to_the_past) and not c:IsTaskActive(por.tasks.key_to_the_past) then
 		c:AssignTask(por.tasks.key_to_the_past);
 		npc:Say("Travel to the Ruins of Takish-Hiz and seek Krylin within the overturned tower at location minus four hundred and ten, minus forty. He will open the way into the Root of Ro. Recover the five fragments of the sandstone tablet.");

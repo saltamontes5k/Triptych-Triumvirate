@@ -1,5 +1,7 @@
 --vxed/player.lua  
 --BiC / Warrior Epic 1.5
+local vxed_task = 32
+
 function event_combine_success(e)
 	if (e.recipe_id == 10344) then
 		e.self:Message(MT.Default,"With the final piece in place, the clockwork scout's eyes light up as it comes to life.");
@@ -28,14 +30,17 @@ end
 
 function event_click_door(e)
 	if e.door:GetDoorID() == 7 then -- obelisk zone out behind Stonespiritist Ekikoa
-		-- if player hasn't hailed Stonespiritist Ekikoa to get either temp or
-		-- permanent Vxed flag then the port out stone doesn't work for them.
-		-- Unknown what happens if at flagged cap (if live even has one anymore)
-		local qglobals = eq.get_qglobals(e.self) -- god_kodtaz_access currently represents permanent flag
+		-- Speaking with Stonespiritist Ekikoa advances vxed_task activity 2; that is
+		-- what makes the tablet usable. Keep the legacy temp/permanent flags, a
+		-- completed task, and GM access working so nobody is locked out.
+		local qglobals = eq.get_qglobals(e.self)
 		local has_perm_flag = (qglobals.god_tipt_access and qglobals.god_tipt_access == "1")
 		local has_temp_flag = (eq.get_data(string.format("%s-god_vxed", e.self:CharacterID())) == "T")
+		local has_ekikoa_flag = (e.self:GetTaskActivityDoneCount(vxed_task, 2) >= 1)
+		local has_completed_task = e.self:IsTaskCompleted(vxed_task)
+		local is_gm = e.self:GetGM()
 
-		if not has_temp_flag and not has_perm_flag then
+		if not has_temp_flag and not has_perm_flag and not has_ekikoa_flag and not has_completed_task and not is_gm then
 		  e.self:Message(MT.Yellow, "You become dizzy as you inspect the stone slab.")
 		  return 1 -- prevent zone out
 		end

@@ -14,6 +14,8 @@ local p75 = false
 local p50 = false
 local p25 = false
 local adds = {}
+local hard = false
+local p90 = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -25,7 +27,7 @@ local function clear_adds()
 end
 
 local function spawn_brood(e)
-	for _ = 1, 4 do
+	for _ = 1, hard and 8 or 4 do
 		local mob = raid.spawn_add(raid.ADD.broodling, e.self, 60)
 		if mob then adds[#adds + 1] = mob:GetID() end
 	end
@@ -34,6 +36,7 @@ end
 local function reset(e)
 	engaged = false
 	p75 = false
+	p90 = false
 	p50 = false
 	p25 = false
 	clear_adds()
@@ -48,6 +51,11 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- the Queen comes in her harder thread!")
+			end
 			eq.set_timer("venom", 45000)
 			eq.zone_emote(15, "Queen Malarian skitters forth -- 'My children hunger!'")
 		end
@@ -68,11 +76,15 @@ function event_timer(e)
 		local victim = raid.random_client(e.self:GetX(), e.self:GetY(), 300)
 		if victim then
 			eq.zone_emote(15, "Malarian venom sprays across " .. victim:GetCleanName() .. "!")
-			raid.hit(e.self, victim, 6000)
+			raid.hit(e.self, victim, hard and 7000 or 6000)
 		end
 	end
 
-	if not p75 and e.self:GetHPRatio() <= 75 then
+	if hard and not p90 and e.self:GetHPRatio() <= 90 then
+		p90 = true
+		spawn_brood(e)
+		eq.zone_emote(15, "The fields crawl -- the brood spreads wide across the hills!")
+	elseif not p75 and e.self:GetHPRatio() <= 75 then
 		p75 = true
 		spawn_brood(e)
 		eq.zone_emote(15, "The plague brood boils up out of the earth!")
@@ -90,6 +102,6 @@ end
 function event_death_complete(e)
 	clear_adds()
 	eq.zone_emote(15, "Queen Malarian falls. The plague brood is motherless.")
-	raid.spawn_chest(e, raid.CHEST.MALARIAN)
+	raid.spawn_chest(e, raid.chest_for("MALARIAN", raid.is_hard()))
 	eq.signal(raid.CTRL.MALARIAN, 1)
 end

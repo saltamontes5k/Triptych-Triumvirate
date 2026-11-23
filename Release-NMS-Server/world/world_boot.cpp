@@ -246,6 +246,13 @@ bool WorldBoot::DatabaseLoadRoutines(int argc, char **argv)
 		DatabaseUpdate update{};
 		update.SetDatabase(&database)
 			->SetContentDatabase(&content_db)
+			// Boot-time migrations must never wedge the login server on the pre-migration
+			// backup: a stuck or unresolvable dump here hung the whole boot indefinitely
+			// on 2026-11-21 (mysqldump unreachable from the launch context). The backup is
+			// still attempted, but a dump failure/timeout logs loudly and applies without
+			// it; run `world.exe database:updates` for the operator-driven backup path.
+			->SetFailOnDumpFailure(false)
+			->SetDumpTimeoutMinutes(10)
 			->CheckDbUpdates();
 	}
 

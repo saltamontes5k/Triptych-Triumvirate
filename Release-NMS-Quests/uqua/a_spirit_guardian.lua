@@ -2,6 +2,14 @@ local rage_fury = 0;
 local counter = 0;
 local instance_id = eq.get_zone_instance_id();
 
+function event_spawn(e)
+	e.self:SetSpecialAbility(SpecialAbility.immune_melee, 1)
+	e.self:SetSpecialAbility(SpecialAbility.immune_magic, 1)
+	e.self:SetSpecialAbility(SpecialAbility.immune_aggro, 1)
+	e.self:SetSpecialAbility(SpecialAbility.immune_aggro_on, 1)
+	e.self:SetSpecialAbility(SpecialAbility.no_harm_from_client, 1)
+end
+
 function event_say(e)
 	if rage_fury == 0 then
 		if e.message:findi("hail") then

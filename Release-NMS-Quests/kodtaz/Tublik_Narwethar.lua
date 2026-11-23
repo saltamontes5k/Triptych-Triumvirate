@@ -37,7 +37,7 @@ function event_say(e)
     end
   end  if e.other:IsTaskCompleted(task_ids.trusik_task) or e.other:GetGM() then
     if e.message:findi("hail") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'Hello again, " .. e.other:GetCleanName() .. "!  You've done great things here in Kod'taz to combat both the Trusik and the Muramites, but I suspect your journey is not yet complete.  If you wish to enter the [" .. eq.say_link("Sanctuary of the Righteous") .. "], the [" .. eq.say_link("Sanctuary of the Glorified") .. "], or the [" .. eq.say_link("Sanctuary of the Transcendent") .. "] again, just say so!'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Hello again, " .. e.other:GetCleanName() .. "!  You've done great things here in Kod'taz to combat both the Trusik and the Muramites, but I suspect your journey is not yet complete.  If you wish to enter the [" .. eq.say_link("Sanctuary of the Righteous") .. "], the [" .. eq.say_link("Sanctuary of the Glorified") .. "], or the [" .. eq.say_link("Sanctuary of the Transcendent") .. "] again, just say so!'")
     end
     if e.message:findi('sanctuary of the righteous') then
       local dz = e.other:CreateExpedition(righteous_info)
@@ -86,11 +86,11 @@ function event_say(e)
     end
   elseif e.other:IsTaskActivityActive(task_ids.trusik_task, 9) or e.other:IsTaskActivityActive(task_ids.trusik_task, 10) or e.other:IsTaskActivityActive(task_ids.trusik_task, 11) then
     if e.message:findi("hail") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether say 'Hello again, " .. e.other:GetCleanName() .. "!  Are you ready to head into the [" .. eq.say_link("sanctuary of the transcendent") .. "]?'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Hello again, " .. e.other:GetCleanName() .. "!  Are you ready to head into the [" .. eq.say_link("sanctuary of the transcendent") .. "]?'")
     end
   elseif e.other:IsTaskActivityActive(task_ids.trusik_task, 7) or e.other:IsTaskActivityActive(task_ids.trusik_task, 8) then
     if e.message:findi("sanctuary of the transcendent") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'The glyphs you recovered show an Artifact of Transcendence that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Transcendent to the south of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Transcendent and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'The glyphs you recovered show an Artifact of Transcendence that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Transcendent to the south of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Transcendent and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
       local dz = e.other:CreateExpedition(transcend_info)
       if dz.valid then
         dz:AddReplayLockout(eq.seconds("14h"))
@@ -98,11 +98,11 @@ function event_say(e)
     end
   elseif e.other:IsTaskActivityActive(task_ids.trusik_task, 5) or e.other:IsTaskActivityActive(task_ids.trusik_task, 6) then
     if e.message:findi("hail") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether say 'Hello again, " .. e.other:GetCleanName() .. "!  Are you ready to head into the [" .. eq.say_link("sanctuary of the glorified") .. "]?'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Hello again, " .. e.other:GetCleanName() .. "!  Are you ready to head into the [" .. eq.say_link("sanctuary of the glorified") .. "]?'")
     end
   elseif e.other:IsTaskActivityActive(task_ids.trusik_task, 4) then
     if e.message:findi("sanctuary of the glorified") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'The glyphs you recovered show an Artifact of Glorification that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Glorification to the west of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Glorified and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'The glyphs you recovered show an Artifact of Glorification that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Glorification to the west of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Glorified and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
       local dz = e.other:CreateExpedition(glorious_info)
       if dz.valid then
         dz:AddReplayLockout(eq.seconds("14h"))
@@ -119,7 +119,7 @@ function event_say(e)
       e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'It's clear to me that you must proceed into each of the three remaining temples and recover the three artifacts that are in them. You should start with the [" .. eq.say_link("sanctuary of the righteous") .. "]'")
     end
     if e.message:findi("sanctuary of the righteous") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'The glyphs you recovered show an Artifact of Righteousness that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Righteous to the south of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Righteous and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'The glyphs you recovered show an Artifact of Righteousness that is guarded by a sentinel that is ages old. You will find the Sanctuary of the Righteous to the south of the Altar of Destruction. You must gather a raiding party several times larger than your normal party's size and be prepared for anything. Find an entrance to the inner chambers of the Sanctuary of the Righteous and recover the artifact. May you be gifted with the luck of the brotherhood. I fear you may need it.'")
       local dz = e.other:CreateExpedition(righteous_info)
       if dz.valid then
         dz:AddReplayLockout(eq.seconds("14h"))
@@ -208,7 +208,7 @@ function event_say(e)
     end
   elseif e.other:IsTaskActivityActive(task_ids.kevren_task, 3) or e.other:IsTaskActivityActive(task_ids.kevren_task, 4) then
     if e.message:findi("hail") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'Can I help you with something? Has someone sent you? Speak up!'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Can I help you with something? Has someone sent you? Speak up!'")
     end
     if e.message:findi("stone tablet") then
       e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You need a stone tablet? What for? What have you got that's so special it requires the use of a stone tablet?'")
@@ -219,7 +219,7 @@ function event_say(e)
     end
   else
     if e.message:findi("hail") then
-      e.other:Message(MT.NPCQuestSay, "Tublik Narwether says 'Can I help you with something? Has someone sent you? Speak up!'")
+      e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Can I help you with something? Has someone sent you? Speak up!'")
     end
   end
 end
@@ -228,6 +228,8 @@ end
 function event_trade(e)
   local item_lib = require("items")
 
+  -- The engine also credits Deliver activities on turn-in; these explicit
+  -- updates make the task progress visible at each step of the GoD chains.
   if item_lib.check_turn_in(e.trade, {item1 = 60146}) then
     e.other:SummonItem(60146)
     give_tablet(e, kt_flag)
@@ -246,13 +248,18 @@ function event_trade(e)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60160}) then
+    e.other:UpdateTaskActivity(task_ids.tublik_task, 2, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You're done already? I wasn't expecting such a prompt response, but nicely done " .. e.other:GetCleanName() .. "! Give me a while to examine these artifacts. I should have some additional information for you once you return.'")
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60161}) then
+    e.other:UpdateTaskActivity(task_ids.tublik_task, 5, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Excellent! We don't have to worry about that abomination any longer. This artifact you found on the creature is also quite unique. It will be a while before I have a chance to look it over, but it's nice to have it in our possession nonetheless. Well done once again, " .. e.other:GetCleanName() .. ". I look forward to working with you again soon!'")
   end
 
+  -- Flesh scraps / trial-temple clues are ground spawns: player.lua credits
+  -- their task activities on pickup, so these hand-ins are now optional (kept
+  -- for the lore text and for players who still turn the pieces in).
   if item_lib.check_turn_in(e.trade, {item1 = 60162, item2 = 60163, item3 = 60164, item4 = 60165}) then
     e.other:Message(MT.NPCQuestSay, "Tublik grunts unhappily at the four pieces. 'I had hoped more work wouldn't be needed to uncover the clues, but it looks like there's a bit more you're going to need to do for me. Take a look at these edges. Do you see how they look really sinewy? That's because they're [" .. eq.say_link("made of flesh") .. "], probably that of the trusik. No doubt the Muramites have been quite cruel to them now that they are mostly used for slavery.'")
     e.other:SummonItem(60162)
@@ -262,6 +269,7 @@ function event_trade(e)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60166}) then
+    e.other:UpdateTaskActivity(task_ids.tublik_task, 10, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'Nicely sewn, " .. e.other:GetCleanName() .. ". I would have tried doing it myself, but I have the most unsteady fingers when it comes to things like that. In any case, let me have a look at what this says.' Tublik looks over the clue for a time before continuing. 'Unbelievable. Simply astounding. These notes weren't made by the Muramites at all. In fact, they were created by trusik priests from their own flesh in some kind of [" .. eq.say_link("ritual") .. "].'")
   end
 
@@ -270,32 +278,38 @@ function event_trade(e)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60170}) then
+    e.other:UpdateTaskActivity(task_ids.trusik_task, 2, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You've done it! You've recovered the first of the three artifacts! You must keep this with you, as you'll need it once you've recovered all three artifacts. The next temple is the[" .. eq.say_link("Sanctuary of the Glorified") .. "], are you ready ".. e.other:GetCleanName() .. "?")
     e.other:SummonItem(60170)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60171}) then
+    e.other:UpdateTaskActivity(task_ids.trusik_task, 6, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You've done it! You've recovered the second of the three artifacts! You must keep this with you, because you'll need it once you've recovered all three artifacts. You only need one more from the [" .. eq.say_link("Sanctuary of the Transcendent") .. "]. Are you ready to progress forward with the final artifact?'")
     e.other:SummonItem(60171)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60172}) then
+    e.other:UpdateTaskActivity(task_ids.trusik_task, 10, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You've done it! You've recovered all three of the artifacts! You must keep this with you, because you'll need it now. Somewhere deep down I knew you would be able to get them all. I've been studying the markings from the artifacts and I've come to the conclusion that they must be combined to form a key to enter the [" .. eq.say_link("Altar of Destruction") .. "].'")
     e.other:SummonItem(60172)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60173}) then
+    e.other:UpdateTaskActivity(task_ids.trusik_task, 13, 1)
     e.other:Message(MT.NPCQuestSay, "Tublik scans the icon before returning it to you. 'You've done well, " .. e.other:GetCleanName() .. ". Up until now I hadn't noticed the final glyph that is created when the three pieces are combined. I must inspect this further, but return to me shortly and I should have an answer as to the glyph's meaning.'")
     e.other:SummonItem(60173)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60174}) then
-    e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You've exceed all my expectations. This key is only the first of what looks to be three needed... needed for what I wonder? I imagine you'll find out more as you continue your adventures. Seek out Brevik in the Abysmal Sea should you discover anything else. He is one of the Wayfarers Brotherhood's resident geomancer adepts. He's not yet fully skilled, but he has much in the way of knowledge of the craft already and learning more each day. He will no doubt have more information for you. For now, I bid you good luck and farewell, " .. e.other:GetCleanName() .. "!'")
+    e.other:UpdateTaskActivity(task_ids.trusik_task, 16, 1)
+    e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'You've exceeded all my expectations. This key is only the first of what looks to be three needed... needed for what I wonder? I imagine you'll find out more as you continue your adventures. Seek out Brevik in the Abysmal Sea should you discover anything else. He is one of the Wayfarers Brotherhood's resident geomancer adepts. He's not yet fully skilled, but he has much in the way of knowledge of the craft already and learning more each day. He will no doubt have more information for you. For now, I bid you good luck and farewell, " .. e.other:GetCleanName() .. "!'")
   end
   item_lib.return_items(e.self, e.other, e.trade)
 end
 
 function give_tablet(e, kt_flag)
+  e.other:UpdateTaskActivity(task_ids.kevren_task, 4, 1)
   e.other:Message(MT.NPCQuestSay, "Tublik Narwethar says 'So, you really are helping Kevren with this. My apologies for being so blunt with the requirements, but you never can be too careful with things like this. Here's a stone tablet for your troubles. You're going to need to use as many piles of dust as you have glyphs, then combine the dust and the four glyphs together with the stone tablet to translate them. These glyphs can be tricky, so good luck.'")
   e.other:SummonItem(60175)
 end

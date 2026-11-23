@@ -290,6 +290,7 @@ Mob::Mob(
 	qglobal              = 0;
 	spawned              = false;
 	rare_spawn           = false;
+	rare_creature        = false;
 	always_aggro         = in_always_aggro;
 	heroic_strikethrough = in_heroic_strikethrough;
 	keeps_sold_items     = in_keeps_sold_items;
@@ -1412,6 +1413,16 @@ void Mob::FillSpawnStruct(NewSpawn_Struct* ns, Mob* ForWho)
 	ns->spawn.invis		= (invisible || hidden) ? 1 : 0;	// TODO: load this before spawning players
 	ns->spawn.NPC		= IsClient() ? 0 : 1;
 	ns->spawn.IsMercenary = IsMerc() ? 1 : 0;
+
+	// Housing actor binding (RoF2 spawn tail). nms_housing_actors / nms_housing_service stamp
+	// these entity variables on the NPC they spawn; the encoder sends the sentinel for every
+	// other mob, so nothing outside housing changes.
+	const std::string housing_item_guid = GetEntityVariable("housing_item_guid");
+	if (housing_item_guid.size() == 16) {
+		strn0cpy(ns->spawn.housing_item_guid, housing_item_guid.c_str(), sizeof(ns->spawn.housing_item_guid));
+		ns->spawn.housing_estate_id = Strings::ToUnsignedInt(GetEntityVariable("housing_estate_id"));
+		ns->spawn.housing_item_id   = Strings::ToUnsignedInt(GetEntityVariable("housing_item_row"));
+	}
 	ns->spawn.targetable_with_hotkey = no_target_hotkey ? 0 : 1; // opposite logic!
 	ns->spawn.untargetable = IsTargetable();
 
@@ -5506,7 +5517,9 @@ void Mob::ExecWeaponProc(const EQ::ItemInstance* inst, uint16 spell_id, Mob* on,
 		return;
 	}
 
-	if (IsClient()) {
+	// Target's target procs (remote heals) resolve from the mob themselves; implied targeting would move a
+	// beneficial one onto the mob's target first, so it then landed on that player's target instead
+	if (IsClient() && spells[spell_id].target_type != ST_TargetsTarget) {
 		Mob* new_target = entity_list.GetMob(GetSpellImpliedTargetID(spell_id, on->GetID()));
 		if (new_target) {
 			on = new_target;

@@ -6,11 +6,11 @@
 # (is_eligible_for_zone) is untouched and the two systems cannot disagree.
 #
 #   Group chain tasks per theme + raid request tasks:
-#     oceangreen-group  303000-303005,     oceangreen-raid  303060
+#     oceangreen-group  303000-303005,     oceangreen-raid  303060, 303078
 #                       303080-303081
 #     kithicor-group    303010-303012     kithicor-raid    303061
 #     kunark-group      303020-303024     kunark-raid      303062
-#     rathe-group       303030-303036     rathe-raid       303063
+#     rathe-group       303030-303036     rathe-raid       303063, 303079
 #     korafax-kuua      303040-303051     korafax-raid-1/2/3  303064-303066
 #                                         discord-tower    303067
 #   Theme solo/partisan tasks (v145, no chain membership):
@@ -70,6 +70,8 @@ my %SOD_TASK_FLAG = (
     303062 => 'kunark-raid',      303063 => 'rathe-raid',
     303064 => 'korafax-raid-1',   303065 => 'korafax-raid-2',
     303066 => 'korafax-raid-3',   303067 => 'discord-tower',
+    # v111 alternate raids: either victory counts as the theme's raid.
+    303078 => 'oceangreen-raid',  303079 => 'rathe-raid',
 );
 
 my %SOD_CHAIN_TASKS = (
@@ -80,14 +82,21 @@ my %SOD_CHAIN_TASKS = (
     'rathe-group'      => [303030, 303031, 303032, 303033, 303034, 303035, 303036],
     'korafax-kuua'     => [303040, 303041, 303042, 303043, 303044, 303045,
                            303046, 303047, 303048, 303049, 303050, 303051],
-    'oceangreen-raid'  => [303060],
+    'oceangreen-raid'  => [303060, 303078],
     'kithicor-raid'    => [303061],
     'kunark-raid'      => [303062],
-    'rathe-raid'       => [303063],
+    'rathe-raid'       => [303063, 303079],
     'korafax-raid-1'   => [303064],
     'korafax-raid-2'   => [303065],
     'korafax-raid-3'   => [303066],
     'discord-tower'    => [303067],
+);
+
+# Chains where ANY completed member sets the flag (a theme with two raids:
+# either one counts as the theme's raid victory).
+my %SOD_CHAIN_ANY = (
+    'oceangreen-raid' => 1,
+    'rathe-raid'      => 1,
 );
 
 my @SOD_THEMES       = ('oceangreen', 'kithicor', 'kunark', 'rathe');
@@ -98,18 +107,25 @@ my $SOD_TOWER_KEY    = 88343;
 # ---------------------------------------------------------------------------
 # Giver offers: npc id => [ [task id, prereq...], ... ]
 # Prereq entries: a task id number, a chain flag name (e.g. 'kunark-group'),
-# or the special string 'korafax' (= SodKorafaxAccess).
+# the special string 'korafax' (= SodKorafaxAccess), the special string
+# 'towerkey' (= a Tower Key 88343 on the character), or an ARRAY reference.
+# An ARRAY prereq is an OR over its elements; an ARRAY element that is itself
+# an ARRAY is an AND over its own entries -- so
+#   [[a, b], [c, d]]  means  (a AND b) OR (c AND d).
+# Raid prereqs mirror the page's "request ..." lists (v110/v111).
 # ---------------------------------------------------------------------------
 my %SOD_OFFERS = (
     # Oceangreen
     466141 => [[303000, ()], [303001, 303000]],                     # Sergeant Bronal Cadran
-    466035 => [[303002, ()], [303003, 303002], [303004, 303003]],   # Captain Hiran Tillin
-    # Freedom! joins the chain live-faithfully: Raxtor offers it after the
-    # Tillin tasks, and Beat the Blackburrow Boss now requires it plus the
-    # v145 theme tasks Summary Execution (Bracka) and What Evil Lurks
-    # (Fripp) -- the live page's full request gate.
-    466160 => [[303080, 303003, 303004],
-               [303005, 303003, 303004, 303080, 303106, 303107]],  # Raxtor Darkpaw
+    # Familiarity is Key follows Man the Defenses and No Cure for Death,
+    # matching the accepted Oceangreen task prerequisites.
+    466035 => [[303002, 303000, 303001], [303003, 303002], [303004, 303003]],  # Captain Hiran Tillin
+    # Freedom! is gated on Summary Execution, Invading the Invaders and
+    # What Evil Lurks (the accepted live request gate); Beat the
+    # Blackburrow Boss follows Freedom! alone. The accepted task ids are
+    # 920183 / 920180; ours are 303080 / 303005 in the same order.
+    466160 => [[303080, 303106, 303109, 303107],
+               [303005, 303080]],                                   # Raxtor Darkpaw
     466155 => [[303081, ()], [303109, ()]],                         # Elder Mystic Foppye
     # Queen Malarian path (v111): Cadmael carries the path and requests the
     # raid once Jerom's Bubonians task is also done; Stop the Ascension
@@ -122,9 +138,12 @@ my %SOD_OFFERS = (
     456178 => [[303010, ()]],                                       # Lanys T`Vyl (Obliteration)
     456174 => [[303011, 303010]],                                   # Commander Barvian (Light)
     # Bahgresh paths (v111): Tephys -> Firiona -> Laarthik gate the raid.
+    # The raid itself is dual-path per the page: the full Obliteration raid
+    # chain OR the Light group chain.
     456172 => [[303074, ()]],                                       # Lord Tephys (Light)
     456171 => [[303012, 303011], [303075, 303074],
-               [303061, 303074, 303075, 303076]],                   # Firiona Vie
+               [303061, [[303074, 303075, 303076],
+                         [303010, 303011, 303012]]]],               # Firiona Vie
     456175 => [[303076, 303075]],                                   # Laarthik V`Shin (Obliteration)
     # Crystal Bloom path (v111): Ulgin's task gates the Crystal Core raid.
     # v150 adds his four themeRathe Darkhammer tasks, gated on the four
@@ -209,7 +228,7 @@ my %SOD_OFFERS = (
     # Korafax raids + Citadel
     470001 => [[303064, 'korafax-kuua'], [303065, 303064],
                [303066, 303065],
-               [303067, 303064, 303065, 303066]],                   # Herald of Druzzil Ro
+               [303067, 303064, 303065, 303066, 'towerkey']],       # Herald of Druzzil Ro
 );
 
 # ---------------------------------------------------------------------------
@@ -280,7 +299,9 @@ my %SOD_RAIDS = (
 
 # ---------------------------------------------------------------------------
 # Portal clickies: npc id => [kind, dest zone, x, y, z]
-#   kind 'void'    - theme zone -> The Void (version redirect happens there)
+#   kind 'void'    - theme zone -> The Void. The player lands in their
+#                    EARNED version (thevoida..g); SodGateVoid in each
+#                    <thevoid*>/player.pl guards the zone line itself.
 #   kind 'korafax' - The Void  -> Korafax (gated)
 #   kind 'citadel' - Korafax   -> Citadel of the Worldslayer (gated)
 # ---------------------------------------------------------------------------
@@ -305,7 +326,24 @@ sub _sod_subflag {
 sub _sod_prereq_met {
     my ($client, $pre) = @_;
     return 1 if !defined $pre || $pre eq '';
+    return 1 if $client->GetGM();
     if ($pre eq 'korafax')    { return SodKorafaxAccess($client); }
+    if ($pre eq 'towerkey')   { return ($client->CountItem($SOD_TOWER_KEY) > 0) ? 1 : 0; }
+    if (ref($pre) eq 'ARRAY') {
+        # OR over the alternatives; an ARRAY alternative is an AND.
+        foreach my $alt (@{$pre}) {
+            if (ref($alt) eq 'ARRAY') {
+                my $all = 1;
+                foreach my $p (@{$alt}) {
+                    if (!_sod_prereq_met($client, $p)) { $all = 0; last; }
+                }
+                return 1 if $all;
+            } else {
+                return 1 if _sod_prereq_met($client, $alt);
+            }
+        }
+        return 0;
+    }
     if ($pre =~ /^[A-Za-z]/)  { return _sod_subflag($client, $pre); }
     return $client->IsTaskCompleted($pre) ? 1 : 0;
 }
@@ -322,14 +360,19 @@ sub _sod_theme_done {
 # ---------------------------------------------------------------------------
 
 # Create a raid expedition for $task_id. Returns 1 if it consumed the say.
+# $hard (v464): the expedition name carries a "(Hard)" suffix, making it a
+# separate expedition identity -- encounters scale, deeper mechanics run,
+# and the hard chest replaces the normal one (sod_raids.lua keys off the
+# suffix for chests, loot events and lockouts).
 sub SodRaidRequest {
-    my ($client, $task_id, $npc_id) = @_;
+    my ($client, $task_id, $npc_id, $hard) = @_;
     my $raid = $SOD_RAIDS{$task_id};
     return 0 unless $raid;
+    my $name = $raid->{name} . ($hard ? ' (Hard)' : '');
 
     my $current = $client->GetExpedition();
     if ($current) {
-        if ($current->GetName() eq $raid->{name}) {
+        if ($current->GetName() eq $name) {
             $client->Message(15, "Your expedition stands ready. Say 'ready' to enter.");
         } else {
             $client->Message(13, "You already hold a claim on another expedition.");
@@ -339,13 +382,13 @@ sub SodRaidRequest {
 
     my ($czone, $cx, $cy, $cz) = @{$raid->{compass}};
     my $dz = $client->CreateExpedition($raid->{zone}, $raid->{version},
-        8 * 60 * 60, $raid->{name}, 1, 54);
+        8 * 60 * 60, $name, 1, 54);
     if ($dz) {
         $dz->SetCompass($czone, $cx, $cy, $cz);
         $dz->SetSafeReturn($czone, $cx, $cy, $cz, 0);
         $dz->AddReplayLockout(72 * 60 * 60);
         $client->AssignTask($task_id, $npc_id || 0);
-        $client->Message(15, "$raid->{name} is prepared. Say 'ready' to enter.");
+        $client->Message(15, "$name is prepared. Say 'ready' to enter.");
     } else {
         $client->Message(13, "You are not yet able to claim that expedition.");
     }
@@ -358,7 +401,8 @@ sub SodRaidEnter {
     my $dz = $client->GetExpedition();
     return 0 unless $dz;
     foreach my $raid (values %SOD_RAIDS) {
-        next unless $dz->GetName() eq $raid->{name};
+        next unless $dz->GetName() eq $raid->{name}
+            || $dz->GetName() eq $raid->{name} . ' (Hard)';
         my ($x, $y, $z) = @{$raid->{zonein}};
         $client->MovePCInstance($dz->GetZoneID(), $dz->GetInstanceID(), $x, $y, $z, 0);
         return 1;
@@ -371,6 +415,12 @@ sub SodOnTaskComplete {
     my ($client, $task_id) = @_;
     return unless exists $SOD_TASK_FLAG{$task_id};
     my $flag = $SOD_TASK_FLAG{$task_id};
+    # Any-completed chains (themes with two raid victories) set immediately.
+    if ($SOD_CHAIN_ANY{$flag}) {
+        plugin::SetSubflag($client, 'SoD', $flag, 1);
+        _sod_update_merc_tier($client);
+        return;
+    }
     foreach my $tid (@{$SOD_CHAIN_TASKS{$flag}}) {
         return unless $client->IsTaskCompleted($tid);
     }
@@ -399,6 +449,12 @@ sub _sod_update_merc_tier {
     my $key = $client->AccountID() . "-sod-merc-tier";
     my $cur = quest::get_data($key);
     quest::set_data($key, $tier) if $cur ne $tier;
+    # The potimea OBJ_VOIDPORTAL door (Lua) reads this bucket to land the
+    # player in their earned Void version -- keep both sides in sync.
+    my $vkey = $client->AccountID() . "-sod-void-version";
+    my $ver  = SodVoidVersion($client);
+    my $vcur = quest::get_data($vkey);
+    quest::set_data($vkey, $ver) if $vcur ne $ver;
 }
 
 # Zone-in backfill (global_player.pl EVENT_ENTERZONE): repairs the tier
@@ -540,6 +596,7 @@ sub SodTaskGiver {
     }
 
     if ($text =~ /request/i) {
+        my $hard = ($text =~ /request\s+hard/i) ? 1 : 0;
         foreach my $offer (@{$offers}) {
             my ($tid, @pres) = @{$offer};
             next unless $SOD_RAIDS{$tid};
@@ -550,7 +607,7 @@ sub SodTaskGiver {
                 if (!_sod_prereq_met($client, $pre)) { $ok = 0; last; }
             }
             next unless $ok;
-            return SodRaidRequest($client, $tid, $npc_id);
+            return SodRaidRequest($client, $tid, $npc_id, $hard);
         }
         $client->Message(13, "There is no raid for you to claim here yet.");
         return 1;
@@ -561,7 +618,9 @@ sub SodTaskGiver {
     foreach my $offer (@{$offers}) {
         my ($tid, @pres) = @{$offer};
         my $title = $SOD_RAIDS{$tid}
-            ? quest::saylink("request", 1, "[Request]") . " -- a raid awaits."
+            ? quest::saylink("request", 1, "[Request]") . " -- a raid awaits. "
+              . quest::saylink("request hard", 1, "[Hard]")
+              . " -- its harder thread."
             : quest::saylink("ready", 1, "[Ready]") . " -- work is available.";
         if ($client->IsTaskCompleted($tid)) {
             $client->Message(15, "Task $tid: completed.");
@@ -595,6 +654,8 @@ sub SodPortalUse {
     my ($kind, $dest, $x, $y, $z) = @{$portal};
 
     if ($kind eq 'void') {
+        # Land in the earned Void version, not a fixed zone (v110).
+        $dest = SodVoidZone(SodVoidVersion($client));
         $client->Message(15, "You step through the timeshear rift...");
         $client->MovePC($dest, $x, $y, $z, 0);
         return 1;

@@ -898,6 +898,10 @@ int lua_merchant_count_item(uint32 npc_id, uint32 item_id) {
 	return quest_manager.MerchantCountItem(npc_id, item_id);
 }
 
+void lua_reload_merchants() {
+	quest_manager.ReloadMerchants();
+}
+
 std::string lua_get_item_comment(uint32 item_id) {
 	return quest_manager.getitemcomment(item_id);
 }
@@ -6230,6 +6234,7 @@ luabind::scope lua_register_general() {
 		luabind::def("merchant_set_item", (void(*)(uint32,uint32))&lua_merchant_set_item),
 		luabind::def("merchant_set_item", (void(*)(uint32,uint32,uint32))&lua_merchant_set_item),
 		luabind::def("merchant_count_item", &lua_merchant_count_item),
+		luabind::def("reload_merchants", &lua_reload_merchants),
 		luabind::def("item_link", (std::string(*)(Lua_ItemInst))&lua_item_link),
 		luabind::def("item_link", (std::string(*)(uint32))&lua_item_link),
 		luabind::def("item_link", (std::string(*)(uint32,int16))&lua_item_link),

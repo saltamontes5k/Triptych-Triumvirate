@@ -174,7 +174,7 @@ local function fail_defense()
 		client:Message(MT.Red, "The hungry adventurers of the Vale have eaten their fill. You are cast out of the expedition.")
 		client:SendSound()
 		strip_icing(client)
-		client:RemoveShroud()
+		client:RemoveSpiritShroud()
 	end
 	eq.set_timer("cake_fail_kick", 5000)
 end
@@ -214,7 +214,7 @@ function event_timer(e)
 		for _, client in ipairs(members) do
 			if client:GetHP() <= 0 then
 				strip_icing(client)
-				client:RemoveShroudSilent()
+				client:RemoveSpiritShroud()
 				fail_defense()
 				return
 			end
@@ -237,7 +237,7 @@ function event_timer(e)
 			local id = client:CharacterID()
 			if client:GetRace() ~= 629 then
 				if seen_unshrouded[id] then
-					client:ApplyShroud(CAKE_SHROUD_ID)
+					client:ApplySpiritShroud(110125)
 					dismiss_pets(client)
 					-- Live-like: the shroud strips the real character's buffs
 					-- (their damage shields / haste / speed buffs would ride
@@ -316,7 +316,7 @@ function event_timer(e)
 					eq.zone_emote(15, "The last adventurer staggers away, unbearably full. The cake has survived the Fool's Gold Cake Defense!")
 					for _, cake in ipairs(cakes) do
 						strip_icing(cake)
-						cake:RemoveShroud()
+						cake:RemoveSpiritShroud()
 						local skill = cake:GetSkill(BAKING_SKILL)
 						if skill < BAKING_CAP then
 							local gain = math.min(30, BAKING_CAP - skill)

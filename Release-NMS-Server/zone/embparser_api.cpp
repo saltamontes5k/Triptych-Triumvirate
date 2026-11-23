@@ -1526,6 +1526,11 @@ uint32_t Perl__MerchantCountItem(uint32 npc_id, uint32 item_id)
 	return quest_manager.MerchantCountItem(npc_id, item_id);
 }
 
+void Perl__ReloadMerchants()
+{
+	quest_manager.ReloadMerchants();
+}
+
 int Perl__CreateInstance(const char* zone_name, int16 version, int32 duration)
 {
 	return quest_manager.CreateInstance(zone_name, version, duration);
@@ -6373,6 +6378,7 @@ void perl_register_quest()
 	package.add("MerchantCountItem", &Perl__MerchantCountItem);
 	package.add("MerchantSetItem", (void(*)(uint32, uint32))&Perl__MerchantSetItem);
 	package.add("MerchantSetItem", (void(*)(uint32, uint32, uint32))&Perl__MerchantSetItem);
+	package.add("ReloadMerchants", &Perl__ReloadMerchants);
 	package.add("MovePCInstance", (void(*)(int, int, float, float, float))&Perl__MovePCInstance);
 	package.add("MovePCInstance", (void(*)(int, int, float, float, float, float))&Perl__MovePCInstance);
 	package.add("RemoveAllFromInstance", &Perl__RemoveAllFromInstance);

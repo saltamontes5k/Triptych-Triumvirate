@@ -20,6 +20,8 @@
 #include "../common/features.h"
 #include "../common/rulesys.h"
 #include "../common/strings.h"
+#include "../common/evolving_items.h"
+#include "../common/repositories/character_evolving_items_repository.h"
 #include "../common/shroud/experience.h"
 
 #include <cmath>
@@ -553,13 +555,6 @@ void Client::CalculateExp(uint64 in_add_exp, uint64 &add_exp, uint64 &add_aaxp, 
 }
 
 bool Client::ConsumeUnspentAA() {
-	auto pow_item = m_inv.GetItem(EQ::invslot::slotPowerSource);
-
-	if (!pow_item) {
-		Message(Chat::SpellFailure, "You must have a Power Source equipped to infuse it with AA points.");
-		return false;
-	}
-
 	if (m_pp.aapoints == 0) {
 		Message(Chat::SpellFailure, "You have no unspent AA points to consume.");
 		return false;
@@ -568,6 +563,87 @@ bool Client::ConsumeUnspentAA() {
 	int base_value = RuleI(Custom, AAConsumeBaseValue);
 	if (base_value <= 0) {
 		Message(Chat::Red, "Server rule 'Custom:AAConsumeBaseValue' is not configured correctly.");
+		return false;
+	}
+
+	// Evolving path (decoupling option D): infuse the worn, activated evolving
+	// items that still have a stage to fill. Energy units are x100-scaled
+	// (10000 = a full stage); per-AA rates mirror the legacy infusion
+	// (33.33/base at tier 0, 6.65/base at tier 1). The AA spent is limited by
+	// the first target's remaining fill and the spend is spread across every
+	// worn activated item of tiers 0-1.
+	std::vector<EQ::ItemInstance *> evolving_targets;
+	for (auto &[worn_slot, worn_inst]: m_inv.GetWorn()) {
+		if (!worn_inst || !worn_inst->IsEvolving() || !worn_inst->GetEvolveActivated() ||
+			worn_inst->GetEvolveLvl() >= worn_inst->GetMaxEvolveLvl() ||
+			!EvolvingItemsManager::Instance()->GetEvolvingItemsCache().contains(worn_inst->GetID())) {
+			continue;
+		}
+		const int worn_tier = static_cast<int>(worn_inst->GetID() / 1000000);
+		if (worn_tier <= 1) {
+			evolving_targets.push_back(worn_inst);
+		}
+	}
+
+	if (!evolving_targets.empty()) {
+		auto *primary = evolving_targets.front();
+		const int primary_tier = static_cast<int>(primary->GetID() / 1000000);
+		const float primary_per_aa_units =
+			((primary_tier == 0 ? 33.33f : 6.65f) / static_cast<float>(base_value)) * 100.0f;
+		const uint64 primary_current = primary->GetEvolveCurrentAmount();
+		const uint64 primary_required =
+			EvolvingItemsManager::Instance()->GetEvolvingItemsCache().at(primary->GetID()).required_amount;
+		const uint64 primary_remaining = (primary_required > primary_current) ? (primary_required - primary_current) : 0;
+
+		if (primary_remaining == 0) {
+			Message(Chat::SpellFailure, "Your evolving items are already fully charged for their current stages.");
+			return false;
+		}
+
+		const uint32 used_aa = static_cast<uint32>(std::min<uint64>(
+			static_cast<uint64>(m_pp.aapoints),
+			static_cast<uint64>(std::ceil(static_cast<float>(primary_remaining) / primary_per_aa_units))));
+
+		for (auto *inst: evolving_targets) {
+			const int item_tier = static_cast<int>(inst->GetID() / 1000000);
+			const float per_aa_units =
+				((item_tier == 0 ? 33.33f : 6.65f) / static_cast<float>(base_value)) * 100.0f;
+			const uint64 current = inst->GetEvolveCurrentAmount();
+			const uint64 required =
+				EvolvingItemsManager::Instance()->GetEvolvingItemsCache().at(inst->GetID()).required_amount;
+			const uint64 remaining = (required > current) ? (required - current) : 0;
+			const uint64 add_units = std::min<uint64>(
+				static_cast<uint64>(static_cast<float>(used_aa) * per_aa_units + 0.5f), remaining);
+			if (add_units == 0) {
+				continue;
+			}
+
+			inst->SetEvolveAddToCurrentAmount(add_units);
+			inst->CalculateEvolveProgression();
+
+			auto e = CharacterEvolvingItemsRepository::SetCurrentAmountAndProgression(
+				database, inst->GetEvolveUniqueID(), inst->GetEvolveCurrentAmount(), inst->GetEvolveProgression());
+			if (!e.id) {
+				continue;
+			}
+
+			SendEvolvingPacket(EvolvingItems::Actions::UPDATE_ITEMS, e);
+
+			if (inst->GetEvolveProgression() >= 100) {
+				DoEvolveCheckProgression(*inst);
+			}
+		}
+
+		m_pp.aapoints -= used_aa;
+		SendAlternateAdvancementStats();
+		Message(Chat::SpellFailure, "Your unspent AA points have been infused into your evolving items.");
+		return true;
+	}
+
+	auto pow_item = m_inv.GetItem(EQ::invslot::slotPowerSource);
+
+	if (!pow_item) {
+		Message(Chat::SpellFailure, "You must have a Power Source equipped to infuse it with AA points.");
 		return false;
 	}
 
@@ -613,20 +689,82 @@ bool Client::ConsumeUnspentAA() {
 }
 
 bool Client::ConsumeItemOnCursor() {
-	auto pow_item = m_inv.GetItem(EQ::invslot::slotPowerSource);
 	auto cur_item = m_inv.GetCursorItem();
-	if (!pow_item) {
-		Message(Chat::SpellFailure, "You must place an item in your Power Source slot in order to consume a similar item.");
-		return false;
-	}
-
-	if (!cur_item || cur_item->GetID() % 1000000 != pow_item->GetID() % 1000000 || cur_item->GetID() >= 2000000) {
-		Message(Chat::SpellFailure, "You can only Consume items similar which are similar, to what is equipped in your Power Source slot.");
+	if (!cur_item || cur_item->GetID() >= 2000000) {
+		Message(Chat::SpellFailure, "You can only Consume items which are similar to what you are improving.");
 		return false;
 	}
 
 	if (cur_item->IsAttuned()) {
 		Message(Chat::SpellFailure, "You may not consume items which have already absorbed energy in this way.");
+		return false;
+	}
+
+	// Evolving path (decoupling option D): feed a duplicate to a worn,
+	// activated evolving item of the same family. A higher-tier duplicate
+	// fills the stage outright, same tier adds 33.33%, lower tier 6.65%
+	// (x100 energy units), capped at the stage's remaining fill.
+	const uint32 cur_base = cur_item->GetID() % 1000000;
+	for (auto &[worn_slot, worn_inst]: m_inv.GetWorn()) {
+		if (!worn_inst || !worn_inst->IsEvolving() || !worn_inst->GetEvolveActivated() ||
+			worn_inst->GetEvolveLvl() >= worn_inst->GetMaxEvolveLvl() ||
+			worn_inst->GetID() % 1000000 != cur_base ||
+			!EvolvingItemsManager::Instance()->GetEvolvingItemsCache().contains(worn_inst->GetID())) {
+			continue;
+		}
+
+		const int cur_item_tier = cur_item->GetItemTier();
+		const int worn_item_tier = static_cast<int>(worn_inst->GetID() / 1000000);
+		float added_percent = 0.0f;
+		if (cur_item_tier > worn_item_tier) {
+			// If the cursor item is of a higher tier, fill the stage outright
+			added_percent = 100.0f;
+		} else if (cur_item_tier == worn_item_tier) {
+			// Same tier, add 33.33% of a stage
+			added_percent = 33.33f;
+		} else {
+			// Lower tier, add 6.65% of a stage
+			added_percent = 6.65f;
+		}
+
+		const uint64 current = worn_inst->GetEvolveCurrentAmount();
+		const uint64 required =
+			EvolvingItemsManager::Instance()->GetEvolvingItemsCache().at(worn_inst->GetID()).required_amount;
+		const uint64 remaining = (required > current) ? (required - current) : 0;
+		const uint64 add_units = std::min<uint64>(
+			static_cast<uint64>(added_percent * 100.0f + 0.5f), remaining);
+		if (add_units == 0) {
+			Message(Chat::SpellFailure, "This item is already fully charged for its current stage.");
+			return false;
+		}
+
+		worn_inst->SetEvolveAddToCurrentAmount(add_units);
+		worn_inst->CalculateEvolveProgression();
+
+		auto e = CharacterEvolvingItemsRepository::SetCurrentAmountAndProgression(
+			database, worn_inst->GetEvolveUniqueID(), worn_inst->GetEvolveCurrentAmount(), worn_inst->GetEvolveProgression());
+		if (!e.id) {
+			return false;
+		}
+
+		SendEvolvingPacket(EvolvingItems::Actions::UPDATE_ITEMS, e);
+		DeleteItemInInventory(EQ::invslot::slotCursor, 0, true, true);
+
+		if (worn_inst->GetEvolveProgression() >= 100) {
+			DoEvolveCheckProgression(*worn_inst);
+		}
+
+		return true;
+	}
+
+	auto pow_item = m_inv.GetItem(EQ::invslot::slotPowerSource);
+	if (!pow_item) {
+		Message(Chat::SpellFailure, "You must place an item in your Power Source slot in order to consume a similar item.");
+		return false;
+	}
+
+	if (cur_item->GetID() % 1000000 != pow_item->GetID() % 1000000) {
+		Message(Chat::SpellFailure, "You can only Consume items similar which are similar, to what is equipped in your Power Source slot.");
 		return false;
 	}
 
@@ -749,7 +887,7 @@ float Client::GetItemStatValue(const EQ::ItemData* item) {
 	return return_value;
 }
 
-float Client::GetBaseExpValueForKill(int conlevel, int target_tier, EQ::ItemInstance* upgrade_item) {
+float Client::GetBaseExpValueForKill(int conlevel, int target_tier, EQ::ItemInstance* upgrade_item, float tier2_rate_floor) {
 	float exp_value   = 0.0f;
 	float norm_val 	  = GetItemStatValue(upgrade_item->GetItem());
 	float clamp_scale = 0.0f;
@@ -799,7 +937,12 @@ float Client::GetBaseExpValueForKill(int conlevel, int target_tier, EQ::ItemInst
 	}
 
 	if (target_tier == 2) {
-		exp_value = EQ::Clamp(exp_value, RuleR(Custom, PowerSourceItemTier2RateFloor) * clamp_scale, 1.0f * clamp_scale);
+		// Orbs keep the Custom floor; native evolving items pass their own
+		// (EvolvingItems:EnergyRateFloorTier2) so the two curves tune apart.
+		const float tier2_floor = tier2_rate_floor >= 0.0f
+			? tier2_rate_floor
+			: RuleR(Custom, PowerSourceItemTier2RateFloor);
+		exp_value = EQ::Clamp(exp_value, tier2_floor * clamp_scale, 1.0f * clamp_scale);
 	}
 
 	exp_value = exp_value * (database.LootBuffEnabled() ? 1.5 : 1);
@@ -838,7 +981,9 @@ bool Client::AddItemExperience(EQ::ItemInstance* item, int conlevel)
 	int   item_tier 		  = item->GetID() / 1000000;
 	EQ::ItemInstance* max_upgrade_item = item->GetMaxUpgrade(database);
 	float cur_item_experience = Strings::ToFloat(item->GetCustomData("Exp"), 0);
-	float new_item_experience = GetBaseExpValueForKill(conlevel, static_cast<int>(upgrade_item->GetID() / 1000000), max_upgrade_item);
+	// A max-tier item has no upgrade chain (GetMaxUpgrade returns null); its
+	// own gearscore stands in as the final-item value.
+	float new_item_experience = GetBaseExpValueForKill(conlevel, static_cast<int>(upgrade_item->GetID() / 1000000), max_upgrade_item ? max_upgrade_item : item);
 	float new_percentage = std::min(100.0f, cur_item_experience + new_item_experience);
 	safe_delete(max_upgrade_item);
 
@@ -1283,6 +1428,7 @@ void Client::AddEXP(ExpSource exp_source, uint64 in_add_exp, uint8 conlevel, boo
 		RuleB(Custom, PowerSourceItemUpgrade) &&
 		power_source_item &&
 		!IsPowerSourceItem(power_source_item) && // purity batteries don't tier/eject
+		!power_source_item->IsEvolving() &&      // converted families progress via evolution, not slot 21
 		exp_source == ExpSource::Kill &&
 		conlevel != 0xFF
 	) {

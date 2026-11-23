@@ -5,13 +5,55 @@
 #include "_options.h"
 #include "core_log.h"
 
+// AllLuclinPcModelsOff governs "classic mode" for races without their own UseLuclin keys
+// (froglok 330, drakkin 522). Read raw instead of calling the client's toggle function:
+// at table-build time the server feature bits behind the missing-key default may not
+// have arrived yet.
+static bool RetroRaces_ClassicMasterOff() {
+	char buf[8] = {0};
+	GetPrivateProfileStringA("Defaults", "AllLuclinPcModelsOff", "FALSE", buf, sizeof(buf), ".\\eqclient.ini");
+	return buf[0] == 'T' || buf[0] == 't' || buf[0] == '1';
+}
+
 char* __fastcall InjectCustomNPCs_Trampoline(char* pThis, char* pPtr, int raceID, int genderID, const char* modelName, int raceMask, int dbStrID);
 char* __fastcall InjectCustomNPCs_Detour(char*pThis, char* pPtr, int raceID, int genderID, const char* modelName, int raceMask, int dbStrID)
 {
-	
-	
+
+
 	if (!raceID) return InjectCustomNPCs_Trampoline(pThis, pPtr, raceID, genderID, modelName, raceMask, dbStrID);
-	if (raceID == 1) { // Trigger on Human load (very early)
+	if (areRetroRacesEnabled) {
+		// Retro Races: swap the model code the race table registers for select races,
+		// but only when the client is in classic/old-models mode for that race.
+		// vah shir 130 KEM/KEF -> CPM/CPF (kerran) keys off its own UseLuclinVahShirMale/Female;
+		// drakkin 522 DKM/DKF -> SRW (sarnak) and froglok 330 FRM/FRF -> FRO (classic froglok,
+		// which also fixes old-models froglok visibility) have no per-race keys, so the
+		// AllLuclinPcModelsOff master governs them.
+		const char* retroModel = nullptr;
+		bool retro = false;
+		if (raceID == 130) {
+			retroModel = (genderID == 1) ? "CPF" : "CPM";
+			char buf[8] = {0};
+			GetPrivateProfileStringA("Defaults", (genderID == 1) ? "UseLuclinVahShirFemale" : "UseLuclinVahShirMale",
+				"TRUE", buf, sizeof(buf), ".\\eqclient.ini");
+			bool ownKeyOff = !(buf[0] == 'T' || buf[0] == 't' || buf[0] == '1');
+			// The stock client special-cases race 130 BEFORE the master switch, but a player
+			// who sets AllLuclinPcModelsOff=TRUE expects every race old-school - honor both.
+			retro = ownKeyOff || RetroRaces_ClassicMasterOff();
+		}
+		else if (raceID == 522) {
+			retroModel = "SRW";
+			retro = RetroRaces_ClassicMasterOff();
+		}
+		else if (raceID == 330) {
+			retroModel = "FRO";
+			retro = RetroRaces_ClassicMasterOff();
+		}
+		if (retroModel && retro) {
+			SimpleLog("Retro Races: race %d gender %d model %s -> %s", raceID, genderID, modelName, retroModel);
+			return InjectCustomNPCs_Trampoline(pThis, pPtr, raceID, genderID, retroModel, raceMask, dbStrID);
+		}
+	}
+	if (areCustomNPCsEnabled && raceID == 1) { // Trigger on Human load (very early)
 		for (auto&& npc : NPCs) {
 			char* modelNameUpper = _strdup(npc.modelName);
 			SimpleLog("Injecting custom race: %d Model: %s Mask: %d (This=0x%p, Ptr=0x%p)", npc.raceID, modelNameUpper, npc.raceMask, pThis, pPtr);

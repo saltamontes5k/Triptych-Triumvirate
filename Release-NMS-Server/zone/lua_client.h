@@ -10,6 +10,7 @@ class Lua_Group;
 class Lua_Raid;
 class Lua_Inventory;
 class Lua_Packet;
+class Lua_Corpse;
 
 namespace luabind {
 	struct scope;
@@ -413,6 +414,14 @@ public:
 	);
 	bool CompleteSharedTaskAchievement(uint32 achievement_id);
 	std::string GetSharedTaskIdentity();
+	uint16 GetSharedTaskInstanceID(uint32 task_id, uint32 zone_id, uint32 zone_version);
+	bool IsSpiritShrouded();
+	uint32 GetFallShroudSelectedTemplate(std::string occurrence);
+	bool ApplyFallEscrow(std::string occurrence, uint32 template_id);
+	bool HasFallOfIllsalinProfile(std::string occurrence, uint32 instance);
+	bool EnterFallOfIllsalin(Lua_NPC npc);
+	bool RegisterFallOfIllsalinCommanderCorpse(std::string occurrence, uint32 instance, Lua_Corpse corpse);
+	bool ExitFallOfIllsalin(std::string occurrence, uint32 instance, Lua_NPC npc);
 	uint32 GetZoneInstanceVersion();
 	int GetTaskActivityDoneCount(int task_id, int activity_id);
 	void LockSharedTask(bool lock);
@@ -431,7 +440,12 @@ public:
 	uint32 GetMoney(uint8 type, uint8 subtype);
 	void OpenLFGuildWindow();
 	void OpenShroudWindow(Lua_Mob npc);
+	void OpenShroudWindowFor(Lua_Mob npc, luabind::object ids);
 	void ApplyShroud(uint32 shroud_id);
+	// Spirit-shroud twins: the mission controllers use these once the native
+	// engine is on, so a script never has to know which table backs the form.
+	void ApplySpiritShroud(uint32 template_id);
+	void RemoveSpiritShroud();
 	void RemoveShroud();
 	void RemoveShroudSilent();
 	void NotifyNewTitlesAvailable();

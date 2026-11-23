@@ -114,10 +114,34 @@ namespace EQ {
 		if(!f) {
 			EQ_EXCEPT("Shared Memory", "Could not open the file to find the existing file size.");
 		}
-		fseek(f, 0U, SEEK_END);
-		uint32 size = static_cast<uint32>(ftell(f)) - sizeof(shared_memory_struct);
-		size_ = size;
+
+		// ftell's long is 32-bit on Windows: on a segment larger than 2 GiB it
+		// returns -1, and the cast below then yields 0xFFFFFFFF, so the file
+		// mapping was created at the 4 GiB ceiling. The item segment is ~3.2 GiB
+		// (its size is sizeof(ItemData) * 0xFFFFFFF mod 2^32), which meant the
+		// first zone to open it silently padded the file from 3.2 GiB to
+		// 4 GiB - the tail was never written, so the valid data length stayed at
+		// 3.2 GiB. Read the size with 64-bit positioning and reject anything the
+		// uint32 segment arithmetic cannot represent.
+#ifdef _WINDOWS
+		fseek(f, 0, SEEK_END);
+		const long long file_size = _ftelli64(f);
+#else
+		fseeko(f, 0, SEEK_END);
+		const long long file_size = static_cast<long long>(ftello(f));
+#endif
 		fclose(f);
+
+		if (file_size < static_cast<long long>(sizeof(shared_memory_struct))) {
+			EQ_EXCEPT("Shared Memory", "Shared memory file is smaller than its header.");
+		}
+
+		if (file_size > 0xFFFFFFFFLL) {
+			EQ_EXCEPT("Shared Memory", "Shared memory file is larger than 4 GiB.");
+		}
+
+		const uint32 size = static_cast<uint32>(file_size) - sizeof(shared_memory_struct);
+		size_ = size;
 
 #ifdef _WINDOWS
 		DWORD total_size = size + sizeof(shared_memory_struct);

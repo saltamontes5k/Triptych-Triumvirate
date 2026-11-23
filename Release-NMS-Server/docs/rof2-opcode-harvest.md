@@ -168,6 +168,72 @@ storage window, not a container for temporary-form items:
   stack u32}` — stack size for stackables, 1 otherwise.
 - `0x0728` `BankEmpty`: empty-bank notice.
 
+## Hailstone housing cross-reference (2026-11-17)
+
+Source: the Hailstone client, `projecthailstone/hailstone-client` v0.7.1-beta
+(`src/net/real_estate_packets.h`, read-only; the numbers are the original client's, taken from
+`RealEstateManagerClient_HandleMessage` @0x5b2500 and friends). Method: extract every
+`kOpRe*` constant and every `HAILSTONE_OP` entry, then diff the number sets against this
+tree's `utils/patches/patch_RoF2.conf`. 633 client numbers against our 658: 41 housing numbers
+were already ours under another name, and these eleven had no entry here at all. Added with the
+wiring below — name in `common/emu_oplist.h`, number in the conf, and a `k_log_only_rof2`
+line so the message logs with its name instead of dropping as unknown. No handler, no behaviour.
+
+| Hex | Name here | Client constant | Direction and shape |
+| --- | --- | --- | --- |
+| 0x0351 | `OP_RealEstateNop1` | `kOpReNop1` | S2C explicit no-op |
+| 0x0c13 | `OP_RealEstateOwnedItemListToggle` | `kOpReOwnedBToggle` | S2C toggle beside 0x3e00 |
+| 0x1097 | `OP_RealEstateItemSummaryUpdate` | `kOpReItemSummaryUpdate` | S2C item-summary update (client handler 0x5afe00) |
+| 0x1baf | `OP_RealEstateItemRemoved` | `kOpReItemRemoved` | S2C summary row removed |
+| 0x2cf7 | `OP_RealEstateItemRowAdd` | `kOpReItemRowAdd` | S2C add one summary row (0x5afe00) |
+| 0x3968 | `OP_RealEstateAccessList` | `kOpReAccess` | S2C access list; its last dword is optional. Our 0x485d is the client's `kOpReAccessUpdate` |
+| 0x3d94 | `OP_RealEstateNop2` | `kOpReNop2` | S2C explicit no-op |
+| 0x4f09 | `OP_RealEstateRemove` | `kOpReRemove` | S2C estate record removal, same body as 0x63fd/0x6fd0 |
+| 0x64a3 | `OP_RealEstateItemMenu13` | `kOpReMenu13` | item-menu case 13; semantics unresolved, named for reference |
+| 0x76c6 | `OP_RealEstateOwnedListToggle` | `kOpReOwnedAToggle` | S2C toggle beside 0x2aa7 |
+| 0x7d28 | `OP_RealEstateItemSummaryForget` | `kOpReItemSummaryForget` | S2C forget the summary |
+
+Direction evidence: every one of these except 0x64a3 has a `case` in the client's inbound
+handler `src/net/game_connection_real_estate.cpp`; 0x64a3 is only a constant next to the other
+menu cases (0x050c, 0x51e3, 0x7ad1), so it is filed as a C2S request.
+
+Deliberately **not** added: the client's own server-support family `0x1430`-`0x1439`
+(`kOpHailstoneGuild`, `kOpHsFiles*`, `kOpHsQuestNpcs*`, `kOpHsZoneLinks*`). Hailstone's
+server script (`server/README.md`, `quests/global/encounters/hailstone.lua`) hears those through
+`event_unhandled_opcode`; naming them here would route them to `Handle_OP_Unimplemented` and the
+script would stop seeing the requests. Also out of scope: the marketplace and player-packet
+numbers the client carries (0x0114, 0x09bf, 0x0a37, 0x1e9f, 0x356f, 0x4a74, 0x4b7f, 0x5148,
+0x5bd5, 0x76c3, 0x77a7, 0xb07f, 0x004c, 0x0e44, 0x150e, 0x15e7, 0x1f65, 0x2b8e, 0x344f,
+0x3ed4, 0x51e5, 0x52f7, 0x5369, 0x5a79, 0x7d50, 0x7d89) — none are housing.
+
+### What the server now sends (2026-11-17)
+
+The list (`0x1cef`) is a merge, not a replacement: the client keys rows by `(estate, row)` and
+only appends or overwrites (`game::RealEstateManager::add_item_rows`), so a deleted row survives a
+list resend and the whole pane can never be cleared by listing rows. Three incremental messages are
+now sent from `zone/nms_housing.cpp`:
+
+- `0x2cf7` `OP_RealEstateItemRowAdd` — one row, same shape as a list entry
+  (`WriteEstateItemRow`). Sent on a deposit into an estate and on a yard/interior placement, just
+  before the list. The list stays the authoritative refresh; the row is the precise message.
+- `0x1baf` `OP_RealEstateItemRowRemoved` — `{u32 estate, u32 row}`. Sent by
+  `ReturnFurnitureRow` after the row is deleted, for both summary keys (`door` for the yard pane,
+  `kHouseEstateBase + door` for the interior pane); an unknown key is a no-op client-side.
+- `0x7d28` `OP_RealEstateItemSummaryForget` — `{u32 estate}`. Sent with the same both-keys rule
+  when the lot's last row goes away (`PlotItemCount(door, -2) == 0`), so the pane does not stay
+  behind empty-but-populated.
+
+Not wired: `0x1967` (the client's `kOpReItemSummaryRename`, `{u32 re, NUL-terminated name}`).
+This tree already maps 0x1967 as `OP_RealEstateOwnerItemPurge`, and a second name for one number
+collides (see the renames note above), so the estate name in the Items window waits on that
+naming decision rather than being sent under a label that says "purge". `0x1097`
+(`kOpReItemSummaryUpdate`) is not decoded by the client at all — it only marks the UI dirty, which
+the list and the row already do.
+
+The 41 housing numbers both trees already carry keep this tree's names; only the eleven above were
+missing. No existing enum value moves: the names are appended at the end of
+`common/emu_oplist.h`, after `OP_NMSWindowEvent`.
+
 ## How the mapping is wired
 
 1. The name goes in `common/emu_oplist.h` (appended, so existing enum values do not move) and

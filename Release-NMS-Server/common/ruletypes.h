@@ -296,6 +296,7 @@ RULE_CATEGORY(Pets)
 RULE_REAL(Pets, AttackCommandRange, 300.0000000000000, "Range at which a pet will respond to attack commands")
 RULE_BOOL(Pets, UnTargetableSwarmPet, true, "Setting whether swarm pets should be targetable")
 RULE_REAL(Pets, PetPowerLevelCap, 99.0, "Maximum number of levels a player pet can go up with pet power")
+RULE_BOOL(Pets, ScaleExcessPetPower, true, "Pet power above the strongest pets table row for a pet type scales that pet's HP, AC, damage and level, like a -1 row does")
 RULE_BOOL(Pets, LivelikeBreakCharmOnInvis, true, "Default: true will break charm on any type of invis (hide/ivu/iva/etc) false will only break if the pet can not see you (ex. you have an undead pet and cast IVU")
 RULE_BOOL(Pets, ClientPetsUseOwnerNameInLastName, true, "Disable this to keep client pet's last names from being owner_name's pet")
 RULE_BOOL(Pets, CanTakeNoDrop, true, "Setting whether anyone can give no-drop items to pets")
@@ -1205,6 +1206,9 @@ RULE_REAL(EvolvingItems, PercentOfGroupExperience, 0.1000000014901, "Percentage 
 RULE_REAL(EvolvingItems, PercentOfRaidExperience, 0.1000000014901, "Percentage of raid experience allocated to evolving items that require experience.")
 RULE_INT(EvolvingItems, DelayUponEquipping, 30000, "Delay in ms before an evolving item will earn rewards after equipping.  Default is 30000ms or 30s.")
 RULE_BOOL(EvolvingItems, DestroyAugmentsOnEvolve, false, "If this is enabled, any augments in an item will be destroyed when the item evolves. Otherwise, send augments to the player via the parcel system (requires that the Parcel System be enabled).")
+RULE_INT(EvolvingItems, MaxActiveEvolvingItems, 3, "Maximum number of evolving items a character may keep activated at once (0 = unlimited). Items at their final evolve tier do not count - they no longer earn progression. Activating past the cap deactivates the least-progressed active item to make room.")
+RULE_BOOL(EvolvingItems, TabExcludeInventoryItems, true, "Hide bag/bank items from the Evolution tab - only worn equipment and their socketed augments list. Delivered to the client dll at zone-in.")
+RULE_REAL(EvolvingItems, EnergyRateFloorTier2, 0.25, "Smallest percentage of an evolving item's bar a white con awards once the item is at chain stage 2 or higher. Replaces the orb curve's Custom:PowerSourceItemTier2RateFloor (0.075) for native evolving items only, so the two systems tune apart. At 0.075 a stage-2 item gained exactly 1/10 of the same family's stage-1 item, which is invisible in the tab's integer percentage.")
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(Custom)
@@ -1223,6 +1227,11 @@ RULE_BOOL(Custom, 	FellowshipVitality, 				true, 	"Enable fellowship vitality XP
 RULE_INT(Custom, 	FellowshipCampMembers, 				2, 		"Living fellowship members, including the camper, that must be within 100 units and out of combat to create a campsite. Clamped to 1-12; the native client may still gate its Camp button on its own threshold.")
 RULE_INT(Custom, 	FellowshipRosterClass, 				0, 		"Which class the native fellowship roster shows for a multiclass character (the row has room for one). 0 = earliest class in the game's order, 1 = latest, 2 = the character's base class, 3 = the class bitmask encoded for the NMS client (id 1000+mask), which renders every class.")
 
+// Friendship consider: player targets on the considerer's /friend list con
+// Amiably on the wire. Compiled default; no rule_values row is required. The
+// client still renders its own player con until the dinput8 display hook lands.
+RULE_BOOL(Custom, 	FriendConsiderAmiable, 				true, 	"Consider characters on your friends list as Amiably. Player targets only.")
+
 // NMS windows / arcade (script-drawn client windows; see zone/nms_window.h)
 RULE_BOOL(Custom, 	NMSWindowEnabled, 					true, 	"Enable the NMSWindow script API (client:NMSWindowOpen etc). Clients without the patched dinput8.dll automatically get the plain-text chat fallback. Requires client dll for real windows.")
 RULE_INT(Custom, 	NMSWindowMaxWindows, 				8, 		"Maximum NMS windows a single player may have open at once. NMSWindowOpen refuses beyond this.")
@@ -1234,7 +1243,7 @@ RULE_BOOL(Custom, 	NMSVaultScriptPanel, 				false, 	"Render the Nautilus Vault a
 
 // Spirit Shrouds
 RULE_BOOL(Custom, 	ShroudsEnabled, 						true, "Enable the spirit-shroud system (Shrouds window and shroud forms).")
-RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points: 1 = profile block 0x00 shroud flag, 2 = profile block 0x4FC0 shroud-state flag, 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4), 8 = server-authoritative client shroud flag (writes the state dword at profile block 0x350C; requires the patched dinput8.dll that retargets the store at eqgame+0x579253 from BaseProfile+0x3408 to +0x340C). Recommended 12.")
+RULE_INT(Custom, 	ShroudLiveMode, 						0, "Bitmask for live-like shroud AAs / monster points. Only bit 4 is live: 4 = live-like strip (display gear/spellbook/AA swap) + monster points + shroud AA purchases (categories 3/4). Bits 1, 2 and 8 described fields of the old runtime OP_Shroud profile block and are inert since form changes became a zone-in profile swap (2026-11-15); the client no longer needs any shroud patch. Recommended 4.")
 RULE_INT(Custom, 	ShroudMonsterPointScale, 				100, "Percent multiplier applied to the monster-point grant for a shroud form (100 = the live guide's baseline ladder: a 10-point starter below level 20, then 32/36/40/45/50/55 at levels 20-45, 78 at 50, 84 at 55, 91 at 60, 97 at 65, 104 at 70). 0 grants no monster points at all (the guide's strict values, where a low-level form's basics are free); the guide's per-form totals otherwise vary by up to about 40 percent, so raise this if the baseline feels stingy.")
 // Native RoF2 Spirit Shroud protocol (ported from the nightstalker6669 e7cb5dc
 // reconstruction). Sits beside the quest-path rules above; both paths share the
@@ -1249,7 +1258,9 @@ RULE_BOOL(Custom, 	FadeNPCDebuffsOutofCombat, 				true, 	"Enable to to cause NPC
 RULE_BOOL(Custom, 	UseNMSItemMutations, 					true, 	"Rename items according to NMS standards and apply other mutations")
 RULE_BOOL(Custom, 	ClearRestingDetrimentalEffectsEnabled, 	true, 	"Remove detrimental spell effects from self and pets when OOC regen engages")
 RULE_REAL(Custom, 	ItemExtraSpellAmtMaximumPercentage, 	0.0000000000000, 	"Adjust the maximum effectiveness of Spell Damage and Heal Amount. 0.0 to Disable, 1.0 to allow adding up to the base effect value, 2.0 to allow double effect value, etc.")
-	RULE_INT(Custom,    AbsolutePetLimit, 						9, 	    "Maximum number of permanent pets that a player can control.")
+	RULE_INT(Custom,    AbsolutePetLimit, 						15, 	    "Maximum number of permanent pets that a player can control.")
+	RULE_BOOL(Custom,	BardDualCharmPets,						true,	"Allow bards to hold two charmed pets at once, including two copies of the same charm song.")
+	RULE_BOOL(Custom,	EnchanterTwoPets,						true,	"Allow enchanters to hold two pets: either two charms or one charm plus one animation.")
 	RULE_REAL(Custom,	PetPlacementAdjustment,					-0.6000000238419,  	"Adjust pet formation positioning")
 RULE_REAL(Custom,	PetPlacementDistance ,					7.0000000000000,  	"Adjust pet formation positioning")
 RULE_REAL(Custom, 	NonDaggerBackstabMultiplier1H, 			0.800000000000, 	"Multiple Backstabs conducted with not-1hp by this amount")
@@ -1286,14 +1297,28 @@ RULE_BOOL(Custom, 	NautilusVault,						true, "Enable the Nautilus Vault (#vault_
 RULE_BOOL(Custom, 	ProcLockerStacks,					true, "When true, the Nautilus Vault Proc Locker procs independently of the held weapon and its augs (all can proc in one swing). When false, the locker item replaces the held weapon's proc and suppresses its aug procs (reference behavior).")
 RULE_BOOL(Custom, 	ProcLockerModSlots,					true, "When true, Nautilus Vault slots 84-87 (the Foci/Skill Mod placeholders on the Proc Locker page) lend their item's skill mods, instrument mods, and focus effects - never stats or procs. Free-form: any non-container item can be parked, which is how a bard parks a second instrument.")
 
-// /nmsloot personal loot offers (mukluk4/Modular-Options loot-offers). Needs the table from
-// migration v375 and a loot window client (our dinput8 window or the Hailstone add-on); a
-// client without either sees nothing, so keep NmsLootOffers off until the dll has shipped.
-// Corpse emptying follows this server's copy rule: with 2+ recipients (and solo when
-// NmsLootEmptySoloCorpse is on) the corpse's loot-table items are removed and every
-// recipient gets a copy of exactly what was removed; quest-added items stay (lootdrop_id 0).
-// With an emptying rule off, the older independent per-player roll remains.
-RULE_BOOL(Custom, 	NmsLootOffers,						false, "/nmsloot: on an NPC's death, create personal loot offers for the killer and each group or raid member in the zone. When a corpse-empty rule is on, each recipient gets a copy of exactly the loot-table items removed from the corpse; otherwise the loot is rolled independently per player. Keep/Sell/Tribute/Bank/Vault/Destroy/Pass from anywhere in the zone; expired offers are delivered to bags when possible. Off = corpse loot only")
+// Loot distribution master rule: one switch for every loot style this server runs.
+//   0 = off: native corpse looting, nothing is stripped, no offers exist.
+//   1 = /nmsloot personal offers (needs the v375 table and a loot window client: our dinput8
+//       window or the Hailstone add-on). Copies every recipient; the two emptying bools apply
+//       here only.
+//   2 = instant 1-100 roll per item: every eligible player rolls once, one line per item, the
+//       winner gets a normal offer (Keep/Sell/Tribute/Bank/Vault/Pass still work).
+//   3 = random recipient per item, delivered straight to bags.
+//   4 = the party/raid leader takes every item, delivered straight to bags.
+// Modes 1-4 strip the corpse's loot-table items (quest-added items stay, lootdrop_id 0) and
+// split the corpse coin. Modes 2/3 roll or assign inside the raid loot-policy set
+// (RaidLootType: LeaderOnly, LeaderAndGroupLeadersOnly, LeaderSelected, EntireRaid) plus the
+// credited killer, who can always loot natively. Mode 4 designates the raid leader, then a
+// LeaderSelected looter, then the group leader, then the credited player. Items a recipient
+// cannot hold (bags and cursor full, LORE conflict) go to the next candidate and finally back
+// on the corpse as a quest-style item. Supersedes Custom:NmsLootOffers.
+RULE_INT(Custom, 	LootSystem,							0, "Loot distribution: 0=off (native corpse looting), 1=/nmsloot personal offers, 2=instant 1-100 roll per item with the winner offered it, 3=random recipient per item, 4=party/raid leader takes every item, 5=personal replay rolls: each group member independently replays the loot tape captured at the NPC's spawn (raids exempt; all-or-nothing staging). Modes 1-5 strip the corpse's loot-table items (quest items stay) and split the coin except mode 5, which keeps coin native on the corpse; 2/3 draw from the raid loot-policy set plus the credited killer; 4 is leader, then a selected looter, then the group leader, then the credited player. 1, 2 and 5 need the character_nms_loot_offers table (v375). Supersedes Custom:NmsLootOffers.")
+
+// Pre-LootSystem switch. The loot code no longer reads it; kept declared so existing rule rows
+// (and anything out of tree that still writes it) keep loading. Migration v415 copies its live
+// value into Custom:LootSystem so this server stays on the offers flow.
+RULE_BOOL(Custom, 	NmsLootOffers,						false, "(Superseded by Custom:LootSystem - no longer read.) /nmsloot personal loot offers: on an NPC's death, create offers for the killer and each group or raid member in the zone.")
 RULE_INT(Custom, 	NmsLootOfferExpireSeconds,			300, "Seconds before an unclaimed /nmsloot offer expires (the client countdown)")
 RULE_BOOL(Custom, 	NmsLootEmptyGroupCorpse,			true, "With /nmsloot offers going to 2 or more players, remove the corpse's loot-table items, give every recipient a copy of exactly the items removed (quest-added items stay) and let the emptied corpse decay at once. On by default")
 RULE_BOOL(Custom, 	NmsLootEmptySoloCorpse,				true, "With /nmsloot offers going to a lone player, do the same: remove the corpse's loot-table items, give the player a copy of exactly the items removed, so only one loot source remains (quest-added items stay). On here; upstream defaults it off")
@@ -1442,6 +1467,8 @@ RULE_INT(Custom,    StarvationDeathEQMinutes,               4320,    "Starvation
 RULE_INT(Custom,    StarvationResGraceEQMinutes,            1440,    "Starvation clock: EQ-minutes of grace after each starvation death before the death touch fires again. 1440 = 1 EQ game day.")
 RULE_INT(Custom,    StarvationMaxGraceDeaths,               3,       "Starvation clock: total starvation deaths before the loop suspends (the debuff stays, no more deaths) until the character eats AND drinks. 0 = no cap.")
 RULE_INT(Custom,    StarvationDeathMinLevel,                1,       "Starvation clock: characters below this level never accrue it (tutorial protection). 1 = everyone.")
+RULE_BOOL(Custom,   HousingTrophies,                        false,   "RoF2 personal housing trophies: the trophy window (0x51a9 open / 0x4b65 select / 0x756a toggle) activates hidden stat items 68733 (+45 AC, +20 heroic stamina) and 68736 (+400 HP/mana/endurance) while their placed source (68727 Trophy of the Landing, 68730 Trophy of the Giant) stands on the owner's estate. Max one per trophy item per estate; pickup or Store All clears the activation. Free tier: favor_cost is 0 in nms_housing_trophy_benefits -- paid favor billing (upstream reconstructs 75/250) is a separate follow-up and would be refused while absent. Fail-closed: false = the three opcodes stay unimplemented log-only. Seeded live by the v465 rule_values row.")
+RULE_BOOL(Custom,   HousingPets,                            false,   "RoF2 housing pets: a placed interior pet-profile item (nms_housing_placeable.pet_race set -- v466 seeds Holgresh 77408, Black Bear Cub 107152, White Nag Harness 51801) spawns a bound noncombat actor (0x21ea BindSpawn, row-id GUID) with the native Stay/Walk Around/Run Around/Follow Me/Play Dead item menu (0x51e3, action9 params 16175-16179 -- the label ids double as the client's dbstr category-28 text, no client changes). Interior zones only; containment is the zone bound itself. Owner-present authority revalidated every 5s, commands need the owner within 20 units, Follow drops to Stay when the owner leaves; pickup/Store All despawns. Walk/Run spiral 4-12 units around the placed pose over the collision map. Fail-closed: false = 0x51e3 stays log-only. Seeded live by the v466 rule_values row.")
 
 RULE_CATEGORY_END()
 

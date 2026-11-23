@@ -21,9 +21,11 @@
 #include "../common/eqemu_logsys.h"
 #include "../common/eq_constants.h"
 #include "../common/eq_packet_structs.h"
+#include "../common/memory_buffer.h"
 #include "../common/races.h"
 #include "../common/rulesys.h"
 #include "../common/strings.h"
+#include "../common/shroud/wire.h"
 
 #include <fmt/format.h>
 
@@ -71,42 +73,45 @@ static void ShroudDiag(const char *fmt, ...) {
 
 } // namespace (file-local diag helpers above)
 
-// Builds and queues the OP_Shroud self-transform (spawn block + profile block).
-// The spawn block is stamped with the target identity because FillSpawnStruct
-// copies the mob's class_/size, which are stale for the frame in which a
-// transform is applied -- that mismatch is what leaves the client's self-model
-// lying in a broken pose and hides its gear/UI.
-// External linkage: the native Spirit Shroud service (client_spirit_shroud.cpp)
-// reuses this builder unchanged.
-void SendShroudTransform(Client *client, const PlayerProfile_Struct &profile, float size)
+// A form change is a same-zone reload, not a transform packet: the client
+// leaves and re-enters, and Handle_Connect_OP_ZoneEntry applies the shroud state
+// to m_pp BEFORE serializing the zone-in profile, so the form (or the restored
+// real character) is what the client builds from.
+//
+// Why the safe-coords mode: the RoF2 client IGNORES a same-zone ZoneSolicited
+// change — it assumes it is already there and never reconnects (observed live:
+// request sent, client keeps playing). The safe-coords mode is the one it
+// answers: it reports "unknown zone", the server resolves that to the current
+// zone, and the client does a real zone-in. The price is that this mode lands
+// the player on the zone's safe point, so stash the current spot first and let
+// the zone-in path put it back (ShroudReturnPos bucket).
+void Client::ReloadForShroudTransition(const char* why)
 {
-	NewSpawn_Struct ns{};
-	client->FillSpawnStruct(&ns, client);
-
-	ns.spawn.race   = static_cast<uint16>(profile.race);
-	ns.spawn.gender = static_cast<uint8>(profile.gender);
-	ns.spawn.class_ = static_cast<uint8>(profile.class_);
-	ns.spawn.level  = static_cast<uint8>(profile.level);
-	if (size > 0.0f) {
-		ns.spawn.size = size;
+	// Quest-driven applies (the monster-mission controllers) can fire from a
+	// spawn poll while the client is still connecting. Zoning then would race
+	// the connect, so leave the state applied and let the caller's next poll
+	// retry the transition.
+	if (!Connected()) {
+		LogInfo("Client [{}] shroud transition reload deferred: not connected yet ({})",
+			GetCleanName(), why ? why : "form change");
+		return;
 	}
 
-	// Serialize the self spawn as a *player-type* spawn even when the shroud
-	// form is a monster race. FillSpawnStruct marks the client's own spawn
-	// NPC=10, which makes the RoF2 spawn writer take its monster-race branch
-	// (a 60-byte tail with no equipment/tint block). The client parses its own
-	// spawn with the same branch, so the re-added self actor is rebuilt without
-	// the player equipment block and ends up broken: feigned/sideways pose,
-	// hidden gear and hotbars, and failed zone transitions. Reporting NPC=0
-	// keeps both the writer and the client on the player branch.
-	ns.spawn.NPC = 0;
+	SetBucket("ShroudReturnPos", fmt::format("{:.2f},{:.2f},{:.2f},{:.2f},{}",
+		GetX(), GetY(), GetZ(), GetHeading(), static_cast<uint64_t>(std::time(nullptr))));
 
-	auto *app = new EQApplicationPacket(OP_Shroud, sizeof(ShroudSelf_Struct));
-	auto *shroud = reinterpret_cast<ShroudSelf_Struct *>(app->pBuffer);
-	shroud->spawn   = ns.spawn;
-	shroud->profile = profile;
-	client->FillShroudTransformExtras(shroud);
-	client->QueuePacket(app);
+	LogInfo("Client [{}] shroud transition reload ({}) at ({:.2f}, {:.2f}, {:.2f})",
+		GetCleanName(), why ? why : "form change", GetX(), GetY(), GetZ());
+
+	// Exactly upstream's call (nsqemu client_spirit_shroud.cpp:733):
+	//   MovePC(zone->GetZoneID(), zone->GetInstanceID(), x, y, z, heading, 1, EvacToSafeCoords)
+	// The evac branch is the only zone-change the RoF2 client actually obeys for
+	// a same-zone transfer: it sends a decoy zone id (1, or 2 when in zone 1)
+	// precisely because the client ignores a request naming the zone it is
+	// already in. ZoneSolicited and ZoneToSafeCoords both name the current zone
+	// and were both observed to do nothing (no reconnect, no profile reload).
+	MovePC(zone->GetZoneID(), GetInstanceID(), GetX(), GetY(), GetZ(), GetHeading(), 1,
+		ZoneMode::EvacToSafeCoords);
 }
 
 namespace { // resume file-local helpers
@@ -202,6 +207,21 @@ std::vector<ShroudDefinition> LoadAllShrouds()
 		d.hp             = Strings::ToInt(row[11], 0);
 		d.mana           = Strings::ToInt(row[12], 0);
 		d.endurance      = Strings::ToInt(row[13], 0);
+
+		// Quest props are not forms a player may pick. The seven shroud ids below
+		// are applied by the monster-mission controllers (Cake Defense, Dwarven
+		// Wedding, Boat Lesson, King of the Monsters, Midnight Snack, Derelict
+		// Space Station, Pottery Trial) and are stripped again by the zone-in
+		// cleanup in global_player.pl whenever the player leaves that expedition.
+		// Offering them in the keeper's window only produces the stuck-model state:
+		// the form is applied, the reload zones, the connect cleanup silently
+		// unshrouds, and the client keeps the model with nothing to remove.
+		constexpr uint32 kQuestPropFirstId = 500;
+		constexpr uint32 kQuestPropLastId  = 506;
+		if (d.id >= kQuestPropFirstId && d.id <= kQuestPropLastId) {
+			continue;
+		}
+
 		shrouds.push_back(d);
 	}
 
@@ -489,10 +509,17 @@ static void SendShroudPointsPackets(Client *client, uint32 shroud_id)
 
 bool Client::OpenShroudWindow(Mob* npc)
 {
+	return OpenShroudWindowFor(npc, {});
+}
+
+bool Client::OpenShroudWindowFor(Mob* npc, const std::vector<uint32>& ids)
+{
 	// The native RoF2 window replaces the quest-built one when the native
 	// protocol is enabled; the quest path below stays authoritative otherwise.
 	if (RuleB(Custom, EnableSpiritShrouds) && ClientVersion() == EQ::versions::ClientVersion::RoF2) {
-		OpenSpiritShrouds();
+		// Same scoping on the spirit path: a mission hands its own ids through,
+		// a keeper passes none and gets the catalog.
+		OpenSpiritShroudsFor(ids);
 		return true;
 	}
 
@@ -501,7 +528,21 @@ bool Client::OpenShroudWindow(Mob* npc)
 		return false;
 	}
 
-	const auto shrouds = LoadAllShrouds();
+	auto shrouds = LoadAllShrouds();
+	if (!ids.empty()) {
+		// Mission scope: keep only the forms the caller offered, and drop the
+		// rest of the catalog. Unknown ids are ignored (the quest carries the
+		// ids, the server owns which forms exist).
+		std::erase_if(shrouds, [&ids](const ShroudDefinition& d) {
+			return std::find(ids.begin(), ids.end(), d.id) == ids.end();
+		});
+		if (shrouds.empty()) {
+			LogError("Shroud window: none of the [{}] requested form ids exist", ids.size());
+			Message(Chat::Yellow, "Those forms are unavailable right now.");
+			return false;
+		}
+	}
+
 	if (shrouds.empty()) {
 		Message(Chat::Yellow, "The shroud forms are unavailable right now.");
 		return false;
@@ -522,7 +563,8 @@ bool Client::OpenShroudWindow(Mob* npc)
 	}
 	window->shroudSelectionTreeString[length] = '\0';
 
-	LogInfo("Shroud window opened for [{}] (npc [{}])", GetCleanName(), window->triggerNPCID);
+	LogInfo("Shroud window opened for [{}] (npc [{}]): [{}] forms, tree [{}] bytes",
+		GetCleanName(), window->triggerNPCID, shrouds.size(), length);
 
 	FastQueuePacket(&outapp);
 	return true;
@@ -571,7 +613,6 @@ void Client::ApplyShroud(uint32 shroud_id)
 	// (or afterwards) restores the real profile instead of persisting the shroud.
 	m_shrouded  = true;
 	m_shroud_id = shroud_id;
-	m_shroud_zonein_pending = false;
 
 	// Shrouded players may not use mercenaries: suspend any active merc so it
 	// despawns and stays suspended until the shroud is removed.
@@ -598,14 +639,6 @@ void Client::ApplyShroud(uint32 shroud_id)
 		// the player keeps their spread instead of respending it.
 		ShroudReapplyPurchases(true);
 	}
-
-	AppearanceStruct appearance{};
-	appearance.race_id        = def.race;
-	appearance.gender_id      = def.gender;
-	appearance.texture        = def.texture;
-	appearance.helmet_texture = def.helmet_texture;
-	appearance.size           = def.size;
-	appearance.send_effects   = true;
 
 	// Keep the profile in sync so a later reset-to-base picks the shroud race.
 	m_pp.race   = def.race;
@@ -645,36 +678,16 @@ void Client::ApplyShroud(uint32 shroud_id)
 	SetMaxHP();
 	SendHPUpdate();
 
-	// Send OP_Shroud (spawn + profile). The RoF2 encoder serializes both; this
-	// is what completes the client's transition.
-	{
-		m_pp.cur_hp    = GetHP();
-		m_pp.mana      = current_mana;
-		m_pp.endurance = current_endurance;
+	// The form is applied to m_pp above; the reload below makes the client
+	// build it from the zone-in profile. No spawn re-send, no illusion packet,
+	// no AA resend: the connect sequence sends all of that from the profile.
+	m_pp.cur_hp    = GetHP();
+	m_pp.mana      = current_mana;
+	m_pp.endurance = current_endurance;
 
-		SendShroudTransform(this, m_pp, def.size);
-		ShroudDiag("ApplyShroud sent OP_Shroud: mob(race=%u gender=%u class=%u lvl=%u "
-		           "texture=%u helm=%u size=%.1f) def.size=%.1f",
-		           race, gender, class_, level, texture, helmtexture, size, def.size);
-		// The client's spawn re-add resets its displayed HP to the wire
-		// max_hp byte (100); refresh the real HP afterwards.
-		SendHPUpdate();
-	}
-
-	// Apply the shroud appearance last so the profile load cannot overwrite it.
-	SendIllusionPacket(appearance);
-
-	// Live-like mode: refresh the AA window now that shroud AAs (categories
-	// 3/4) are usable and the points pool has changed, and push the applied
-	// template's stats so the monster ability window populates.
-	if (live_mode) {
-		SendAlternateAdvancementTable();
-		SendAlternateAdvancementPoints();
-		SendAlternateAdvancementStats();
-		SendShroudRespondStats(this, def);
-		SendShroudProgress(this, def);
-		SendShroudPointsPackets(this, def.id);
-	}
+	ShroudDiag("ApplyShroud reload: mob(race=%u gender=%u class=%u lvl=%u "
+	           "texture=%u helm=%u size=%.1f) def.size=%.1f",
+	           race, gender, class_, level, texture, helmtexture, size, def.size);
 
 	Message(Chat::Yellow, "You take on the form of %s.", def.name.c_str());
 
@@ -684,10 +697,26 @@ void Client::ApplyShroud(uint32 shroud_id)
 		def.name,
 		def.id
 	);
+
+	ReloadForShroudTransition("enter shroud");
 }
 
 void Client::RemoveShroud(bool send_updates)
 {
+	// A native spirit form rides the same saved-profile fields but owns extra
+	// state this function never touched (template, spirit_shroud_state row,
+	// starter items) -- leaving it armed resurrected the form on the next
+	// zone-in. Route to the native restore; by the time it hands back through
+	// RemoveShroud below, the template is cleared, so old-engine bodies run.
+	if (m_spirit_shroud_template) {
+		RestoreNativeShroud(send_updates);
+		return;
+	}
+
+	LogInfo("RemoveShroud requested for [{}]: shrouded [{}] shroud_id [{}] saved_valid [{}] send_updates [{}] live_mode [{}]",
+		GetCleanName(), m_shrouded, m_shroud_id, m_shroud_saved_valid, send_updates,
+		(RuleI(Custom, ShroudLiveMode) & 4) != 0);
+
 	if (!m_shrouded) {
 		return;
 	}
@@ -699,7 +728,6 @@ void Client::RemoveShroud(bool send_updates)
 
 	m_shrouded  = false;
 	m_shroud_id = 0;
-	m_shroud_zonein_pending = false;
 
 	// The guide-content gate belongs to the form; drop it with the form.
 	ClearShroudAbilityCaps();
@@ -711,15 +739,13 @@ void Client::RemoveShroud(bool send_updates)
 	if (RuleI(Custom, ShroudLiveMode) & 4) {
 		ShroudEndSession();
 	}
-
 	if (!send_updates) {
 		return;
 	}
 
-	// Put the real identity and appearance back on the mob BEFORE serializing
-	// the spawn: FillSpawnStruct copies these from the mob, so without this the
-	// re-sent OP_Shroud still carries the shroud's model and the client keeps
-	// the form (gear hidden) while the profile says otherwise.
+	// Put the real identity back on the mob; the reload below makes the client
+	// rebuild the character from the zone-in profile, so the appearance comes
+	// from the spawn the connect sequence sends, not from a transform packet.
 	race        = m_pp.race;
 	gender      = m_pp.gender;
 	class_      = m_pp.class_;
@@ -734,42 +760,16 @@ void Client::RemoveShroud(bool send_updates)
 	SetMaxHP();
 	SendHPUpdate();
 
-	// Re-send OP_Shroud carrying the restored real profile. The client's
-	// shroud apply (eqgame+0x4C2EA0) is the only verb that rewrites its
-	// in-memory character profile; without it the client keeps the shroud's
-	// class/race/level and every class-gated UI element (spell bar, combat
-	// window, hotbars) stays broken until zone-in.
 	m_pp.cur_hp    = GetHP();
 	m_pp.mana      = current_mana;
 	m_pp.endurance = current_endurance;
 
-	SendShroudTransform(this, m_pp, m_shroud_saved_size);
-	ShroudDiag("RemoveShroud sent OP_Shroud: mob(race=%u gender=%u class=%u lvl=%u texture=%u helm=%u size=%.1f)",
+	ShroudDiag("RemoveShroud reload: mob(race=%u gender=%u class=%u lvl=%u texture=%u helm=%u size=%.1f)",
 	           race, gender, class_, level, texture, helmtexture, size);
 
-	// Stand up: the shroud/transform cycle can leave the client showing the
-	// feign/lying state.
-	SendAppearancePacket(AppearanceType::Animation, Animation::Standing);
-
-	// Restore the illusion with the real appearance (a zeroed AppearanceStruct
-	// does not reliably clear a monster-race form).
-	AppearanceStruct appearance{};
-	appearance.race_id        = m_pp.race;
-	appearance.gender_id      = m_pp.gender;
-	appearance.texture        = m_shroud_saved_texture;
-	appearance.helmet_texture = m_shroud_saved_helmtexture;
-	appearance.size           = m_shroud_saved_size;
-	appearance.send_effects   = true;
-	SendIllusionPacket(appearance);
-
-	// Live-like mode: restore the real AA window (shroud ranks were purged).
-	if (RuleI(Custom, ShroudLiveMode) & 4) {
-		SendAlternateAdvancementTable();
-		SendAlternateAdvancementPoints();
-		SendAlternateAdvancementStats();
-	}
-
 	Message(Chat::Yellow, "You return to your natural form.");
+
+	ReloadForShroudTransition("leave shroud");
 }
 
 void Client::SaveShroudSnapshot(uint32 shroud_id, bool native_template)
@@ -862,7 +862,8 @@ bool Client::IsShroudAA(const AA::Ability *ability)
 	// form's own display/cap set via IsShroudAbilityForCurrentForm /
 	// ShroudAbilityMaxRank.
 	if (ability->category == AACategory::ShroudPassive
-		|| ability->category == AACategory::ShroudActive) {
+		|| ability->category == AACategory::ShroudActive
+		|| SpiritShroud::NativeAbility(ability->id)) {
 		return true;
 	}
 
@@ -1160,61 +1161,6 @@ void Client::ShroudReapplyPurchases(bool spend)
 // write, which would have filed records under shroud_id 0 (invisible to the
 // per-form read) now that the table is keyed by form.
 
-// Stamps the live-like overrides (rule bits, monster points, owned shroud AA
-// ranks) onto the transform packet so ENCODE(OP_Shroud) can write them into
-// the 20472-byte profile block.
-void Client::FillShroudTransformExtras(ShroudSelf_Struct *shroud)
-{
-	if (!shroud) {
-		return;
-	}
-
-	// Transform packets sent while NOT shrouded (the unshroud re-send) must
-	// carry a clean block: flag bits stamped while a rule was flipped on would
-	// otherwise keep the client's spellbook/AA swap or inventory hidden after
-	// the form is removed.
-	shroud->live_mode = m_shrouded ? static_cast<uint32>(RuleI(Custom, ShroudLiveMode)) : 0;
-	// Native forms always carry the full shroud stamping: their compact
-	// profile expects the shroud flags set and the monster-point fields fed
-	// from the real AA pool, regardless of the legacy ShroudLiveMode bitmask.
-	if (m_spirit_shroud_template) {
-		shroud->live_mode = 15;
-	}
-	shroud->monster_points       = m_spirit_shroud_template ? m_pp.aapoints : m_shroud_points;
-	shroud->monster_points_spent = m_spirit_shroud_template ? m_pp.aapoints_spent : m_shroud_points_spent;
-
-	shroud->shroud_aa_count = 0;
-	if (!(shroud->live_mode & 4) || !zone) {
-		return;
-	}
-
-	for (const auto &entry : aa_ranks) {
-		if (entry.second.first == 0) {
-			continue;
-		}
-
-		auto *ability = zone->GetAlternateAdvancementAbility(entry.first);
-		if (!IsShroudAA(ability)) {
-			continue;
-		}
-
-		// Emit BOTH id forms (ability id + first rank id): the client's
-		// ownership checks for the profile block's AA array have only been
-		// partially decoded, and the forms cost nothing at this scale.
-		const uint32 id_forms[2]  = {static_cast<uint32>(ability->id), ability->first_rank_id};
-		const uint32 rank_spell   = static_cast<uint32>(ability->first->spell);
-		for (int f = 0; f < 2; ++f) {
-			if (shroud->shroud_aa_count >= ShroudSelf_Struct::kMaxShroudAAs) {
-				break;
-			}
-			const uint32 n              = shroud->shroud_aa_count++;
-			shroud->shroud_aa_ids[n]    = id_forms[f];
-			shroud->shroud_aa_values[n] = entry.second.first;
-			shroud->shroud_aa_spells[n] = rank_spell;
-		}
-	}
-}
-
 // Called once on zone-in. If the character has a persisted shroud, re-apply it:
 // shrouds survive zoning/relogging and are only removed at the Shroudkeeper. A
 // legacy row with shroud_id 0 (written before persistence existed) is cleared.
@@ -1309,105 +1255,189 @@ void Client::LoadAndApplyShroudState()
 	CalcBonuses();
 	SetMaxHP();
 
-	// The RoF2 client crashes if OP_Shroud arrives while it is still building
-	// the zone (its self-spawn re-add dereferences a null local player).
-	// Defer the packet send until Process() sees the zone settle.
-	m_shroud_zonein_pending = true;
-	m_shroud_zonein_at      = Timer::GetTimeSeconds() + 3;
-
+	// No packet to defer any more: this runs before the zone-in profile is
+	// serialized, so the client builds the form from the profile itself.
 	LogInfo(
-		"Client [{}] has a persisted shroud [{}]; client re-apply deferred to zone settle",
+		"Client [{}] has a persisted shroud [{}]; form applied to the zone-in profile",
 		GetCleanName(),
 		shroud_id
 	);
 }
 
-// Delivers the current shroud state to this client (used by the deferred
-// zone-in path). The mob appearance and profile were already put in place
-// when the shroud was applied; this only sends the client-visible packets.
-void Client::ResendShroudState()
+// Zone-in extras for a character that logs in already wearing a form: the
+// profile carries the class/level/AA, but the shroud UI packets (progress,
+// monster points, the template's stat blob) are not profile fields and are not
+// re-sent by the connect sequence. Called once from CompleteConnect after the
+// bulk sends; the runtime transform used to carry these, and it is gone.
+// ---------------------------------------------------------------------------
+// Form inventory view.
+//
+// The legacy strip was a transform-packet trick: the OP_Shroud extras carried an
+// empty inventory so the client showed no gear. The form is applied by the
+// zone-in profile now, which ships the real items, so a transformed character
+// would wear its own equipment and bank. Send the form's own loadout instead --
+// the native catalog's spirit_shroud_starter_equipment, matched by
+// progression/branch/level for legacy forms -- and send nothing else: no
+// possessions, no bank, no bags. The unshroud reload re-sends the real
+// inventory from the database. A form with no authored loadout arrives bare,
+// which is the intended "the form brings its own gear" model.
+// ---------------------------------------------------------------------------
+uint32 Client::ShroudInventoryTemplateId() const
 {
-	m_shroud_zonein_pending = false;
-
-	// Native forms re-send through the native protocol path (their metadata
-	// and AA set live in m_spirit_shroud_definition, not the quest catalog).
-	if (IsSpiritShrouded()) {
-		m_pp.cur_hp    = GetHP();
-		m_pp.mana      = current_mana;
-		m_pp.endurance = current_endurance;
-
-		SendShroudTransform(this, m_pp, SpiritShroudModelSize() > 0.0f ? SpiritShroudModelSize() : size);
-		SendHPUpdate();
-
-		AppearanceStruct appearance{};
-		appearance.race_id        = race;
-		appearance.gender_id      = gender;
-		appearance.texture        = texture;
-		appearance.helmet_texture = helmtexture;
-		appearance.size           = size;
-		appearance.send_effects   = true;
-		SendIllusionPacket(appearance);
-
-		SendAlternateAdvancementTable();
-		SendAlternateAdvancementPoints();
-		SendAlternateAdvancementStats();
-		SendSpiritShroudProgress();
-
-		LogInfo("Client [{}] re-applied native Spirit Shroud form [{}] after zone settle",
-			GetCleanName(), m_spirit_shroud_template);
-		return;
+	if (m_spirit_shroud_template) {
+		return m_spirit_shroud_template;
 	}
 
-	// Live-like mode: re-mirror the session's purchases BEFORE the transform
-	// so the profile block's AA array (written at transform time) carries the
-	// owned shroud ranks. The connect sequence ran ClearAAs + the real-AA
-	// reload after this shroud's points were loaded.
-	if (RuleI(Custom, ShroudLiveMode) & 4) {
-		ShroudReapplyPurchases(false);
+	if (!m_shroud_id) {
+		return 0;
 	}
-
-	m_pp.cur_hp    = GetHP();
-	m_pp.mana      = current_mana;
-	m_pp.endurance = current_endurance;
-
-	SendShroudTransform(this, m_pp, size);
-	SendHPUpdate();
-
-	AppearanceStruct appearance{};
-	appearance.race_id        = race;
-	appearance.gender_id      = gender;
-	appearance.texture        = texture;
-	appearance.helmet_texture = helmtexture;
-	appearance.size           = size;
-	appearance.send_effects   = true;
-	SendIllusionPacket(appearance);
 
 	ShroudDefinition def;
-	if (LoadShroud(m_shroud_id, def)) {
-		Message(Chat::Yellow, "You are still shrouded as %s.", def.name.c_str());
-
-		// Rebuild this form's guide-content gate *before* the AA table goes out.
-		// Without this the marks still describe the previously worn form (or are
-		// empty), and the client keeps those rows: that is how an Air Elemental
-		// Illusionist ended up listing a Sporali's fungal lines after zoning while
-		// shrouded.
-		LoadShroudAbilityCaps(def.progression, def.branch, def.level);
+	if (!LoadShroud(m_shroud_id, def)) {
+		return 0;
 	}
 
-	// Live-like mode: purchases were re-mirrored above (before the transform);
-	// refresh the AA window with the full shroud-aware data set.
-	if (RuleI(Custom, ShroudLiveMode) & 4) {
-		SendAlternateAdvancementTable();
-		SendAlternateAdvancementPoints();
-		SendAlternateAdvancementStats();
-		if (def.id != 0) {
-			SendShroudRespondStats(this, def);
-			SendShroudProgress(this, def);
-			SendShroudPointsPackets(this, def.id);
+	const std::string query = fmt::format(
+		"SELECT `id` FROM `spirit_shroud_templates` "
+		"WHERE `progression_name`='{}' AND `branch_name`='{}' AND `level`={} LIMIT 1",
+		Strings::Replace(def.progression, "'", "''"),
+		Strings::Replace(def.branch, "'", "''"),
+		def.level
+	);
+	auto results = content_db.QueryDatabase(query);
+	if (!results.Success() || results.RowCount() == 0) {
+		return 0;
+	}
+
+	return Strings::ToUnsignedInt((*results.begin())[0], 0);
+}
+
+// The body lives in a free function so the SEH frame below carries no C++
+// objects (MSVC forbids unwinding objects in a __try function).
+static void SendShroudInventoryViewInner(Client *c)
+{
+	EQ::OutBuffer ob;
+
+	const uint32 template_id = c->ShroudInventoryTemplateId();
+	if (template_id) {
+		const std::string query = fmt::format(
+			"SELECT `slot_id`,`item_id` FROM `spirit_shroud_starter_equipment` "
+			"WHERE `template_id`={} ORDER BY `slot_id`",
+			template_id
+		);
+		auto results = content_db.QueryDatabase(query);
+		if (results.Success()) {
+			for (auto row = results.begin(); row != results.end(); ++row) {
+				const int16 slot = static_cast<int16>(Strings::ToInt(row[0], 0));
+				const uint32 item_id = Strings::ToUnsignedInt(row[1]);
+				if (slot <= 0 || item_id == 0) {
+					continue;
+				}
+
+				const EQ::ItemData* data = database.GetItem(item_id);
+				if (!data) {
+					continue;
+				}
+
+				EQ::ItemInstance inst(data, 1);
+				inst.Serialize(ob, slot);
+			}
 		}
 	}
 
-	LogInfo("Client [{}] re-applied persisted shroud [{}] after zone settle", GetCleanName(), m_shroud_id);
+	auto outapp = new EQApplicationPacket(OP_CharInventory);
+	outapp->size    = ob.size();
+	outapp->pBuffer = ob.detach();
+	c->QueuePacket(outapp);
+	safe_delete(outapp);
+}
+
+// The filtered form-inventory view is cosmetic: the real loadout is enforced by
+// IssueNativeStarterItems. A fault here used to kill the zone during the
+// shrouded zone-in (Handle_Connect_OP_ZoneEntry) and left the character unable
+// to log back in -- the form state re-applies before the crash, so every
+// reconnect hit the same fault. Contained to a logged skip; the client simply
+// misses the form-inventory packet.
+// Logging lives in its own function: an SEH function may construct no
+// unwinding objects anywhere (C2712).
+static void SendShroudInventoryViewFaulted(unsigned long long code)
+{
+	LogF(Logs::General, Logs::Crash, "Shroud inventory view faulted (code [0x{:X}]); the form-inventory packet was skipped",
+		code);
+}
+
+void Client::SendShroudInventoryView()
+{
+	// The handler scope may not construct objects (C2712), so the code is
+	// captured in the filter expression and logged after the SEH frame.
+	DWORD seh_code = 0;
+	__try {
+		SendShroudInventoryViewInner(this);
+	} __except (seh_code = GetExceptionCode(), EXCEPTION_EXECUTE_HANDLER) {
+		;
+	}
+	if (seh_code) {
+		SendShroudInventoryViewFaulted(seh_code);
+	}
+}
+
+void Client::SendShroudZoneInState()
+{
+	if (!m_shrouded) {
+		return;
+	}
+
+	if (IsSpiritShrouded()) {
+		SendSpiritShroudProgress();
+		// Do NOT send OP_ClearAA here. The zone-in profile that this runs after
+		// already carries the form's AA array (ReapplyNativeShroud/SetAA), and
+		// OP_ClearAA arrives *after* that profile, wiping the ownership the
+		// client just received -- the AA window then lists nothing at all, owned
+		// or trainable. The table send below refreshes the definitions; the
+		// profile is the authority for what the form owns.
+		uint32 owned_entries = 0;
+		for (const auto &aa : m_pp.aa_array) {
+			if (aa.AA) {
+				++owned_entries;
+			}
+		}
+		LogInfo("[SHROUD-AA] zone-in form [{}] profile AA entries [{}] pool [{}] spent [{}]",
+			m_spirit_shroud_template, owned_entries, m_pp.aapoints, m_pp.aapoints_spent);
+		// The client keeps its AA list across the same-zone reload, and a row is
+		// never evicted by omitting it or by re-sending it with a zero class mask
+		// (that only greys it). Drop the list first, then advertise the form's
+		// ranks alone, so the window holds exactly the form's kit.
+		SendClearPlayerAA();
+		SendAlternateAdvancementTable();
+		SendAlternateAdvancementPoints();
+		SendAlternateAdvancementStats();
+		// The shroud window's purchase button reads the state-update points
+		// packet (the old-engine branch below sends it for quest forms); the
+		// native pool lives in the AA points fields while transformed. Without
+		// this the window believes the monster pool is empty and the buy click
+		// never leaves the client.
+		auto *shroud_points = new EQApplicationPacket(OP_ShroudStateUpdate, 8);
+		reinterpret_cast<uint32 *>(shroud_points->pBuffer)[0] = m_pp.aapoints;
+		reinterpret_cast<uint32 *>(shroud_points->pBuffer)[1] = m_pp.aapoints_spent;
+		FastQueuePacket(&shroud_points);
+		return;
+	}
+
+	ShroudDefinition def;
+	if (!LoadShroud(m_shroud_id, def)) {
+		return;
+	}
+
+	Message(Chat::Yellow, "You are still shrouded as %s.", def.name.c_str());
+
+	if (RuleI(Custom, ShroudLiveMode) & 4) {
+		SendAlternateAdvancementTable();
+		SendAlternateAdvancementPoints();
+		SendAlternateAdvancementStats();
+		SendShroudRespondStats(this, def);
+		SendShroudProgress(this, def);
+		SendShroudPointsPackets(this, def.id);
+	}
 }
 
 void Client::Handle_OP_Shroud(const EQApplicationPacket* app)
@@ -1447,6 +1477,10 @@ void Client::Handle_OP_ShroudSelect(const EQApplicationPacket* app)
 		shroud_id,
 		app->size
 	);
+
+	// Leave the client's "transformation in progress" modal before any path that
+	// can zone it (ApplyShroud/RemoveShroud now reload).
+	SendShroudSelectComplete();
 
 	if (shroud_id == 0) {
 		RemoveShroud();

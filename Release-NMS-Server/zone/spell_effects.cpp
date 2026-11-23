@@ -825,6 +825,15 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 						break;
 					}
 
+					// Re-charming a pet we already own is a refresh: AddBuff
+					// above has already refreshed the charm buff, so keep the
+					// pet's current hate and pet order and skip the landing
+					// block. Falling through here used to hit IsPetAllowed's
+					// duplicate-origin rejection and print a spurious failure.
+					if (caster->IsMyPet(this)) {
+						break;
+					}
+
 					if (caster->IsClient() && !caster->IsPetAllowed(spell_id)) {
 						Message(Chat::SpellFailure, "You may not charm an additional creature with this spell.");
 						break;
@@ -3340,7 +3349,17 @@ bool Mob::SpellEffect(Mob* caster, uint16 spell_id, float partial, int level_ove
 			}
 
 			case SE_PersistentEffect: {
-				MakeAura(spell_id);
+				// A client's ground-target ring aura is created once by the caster, at
+				// the ring; see the TargetRing branch of Mob::SpellFinished. NPC casts
+				// never populate ring coordinates, so they keep the per-target path.
+				const bool client_ring =
+					caster != nullptr &&
+					caster->IsClient() &&
+					spells[spell_id].target_type == ST_Ring;
+
+				if (!client_ring) {
+					MakeAura(spell_id);
+				}
 				break;
 			}
 
@@ -4091,7 +4110,7 @@ bool Mob::IsGroupSuspendableBuff(uint16 spell_id, Buffs_Struct buff) {
 	Client* client = GetOwnerOrSelf()->CastToClient();
 
 	if (caster && client) {
-		if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(client))) {
+		if (caster == client || (client->GetGroup() && client->GetGroup()->IsGroupMember(caster))) {
 			if (GetSpellEffectIndex(spell_id, SE_DivineAura) == -1) {
 				if (caster->GetInv().HasClickEffect(spell_id)) {
 					return true;
@@ -4474,7 +4493,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_Invisibility:
 		case SE_InvisVsAnimals:
 		case SE_InvisVsUndead: {
-			if (buff.ticsremaining > 3) {
+			if (buff.ticsremaining > 3 && !IsGroupSuspendableBuff(buff.spellid, buff)) {
 				if (!IsBardSong(buff.spellid)) {
 					double break_chance = 2.0;
 					if (caster) {
@@ -4498,7 +4517,7 @@ void Mob::DoBuffTic(const Buffs_Struct &buff, int slot, Mob *caster)
 		case SE_Invisibility2:
 		case SE_InvisVsUndead2: {
 			if (!IsBardSong(buff.spellid)) {
-				if (buff.ticsremaining <= 3 && buff.ticsremaining > 1) {
+				if (buff.ticsremaining <= 3 && buff.ticsremaining > 1 && !IsGroupSuspendableBuff(buff.spellid, buff)) {
 					MessageString(Chat::Spells, INVIS_BEGIN_BREAK);
 				}
 			}
@@ -4843,6 +4862,12 @@ void Mob::BuffFadeBySlot(int slot, bool iRecalcBonuses, bool suppress, uint32 su
 				{
 					owner->RemovePet(this);
 					owner->ValidatePetList();
+
+					// The pet list shrank, so re-align bag gear to the new
+					// pet ordinals (dual-charm pets each carry their own bag).
+					if (owner->IsClient() && IsNPC()) {
+						owner->CastToClient()->DoPetBagResync(CastToNPC()->GetPetOriginClass());
+					}
 
 					// NPCs can charm too (charm application is caster->AddPet with no
 					// client requirement) -- CastToClient() on an NPC owner is a bad

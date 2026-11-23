@@ -1933,6 +1933,7 @@ const NPCType *ZoneDatabase::LoadNPCTypesData(uint32 npc_type_id, bool bulk_load
 		t->charm_atk              = n.charm_atk;
 		t->skip_global_loot       = n.skip_global_loot != 0;
 		t->rare_spawn             = n.rare_spawn != 0;
+		t->rare_creature          = n.rare_creature != 0;
 		t->stuck_behavior         = n.stuck_behavior;
 		t->use_model              = n.model;
 		t->flymode                = n.flymode;

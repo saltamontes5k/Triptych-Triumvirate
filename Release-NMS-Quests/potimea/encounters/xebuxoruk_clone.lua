@@ -261,7 +261,7 @@ local function deliver_monologue(self)
 	for _, line in ipairs(MONOLOGUE) do
 		self:Shout(line)
 	end
-	self:Emote("smirks as the last word leaves him. 'Enough. Your time ends HERE.'")
+	event_emote(self, "smirks as the last word leaves him. 'Enough. Your time ends HERE.'")
 	return true
 end
 
@@ -272,7 +272,7 @@ function evt_xeb_say(e)
 
 	-- Already engaged: the fight has his whole attention.
 	if not deliver_monologue(e.self) then
-		e.self:Emote("ignores your hail -- the fight has his whole attention.")
+		event_emote(e.self, "ignores your hail -- the fight has his whole attention.")
 		return
 	end
 
@@ -291,7 +291,7 @@ function evt_xeb_combat(e)
 		-- the same monologue the hail does. If a hail already pulled him,
 		-- fall back to the short taunt.
 		if not deliver_monologue(e.self) then
-			e.self:Emote("smirks, 'Your time is nearly spent!'")
+			event_emote(e.self, "smirks, 'Your time is nearly spent!'")
 		end
 	else
 		eq.stop_all_timers()

@@ -116,6 +116,1035 @@ void PatchA(LPVOID address, const void *dwValue, SIZE_T dwBytes) {
   VirtualProtect((void *)address, dwBytes, oldProtect, &oldProtect);
 }
 
+// --- Evolution tab enumeration patch -------------------------------------
+// The Evolution tab populate (sub_692050) iterates client item-array
+// indices 0..22 (worn slots) only, so loose evolving items - including
+// lineage augs sitting in bags or main inventory - never appear in the tab
+// and players have no visible marker for them. The populate's loop tail is
+//
+//   0x6922AC  83 FD 16        cmp ebp, 16h
+//   0x6922AF  0F 8E rel32     jle loop_head (0x6920C0)
+//
+// This patch redirects the jle into a cave that compares the index against
+// a wider bound before falling through to the loop-exit path. Out-of-range
+// indices return null from the item accessor (it bounds-checks against the
+// array size) and are skipped by the populate's own null check. Socketed
+// augments are sub-items of their worn parent, not array entries - they
+// accrue and evolve server-side regardless of this listing.
+// Static VAs for the populate's loop tail. Every use below is rebased with
+// the tree-wide (static - 0x400000) + baseAddress convention: the exe does
+// not reliably load at its preferred base (mandatory ASLR relocates even
+// non-DYNAMIC_BASE images), and an uncorrected read here faults during
+// DllMain, which the loader surfaces as 0xc0000142 at client start.
+// Listing bound for the Evolution tab populate. 22 = the stock loop's own
+// bound (worn slots only); 32767 = the whole client item array (bag/bank items
+// list too). Which one is live is EvolvingItems:TabExcludeInventoryItems
+// (server rule), delivered by the TAB_CONFIG evolve packet at zone-in; the
+// default here matches the rule's default so the tab behaves the same even
+// before the first packet arrives.
+static DWORD EvoTabEnumerationBound = 22;
+// Mirrors the rule for the uid-path append gate.
+static DWORD g_evoExcludeInventory = 1;
+
+static void InitializeEvolvingTabDetours();
+
+static void InitializeEvolvingTabPatch() {
+  __try {
+    const DWORD base = baseAddress;
+    if (!base) {
+      return;
+    }
+    const DWORD EvoPopulateCmpAddr = 0x006922AC - 0x400000 + base; // 83 FD 16 (cmp ebp, 16h)
+    const DWORD EvoPopulateJleAddr = 0x006922AF - 0x400000 + base; // 0F 8E rel32
+    const DWORD EvoLoopHeadAddr    = 0x006920C0 - 0x400000 + base; // loop head
+    const DWORD EvoLoopExitAddr    = 0x006922B5 - 0x400000 + base; // loop exit (mov ecx, [esi+2ACh])
+
+    // Signature guard: only patch the known build, skip gracefully otherwise.
+    unsigned char expected[] = {0x83, 0xFD, 0x16, 0x0F, 0x8E};
+    unsigned char actual[5]  = {};
+    memcpy(actual, (const void *)EvoPopulateCmpAddr, 5);
+    if (memcmp(actual, expected, 5) != 0) {
+      return;
+    }
+
+  BYTE *cave = (BYTE *)VirtualAlloc(nullptr, 32, MEM_COMMIT | MEM_RESERVE,
+                                    PAGE_EXECUTE_READWRITE);
+  if (!cave) {
+    return;
+  }
+
+  // mov eax, [bound]; cmp ebp, eax; jle loop_head; jmp loop_exit
+  BYTE code[] = {
+      0xA1, 0x00, 0x00, 0x00, 0x00,               // mov eax, [bound_abs32]
+      0x3B, 0xE8,                                  // cmp ebp, eax
+      0x0F, 0x8E, 0x00, 0x00, 0x00, 0x00,          // jle loop_head (rel32)
+      0xE9, 0x00, 0x00, 0x00, 0x00,                // jmp loop_exit (rel32)
+  };
+
+  *(DWORD *)(code + 1) = (DWORD)&EvoTabEnumerationBound;
+
+  DWORD jle_next = (DWORD)cave + 13;               // after the 6-byte jle
+  *(DWORD *)(code + 9) = EvoLoopHeadAddr - jle_next;
+
+  DWORD jmp_next = (DWORD)cave + 18;               // after the 5-byte jmp
+  *(DWORD *)(code + 14) = EvoLoopExitAddr - jmp_next;
+
+  memcpy(cave, code, sizeof(code));
+
+  // Redirect the loop tail's jle into the cave (jmp rel32 + nop padding).
+  BYTE redirect[6];
+  redirect[0] = 0xE9;
+  *(DWORD *)(redirect + 1) = (DWORD)cave - (EvoPopulateJleAddr + 5);
+  redirect[5] = 0x90;
+
+    PatchA((LPVOID)EvoPopulateJleAddr, redirect, 6);
+
+    InitializeEvolvingTabDetours();
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    // A patch fault must never fail client load; the tab just stays stock.
+  }
+}
+
+// --- Friend consider display patch ------------------------------------------
+// The consider renderer (sub_522E20, the OP_Consider 0x742b S->C handler's
+// worker) reads the faction byte at packet+8 and owns the full
+// faction->phrase switch (string ids 12212-12220, ally..scowls, 1:1 with the
+// server's FACTION_VALUE) -- but the switch is gated on SpawnType != 0
+// (spawn+0x125), so player targets always fall to the stock Indifferent line
+// and the server's consider byte (4 = Amiably for /friend targets, 1 reserved
+// for the spouse round) is never rendered. Full decode:
+// Release-NMS-Deploy/consider-display-re-findings.md. The gate is exactly
+// one conditional jump:
+//
+//   0x522FA1  80 BA 25 01 00 00 00   cmp byte ptr [edx+125h], 0
+//   0x522FA8  0F 84 C6 00 00 00      jz 0x523074   (indifferent line)
+//   0x522FAE  83 FF 01               cmp edi, 1    (faction switch begins)
+//
+// NOPing the 6-byte jz drops players into the switch too; the next
+// instruction re-sets flags with its own cmp, so no stale state leaks.
+// Faction 5 -- the stock Indifferent byte -- matches no case and lands on
+// the same 12216 string as before, so stranger cons are byte-for-byte
+// unchanged. Corpses never reach this renderer (the 0x742b dispatcher
+// answers them first), NPC cons keep their stock switch path, and the
+// level-phrase/con-color path reads the real SpawnType elsewhere, so only
+// the regards line can differ. A stock EQEmu server sends faction 1
+// (Ally) for every player con, so this dll would show warmly cons there --
+// it ships with the NMS client package and is supported on the NMS server.
+static void InitializeConsiderGatePatch() {
+  __try {
+    const DWORD base = baseAddress;
+    if (!base) {
+      return;
+    }
+    const DWORD ConsiderGateCmpAddr = 0x00522FA1 - 0x400000 + base; // cmp byte [edx+125h],0
+    const DWORD ConsiderGateJzAddr  = 0x00522FA8 - 0x400000 + base; // 0F 84 rel32
+
+    // Signature guard: only patch the known build, skip gracefully otherwise.
+    unsigned char expected[] = {
+        0x80, 0xBA, 0x25, 0x01, 0x00, 0x00, 0x00, // cmp byte ptr [edx+125h], 0
+        0x0F, 0x84, 0xC6, 0x00, 0x00, 0x00,       // jz 0x523074 (indifferent line)
+    };
+    unsigned char actual[sizeof(expected)] = {};
+    memcpy(actual, (const void *)ConsiderGateCmpAddr, sizeof(expected));
+    if (memcmp(actual, expected, sizeof(expected)) != 0) {
+      return;
+    }
+
+    BYTE nops[6] = {0x90, 0x90, 0x90, 0x90, 0x90, 0x90};
+    PatchA((LPVOID)ConsiderGateJzAddr, nops, 6);
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    // A patch fault must never fail client load; the con stays stock.
+  }
+}
+
+// --- Evolution tab socketed-aug rows (Phase 2) ------------------------------
+// The populate only lists client item-ARRAY entries; socketed augments live
+// nested inside their parent, so no loop bound can reach them. The server's
+// per-kill EvolveItem pushes (OP_EvolveItem action 0, the EvolveItemToggle
+// wire shape) are the only signal naming them client-side. Tap the client's
+// evolve handler (sub_461120, __cdecl, rets clean: verified 'retn') to
+// collect those unique ids, then after every populate pass resolve each id
+// through the client's uid lookup (sub_586180, top-level items ONLY - nested
+// augment children are not registered in it, so a miss falls through to the
+// child search below) and append a row mirroring the stock column build:
+//   rowAdd   sub_8580C0 __stdcall(&cxstr, -1, tag, 0, nullptr) -> row index
+//   col icon sub_857540 __thiscall(ctrl, row, col, iconRes)
+//   col text sub_8575B0 __thiscall(ctrl, row, col, &cxstr)
+//   strings  sub_805C20/sub_805DE0 __thiscall(&cxstr, cstr); free sub_805B20
+//            __stdcall(buf); "%%d%%" via sub_8079C0 __cdecl(&cxstr, fmt, int)
+// Item state offsets: progress double +32, evolve level +264 (0x108),
+// activated byte +306 (0x132), isEvolving +268. Every fetched item holds a
+// reference (+4 refcount) that must be released (InterlockedDecrement,
+// vtable+4 dtor at zero) - the stock populate's own discipline.
+// Dedupe: one walk of the same array the trampoline just listed (non-null +
+// isEvolving), compared by resolved pointer, so worn/bagged items - whose
+// uids also appear in the pushes - never double-row.
+
+typedef void *(__thiscall *EvoLookup_t)(void *thiz, void **out, unsigned int uidLo,
+                                        unsigned int uidHi, void *slotOut);
+typedef void   (__thiscall *EvoAccessor_t)(void *arrThis, void **out, int index);
+// sub_8580C0 is __thiscall: ecx = the list control, five stack args
+// (stock: mov ecx,[esi+2ACh] ... push 0,0,tag,-1,&cxstr). Calling it without
+// ecx faults inside the control.
+typedef int    (__thiscall *EvoRowAdd_t)(void *ctrl, void *cx, int insertAt, int tag,
+                                         int arg4, const char *src);
+typedef void   (__thiscall *EvoColIcon_t)(void *ctrl, int row, int col, unsigned int iconRes);
+typedef void   (__thiscall *EvoColText_t)(void *ctrl, int row, int col, void *cx);
+typedef void * (__thiscall *EvoStrFromCstr_t)(void *cx, const char *cstr);
+typedef void   (__stdcall  *EvoStrFree_t)(void *buf);
+typedef void * (__cdecl   *EvoFmtPct_t)(void *cx, const char *fmt, ...);
+typedef unsigned int (__thiscall *EvoIconId_t)(void *item);
+typedef unsigned int (__thiscall *EvoIconRes_t)(void *iconMgr, unsigned int iconId);
+typedef const char *(__thiscall *EvoItemCstr_t)(void *item);
+typedef const char *(__thiscall *EvoStrTbl_t)(void *tbl, unsigned int id, unsigned int arg);
+typedef void   (__thiscall *EvoCtrlVoid_t)(void *ctrl);
+// sub_8582A0: deleteRow - selection fixup (ctrl+0x1f8), removal (0x859ad0), update.
+typedef void   (__thiscall *EvoDeleteRow_t)(void *ctrl, int row);
+typedef void   (__thiscall *EvoItemDtor_t)(void *item, int flag);
+
+static DWORD EvoRebase(DWORD staticVa) {
+  return staticVa - 0x400000 + baseAddress;
+}
+
+// Phase-2 diagnostics: nms_client_evolve.log records the tap/append chain so
+// a missing aug row names the stage that dropped it. Off in shipped builds -
+// the log grows by tens of KB per login and only matters while the tab itself
+// is being debugged. Build with /DNMS_EVOLVE_DIAG=1 to get it back.
+#ifndef NMS_EVOLVE_DIAG
+#define NMS_EVOLVE_DIAG 0
+#endif
+
+#if NMS_EVOLVE_DIAG
+static void EvoDiag(const char *fmt, ...) {
+  FILE *f = fopen("nms_client_evolve.log", "a");
+  if (!f) {
+    return;
+  }
+  SYSTEMTIME st;
+  GetLocalTime(&st);
+  fprintf(f, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond,
+          st.wMilliseconds);
+  va_list args;
+  va_start(args, fmt);
+  vfprintf(f, fmt, args);
+  va_end(args);
+  fprintf(f, "\n");
+  fclose(f);
+}
+#else
+// Diagnostics compiled out: the call sites stay in the source, the shipped
+// build makes every one of them a no-op and no log file is ever opened.
+#define EvoDiag(...) ((void)0)
+#endif
+
+// Rows built from socketed augments carry tag 0x40000000 | slot; the item
+// accessor is hooked to map that back to the augment CONTENTS so the client's
+// "Toggle Selected" acts on the augment instead of resolving the tag as an
+// array index and acting on its parent.
+static unsigned __int64 g_childRowUids[256];
+static int g_childRowCount = 0;
+static void *g_childArrThis = nullptr;
+static int g_childBound = 0;
+
+static unsigned __int64 g_evolveUids[512];
+struct EvoTrackEntry {
+  unsigned int pct;
+  unsigned int itemId; // server item id from pkt+4; 0 = server not updated yet
+  unsigned char act;
+};
+static EvoTrackEntry g_evolveTrack[512];
+static unsigned char g_evolveLogged[512]; // last verdict written for this uid
+static int g_evolveUidCount = 0;
+
+// Returns true only for a uid seen for the first time.
+static bool EvolveTrackUid(unsigned __int64 uid, unsigned int pct,
+                           unsigned int itemId, unsigned char act) {
+  for (int i = 0; i < g_evolveUidCount; i++) {
+    if (g_evolveUids[i] == uid) {
+      g_evolveTrack[i].pct = pct; // latest push wins
+      g_evolveTrack[i].act = act;
+      if (itemId) {
+        g_evolveTrack[i].itemId = itemId;
+      }
+      return false;
+    }
+  }
+  if (g_evolveUidCount >= 512) {
+    // A full table would go blind for the rest of the session; drop the oldest
+    // half instead. The next kill refills whatever is still live.
+    memmove(g_evolveUids, g_evolveUids + 256, sizeof(g_evolveUids[0]) * 256);
+    memmove(g_evolveTrack, g_evolveTrack + 256, sizeof(g_evolveTrack[0]) * 256);
+    memmove(g_evolveLogged, g_evolveLogged + 256, 256);
+    g_evolveUidCount = 256;
+    EvoDiag("tap table full, dropped the oldest 256 entries");
+  }
+  int n = g_evolveUidCount++;
+  g_evolveUids[n] = uid;
+  g_evolveTrack[n].pct = pct;
+  g_evolveTrack[n].itemId = itemId;
+  g_evolveTrack[n].act = act;
+  g_evolveLogged[n] = 0;
+  return true;
+}
+
+DETOUR_TRAMPOLINE_EMPTY(void __cdecl EvolveHandler_Trampoline(void *pkt, void *arg2));
+
+void __cdecl EvolveHandler_Detour(void *pkt, void *arg2) {
+  __try {
+    if (pkt) {
+      unsigned int action = *(unsigned int *)pkt;
+      // TAB_CONFIG (EvolvingItems:TabExcludeInventoryItems): the zone-in
+      // publish tells the dll which listing bound to use. Swallow it - the
+      // stock handler has no case for this action.
+      if (action == 5) {
+        const DWORD exclude = (*(DWORD *)((char *)pkt + 16)) & 1u;
+        if (exclude != g_evoExcludeInventory) {
+          g_evoExcludeInventory = exclude;
+          EvoTabEnumerationBound = exclude ? 22 : 32767;
+          EvoDiag("tab config: exclude inventory %u, bound %u", exclude,
+                  EvoTabEnumerationBound);
+        }
+        return;
+      }
+      unsigned __int64 uid = *(unsigned __int64 *)((char *)pkt + 8);
+      // EvolveItemToggle: action @0, unknown_004 @4 (spare, now the item id),
+      // unique_id @8, percentage @16, activated @20 (u32 on the wire).
+      if (action == 0 && uid &&
+          EvolveTrackUid(uid, *(unsigned int *)((char *)pkt + 16),
+                         *(unsigned int *)((char *)pkt + 4),
+                         *(BYTE *)((char *)pkt + 20))) {
+        EvoDiag("tap new uid %I64u pct=%u act=%u itemid=%u", (unsigned __int64)uid,
+                *(unsigned int *)((char *)pkt + 16),
+                (unsigned)*(BYTE *)((char *)pkt + 20),
+                *(unsigned int *)((char *)pkt + 4));
+      }
+    }
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+  }
+  EvolveHandler_Trampoline(pkt, arg2);
+}
+
+static void EvoReleaseItem(void *item) {
+  if (!item) {
+    return;
+  }
+  LONG refs = InterlockedDecrement((volatile LONG *)((char *)item + 4));
+  if (refs == 0) {
+    void *vtable = *(void **)item;
+    ((EvoItemDtor_t)(*(void **)((char *)vtable + 4)))(item, 1);
+  }
+}
+
+// Locate the row currently carrying this tag (count @ ctrl+0x1d8, row array @
+// ctrl+0x1dc, 0x128 per row, tag @ row+0x10); -1 when absent.
+static int EvolveFindRowByTag(void *ctrl, int tag) {
+  int count = *(int *)((char *)ctrl + 0x1D8);
+  void *rows = *(void **)((char *)ctrl + 0x1DC);
+  for (int r = 0; rows && r < count && r < 4096; r++) {
+    if (*(int *)((char *)rows + 0x128 * r + 0x10) == tag) {
+      return r;
+    }
+  }
+  return -1;
+}
+
+// Column writes for one appended row, shared by the insert path and the
+// post-refresh rewrite (SEH-guarded by the callers).
+static void EvolveWriteColumns(void *ctrl, int row, void *item, int pctOv,
+                               int actOv) {
+  const char *empty      = (const char *)EvoRebase(0x00A17E80); // Directory ""
+  void *iconMgr          = (void *)*(DWORD *)EvoRebase(0x00F71398);
+  void *strTbl           = (void *)*(DWORD *)EvoRebase(0x00DD25C4);
+  EvoStrFromCstr_t build = (EvoStrFromCstr_t)EvoRebase(0x00805C20);
+  EvoStrFromCstr_t apply = (EvoStrFromCstr_t)EvoRebase(0x00805DE0);
+  EvoStrFree_t     release = (EvoStrFree_t)EvoRebase(0x00805B20);
+  EvoColIcon_t     colIcon = (EvoColIcon_t)EvoRebase(0x00857540);
+  EvoColText_t     colText = (EvoColText_t)EvoRebase(0x008575B0);
+  EvoIconId_t      iconIdOf = (EvoIconId_t)EvoRebase(0x007B2FB0);
+  EvoIconRes_t     iconResOf = (EvoIconRes_t)EvoRebase(0x00665A60);
+  EvoItemCstr_t    nameOf = (EvoItemCstr_t)EvoRebase(0x007B06E0);
+  EvoStrTbl_t      strOf = (EvoStrTbl_t)EvoRebase(0x007D0660);
+  EvoFmtPct_t      fmt = (EvoFmtPct_t)EvoRebase(0x008079C0);
+
+  void *cx = nullptr;
+  unsigned int res = iconResOf(iconMgr, iconIdOf(item));
+  colIcon(ctrl, row, 0, res);
+
+  build(&cx, nameOf(item));
+  colText(ctrl, row, 1, &cx);
+  if (cx) {
+    release(cx);
+  }
+  cx = nullptr;
+
+  char buf[16];
+  sprintf(buf, "%d", *(int *)((char *)item + 264));
+  build(&cx, buf);
+  colText(ctrl, row, 2, &cx);
+  if (cx) {
+    release(cx);
+  }
+  cx = nullptr;
+
+  int pct = pctOv >= 0 ? pctOv : (int)*(double *)((char *)item + 32);
+  fmt(&cx, "%d%%", pct);
+  colText(ctrl, row, 3, &cx);
+  if (cx) {
+    release(cx);
+  }
+  cx = nullptr;
+
+  unsigned char active = actOv >= 0 ? (unsigned char)actOv
+                                    : *(BYTE *)((char *)item + 306);
+  if (active) {
+    apply(&cx, strOf(strTbl, 13219, 0)); // "yes"
+  } else {
+    apply(&cx, empty);
+  }
+  colText(ctrl, row, 4, &cx);
+  if (cx) {
+    release(cx);
+  }
+  cx = nullptr;
+}
+
+static int EvolveAppendRow(void *ctrl, void *item, int tag, int pctOv,
+                           int actOv) {
+  __try {
+  const char *empty      = (const char *)EvoRebase(0x00A17E80); // Directory ""
+  void *iconMgr          = (void *)*(DWORD *)EvoRebase(0x00F71398);
+  void *strTbl           = (void *)*(DWORD *)EvoRebase(0x00DD25C4);
+  EvoStrFromCstr_t build = (EvoStrFromCstr_t)EvoRebase(0x00805C20);
+  EvoStrFree_t     release = (EvoStrFree_t)EvoRebase(0x00805B20);
+  EvoRowAdd_t      rowAdd = (EvoRowAdd_t)EvoRebase(0x008580C0);
+
+  if (!iconMgr || !strTbl) {
+    EvoDiag("icon/string table not ready - not appending");
+    return -1;
+  }
+
+  void *cxRow = nullptr;
+  build(&cxRow, empty);
+  // Insert exactly like the stock populate does (sort flag untouched). The
+  // sorted path positions an EMPTY new row and returns a stale index, but the
+  // tag scan below locates the row wherever it landed, so the stale index no
+  // longer matters. The unsorted append this replaced skips the control's
+  // cell-storage path: three column writes (insert-time, tag-scanned, and the
+  // post-refresh rewrite) all landed on the scan-verified row and the first
+  // appended row still rendered blank - the cells themselves never existed.
+  int row = rowAdd(ctrl, &cxRow, -1, tag, 0, nullptr);
+  // The control may move the row during the insert; the tag travels with it,
+  // so locate the row that actually carries our tag and write the columns
+  // there.
+  {
+    int found = EvolveFindRowByTag(ctrl, tag);
+    int count = *(int *)((char *)ctrl + 0x1D8);
+    if (row < 64) {
+      EvoDiag("row tag %08x: insert returned %d, scan found %d count %d", tag, row,
+              found, count);
+    }
+    if (found >= 0) {
+      row = found;
+    }
+  }
+  if (cxRow) {
+    release(cxRow);
+  }
+  cxRow = nullptr;
+
+  EvolveWriteColumns(ctrl, row, item, pctOv, actOv);
+  return row;
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    EvoDiag("row build FAULTED (tag %d pct %d)", tag, pctOv);
+  }
+  return -1;
+}
+
+// One throwaway row that absorbs the first append after the stock populate.
+// The row-array grow doubles capacity (count*2+8, sub_8595D0), so the first
+// append is the only realloc, and that one row renders blank no matter how
+// its columns are written (five write strategies all landed on the
+// scan-verified row). The caller deletes this row once the real rows are in.
+static int EvolveAppendSacrificial(void *ctrl) {
+  __try {
+    const char *empty      = (const char *)EvoRebase(0x00A17E80);
+    EvoStrFromCstr_t build = (EvoStrFromCstr_t)EvoRebase(0x00805C20);
+    EvoStrFree_t     release = (EvoStrFree_t)EvoRebase(0x00805B20);
+    EvoRowAdd_t      rowAdd = (EvoRowAdd_t)EvoRebase(0x008580C0);
+    void *cxRow = nullptr;
+    build(&cxRow, empty);
+    // 0x20000000 has no augment-tag bit: the accessor hook passes it to the
+    // stock bounds-checked accessor, which answers null for it.
+    int row = rowAdd(ctrl, &cxRow, -1, 0x20000000, 0, nullptr);
+    if (cxRow) {
+      release(cxRow);
+    }
+    return row;
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    EvoDiag("sacrificial append FAULTED");
+  }
+  return -1;
+}
+
+// --- socketed-augment child rows -------------------------------------------
+// Socketed augments are CONTENTS children of their parent's contents array
+// (pContentsArray @+0xa8, count @+0xac, augs in slots 0..5). They are NOT in
+// the client's uid registry, so the stock handler's lookup misses them and
+// their instance fields (+0x20 progress, +0x132 activated) keep their
+// parse-time values; the wire item packet carries augments as bare item ids,
+// with no instance id and no progress block. Live progress therefore has to
+// come from the push, and the child has to be found by something else.
+//
+// Two handles are tried, cheapest first:
+//   * the child's own uid at +0xf8 (only works if children carry one - the
+//     one-shot dump below is what answers that);
+//   * the item id the server now writes into EvolveItemToggle.unknown_004,
+//     matched against the child's ITEMINFO::ItemNumber.
+// The dump is unconditional: gating it behind a lookup miss means it only runs
+// after an aug actually accrues, which is exactly the event under test.
+static bool g_evoDumpedThisZone = false;
+static void *g_evoLastWin = nullptr;
+static int g_evoLastUidCount = -1;
+
+static int EvoChildCount(void *parent) {
+  int n = *(int *)((char *)parent + 0xAC);
+  if (n < 0) {
+    return 0;
+  }
+  return n > 0x14 ? 0x14 : n;
+}
+
+// The item definition is reached through vtable slot 2 (byte offset 8): the
+// icon getter does exactly this before reading ITEMINFO::IconNumber at +0xf8.
+typedef void *(__thiscall *EvoGetDef_t)(void *item);
+static void *EvoItemDef(void *item) {
+  void *vtable = *(void **)item;
+  if (!vtable) {
+    return nullptr;
+  }
+  return ((EvoGetDef_t)(*(void **)((char *)vtable + 8)))(item);
+}
+
+static int EvoItemDefId(void *item) {
+  void *def = EvoItemDef(item);
+  if (!def) {
+    return 0;
+  }
+  return *(int *)((char *)def + 0xEC); // ITEMINFO::ItemNumber
+}
+
+static void EvolveDumpChildren(EvoAccessor_t accessor, void *arrThis, int bound) {
+  __try {
+  int lines = 0;
+  int parents = 0;
+  for (int i = 0; i <= bound && lines < 160 && parents < 48; i++) {
+    void *parent = nullptr;
+    accessor(arrThis, &parent, i);
+    if (!parent) {
+      continue;
+    }
+    int n = EvoChildCount(parent);
+    if (n > 0) {
+      parents++;
+      EvoDiag("CHILD parent idx=%d ptr=%p def=%d uid=%I64u n=%d", i, parent,
+              EvoItemDefId(parent),
+              *(unsigned __int64 *)((char *)parent + 0xF8), n);
+      lines++;
+      void *arr = *(void **)((char *)parent + 0xA8);
+      for (int s = 0; arr && s < n && lines < 160; s++) {
+        void *child = *(void **)((char *)arr + s * 4);
+        if (!child) {
+          continue;
+        }
+        EvoDiag("CHILD   s=%d ptr=%p def=%d uid=%I64u evo=%u lvl=%d pct=%d act=%u",
+                s, child, EvoItemDefId(child),
+                *(unsigned __int64 *)((char *)child + 0xF8),
+                (unsigned)*(BYTE *)((char *)child + 268),
+                *(int *)((char *)child + 264),
+                (int)*(double *)((char *)child + 32),
+                (unsigned)*(BYTE *)((char *)child + 306));
+        lines++;
+      }
+    }
+    EvoReleaseItem(parent);
+  }
+  EvoDiag("child dump done lines=%d parents=%d", lines, parents);
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    // A bad contents entry loses the dump, never the pass.
+    EvoDiag("child dump FAULTED (SEH swallowed)");
+  }
+}
+
+// Resolve one pushed id to a child CONTENTS and take a reference on it (the
+// caller releases). uid 0 = match by item id; def 0 = match by uid.
+static void *EvolveFindChild(EvoAccessor_t accessor, void *arrThis, int bound,
+                             unsigned __int64 uid, unsigned int def,
+                             bool requireEvolving) {
+  for (int i = 0; i <= bound; i++) {
+    void *parent = nullptr;
+    accessor(arrThis, &parent, i);
+    if (!parent) {
+      continue;
+    }
+    void *arr = *(void **)((char *)parent + 0xA8);
+    void *found = nullptr;
+    int n = EvoChildCount(parent);
+    for (int s = 0; arr && s < n; s++) {
+      void *child = *(void **)((char *)arr + s * 4);
+      if (!child) {
+        continue;
+      }
+      bool hit = false;
+      if (uid) {
+        hit = *(unsigned __int64 *)((char *)child + 0xF8) == uid;
+      }
+      if (!hit && def) {
+        hit = (unsigned)EvoItemDefId(child) == def &&
+              (!requireEvolving || *(BYTE *)((char *)child + 268));
+      }
+      if (hit) {
+        InterlockedIncrement((volatile LONG *)((char *)child + 4));
+        found = child;
+        break;
+      }
+    }
+    EvoReleaseItem(parent);
+    if (found) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
+// The client resolves a row's tag through the item accessor (sub_42DEC0); an
+// augment row's tag is not an array index, so hook it and return the socketed
+// CONTENTS. Everything else goes straight to the trampoline.
+// __thiscall cannot be spelled on a free function here; __fastcall carries the
+// same this-in-ecx / args-on-stack shape (the edx slot is unused).
+DETOUR_TRAMPOLINE_EMPTY(void __fastcall EvoAccess_Trampoline(void *arrThis,
+                                                             void *unusedEdx,
+                                                             void **out,
+                                                             int index));
+
+void __fastcall EvoAccess_Detour(void *arrThis, void *unusedEdx, void **out,
+                                 int index) {
+  if (out && (index & 0x40000000)) {
+    *out = nullptr;
+    const int slot = index & 0x3FFFFFFF;
+    if (slot >= 0 && slot < g_childRowCount && g_childArrThis) {
+      *out = EvolveFindChild((EvoAccessor_t)EvoAccess_Trampoline, g_childArrThis,
+                             g_childBound, g_childRowUids[slot], 0, false);
+    } else {
+      // The draw/refresh path resolving an augment tag to null would blank
+      // the row - keep the first few misses so the log can name it.
+      static int misses = 0;
+      if (misses < 20) {
+        misses++;
+        EvoDiag("accessor miss tag %08x slot %d childRowCount %d arrThis %p",
+                (unsigned)index, slot, g_childRowCount, g_childArrThis);
+      }
+    }
+    return;
+  }
+  EvoAccess_Trampoline(arrThis, unusedEdx, out, index);
+}
+
+static void EvolveTabAppendPass() {
+  __try {
+    // The child walk does not need any packet: socketed augments must list the
+    // moment the tab opens, before the first push of the session.
+    if (!baseAddress) {
+      return;
+    }
+    void *win = (void *)*(DWORD *)EvoRebase(0x00D1FC8C);
+    if (!win) {
+      return;
+    }
+    void *ctrl = (void *)*(DWORD *)((char *)win + 0x2AC); // EI_ItemList
+    if (!ctrl) {
+      return;
+    }
+    void *mgr = (void *)*(DWORD *)EvoRebase(0x00DD261C);
+    if (!mgr) {
+      return;
+    }
+
+    DWORD q = *(DWORD *)((char *)mgr + 8);
+    void *arrThis = (char *)mgr + *(DWORD *)(q + 4) + 8;
+    EvoAccessor_t accessor = (EvoAccessor_t)EvoRebase(0x0042DEC0);
+    int bound = (int)EvoTabEnumerationBound;
+    if (bound > 32767) {
+      bound = 32767;
+    }
+
+    // The inventory window is rebuilt per zone/character: re-arm the dump.
+    if (win != g_evoLastWin) {
+      g_evoLastWin = win;
+      g_evoDumpedThisZone = false;
+      EvoDiag("populate win %p ctrl %p mgr %p base %p uids %d", win, ctrl, mgr,
+              (void *)baseAddress, g_evolveUidCount);
+    }
+    if (!g_evoDumpedThisZone) {
+      g_evoDumpedThisZone = true;
+      EvolveDumpChildren(accessor, arrThis, bound);
+    }
+
+    // One walk mirrors the trampoline's own pass: keep the pointers it listed
+    // (non-null + isEvolving) and their array indices, release everything.
+    static void *listed[32768];
+    static int listedIdx[32768];
+    int listedCount = 0;
+    for (int i = 0; i <= bound; i++) {
+      void *it = nullptr;
+      accessor(arrThis, &it, i);
+      if (it) {
+        if (*(BYTE *)((char *)it + 268) && listedCount < 32768) {
+          listed[listedCount] = it;
+          listedIdx[listedCount] = i;
+          listedCount++;
+        }
+        EvoReleaseItem(it);
+      }
+    }
+
+    bool appended = false;
+    static unsigned __int64 childUids[256];
+    static unsigned __int64 childLogged[128];
+    static int childLoggedCount = 0;
+    int childAppended = 0;
+    // Augment rows this pass appended (tag slot -> the pct/act overrides
+    // used), for the post-refresh column rewrite.
+    static int rwSlot[256];
+    static int rwPct[256];
+    static int rwAct[256];
+    int rwCount = 0;
+    int sacrificialRow = -1;
+    g_childRowCount = 0;
+
+    // Socketed evolving augments are CONTENTS children of a parent and are
+    // never in the item array, so the stock loop cannot list them and the uid
+    // pushes only exist once they accrue. Walk the parents' contents and give
+    // every evolving child a row: live pct/activated from the tracked push when
+    // one has arrived, else the child's own values. A child whose uid is in the
+    // array already is a bagged item the stock loop listed - skip it.
+    EvoLookup_t lookup = (EvoLookup_t)EvoRebase(0x00586180);
+    {
+      // Publish the slot table up front: the control refreshes layout on every
+      // insert and resolves the new row's tag, so the accessor hook must be
+      // able to answer for slot N before that insert happens.
+      g_childArrThis = arrThis;
+      g_childBound = bound;
+      g_childRowCount = 0;
+      sacrificialRow = EvolveAppendSacrificial(ctrl);
+      if (sacrificialRow >= 0) {
+        appended = true;
+      }
+      for (int i = 0; i <= bound && childAppended < 256; i++) {
+        void *parent = nullptr;
+        accessor(arrThis, &parent, i);
+        if (!parent) {
+          continue;
+        }
+        void *arr = *(void **)((char *)parent + 0xA8);
+        int n = EvoChildCount(parent);
+        for (int s = 0; arr && s < n && childAppended < 256; s++) {
+          void *child = *(void **)((char *)arr + s * 4);
+          if (!child || !*(BYTE *)((char *)child + 268)) {
+            continue;
+          }
+          unsigned __int64 cuid = *(unsigned __int64 *)((char *)child + 0xF8);
+          if (!cuid) {
+            continue;
+          }
+          // A bag's contents are separate client copies, so pointer identity
+          // with the array entry fails; the shared ITEM DEFINITION does not.
+          // Skip any child whose definition a listed item already represents:
+          // bag contents duplicate a row, a socketed augment does not.
+          void *def = EvoItemDef(child);
+          bool inArray = false;
+          for (int k = 0; k < listedCount && !inArray; k++) {
+            inArray = EvoItemDef(listed[k]) == def;
+          }
+          static int scanned = 0;
+          if (scanned < 16) {
+            scanned++;
+            EvoDiag("childscan uid %I64u child %p def %p inArray %d", cuid, child, def,
+                    inArray ? 1 : 0);
+          }
+          if (inArray) {
+            continue;
+          }
+          bool seen = false;
+          for (int k = 0; k < childAppended && !seen; k++) {
+            seen = childUids[k] == cuid;
+          }
+          if (seen) {
+            continue;
+          }
+          int pct = -1;
+          int act = -1;
+          for (int k = 0; k < g_evolveUidCount; k++) {
+            if (g_evolveUids[k] == cuid) {
+              pct = (int)g_evolveTrack[k].pct;
+              act = (int)g_evolveTrack[k].act;
+              break;
+            }
+          }
+            // Tag the row with 0x40000000 | (slot + 1) so the client's
+            // "Toggle Selected" resolves this row to the augment, not to its
+            // parent. The +1 is load-bearing: the stock paint loop
+            // (sub_856D10) special-cases a row whose tag is EXACTLY
+            // 0x40000000 and routes it to vtable+364 instead of the cell
+            // draw, which silently blanked the first appended row in every
+            // build before this one.
+            const int slot = childAppended;
+            const int tagSlot = slot + 1;
+            childUids[childAppended++] = cuid;
+            g_childRowUids[tagSlot] = cuid;
+            g_childRowCount = tagSlot + 1;
+            int rowIdx = EvolveAppendRow(
+                ctrl, child, (int)(0x40000000u | (unsigned)tagSlot), pct, act);
+            appended = true;
+            if (rowIdx >= 0 && rwCount < 256) {
+              rwSlot[rwCount] = tagSlot;
+              rwPct[rwCount] = pct;
+              rwAct[rwCount] = act;
+              rwCount++;
+            }
+          bool once = true;
+          for (int k = 0; k < childLoggedCount; k++) {
+            once = once && childLogged[k] != cuid;
+          }
+          if (once && childLoggedCount < 128) {
+            childLogged[childLoggedCount++] = cuid;
+            EvoItemCstr_t nameFn = (EvoItemCstr_t)EvoRebase(0x007B06E0);
+            const char *nm = nameFn(child);
+            EvoDiag("child row uid %I64u parent idx=%d slot=%d row=%d tag=%08x pct=%d act=%d name=%s",
+                    cuid, i, s, rowIdx, (unsigned)(0x40000000u | (unsigned)slot), pct,
+                    act, nm ? nm : "(null)");
+          }
+        }
+        EvoReleaseItem(parent);
+      }
+      static int lastChildAppended = -1;
+      if (childAppended != lastChildAppended) {
+        lastChildAppended = childAppended;
+        EvoDiag("child walk listed=%d appended=%d uids=%d", listedCount,
+                childAppended, g_evolveUidCount);
+      }
+      g_childRowCount = childAppended ? childAppended + 1 : 0;
+      g_childArrThis = arrThis;
+      g_childBound = bound;
+    }
+
+    for (int n = 0; n < g_evolveUidCount; n++) {
+      unsigned __int64 uid = g_evolveUids[n];
+      // Already given a row by the child walk (a socketed aug with a push).
+      bool childDone = false;
+      for (int k = 0; k < childAppended && !childDone; k++) {
+        childDone = childUids[k] == uid;
+      }
+      if (childDone) {
+        continue;
+      }
+      void *item = nullptr;
+      struct {
+        unsigned int lo;
+        unsigned short hi;
+      } slot = {0, 0};
+      lookup(mgr, &item, (unsigned int)uid, (unsigned int)(uid >> 32), &slot);
+      if (!item) {
+        EvoTrackEntry &t = g_evolveTrack[n];
+        void *child =
+            t.itemId ? EvolveFindChild(accessor, arrThis, bound, 0, t.itemId, true)
+                     : nullptr;
+        if (!child) {
+          child = EvolveFindChild(accessor, arrThis, bound, uid, 0, false);
+        }
+        if (!child && t.itemId) {
+          child = EvolveFindChild(accessor, arrThis, bound, 0, t.itemId, false);
+        }
+        if (child) {
+          EvolveAppendRow(ctrl, child, -1, (int)t.pct, (int)t.act);
+          appended = true;
+          if (g_evolveLogged[n] != 3) {
+            g_evolveLogged[n] = 3;
+            EvoDiag("uid %I64u child row appended child=%p def=%d pct=%u act=%u",
+                    (unsigned __int64)uid, child, EvoItemDefId(child), t.pct,
+                    (unsigned)t.act);
+          }
+          EvoReleaseItem(child);
+        } else if (g_evolveLogged[n] != 4) {
+          g_evolveLogged[n] = 4;
+          EvoDiag("uid %I64u NO child match itemid=%u", (unsigned __int64)uid,
+                  t.itemId);
+        }
+        continue;
+      }
+
+      // Inventory exclusion (EvolvingItems:TabExcludeInventoryItems): the uid
+      // lookup below searches the whole item array regardless of the bound,
+      // so a push for a bag/bank item still resolves here. The bound-22 stock
+      // loop already listed every worn item, so skip this append entirely
+      // while the tab is excluding inventory.
+      if (g_evoExcludeInventory) {
+        EvoReleaseItem(item);
+        continue;
+      }
+
+      int idx = -1;
+      bool dup = false;
+      for (int i = 0; i < listedCount; i++) {
+        if (listed[i] == item) {
+          dup = true;
+          idx = listedIdx[i];
+          break;
+        }
+      }
+      if (!dup) {
+        EvolveAppendRow(ctrl, item, idx, -1, -1);
+        appended = true;
+        if (g_evolveLogged[n] != 2) {
+          g_evolveLogged[n] = 2;
+          EvoDiag("uid %I64u appended idx=%d def=%d lvl=%d pct=%d",
+                  (unsigned __int64)uid, idx, EvoItemDefId(item),
+                  *(int *)((char *)item + 264),
+                  (int)*(double *)((char *)item + 32));
+        }
+      } else if (g_evolveLogged[n] != 1) {
+        g_evolveLogged[n] = 1;
+        EvoDiag("uid %I64u listed idx=%d def=%d (dup-skip)", (unsigned __int64)uid,
+                idx, EvoItemDefId(item));
+      }
+      EvoReleaseItem(item);
+    }
+
+    if (sacrificialRow >= 0) {
+      ((EvoDeleteRow_t)EvoRebase(0x008582A0))(ctrl, sacrificialRow);
+      sacrificialRow = -1;
+      EvoDiag("sacrificial row deleted");
+    }
+    if (appended) {
+      // Same post-loop refresh the stock populate performs.
+      ((EvoCtrlVoid_t)(*(void **)((char *)*(void **)ctrl + 388)))(ctrl);
+
+      // The refresh/draw path clears or bypasses the columns of (at least)
+      // the first appended row: the tag scan proves the writes landed and
+      // the row sorts on its name, yet the row renders blank. Re-write every
+      // augment row's columns after the refresh has run; harmless for the
+      // rows that survived it.
+      __try {
+        int rewritten = 0;
+        for (int k = 0; k < rwCount && k < 256; k++) {
+          const int tag = (int)(0x40000000u | (unsigned)rwSlot[k]);
+          const int row = EvolveFindRowByTag(ctrl, tag);
+          if (row < 0) {
+            continue;
+          }
+          void *child = EvolveFindChild((EvoAccessor_t)EvoRebase(0x0042DEC0),
+                                        arrThis, bound, g_childRowUids[rwSlot[k]],
+                                        0, false);
+          if (child) {
+            EvolveWriteColumns(ctrl, row, child, rwPct[k], rwAct[k]);
+            EvoReleaseItem(child);
+            rewritten++;
+          }
+        }
+        EvoDiag("post-refresh rewrite rows=%d of %d", rewritten, rwCount);
+        // Readback datum: where did the first augment row land after the
+        // refresh, and is the row array still carrying it?
+        const int firstRow = EvolveFindRowByTag(ctrl, (int)0x40000000u);
+        EvoDiag("post-refresh tag 40000000 row=%d count=%d", firstRow,
+                *(int *)((char *)ctrl + 0x1D8));
+      }
+      __except (EXCEPTION_EXECUTE_HANDLER) {
+        EvoDiag("post-refresh rewrite FAULTED (SEH swallowed)");
+      }
+    }
+    if (appended || g_evolveUidCount != g_evoLastUidCount) {
+      g_evoLastUidCount = g_evolveUidCount;
+      EvoDiag("pass uids=%d listed=%d appended=%d", g_evolveUidCount, listedCount,
+              appended ? 1 : 0);
+    }
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    EvoDiag("append pass FAULTED (SEH swallowed)");
+  }
+}
+
+// The populate is __usercall(a1@ecx window, a2@edi arg), so a plain detour
+// would clobber edi. This shim calls the trampoline with the untouched
+// entry registers (the call itself matches the original's entry stack
+// shape), then appends the tracked rows, then returns to the caller.
+DETOUR_TRAMPOLINE_EMPTY(void __cdecl EvolvePopulate_Trampoline());
+
+__declspec(naked) void EvolvePopulate_Shim() {
+  __asm {
+    call EvolvePopulate_Trampoline
+    call EvolveTabAppendPass
+    ret
+  }
+}
+
+// Deactivated evolving items are drawn in red. The inventory item-button
+// update (sub_694D20) picks a colour pair from +0x10c (evolving) and +0x132
+// (activated) and stores it on the button:
+//   694ef6  cmp byte ptr [eax+10Ch], 0
+//   694efd  jz  not-evolving
+//   694eff  cmp byte ptr [eax+132h], 0
+//   694f09  jz  loc_694F17
+//   694f0b  push 0FF00FF00h / push 0FF009600h   (activated: green)
+//   694f17  push 0FFFF0000h / push 0FF960000h   (deactivated: red)
+//   694f21  call sub_69A680                     (store the pair on the button)
+// Give the deactivated branch the same neutral pair a non-evolving item gets,
+// so "switched off" no longer paints the inventory red. Active stays green.
+static void PatchEvolvingTint() {
+  __try {
+    const unsigned char want[10] = {0x68, 0x00, 0x00, 0xFF, 0xFF,
+                                    0x68, 0x00, 0x00, 0x96, 0xFF};
+    unsigned char have[10] = {};
+    DWORD at = EvoRebase(0x00694F17);
+    memcpy(have, (const void *)at, sizeof(have));
+    if (memcmp(have, want, sizeof(want)) != 0) {
+      EvoDiag("tint patch: signature mismatch, left stock");
+      return;
+    }
+    const unsigned char neutral[10] = {0x68, 0x00, 0xFF, 0xFF, 0xFF,
+                                       0x68, 0x00, 0xFF, 0xFF, 0xFF};
+    PatchA((LPVOID)at, neutral, sizeof(neutral));
+    EvoDiag("tint patch: deactivated evolving items render neutral");
+  }
+  __except (EXCEPTION_EXECUTE_HANDLER) {
+    EvoDiag("tint patch FAULTED (SEH swallowed)");
+  }
+}
+
+static void InitializeEvolvingTabDetours() {
+  if (!baseAddress) {
+    return;
+  }
+  // Both detours ride the populate's loop-tail signature guard in the
+  // caller, so the addresses below match the loaded exe. AddDetour (not the
+  // void AddDetourf wrapper) so an attach failure is recorded, not swallowed.
+  BOOL tap = AddDetour(EvoRebase(0x00461120), (PBYTE)EvolveHandler_Detour,
+                       (PBYTE)EvolveHandler_Trampoline, 20);
+  BOOL pop = AddDetour(EvoRebase(0x00692050), (PBYTE)EvolvePopulate_Shim,
+                       (PBYTE)EvolvePopulate_Trampoline, 20);
+  EvoDiag("attach handler 0x461120 -> %d, populate 0x692050 -> %d (base %p)",
+          (int)tap, (int)pop, (void *)baseAddress);
+  BOOL acc = AddDetour(EvoRebase(0x0042DEC0), (PBYTE)EvoAccess_Detour,
+                       (PBYTE)EvoAccess_Trampoline, 20);
+  EvoDiag("attach accessor 0x42DEC0 -> %d", (int)acc);
+  PatchEvolvingTint();
+}
+
+
 char bMySEQDetected = 3;
 
 // Function Addr's
@@ -769,34 +1798,29 @@ void TriggerLocalAbilityUI(int targetSkillId) {
 
 
 // ---------------------------------------------------------------------------
-// NMS: Shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
+// NMS: shroud transforms need no client patch any more (retired 2026-11-15)
 //
-// The client's OP_Shroud self path (eqgame+0x4C2EA0) clears the local-player
-// spawn pointer (flt_DD2630 @ 0xDD2630) before applying the shroud profile,
-// and only restores it inside the success path of the spawn re-parse
-// (sub_4BD5F0). When the re-parse takes its "spawn still exists -> update in
-// place" branch it returns 0, the dispatcher early-returns, and the player
-// pointer stays NULL: feigned pose, dead UI.
+// The server used to apply a shroud with a runtime OP_Shroud self-transform,
+// and that path needed three byte patches: NOP the 'mov [flt_DD2630],0' that
+// nulled the local-player pointer (0x4C2F60), force the completion branch
+// (0x4C2F85), and retarget the profile store at 0x579255 so the wire dword at
+// block+0x350C landed in BaseProfile+0x340C instead of +0x3408. There were also
+// /sit+/stand and hotbar re-show nudges for the class rebuild the transform
+// caused.
 //
-// Two tiny patches, both of which only ever execute inside this self path:
-//   A) 0x4C2F60: 'mov dword ptr [0xDD2630], 0' (10 bytes) -> NOPs
-//   B) 0x4C2F85: 'jnz short +0x0A' (75 0A) -> 'jmp short +0x0A' (EB 0A),
-//      i.e. always run the completion path (standstate restore + UI reload)
+// Form changes are a same-zone reload now: the server applies the form to the
+// character before the zone-in profile is serialized, so the client builds it
+// from the ordinary profile and OP_Shroud is never sent. All of the above is
+// gone with it; the remaining AA pane scan bound below is a content contract,
+// not shroud code.
+//
+// Keep ShroudPatchLog: its byte guard is what records a silently skipped patch.
 // ---------------------------------------------------------------------------
 
-// NMS: shroud diagnostics. 0 = compile out all shroud runtime logging and
-// packet captures (leave 0 for release builds).
-// NMS: the shroud diagnostics that used to live here (ShroudLog and friends, the
-// AA-pane probe, packet dumps and the per-opcode probes) were removed once the
-// feature was verified. The only shroud logging left is ShroudPatchLog below: it
-// is always compiled in because a byte-guard mismatch means a patch silently did
-// not apply, which a released build should record.
 
-
-// NMS: status log for the shroud byte-guards. Always compiled in (unlike
-// ShroudLog): a guard mismatch means a patch silently did not apply, which is
-// exactly what a released build should record. Success lines are one short line
-// per patch at startup.
+// NMS: status log for the client byte-guards. Always compiled in: a guard
+// mismatch means a patch silently did not apply, which a released build should
+// record. Success lines are one short line per patch at startup.
 static void ShroudPatchLog(const char *fmt, ...) {
   FILE *f = fopen("nms_client_patch.log", "a");
   if (!f)
@@ -1037,92 +2061,23 @@ static void PSLogItemPacket(const char *buf, size_t size) {
 }
 #endif
 
-// Set after the OP_Shroud self-transform completes; consumed by the pulse
-// hook which issues /sit + /stand so the actor rebuilds its pose.
-bool g_shroudPoseFix = false;
-
-static DWORD g_clientBase = 0x400000;
-
-static void ApplyShroudFlowFix(DWORD baseAddress) {
-  g_clientBase = baseAddress;
-
-  // The client's AA pane builder walks AA ids 0..49998 only
-  // (eqgame+0x608CDF: 'cmp eax,0C34Fh' / jl).  The shroud content band lives
-  // at 90100-90300, so every shroud row was invisible to the window no matter
-  // what the row contained.  Widen the bound to 100000: enough for the shroud
-  // content band (91000-99999), and deliberately not more.  Nothing else in the
-  // database lives above 90400 today (EQS's own custom AAs are 61xxx/70xxx/71xxx,
-  // which this same client limit already scanned), so no other content changes
-  // visibility.
-  {
-    const DWORD pBound = g_clientBase + (0x608CE0 - 0x400000);
-    const unsigned char expect[4] = {0x4F, 0xC3, 0x00, 0x00};  // 0xC34F = 49999
-    if (memcmp((const void *)pBound, expect, sizeof(expect)) == 0) {
-      const unsigned int bound = 100000;
-      PatchA((LPVOID)pBound, &bound, sizeof(bound));
-      ShroudPatchLog("AA pane scan bound widened to %u @ %08X", bound, pBound);
-    } else {
-      const unsigned char *pb = (const unsigned char *)pBound;
-      ShroudPatchLog("AA pane scan bound patch SKIPPED: %02X %02X %02X %02X @ %08X",
-                pb[0], pb[1], pb[2], pb[3], pBound);
-    }
-  }
-  DWORD pNull = (DWORD)0x004C2F60 - 0x400000 + baseAddress;
-  DWORD pJz = (DWORD)0x004C2F85 - 0x400000 + baseAddress;
-
-  // NOTE: at runtime the loader relocates the absolute address inside
-  // 'mov dword ptr [0xDD2630], 0' (base != 0x400000), so only the opcode +
-  // disp32 prefix (C7 05 30 26) can be matched; the imm32 varies.
-  const unsigned char expectNullPrefix[4] = {0xC7, 0x05, 0x30, 0x26};
-  if (memcmp((const void *)pNull, expectNullPrefix, 4) == 0) {
-    static const unsigned char nops[10] = {0x90, 0x90, 0x90, 0x90, 0x90,
-                                           0x90, 0x90, 0x90, 0x90, 0x90};
-    PatchA((LPVOID)pNull, nops, 10);
-    ShroudPatchLog("shroud fix A applied: NOPed mov [flt_DD2630],0 @ %08X", pNull);
+// The client's AA pane builder walks AA ids 0..49998 only
+// (eqgame+0x608CDF: 'cmp eax,0C34Fh' / jl), so every rank row above that is
+// invisible to the window no matter what the row contains. EQS content does
+// exceed it (the 61xxx-62xxx and 9xxxx custom bands, and the shroud bands), so
+// widen the bound to 100000. This is a content contract, not shroud code: it
+// applies to every character whether or not a form exists.
+static void ApplyAAPaneScanFix(DWORD baseAddress) {
+  const DWORD pBound = (DWORD)0x00608CE0 - 0x400000 + baseAddress;
+  const unsigned char expect[4] = {0x4F, 0xC3, 0x00, 0x00};  // 0xC34F = 49999
+  if (memcmp((const void *)pBound, expect, sizeof(expect)) == 0) {
+    const unsigned int bound = 100000;
+    PatchA((LPVOID)pBound, &bound, sizeof(bound));
+    ShroudPatchLog("AA pane scan bound widened to %u @ %08X", bound, pBound);
   } else {
-    ShroudPatchLog("shroud fix A SKIPPED: unexpected bytes @ %08X", pNull);
-  }
-
-  const unsigned char expectJz[2] = {0x75, 0x0A};
-  if (memcmp((const void *)pJz, expectJz, 2) == 0) {
-    const unsigned char jmp[2] = {0xEB, 0x0A};
-    PatchA((LPVOID)pJz, jmp, 2);
-    ShroudPatchLog("shroud fix B applied: jnz->jmp @ %08X", pJz);
-  } else {
-    ShroudPatchLog("shroud fix B SKIPPED: unexpected bytes @ %08X", pJz);
-  }
-
-  // ---------------------------------------------------------------------
-  // NMS: server-authoritative shroud state (the "monster character" flag).
-  //
-  // The profile applier eqgame+0x5789B0 (called by the OP_Shroud handler at
-  // 0x4C2F6E and by the OP_PlayerProfile applier at 0x579763) copies the wire
-  // profile dword at block+0x350C into BaseProfile+0x3408 -- the field
-  // EQData.h calls "Unknown0x3408"; nothing reads it for shroud purposes.
-  //
-  // The switch the client actually uses is BaseProfile+0x340C ("profileType":
-  // ida sub_7EBB70 stores the key "profileType" into this+0x340C, EQData.h
-  // has "/*0x340c*/ DWORD Shrouded"). It gates the AA window monster mode
-  // (sub_4A40F0 requires Shrouded == 1 or 2), IsShrouded (0x441E70) and the
-  // shroud UI. No server packet reaches it natively: the RoF2 profile has no
-  // such member, and the only writers in the client are the PcProfile
-  // text/binary loaders that no shroud opcode calls.
-  //
-  // Retarget the single store (one displacement byte, same instruction length)
-  // so the server block+0x350C value drives the real field. Behaviour is
-  // unchanged for unshrouded profiles: ENCODE(OP_PlayerProfile) writes 0 to
-  // that wire field, so the flag lands as 0.
-  // ---------------------------------------------------------------------
-  DWORD pShroudStore = (DWORD)0x00579255 - 0x400000 + baseAddress;
-  const unsigned char expectStore[4] = {0x08, 0x34, 0x00, 0x00};
-  if (memcmp((const void *)pShroudStore, expectStore, 4) == 0) {
-    const unsigned char disp340C = 0x0C;  // 0x3408 -> 0x340C
-    PatchA((LPVOID)pShroudStore, &disp340C, 1);
-    ShroudPatchLog("shroud flag store retargeted to BaseProfile+0x340C @ %08X",
-                    pShroudStore);
-  } else {
-    ShroudPatchLog("shroud flag store SKIPPED: unexpected bytes @ %08X",
-                    pShroudStore);
+    const unsigned char *pb = (const unsigned char *)pBound;
+    ShroudPatchLog("AA pane scan bound patch SKIPPED: %02X %02X %02X %02X @ %08X",
+                   pb[0], pb[1], pb[2], pb[3], pBound);
   }
 }
 
@@ -1131,121 +2086,6 @@ unsigned char __fastcall HandleWorldMessage_Trampoline(
     DWORD * con, DWORD edx, unsigned __int32 unk, unsigned __int16 opcode,
     char *buf, size_t size);
 
-// NMS: the shroud profile swap (OP_Shroud) rebuilds the class-dependent UI and
-// leaves the hotbar windows (HotButtonWnd + pages 2..10) hidden; they only come
-// back at zone-in. Re-show them after the handler so the bars survive both the
-// shroud and the unshroud. Re-run a few times over the next second because the
-// client can re-hide them while it finishes rebuilding the UI.
-void ShroudRestoreHotbars() {
-  static const char *kHotbarWnds[] = {
-      "HotButtonWnd",  "HotButtonWnd2", "HotButtonWnd3", "HotButtonWnd4",
-      "HotButtonWnd5", "HotButtonWnd6", "HotButtonWnd7", "HotButtonWnd8",
-      "HotButtonWnd9", "HotButtonWnd10",
-  };
-
-  for (const char *name : kHotbarWnds) {
-    CXWnd *wnd = FindMQ2Window((PCHAR)name);
-    if (wnd) {
-      wnd->Show(true, true);
-    }
-  }
-}
-
-int   g_shroudHotbarFixesLeft = 0;
-
-// NMS: server-authoritative shroud state carrier.
-//
-// The profile block of OP_Shroud carries the shroud flag at +0x350C (server:
-// BuildShroudProfileBlock, Custom:ShroudLiveMode bit 8).  The client switch
-// everything keys off is BaseProfile+0x340C -- but the applier (eqgame+0x5789B0)
-// only writes it *before* the handler re-initialises the profile object:
-// BaseProfile::BaseProfile (eqgame+0x7EF0E0) zeroes 0x340C/0x3410/0x3414/0x3418
-// during the same OP_Shroud, so the value is wiped within the handler.  Capture
-// the server's dword from the packet and re-stamp it after the handler and on
-// each follow-up tick, which makes the server authoritative for the flag.
-uint32_t g_serverShroudState    = 0;
-int    g_serverShroudStateValid = 0;
-int    g_serverShroudStampLeft  = 0;
-DWORD  g_serverShroudStampNext  = 0;
-DWORD  g_aaRefreshAt            = 0;  // coalesced AA-window repopulate
-
-// NMS: AA-window list probe.  The four AA panes hold {text, row-id} entries;
-// the list object keeps its entry count at +472 and the entry vector at +476,
-// each entry 296 bytes with the value (AA rank id) at +16 -- see the AA
-// window refresh eqgame+0x609F90.  Counting shroud-band ids tells us whether
-// the rows were filtered out before reaching the UI or are being listed.
-// NMS: AA table + window probe.
-//  - looks up our shroud rows in the client's AA table (manager dword_D20358)
-//    and dumps the fields the gates read (shroud byte +144, category +140,
-//    classes +104, total_cost +112, prev/next +116/+120, current/max +36/+108)
-//  - enumerates the four AA panes' entries (count at list+472, vector at +476,
-//    296-byte entries with the value at +16 -- see eqgame+0x609F90)
-// NMS: one-shot diagnostic re-run after the auto-grant removal.  Answers:
-//   - what the client believes it owns (full AAList scan)
-//   - whether the table holds rows for the ability ids themselves
-//   - whether the monster pane still lists a normal row that merely carries the
-//     shroud byte (does the path work at all now?)
-//   - whether our row's payload still disqualifies a normal row
-static int g_diagDone = 0;
-
-static int NMSDiagPaneScan(void *aa, int wantOurs, int wantA) {
-  unsigned char *ab = (unsigned char *)aa;
-  int total = 0;
-  for (int li = 0; li < 4; ++li) {
-    unsigned char *l = *(unsigned char **)(ab + 672 + 4 * li);
-    if (!l)
-      continue;
-    const unsigned int c = *(unsigned int *)(l + 472);
-    const unsigned char *dp = *(const unsigned char **)(l + 476);
-    if (c > 5000 || !dp)
-      continue;
-    total += (int)c;
-    for (unsigned int e = 0; e < c && e < 400; ++e) {
-      const unsigned int id = *(const unsigned int *)(dp + 296 * e + 16);
-      if (id == 90300)
-        wantOurs = 1;
-      if (id == 41841)
-        wantA = 1;
-    }
-  }
-  return (wantOurs ? 1 : 0) | (wantA ? 2 : 0) | (total << 8);
-}
-
-
-void ShroudRefreshAAWindow(void) {
-  __try {
-    CXWnd *aaWnd = FindMQ2Window("AAWindow");
-    if (!aaWnd)
-      return;
-    typedef void(__fastcall * AARefresh_t)(void *, int);
-    AARefresh_t refresh = (AARefresh_t)(g_clientBase + (0x609F90 - 0x400000));
-    refresh((void *)aaWnd, 0);
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-  }
-}
-
-void ShroudStampServerState(const char *when) {
-  if (!g_serverShroudStateValid)
-    return;
-  __try {
-    PCHARINFO2 ci = GetCharInfo2();
-    if (ci) {
-      unsigned char *bb = reinterpret_cast<unsigned char *>(ci);
-      unsigned int *flag = reinterpret_cast<unsigned int *>(bb + 0x340C);
-      if (*flag != g_serverShroudState) {
-        *flag = g_serverShroudState;
-        // The AA window's panes are populated by the refresh at
-        // eqgame+0x609F90 (-> sub_608AC0, which filters rows through the
-        // monster gate).  That populate runs inside the OP_Shroud handler,
-        // before this stamp, so it saw 'not shrouded' and produced an empty
-        // monster list.  Re-run it now that the server's state is applied.
-        ShroudRefreshAAWindow();
-      }
-    }
-  } __except (EXCEPTION_EXECUTE_HANDLER) {
-  }
-}
-DWORD g_shroudHotbarNextTick  = 0;
 
 
 // Legends of Norrath (the in-game card game). eqgame hands the card game's DLL
@@ -1437,52 +2277,6 @@ unsigned char __fastcall HandleWorldMessage_Detour(DWORD *con, DWORD edx,
   if (opcode == 0x4c89 && PSApplyPowerPacket(buf, size))
     return 1;
 #endif
-  // NMS: shroud self-transform flow fix (RoF2 OP_Shroud 0x6562)
-  if (opcode == 0x66b5 || opcode == 0x7a27) {
-    // NMS: our monster rows only exist in the client's AA table while the
-    // shroud is applied, and the table is rebuilt around the OP_Shroud
-    // transform.  The window's populate (eqgame+0x608AC0) runs on the first
-    // packet of the burst, i.e. before the rows land, so coalesce the burst
-    // and repopulate once it goes quiet (see the pulse hook).
-    if (g_serverShroudStateValid && g_serverShroudState > 0) {
-      g_aaRefreshAt = GetTickCount() + 700;
-    }
-  }
-  if (opcode == 0x6562) {
-    // Capture the server's shroud-state dword from the profile block
-    // (offset +0x350C).  Guarded so the other-player shroud form (which has no
-    // profile block) cannot feed us garbage: accept only 0/1 from a block whose
-    // identity bytes look like a real profile.
-    if (size >= 6) {
-      unsigned short endOff = *(unsigned short *)(buf + 4);
-      if (endOff >= 6 && (size_t)endOff + 0x350C + 4 <= size) {
-        const unsigned char *blk = (const unsigned char *)(buf + endOff);
-        const unsigned int state = *(const unsigned int *)(blk + 0x350C);
-        const bool looks_like_profile =
-            blk[0x10] >= 1 && blk[0x10] <= 16 &&
-            blk[0x11] >= 1 && blk[0x11] <= 100 && blk[0x08] <= 2;
-        if (looks_like_profile && state <= 2) {
-          g_serverShroudState = state;
-          g_serverShroudStateValid = 1;
-          g_serverShroudStampLeft = 12;
-          g_serverShroudStampNext = GetTickCount() + 500;
-        }
-      }
-    }
-    unsigned char shroud_ret =
-        HandleWorldMessage_Trampoline(con, edx, unk, opcode, buf, size);
-    ShroudStampServerState("after-apply");
-    // The transform animation leaves the actor in its last frame (this branch
-    // fails to rebuild the shroud model); nudge the pose with /sit + /stand.
-    extern bool g_shroudPoseFix;
-    g_shroudPoseFix = true;
-    // Put the hotbar windows back; schedule follow-ups to beat deferred UI work.
-    ShroudRestoreHotbars();
-    g_shroudHotbarFixesLeft = 12;
-    g_shroudHotbarNextTick  = GetTickCount() + 500;
-    return shroud_ret;
-  }
-
   // Capture the real zone UdpConnection* via the Send hook instead — see UdpSend_Detour
   // Capture bitmask from OP_ServerAuthStats for deferred CAuth response
   if (opcode == 0x1338 && size >= 4) {
@@ -2098,6 +2892,8 @@ void InitHooks() {
   InitOffsets();
   GetEQPath(gszEQPath);
   InitializeCriticalSection(&gDetourCS);
+  InitializeEvolvingTabPatch();
+  InitializeConsiderGatePatch();
 
   if (isMQInjectsEnabled) {
     InitializeMQ2Detours();
@@ -2174,8 +2970,8 @@ void InitHooks() {
   EzDetour((DWORD)var, HandleWorldMessage_Detour,
            HandleWorldMessage_Trampoline);
 
-  // NMS: Shroud self-transform flow fix (see ApplyShroudFlowFix above)
-  ApplyShroudFlowFix(baseAddress);
+  // NMS: AA pane scan bound (content contract; see ApplyAAPaneScanFix above)
+  ApplyAAPaneScanFix(baseAddress);
 
   // Hook UdpConnection::Send (0x8C51F0) to capture the real zone UdpConnection* for CAuth
   var = (((DWORD)0x008C51F0 - 0x400000) + baseAddress);

@@ -79,7 +79,7 @@ function KeleTimer(e)
 	if e.timer == "adds" then
 		eq.stop_timer(e.timer);
 		if count < 4 then
-			eq.zone_emote(MT.Yellow, "Kelekdrix, Herald of Trushar laughs as her body is wrapped in a rocky protection, 'Bury them, my minions.  Offer a full demonstration of our geomantic magics.'")
+			eq.zone_emote(MT.Yellow, "Kelekdrix, Herald of Trushar cries out as more of her minions rise from the stone, 'Bury them. Let the geomantic magics of the temple consume them.'")
 			kele:ModifyNPCStat("special_abilities",abilities_inactive);
 			kele:WipeHateList();
 			eq.signal(296024,111,10 * 1000);
@@ -89,7 +89,7 @@ function KeleTimer(e)
 end
 
 function KeleDeath(e)
-	eq.zone_emote(MT.Yellow, "Kelekdrix, Herald of Trushar's corpse cries out, her booming alto echoing with contempt, 'Your victory here is hollow. With my death, the way to the lower reaches is unsealed. The denizens below destroy everything they touch. You will suffer their wrath!'")
+	eq.zone_emote(MT.Yellow, "The corpse of Kelekdrix, Herald of Trushar, cries out, her booming alto echoing with contempt, 'Your victory here is hollow. With my death, the way to the lower reaches is unsealed. The denizens below destroy everything they touch. You will suffer their wrath!'")
 	eq.get_entity_list():FindDoor(41):SetLockPick(0);	-- unlock door
 	eq.spawn2(296027, 0, 0, 90, -515, -27, 128);		-- NPC: #Mimezpo_the_Oracle
 	eq.spawn2(296077, 0, 0, 526, -495, 7, 386);			-- NPC: #a_pile_of_bones__

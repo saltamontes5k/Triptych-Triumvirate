@@ -1124,7 +1124,8 @@ void Client::MigrateDuplicateAALines()
 
 		// Shroud AAs are session-scoped lines, never folded into real lines.
 		if (ability->category == AACategory::ShroudPassive ||
-			ability->category == AACategory::ShroudActive) {
+			ability->category == AACategory::ShroudActive ||
+			SpiritShroud::NativeAbility(ability->id)) {
 			continue;
 		}
 
@@ -1215,7 +1216,7 @@ void Client::SendAlternateAdvancementTable() {
 	// this profile (a regular same-ID definition supersedes its cached
 	// predecessor; omission does not). Hide only Monster definitions, leaving
 	// every ordinary AA untouched.
-	if (ClientVersion() == EQ::versions::ClientVersion::RoF2) {
+	if (ClientVersion() == EQ::versions::ClientVersion::RoF2 && !IsSpiritShrouded()) {
 		const auto* form = IsSpiritShrouded() ? SpiritShroudDefinition() : nullptr;
 		for (const auto &entry : zone->aa_ranks) {
 			const auto* rank = entry.second.get();
@@ -1236,8 +1237,15 @@ void Client::SendAlternateAdvancementTable() {
 
 	const bool shroud_usable = IsShrouded() &&
 		(RuleI(Custom, ShroudLiveMode) != 0 || m_spirit_shroud_template != 0);
+	// While a native form is active the window advertises the form's kit and
+	// nothing else. Every other line is still serialized (omission does not
+	// evict a cached definition) but with a zero class mask, so the client's
+	// class filter drops it. The multiclass class-lie would otherwise mark the
+	// whole catalog usable and fill the window with the character's real AAs.
+	const auto* active_form = IsSpiritShrouded() ? SpiritShroudDefinition() : nullptr;
 	uint32 ability_count    = 0;
 	uint32 rank_candidates  = 0;
+	uint32 form_rows        = 0;
 
 	for(auto &aa : zone->aa_abilities) {
 		AA::Ability *ability = aa.second.get();
@@ -1251,6 +1259,18 @@ void Client::SendAlternateAdvancementTable() {
 
 		++ability_count;
 
+		if (active_form) {
+			// A form advertises ONLY its own ranks. The client rebuilds its AA
+			// list from this table on the reload, so not sending the ordinary
+			// catalog is what keeps the character's real AAs out of the window;
+			// sending them with a zero class mask does not (the row still exists
+			// client-side). Mirrors upstream nightstalker6669/EQEmu develop.
+			for (auto *rank = ability->first; rank && HasSpiritShroudRank(rank->id); rank = rank->next) {
+				SendAlternateAdvancementRank(aa.first, rank->current_value);
+				++form_rows;
+			}
+			continue;
+		}
 		uint32 charges = 0;
 		auto ranks = GetAA(ability->first_rank_id, &charges);
 		if(ranks) {
@@ -1266,8 +1286,8 @@ void Client::SendAlternateAdvancementTable() {
 		}
 	}
 
-	LogInfo("[AA] table sent to [{}]: {} abilities, {} rank candidates, {} ms",
-		GetName(), ability_count, rank_candidates, Timer::GetCurrentTime() - now_ms);
+	LogInfo("[AA] table sent to [{}]: {} abilities, {} rank candidates, {} ms (form rows {})",
+		GetName(), ability_count, rank_candidates, Timer::GetCurrentTime() - now_ms, form_rows);
 }
 
 void Client::SendAlternateAdvancementRank(int aa_id, int level, const SpiritShroud::Template *shroud_preview) {
@@ -1284,9 +1304,7 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level, const SpiritShro
 
 	// NMS: suppress duplicate lines - only the winning line for a name is sent
 	// (shroud AAs are exempt: they intentionally mirror real AA names).
-	if (RuleB(Custom, DedupeAALines)
-		&& ability->category != AACategory::ShroudPassive
-		&& ability->category != AACategory::ShroudActive) {
+	if (RuleB(Custom, DedupeAALines) && !Client::IsShroudAA(ability)) {
 		const auto &winners = GetAAWinnerMap();
 		auto winner = winners.find(ability->name);
 		if (winner != winners.end() && winner->second != ability->id) {
@@ -1338,8 +1356,9 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level, const SpiritShro
 	aai->desc_sid = rank->desc_sid;
 	aai->cost = rank->cost;
 	aai->seq = aa_id;
-	// NMS: only the current shroud form/level's lines may look like shroud rows to
-	// the client's AA window; the encoder writes this as the per-row shroud byte.
+	// NMS: per-row "shroud" flag for the client's Monster Abilities pane. The
+	// client enters that mode from the profile marker (unknown0112 = template id),
+	// and then lists only rows flagged here.
 	aai->shroud_row = (Client::IsShroudAA(ability) && IsShroudAbilityForCurrentForm(aa_id)) ? 1 : 0;
 	aai->type = ability->type;
 	// Shroud rows send the rank's real spell. It used to be blanked to -1 on the
@@ -1360,6 +1379,13 @@ void Client::SendAlternateAdvancementRank(int aa_id, int level, const SpiritShro
 	if(captured) {
 		aai->current_level = captured->current;
 		aai->max_level     = captured->maximum;
+	}
+	if (shroud_form) {
+		// Ground truth for the shrouded AA window: what the server actually puts
+		// on the wire for a form row (and whether the profile owns it).
+		LogInfo("[SHROUD-AA] rank [{}] ability [{}] cat [{}] classes [{}] cur [{}] max [{}] level_req [{}] owned [{}]",
+			rank->id, ability->id, ability->category, aai->classes, aai->current_level, aai->max_level,
+			aai->level_req, GetAA(ability->first_rank_id));
 	}
 	aai->grant_only = ability->grant_only;
 
@@ -1451,10 +1477,13 @@ void Client::SendAlternateAdvancementStats() {
 	auto outapp = new EQApplicationPacket(OP_AAExpUpdate, sizeof(AltAdvStats_Struct));
 	AltAdvStats_Struct *aps = (AltAdvStats_Struct *)outapp->pBuffer;
 	aps->experience = (uint32)(((float)330.0f * (float)m_pp.expAA) / (float)GetRequiredAAExperience());
-	// While shrouded in live-like mode the AA window counts monster points.
-	aps->unspent = (IsShrouded() && (RuleI(Custom, ShroudLiveMode) & 4))
-		? GetShroudPoints()
-		: m_pp.aapoints;
+	// While shrouded in live-like mode the AA window counts monster points. A
+	// native form keeps its pool in the profile (m_pp.aapoints); GetShroudPoints()
+	// is the LEGACY quest-shroud pool and is always 0 for a spirit form, which is
+	// why the window showed 0 points and refused every purchase.
+	aps->unspent = IsSpiritShrouded()
+		? m_pp.aapoints
+		: ((IsShrouded() && (RuleI(Custom, ShroudLiveMode) & 4)) ? GetShroudPoints() : m_pp.aapoints);
 	aps->percentage = m_epp.perAA;
 	QueuePacket(outapp);
 	safe_delete(outapp);
@@ -1468,9 +1497,7 @@ void Client::SendAlternateAdvancementPoints() {
 	for(auto &aa : zone->aa_abilities) {
 		// NMS: only report owned ranks for the winning line of each name
 		// (shroud AAs are exempt: they intentionally mirror real AA names).
-		if (RuleB(Custom, DedupeAALines)
-			&& aa.second->category != AACategory::ShroudPassive
-			&& aa.second->category != AACategory::ShroudActive) {
+		if (RuleB(Custom, DedupeAALines) && !Client::IsShroudAA(aa.second.get())) {
 			const auto &winners = GetAAWinnerMap();
 			auto winner = winners.find(aa.second->name);
 			if (winner != winners.end() && winner->second != aa.second->id) {
@@ -2572,9 +2599,14 @@ bool Mob::CanPurchaseAlternateAdvancementRank(AA::Rank *rank, bool check_price, 
 
 	//check price, if client
 	if (check_price && IsClient()) {
-		// Shroud AAs are bought with monster points, not real AA points.
+		// Shroud AAs are bought with monster points, not real AA points. A native
+		// form keeps that pool in the profile; GetShroudPoints() is the legacy
+		// quest pool and reads 0 for a spirit form, which made every priced row
+		// "unaffordable" even when the window showed points.
 		const uint32 available = Client::IsShroudAA(a)
-			? CastToClient()->GetShroudPoints()
+			? (CastToClient()->IsSpiritShrouded()
+				? static_cast<uint32>(CastToClient()->GetAAPoints())
+				: CastToClient()->GetShroudPoints())
 			: static_cast<uint32>(CastToClient()->GetAAPoints());
 
 		if (rank->cost > available) {

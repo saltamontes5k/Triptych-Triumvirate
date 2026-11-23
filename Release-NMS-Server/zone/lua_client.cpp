@@ -4,6 +4,8 @@
 #include <luabind/luabind.hpp>
 #include <cmath>
 #include <limits>
+#include <cstdlib>
+#include <cerrno>
 
 #include "client.h"
 #include "nms_window.h"
@@ -13,6 +15,7 @@
 #include "achievement_state_updates.h"
 #include "lua_expedition.h"
 #include "lua_npc.h"
+#include "lua_corpse.h"
 #include "lua_item.h"
 #include "lua_iteminst.h"
 #include "lua_inventory.h"
@@ -1802,6 +1805,94 @@ std::string Lua_Client::GetSharedTaskIdentity()
 	return identity > 0 ? std::to_string(identity) : std::string{};
 }
 
+uint16 Lua_Client::GetSharedTaskInstanceID(uint32 task_id, uint32 zone_id, uint32 zone_version)
+{
+	Lua_Safe_Call_Int();
+	const auto identity = self->GetSharedTaskId();
+	const auto *state = self->GetTaskState();
+	if (identity <= 0 || !state || !task_id || !zone_id ||
+		state->GetActiveSharedTask().task_id != task_id) {
+		return 0;
+	}
+	auto rows = database.QueryDatabase(fmt::format(
+		"SELECT i.id FROM shared_tasks st "
+		"JOIN shared_task_members m ON m.shared_task_id=st.id AND m.character_id={} "
+		"JOIN shared_task_dynamic_zones z ON z.shared_task_id=st.id "
+		"JOIN dynamic_zones dz ON dz.id=z.dynamic_zone_id "
+		"JOIN instance_list i ON i.id=dz.instance_id "
+		"WHERE st.id={} AND st.task_id={} AND i.zone={} AND i.version={} "
+		"AND st.completion_time IS NULL AND (st.expire_time IS NULL OR st.expire_time>NOW()) "
+		"AND (i.never_expires=1 OR i.expire_at>UNIX_TIMESTAMP()) LIMIT 2",
+		self->CharacterID(), identity, task_id, zone_id, zone_version), false);
+	if (!rows.Success() || rows.RowCount() != 1) return 0;
+	const auto instance = Strings::ToUnsignedInt((*rows.begin())[0], 0);
+	return instance > 0 && instance <= UINT16_MAX ? uint16(instance) : 0;
+}
+
+namespace {
+std::optional<uint64_t> FallOccurrence(const std::string &text)
+{
+	if (text.empty()) return std::nullopt;
+	errno = 0;
+	char *end = nullptr;
+	const auto value = std::strtoull(text.c_str(), &end, 10);
+	if (errno || !end || *end || value == 0) return std::nullopt;
+	return value;
+}
+}
+
+bool Lua_Client::IsSpiritShrouded()
+{
+	Lua_Safe_Call_Bool();
+	return self->IsSpiritShrouded();
+}
+
+uint32 Lua_Client::GetFallShroudSelectedTemplate(std::string occurrence)
+{
+	Lua_Safe_Call_Int();
+	const auto run = FallOccurrence(occurrence);
+	if (!run) return 0;
+	const auto selected = self->FallShroudSelectedTemplate(*run);
+	return selected ? *selected : 0;
+}
+
+bool Lua_Client::ApplyFallEscrow(std::string occurrence, uint32 template_id)
+{
+	Lua_Safe_Call_Bool();
+	const auto run = FallOccurrence(occurrence);
+	return run && template_id && self->ApplyFallEscrow(*run, template_id);
+}
+
+bool Lua_Client::HasFallOfIllsalinProfile(std::string occurrence, uint32 instance)
+{
+	Lua_Safe_Call_Bool();
+	const auto run = FallOccurrence(occurrence);
+	return run && instance && self->HasFallOfIllsalinProfile(*run, instance);
+}
+
+bool Lua_Client::EnterFallOfIllsalin(Lua_NPC npc)
+{
+	Lua_Safe_Call_Bool();
+	auto *actor = static_cast<NPC *>(npc);
+	return actor && self->EnterFallOfIllsalin(*actor);
+}
+
+bool Lua_Client::RegisterFallOfIllsalinCommanderCorpse(std::string occurrence, uint32 instance, Lua_Corpse corpse)
+{
+	Lua_Safe_Call_Bool();
+	const auto run = FallOccurrence(occurrence);
+	auto *body = static_cast<Corpse *>(corpse);
+	return run && instance && body && self->RegisterFallOfIllsalinCommanderCorpse(*run, instance, *body);
+}
+
+bool Lua_Client::ExitFallOfIllsalin(std::string occurrence, uint32 instance, Lua_NPC npc)
+{
+	Lua_Safe_Call_Bool();
+	const auto run = FallOccurrence(occurrence);
+	auto *actor = static_cast<NPC *>(npc);
+	return run && instance && actor && self->ExitFallOfIllsalin(*run, instance, *actor);
+}
+
 // NMS: instance version of the zone this client is in (lua mirror of the perl
 // binding used by the King of the Monsters moors v40 monster mission gating).
 uint32 Lua_Client::GetZoneInstanceVersion()
@@ -1890,6 +1981,44 @@ void Lua_Client::OpenLFGuildWindow() {
 void Lua_Client::OpenShroudWindow(Lua_Mob npc) {
 	Lua_Safe_Call_Void();
 	self->OpenShroudWindow(npc);
+}
+
+// Mission-scoped spirit-shroud window: client:OpenShroudWindowFor(npc, {ids}).
+// The caller decides which forms appear, so one NPC can serve a whole family of
+// mission forms (the live OMM missions handed the window a fixed set the same
+// way) instead of every branch needing its own keeper.
+void Lua_Client::OpenShroudWindowFor(Lua_Mob npc, luabind::object ids) {
+	Lua_Safe_Call_Void();
+
+	if (luabind::type(ids) != LUA_TTABLE) {
+		return;
+	}
+
+	std::vector<uint32> wanted;
+	for (int i = 1; i <= MAXCHOOSERENTRIES; ++i) {
+		auto cur = ids[i];
+		if (luabind::type(cur) == LUA_TNUMBER) {
+			wanted.push_back(luabind::object_cast<uint32>(cur));
+		}
+	}
+
+	if (wanted.empty()) {
+		return;
+	}
+
+	self->OpenShroudWindowFor(npc, wanted);
+}
+
+void Lua_Client::ApplySpiritShroud(uint32 template_id) {
+	Lua_Safe_Call_Void();
+	// A quest apply is the entitlement: waive the keeper entitlement_key the
+	// same way a mission-scoped window does (client.h EnterNativeShroud).
+	self->EnterNativeShroud(template_id, true);
+}
+
+void Lua_Client::RemoveSpiritShroud() {
+	Lua_Safe_Call_Void();
+	self->RestoreNativeShroud();
 }
 
 void Lua_Client::RemoveShroud() {
@@ -4199,6 +4328,14 @@ luabind::scope lua_register_client() {
 	.def("CompleteAchievement", (bool(Lua_Client::*)(uint32))&Lua_Client::CompleteAchievement)
 	.def("CompleteSharedTaskAchievement", &Lua_Client::CompleteSharedTaskAchievement)
 	.def("GetSharedTaskIdentity", &Lua_Client::GetSharedTaskIdentity)
+	.def("GetSharedTaskInstanceID", &Lua_Client::GetSharedTaskInstanceID)
+	.def("IsSpiritShrouded", &Lua_Client::IsSpiritShrouded)
+	.def("GetFallShroudSelectedTemplate", &Lua_Client::GetFallShroudSelectedTemplate)
+	.def("ApplyFallEscrow", &Lua_Client::ApplyFallEscrow)
+	.def("HasFallOfIllsalinProfile", &Lua_Client::HasFallOfIllsalinProfile)
+	.def("EnterFallOfIllsalin", &Lua_Client::EnterFallOfIllsalin)
+	.def("RegisterFallOfIllsalinCommanderCorpse", &Lua_Client::RegisterFallOfIllsalinCommanderCorpse)
+	.def("ExitFallOfIllsalin", &Lua_Client::ExitFallOfIllsalin)
 	.def("GetZoneInstanceVersion", &Lua_Client::GetZoneInstanceVersion)
 	.def("GetTaskActivityDoneCount", (int(Lua_Client::*)(int,int))&Lua_Client::GetTaskActivityDoneCount)
 	.def("CompleteTask", (bool(Lua_Client::*)(int))&Lua_Client::CompleteTask)
@@ -4537,7 +4674,10 @@ luabind::scope lua_register_client() {
 	.def("NukeItem", (void(Lua_Client::*)(uint32,int))&Lua_Client::NukeItem)
 	.def("OpenLFGuildWindow", (void(Lua_Client::*)(void))&Lua_Client::OpenLFGuildWindow)
 	.def("OpenShroudWindow", (void(Lua_Client::*)(Lua_Mob))&Lua_Client::OpenShroudWindow)
+	.def("OpenShroudWindowFor", (void(Lua_Client::*)(Lua_Mob, luabind::object))&Lua_Client::OpenShroudWindowFor)
 	.def("ApplyShroud", (void(Lua_Client::*)(uint32_t))&Lua_Client::ApplyShroud)
+	.def("ApplySpiritShroud", (void(Lua_Client::*)(uint32_t))&Lua_Client::ApplySpiritShroud)
+	.def("RemoveSpiritShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveSpiritShroud)
 	.def("RemoveShroud", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroud)
 	.def("RemoveShroudSilent", (void(Lua_Client::*)(void))&Lua_Client::RemoveShroudSilent)
 	.def("PlayMP3", (void(Lua_Client::*)(std::string))&Lua_Client::PlayMP3)

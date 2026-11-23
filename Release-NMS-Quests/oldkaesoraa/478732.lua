@@ -22,15 +22,67 @@ end
 function event_spawn(e)
 	e.self:SetEntityVariable("done", "0")
 	e.self:SetEntityVariable("dead", "0")
+	-- v464 hard mode: chest and loot-event/lockout identity follow the
+	-- expedition name's (Hard) suffix.
+	local hard = raid.is_hard()
+	e.self:SetEntityVariable("hard", hard and "1" or "0")
 	local exp = eq.get_expedition()
 	if exp.valid then
-		exp:SetLootEventByNPCTypeID(raid.CHEST.COUNCIL, raid.EVENT.COUNCIL)
+		exp:SetLootEventByNPCTypeID(raid.chest_for("COUNCIL", hard), raid.event_name("COUNCIL", hard))
 	end
 	-- councilors may boot after the anchor; align on a delay
 	eq.set_timer("align", 10000)
+	-- hard: poll for post-wipe loyalty redraws (live reshuffle rule)
+	if hard then
+		eq.set_timer("reshuffle", 30000)
+	end
 end
 
 function event_timer(e)
+	if e.timer == "reshuffle" then
+		-- hard: after a wipe (two calm polls, fight not done, nobody
+		-- engaged) the living councilors redraw their loyalties; dead
+		-- members stay dead and the 4-aligned total is preserved.
+		if e.self:GetEntityVariable("done") == "1" then
+			eq.stop_timer("reshuffle")
+			return
+		end
+		local el = eq.get_entity_list()
+		local any_engaged = false
+		local alive = {}
+		for _, id in ipairs(COUNCIL) do
+			local mob = el:GetNPCByID(id)
+			if mob and mob.valid then
+				if mob:IsEngaged() then any_engaged = true end
+				alive[#alive + 1] = mob
+			end
+		end
+		if any_engaged or #alive == 0 then
+			e.self:SetEntityVariable("calm", "0")
+			return
+		end
+		local calm = tonumber(e.self:GetEntityVariable("calm") or "0") + 1
+		if calm < 2 then
+			e.self:SetEntityVariable("calm", tostring(calm))
+			return
+		end
+		e.self:SetEntityVariable("calm", "0")
+		local dead = tonumber(e.self:GetEntityVariable("dead") or "0")
+		local slots = 4 - dead
+		if slots <= 0 or #alive == 0 then return end
+		if slots > #alive then slots = #alive end
+		local order = shuffle({ unpack(alive) })
+		for i, mob in ipairs(order) do
+			local bad = i <= slots
+			mob:SetEntityVariable("discord", bad and "1" or "0")
+			if bad then
+				eq.zone_emote(15, mob:GetCleanName()
+					.. " argues loudly for joining the Discord.")
+			end
+		end
+		eq.zone_emote(15, "The surviving councilors redraw their loyalties!")
+		return
+	end
 	if e.timer == "align" then
 		local el = eq.get_entity_list()
 		local order = shuffle({ unpack(COUNCIL) })
@@ -65,10 +117,12 @@ function event_signal(e)
 		e.self:SetEntityVariable("done", "1")
 		eq.zone_emote(15, "The council falls silent. Jaled`Dar's agents move among the bodies.")
 		local exp = eq.get_expedition()
-		if exp.valid and not exp:HasLockout(raid.EVENT.COUNCIL) then
-			exp:AddLockout(raid.EVENT.COUNCIL, eq.seconds("72h"))
+		local hard = e.self:GetEntityVariable("hard") == "1"
+		local event_name = raid.event_name("COUNCIL", hard)
+		if exp.valid and not exp:HasLockout(event_name) then
+			exp:AddLockout(event_name, eq.seconds("72h"))
 		end
-		raid.spawn_chest(e, raid.CHEST.COUNCIL)
+		raid.spawn_chest(e, raid.chest_for("COUNCIL", hard))
 		ach.set_zone(1645340, 1, 1645340)
 		ach.set_zone(1600030, 1, 1600252)
 	end

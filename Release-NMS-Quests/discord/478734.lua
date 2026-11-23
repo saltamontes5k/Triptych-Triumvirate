@@ -6,14 +6,17 @@
 
 local raid = require("sod_raids")
 local ach = require("achievement_flags")
-local EVENT = raid.EVENT.PALLORAX
-local CHEST = raid.CHEST.PALLORAX
 
 function event_spawn(e)
 	e.self:SetEntityVariable("done", "0")
+	-- v464 hard mode: the chest and the loot-event/lockout identity
+	follow the expedition name's (Hard) suffix, so hard and normal
+	run as separate lockouts with separate chests.
+	local hard = raid.is_hard()
+	e.self:SetEntityVariable("hard", hard and "1" or "0")
 	local exp = eq.get_expedition()
 	if exp.valid then
-		exp:SetLootEventByNPCTypeID(CHEST, EVENT)
+		exp:SetLootEventByNPCTypeID(raid.chest_for("PALLORAX", hard), raid.event_name("PALLORAX", hard))
 	end
 end
 
@@ -21,8 +24,9 @@ function event_signal(e)
 	if e.signal == 1 and e.self:GetEntityVariable("done") ~= "1" then
 		e.self:SetEntityVariable("done", "1")
 		local exp = eq.get_expedition()
-		if exp.valid and not exp:HasLockout(EVENT) then
-			exp:AddLockout(EVENT, eq.seconds("72h"))
+		local event_name = raid.event_name("PALLORAX", e.self:GetEntityVariable("hard") == "1")
+		if exp.valid and not exp:HasLockout(event_name) then
+			exp:AddLockout(event_name, eq.seconds("72h"))
 		end
 		ach.set_zone(1647040, 1, 1647040)
 		ach.set_zone(1600040, 1, 1600279)

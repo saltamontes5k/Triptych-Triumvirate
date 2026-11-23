@@ -11,6 +11,8 @@
 #include "task_client_state.h"
 #include "zonedb.h"
 #include "../common/shared_tasks.h"
+#include "../common/dodh_bellfast_admission.h"
+#include "../common/dodh_longshadow_admission.h"
 #include "worldserver.h"
 #include "dynamic_zone.h"
 #include "string_ids.h"
@@ -3091,6 +3093,29 @@ void ClientTaskState::AcceptNewTask(
 				Chat::Red,
 				"This task's selectable reward could not be prepared. Please try again."
 			);
+			return;
+		}
+	}
+
+	// Authored Depths of Darkhollow requester gate. A managed task is only
+	// offered by its exact authored giver, and only when the requester's
+	// faction/completion prerequisites are proven. Missing givers, missing
+	// rows and failed queries all deny. World->zone confirmations are exempt.
+	if (!client->m_requesting_shared_task && task->type == TaskType::Shared) {
+		auto *giver = entity_list.GetNPCByID(npc_entity_id);
+		if (DodhLongshadowAdmission::Managed(task_id) &&
+		    (!zone || !giver || giver->GetDepop() || giver->GetHP() <= 0 ||
+		     !DodhLongshadowAdmission::Requester(zone->GetZoneID(), zone->GetInstanceVersion(),
+		         zone->GetInstanceID(), giver->GetNPCTypeID(), giver->GetSpawnPointID()) ||
+		     !DodhLongshadowAdmission::EarnedPrerequisites(database, task_id, client->CharacterID()))) {
+			return;
+		}
+		if (DodhBellfastAdmission::Managed(task_id) &&
+		    (!zone || !giver || giver->GetDepop() || giver->GetHP() <= 0 ||
+		     client->IsSpiritShrouded() ||
+		     !DodhBellfastAdmission::Requester(zone->GetZoneID(), zone->GetInstanceVersion(),
+		         zone->GetInstanceID(), giver->GetNPCTypeID(), giver->GetSpawnPointID()) ||
+		     !DodhBellfastAdmission::EarnedPrerequisites(database, task_id, client->CharacterID()))) {
 			return;
 		}
 	}

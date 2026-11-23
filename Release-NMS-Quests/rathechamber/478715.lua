@@ -13,6 +13,7 @@ local raid = require("sod_raids")
 
 local engaged = false
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -33,6 +34,12 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- Xadrith comes in its harder thread!")
+				eq.set_timer("feedback", 45000)
+			end
 			eq.set_timer("adds", 45000)
 			eq.set_timer("blaze", 60000)
 			eq.zone_emote(15, "Xadrith the Voice shrieks, 'You trespass on the Voice of the Rallosian Empire!'")
@@ -48,7 +55,7 @@ function event_timer(e)
 		if not e.self:IsEngaged() then
 			engaged = false
 			clear_adds()
-			for _, t in ipairs({ "adds", "blaze" }) do eq.stop_timer(t) end
+			for _, t in ipairs({ "adds", "blaze", "feedback" }) do eq.stop_timer(t) end
 			pcall(function() e.self:GotoBind() end) -- back to the rooted spawn
 			e.self:Heal()
 			eq.zone_emote(15, "Xadrith falls silent once more.")
@@ -69,6 +76,13 @@ function event_timer(e)
 			end
 		end
 		eq.zone_emote(15, "Ra'tuk guardians answer the Voice's call!")
+	elseif e.timer == "feedback" then
+		-- hard: Discordant Feedback (live mechanic, skipped in normal)
+		local victim = raid.random_client(e.self:GetX(), e.self:GetY(), 300)
+		if victim then
+			eq.zone_emote(15, "Discordant feedback tears through " .. victim:GetCleanName() .. "!")
+			raid.hit(e.self, victim, 4000)
+		end
 	elseif e.timer == "blaze" then
 		eq.zone_emote(15, "Xadrith blazes with coruscating color!")
 		for _, client in ipairs(raid.alive_clients(e.self:GetX(), e.self:GetY(), 200)) do

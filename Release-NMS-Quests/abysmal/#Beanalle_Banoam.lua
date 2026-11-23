@@ -29,22 +29,22 @@ function event_trade(e)
   local item_lib = require("items")
   if e.other:IsTaskActivityActive(task_ids.bic_abysmal, 11) or e.other:IsTaskActivityActive(task_ids.bic_abysmal, 12) or e.other:IsTaskActivityActive(task_ids.bic_abysmal, 13) or e.other:IsTaskActivityActive(task_ids.bic_abysmal, 14) or e.other:IsTaskActivityActive(task_ids.bic_abysmal, 15) then
     if item_lib.check_turn_in(e.trade, {item1 = 67564}) then
-      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke.'")
+      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke. If you would rather have a different augment, seek out Fezbin Fizzle, who can change it out for another.'")
       e.other:SummonItem(67572)
       e.other:UpdateTaskActivity(task_ids.bic_abysmal, 12, 1)
     end
     if item_lib.check_turn_in(e.trade, {item1 = 67565}) then
-      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke.'")
+      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke. If you would rather have a different augment, seek out Fezbin Fizzle, who can change it out for another.'")
       e.other:SummonItem(67573)
       e.other:UpdateTaskActivity(task_ids.bic_abysmal, 13, 1)
     end
     if item_lib.check_turn_in(e.trade, {item1 = 67566}) then
-      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke.'")
+      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke. If you would rather have a different augment, seek out Fezbin Fizzle, who can change it out for another.'")
       e.other:SummonItem(67575)
       e.other:UpdateTaskActivity(task_ids.bic_abysmal, 14, 1)
     end
     if item_lib.check_turn_in(e.trade, {item1 = 67567}) then
-      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke.'")
+      e.other:Message(MT.NPCQuestSay, "Beanalle Banoam says 'Ah, perfect. I am glad you were successful in finding it. Now, if you will give me one second I will condense the shard into concentrated energy which you can add to your stone. There we are. Please take the time to attach this, but make sure you do it in the order I mentioned when we first spoke. If you would rather have a different augment, seek out Fezbin Fizzle, who can change it out for another.'")
       e.other:SummonItem(67574)
       e.other:UpdateTaskActivity(task_ids.bic_abysmal, 15, 1)
     end

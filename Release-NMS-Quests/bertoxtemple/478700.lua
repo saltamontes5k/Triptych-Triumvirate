@@ -14,8 +14,10 @@ local raid = require("sod_raids")
 
 local engaged = false
 local adds75_done = false
+local adds30_done = false
 local ae50_on = false
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -29,6 +31,7 @@ end
 local function reset(e)
 	engaged = false
 	adds75_done = false
+	adds30_done = false
 	ae50_on = false
 	clear_adds()
 	for _, t in ipairs({ "draw", "fury", "resetcheck" }) do
@@ -42,6 +45,11 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- Rottrued comes in its harder thread!")
+			end
 			eq.set_timer("draw", 40000)
 			eq.zone_emote(15, "Rottrued the Twisted cries out, 'The Wrext Mal rise! Bertoxxulous ascends!'")
 		end
@@ -74,7 +82,7 @@ function event_timer(e)
 	-- 75%: mundunugu wave
 	if not adds75_done and e.self:GetHPRatio() <= 75 then
 		adds75_done = true
-		for i = 1, 3 do
+		for i = 1, hard and 5 or 3 do
 			local mob = raid.spawn_add(raid.ADD.ritualist, e.self, 45)
 			if mob then
 				adds[#adds + 1] = mob:GetID()
@@ -87,11 +95,21 @@ function event_timer(e)
 		eq.zone_emote(15, "Twisted mundunugu claw their way out of the temple floor!")
 	end
 
+	-- 30% (hard): the martyr phase -- a second mundunugu wave pours in
+	if hard and not adds30_done and e.self:GetHPRatio() <= 30 then
+		adds30_done = true
+		for _ = 1, 5 do
+			local mob = raid.spawn_add(raid.ADD.ritualist, e.self, 45)
+			if mob then adds[#adds + 1] = mob:GetID() end
+		end
+		eq.zone_emote(15, "The martyr camps ignite -- twisted mundunugu rise from every corner!")
+	end
+
 	-- 50%: recurring AE
 	if not ae50_on and e.self:GetHPRatio() <= 50 then
 		ae50_on = true
 		eq.zone_emote(15, "Rottrued's flesh turns aside spell and steel alike -- he begins to chant a screeching fury.")
-		eq.set_timer("fury", 30000)
+		eq.set_timer("fury", hard and 20000 or 30000)
 	end
 end
 
@@ -99,6 +117,6 @@ function event_death_complete(e)
 	clear_adds()
 	eq.stop_timer("fury")
 	eq.zone_emote(15, "Rottrued collapses, his ascension unmade. A hidden agent moves in the shadows.")
-	raid.spawn_chest(e, raid.CHEST.ROTT)
+	raid.spawn_chest(e, raid.chest_for("ROTT", raid.is_hard()))
 	eq.signal(raid.CTRL.ROTT, 1)
 end

@@ -20,7 +20,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "../common/opcodemgr.h"
 #include "../common/raid.h"
 #include "../common/data_bucket.h"
+#include "../common/evolving_items.h"
 #include "achievement_manager.h"
+#include "nms_housing_portal.h"
+#include "nms_housing_service.h"
 
 #include <iomanip>
 #include <iostream>
@@ -68,6 +71,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 #include "gm_commands/door_manipulation.h"
 #include "gm_commands/object_manipulation.h"
 #include "client.h"
+#include "dodh_brovil_gate.inc"
 #include "nms_vault.h"
 #include "nms_loot_offers.h"
 #include "nms_lon_session.h"
@@ -158,10 +162,10 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_RealEstatePlacementSource)
 	NMS_LOG_ONLY(OP_RealEstatePlacementEnd)
 	NMS_LOG_ONLY(OP_RealEstateOperationResult)
-	NMS_LOG_ONLY(OP_RealEstateCustomInteraction)
-	NMS_LOG_ONLY(OP_RealEstateTrophyOpen)
-	NMS_LOG_ONLY(OP_RealEstateTrophyToggle)
-	NMS_LOG_ONLY(OP_RealEstateTrophy)
+	// CustomInteraction now has a real handler (zone/nms_housing_pets.cpp, gated by
+	// RuleB(Custom, HousingPets)); it is the pet command request (0x51e3).
+	// TrophyOpen/Trophy/TrophyToggle now have real handlers (zone/nms_housing_trophies.cpp,
+	// gated by RuleB(Custom, HousingTrophies)); List/Timer/Clear are server->client only.
 	NMS_LOG_ONLY(OP_RealEstateTrophyList)
 	NMS_LOG_ONLY(OP_RealEstateTrophyTimer)
 	NMS_LOG_ONLY(OP_RealEstateTrophyClear)
@@ -173,6 +177,19 @@ static const LogOnlyOpcode k_log_only_rof2[] = {
 	NMS_LOG_ONLY(OP_RealEstateTransferResult)
 	NMS_LOG_ONLY(OP_RealEstateTransferConsent)
 	NMS_LOG_ONLY(OP_RealEstateBindSpawn)
+	// Hailstone housing cross-reference (hailstone-client v0.7.1-beta): named so the message logs
+	// with its opcode instead of dropping as unknown. No handler; see patch_RoF2.conf.
+	NMS_LOG_ONLY(OP_RealEstateNop1)
+	NMS_LOG_ONLY(OP_RealEstateItemSummaryUpdate)
+	NMS_LOG_ONLY(OP_RealEstateItemRowAdd)
+	NMS_LOG_ONLY(OP_RealEstateItemRemoved)
+	NMS_LOG_ONLY(OP_RealEstateAccessList)
+	NMS_LOG_ONLY(OP_RealEstateNop2)
+	NMS_LOG_ONLY(OP_RealEstateRemove)
+	NMS_LOG_ONLY(OP_RealEstateItemMenu13)
+	NMS_LOG_ONLY(OP_RealEstateOwnedListToggle)
+	NMS_LOG_ONLY(OP_RealEstateItemSummaryForget)
+	NMS_LOG_ONLY(OP_RealEstateOwnedItemListToggle)
 	NMS_LOG_ONLY(OP_GuildTrophyAvailable)
 	NMS_LOG_ONLY(OP_GuildTrophyActive)
 	NMS_LOG_ONLY(OP_GuildTrophyToggle)
@@ -496,6 +513,7 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RaidDelegateAbility] = &Client::Handle_OP_RaidDelegateAbility;
 	ConnectedOpcodes[OP_RaidClearNPCMarks] = &Client::Handle_OP_RaidClearNPCMarks;
 	ConnectedOpcodes[OP_RandomReq] = &Client::Handle_OP_RandomReq;
+	ConnectedOpcodes[OP_RealEstateCustomInteraction] = &Client::Handle_OP_RealEstateCustomInteraction;
 	ConnectedOpcodes[OP_RealEstateExit] = &Client::Handle_OP_RealEstateExit;
 	ConnectedOpcodes[OP_RealEstateHouseSwap] = &Client::Handle_OP_RealEstateHouseSwap;
 	ConnectedOpcodes[OP_RealEstateGo] = &Client::Handle_OP_RealEstateGo;
@@ -510,6 +528,9 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_RealEstateInspect] = &Client::Handle_OP_RealEstateInspect;
 	ConnectedOpcodes[OP_RealEstateSale] = &Client::Handle_OP_RealEstateSale;
 	ConnectedOpcodes[OP_RealEstateTransfer] = &Client::Handle_OP_RealEstateTransfer;
+	ConnectedOpcodes[OP_RealEstateTrophyOpen] = &Client::Handle_OP_RealEstateTrophyOpen;
+	ConnectedOpcodes[OP_RealEstateTrophy] = &Client::Handle_OP_RealEstateTrophy;
+	ConnectedOpcodes[OP_RealEstateTrophyToggle] = &Client::Handle_OP_RealEstateTrophyToggle;
 	ConnectedOpcodes[OP_RealEstatePickup] = &Client::Handle_OP_RealEstatePickup;
 	ConnectedOpcodes[OP_RealEstateStoreAll] = &Client::Handle_OP_RealEstateStoreAll;
 
@@ -558,6 +579,11 @@ void MapOpcodes()
 	ConnectedOpcodes[OP_SpiritShroudEquipmentRequest] = &Client::Handle_OP_SpiritShroudPreview;
 	ConnectedOpcodes[OP_SpiritShroudComplete] = &Client::Handle_OP_SpiritShroudComplete;
 	ConnectedOpcodes[OP_SpiritShroudBank] = &Client::Handle_OP_SpiritShroudBank;
+	// Fall of Illsalin monster-mission panel (RoF2 native task journal). The provider
+	// reads fall_shroud_roles and writes fall_shroud_choices; no form/session here.
+	ConnectedOpcodes[OP_FallMonsterCatalogue] = &Client::Handle_OP_FallMonsterSelect;
+	ConnectedOpcodes[OP_FallMonsterDetails] = &Client::Handle_OP_FallMonsterSelect;
+	ConnectedOpcodes[OP_FallMonsterSelectRole] = &Client::Handle_OP_FallMonsterSelect;
 	ConnectedOpcodes[OP_ShopEnd] = &Client::Handle_OP_ShopEnd;
 	ConnectedOpcodes[OP_ShopPlayerBuy] = &Client::Handle_OP_ShopPlayerBuy;
 	ConnectedOpcodes[OP_ShopPlayerSell] = &Client::Handle_OP_ShopPlayerSell;
@@ -874,19 +900,11 @@ void Client::ReapplyBuff(uint32 index, bool from_suppress)
 // Finish client connecting state
 void Client::CompleteConnect()
 {
-	// Native Spirit Shroud state metadata loads first (form definition and
-	// owned-rank set for the protocol path); the persisted shroud re-apply
-	// below then branches on it.
-	LoadSpiritShroudState();
-
-	// If the zone was killed mid-shroud, restore the real profile before any
-	// class/stat logic runs so the character is never stranded as a shroud;
-	// otherwise re-apply a persisted shroud (shrouds survive zoning/relogging).
-	LoadAndApplyShroudState();
-
-	if (RuleB(Custom, MulticlassingEnabled)) {
-		m_pp.classes = Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
-	}
+	// Shroud state (and the multiclass class bitmask) is applied earlier, in
+	// Handle_Connect_OP_ZoneEntry, BEFORE the zone-in profile is serialized —
+	// that is what lets the client receive the form on the wire with no
+	// runtime OP_Shroud transform. Nothing shroud-related belongs here: this
+	// point is already after the profile has been sent.
 
 	// Load Kill Counters
 	auto kdb = AccountKillCountsRepository::GetWhere(database, fmt::format("account_id = {}", account_id));
@@ -905,6 +923,15 @@ void Client::CompleteConnect()
 	MarkPetListDirty();
 
 	SendAllPackets();
+
+	// Evolving items: reset activations that exceed the cap (legacy characters
+	// could have been lit up before the rule existed).
+	NormalizeEvolvingItemActivation();
+
+	// A character that logged in wearing a form needs its shroud UI packets
+	// (progress, monster points, template stats) — they are not profile fields
+	// and the pre-reload flow carried them on the OP_Shroud transform.
+	SendShroudZoneInState();
 
 	hpupdate_timer.Start();
 	autosave_timer.Start();
@@ -1083,6 +1110,9 @@ void Client::CompleteConnect()
 	// ready yet and MacroQuest faults on the CXStr-backed window. Process() sends it
 	// after a short settle delay instead.
 	m_nms_loot_restore_timer.Start(3000);
+	// Expiry delivery poll. Separate from the zone-in restore: this one repeats, but it only
+	// touches the DB and refreshes the window when an offer actually expired into the bags.
+	m_nms_loot_expire_timer.Start(15000);
 
 	DeleteEntityVariable(SEE_BUFFS_FLAG);
 
@@ -1409,6 +1439,7 @@ void Client::Handle_Connect_OP_ClientReady(const EQApplicationPacket *app)
 		SendZoneInPackets();
 	}
 	CompleteConnect();
+	SendFallOfIllsalinCatalogue();
 	SendHPUpdate();
 }
 
@@ -1642,6 +1673,13 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 
 	uint32 cid = CharacterID();
 	character_id = cid; /* Global character_id reference */
+
+	if (!ClaimInventorySession(cid, AccountID(), zone ? zone->GetZoneID() : 0,
+		zone ? zone->GetInstanceID() : 0)) {
+		LogError("Inventory session lease refused for character [{}] account [{}]", cid, AccountID());
+		Disconnect();
+		return;
+	}
 
 	/* Flush and reload factions */
 	database.RemoveTempFactions(this);
@@ -2057,6 +2095,58 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 	/* Reset rest timer if the durations have been lowered in the database */
 	if ((m_pp.RestTimer > RuleI(Character, RestRegenTimeToActivate)) && (m_pp.RestTimer > RuleI(Character, RestRegenRaidTimeToActivate)))
 		m_pp.RestTimer = 0;
+
+	// ---------------------------------------------------------------------
+	// Shroud state is applied HERE, at the end of the m_pp assembly and before
+	// the profile is serialized below, so the form's class/race/level/stats/AA
+	// travel in the normal OP_PlayerProfile. The client builds the shroud
+	// character from that profile exactly as it builds any other, which is why
+	// no OP_Shroud transform (and no client-side patch) is needed at runtime.
+	//
+	// Ordering matters: these loads used to run in CompleteConnect(), i.e.
+	// AFTER this profile had already been sent, which is what forced the
+	// deferred OP_Shroud re-apply. Do not move them back.
+	//
+	// Native Spirit Shroud metadata loads first (form definition and owned-rank
+	// set for the protocol path); the persisted shroud re-apply then branches on
+	// it. If the zone was killed mid-shroud the restore branch puts the real
+	// profile back before it is serialized, so the client is never stranded.
+	LoadSpiritShroudState();
+	LoadAndApplyShroudState();
+	// Friendship consider cache (Custom:FriendConsiderAmiable): one indexed
+	// SELECT per zone-in, refreshed again on OP_FriendsWho.
+	LoadFriendState();
+
+	// A form change zones the player to themselves, which the client only
+	// answers in safe-coords mode, so the arrival is the zone's safe point.
+	// Put them back where they were (see ReloadForShroudTransition).
+	if (const std::string stored = GetBucket("ShroudReturnPos"); !stored.empty()) {
+		SetBucket("ShroudReturnPos", "");
+
+		float x = 0.0f, y = 0.0f, z = 0.0f, heading = 0.0f;
+		unsigned long long stamp = 0;
+		if (std::sscanf(stored.c_str(), "%f,%f,%f,%f,%llu", &x, &y, &z, &heading, &stamp) == 5) {
+			const uint64_t now = static_cast<uint64_t>(std::time(nullptr));
+			if (now >= stamp && now - stamp <= 120) {
+				m_Position = glm::vec4(x, y, z, heading);
+				LogInfo("Client [{}] shroud reload position restored to ({:.2f}, {:.2f}, {:.2f})",
+					GetCleanName(), x, y, z);
+			} else {
+				LogInfo("Client [{}] ignored a stale shroud reload position", GetCleanName());
+			}
+		}
+	}
+
+	// Multiclass bitmask must be in the profile too (same reason). While a
+	// shroud form is active the character is single-class by definition — the
+	// client renders the class list from this bitmask, so leaving the real
+	// multiclass mask here showed a cake-shaped Bard/Rogue/Berserker (and let
+	// multiclass AA/spell gates follow the real classes into the form).
+	if (RuleB(Custom, MulticlassingEnabled)) {
+		m_pp.classes = IsShrouded()
+			? GetPlayerClassBit(m_pp.class_)
+			: Strings::ToInt(GetBucket("GestaltClasses"), GetPlayerClassBit(m_pp.class_));
+	}
 
 	/* This checksum should disappear once dynamic structs are in... each struct strategy will do it */ // looks to be in place now
 	//CRC32::SetEQChecksum((unsigned char*)&m_pp, sizeof(PlayerProfile_Struct) - sizeof(m_pp.m_player_profile_version) - 4);
@@ -3316,6 +3406,10 @@ void Client::Handle_OP_AltCurrencyMerchantRequest(const EQApplicationPacket *app
 				continue;
 			}
 
+			if (!PassesMerchantBucket(ml)) {
+				continue;
+			}
+
 			item = database.GetItem(ml.item);
 			if (item) {
 				item_ss << "^" << item->Name << "|";
@@ -3374,6 +3468,10 @@ void Client::Handle_OP_AltCurrencyPurchase(const EQApplicationPacket *app)
 
 			int32 fac = tar->GetPrimaryFaction();
 			if (fac != 0 && GetModCharacterFactionLevel(fac) < ml.faction_required) {
+				continue;
+			}
+
+			if (!PassesMerchantBucket(ml)) {
 				continue;
 			}
 
@@ -3584,6 +3682,10 @@ void Client::Handle_OP_AltCurrencySell(const EQApplicationPacket *app)
 				continue;
 			}
 
+			if (!PassesMerchantBucket(ml)) {
+				continue;
+			}
+
 			item = database.GetItem(ml.item);
 			if (!item)
 				continue;
@@ -3708,6 +3810,10 @@ void Client::Handle_OP_AltCurrencySellSelection(const EQApplicationPacket *app)
 
 				int32 fac = tar->GetPrimaryFaction();
 				if (fac != 0 && GetModCharacterFactionLevel(fac) < ml.faction_required) {
+					continue;
+				}
+
+				if (!PassesMerchantBucket(ml)) {
 					continue;
 				}
 
@@ -4054,6 +4160,22 @@ void Client::Handle_OP_AugmentItem(const EQApplicationPacket *app)
 
 						aug = tobe_auged->GetAugment(in_augment->augment_index);
 						if (aug) {
+							// Evolving augs socket as first-class items: ensure the
+							// evolve row exists and arm the equip timer (the cursor
+							// clone carried a disabled timer). Socketed augs can
+							// never appear in the client's Evolution tab (it lists
+							// inventory-slot items only), so auto-activate them in
+							// worn gear.
+							if (aug->IsEvolving()) {
+								EvolvingItemsManager::Instance()->DoLootChecks(
+									CharacterID(), static_cast<uint16>(item_slot), *aug
+								);
+
+								// Activation is the player's choice now that socketed
+								// augs are listed in the Evolution tab; auto-activating
+								// here would bypass MaxActiveEvolvingItems.
+							}
+
 							std::vector<std::any> args;
 							args.push_back(aug);
 
@@ -4285,8 +4407,14 @@ void Client::Handle_OP_AugmentItem(const EQApplicationPacket *app)
 	}
 
 	for (int class_id = Class::Warrior; class_id <= Class::Berserker; class_id++) {
-		auto pet_bag_idx = GetActivePetBagSlot(class_id);
-		if (pet_bag_idx >= 0 && EQ::InventoryProfile::CalcSlotId(in_augment->container_slot) == pet_bag_idx) {
+		bool touched_pet_bag = false;
+		for (auto& pet_bag : CollectActivePetBags(class_id)) {
+			if (EQ::InventoryProfile::CalcSlotId(in_augment->container_slot) == pet_bag.first) {
+				touched_pet_bag = true;
+				break;
+			}
+		}
+		if (touched_pet_bag) {
 			DoPetBagResync(class_id);
 			break;
 		}
@@ -5979,6 +6107,15 @@ void Client::Handle_OP_ClientUpdate(const EQApplicationPacket *app) {
 				MessageString(Chat::Skills, 12682); //You have moved and are no longer hidden!!
 			}
 		}
+
+		/* Break feign death if moving. A multiclass player whose client class can't feign isn't stood up by
+		   their client, so it never sends a standing appearance and the server would keep them feigned. */
+		if (GetFeigned()) {
+			SetFeigned(false);
+			playeraction = 0;
+			SetAppearance(eaStanding, false);
+			Message(Chat::Skills, "You have moved and are no longer feigning death.");
+		}
 		rewind_timer.Start(30000, true);
 	}
 
@@ -6126,6 +6263,17 @@ void Client::Handle_OP_Consider(const EQApplicationPacket *app)
 			(t->IsNPC()) ? t->CastToNPC()->GetPrimaryFaction() : 0,
 			t
 		);
+	} else if (t->IsClient()) {
+		// Marriage/spouse branch lands here later: spouse -> FACTION_ALLY.
+		// The Indifferent baseline is deliberate: it keeps the later spouse
+		// byte (1) distinguishable from a stranger on the wire (the stock
+		// baseline here was 1). The client ignores this byte for players
+		// until the dinput8 display hook lands.
+		if (RuleB(Custom, FriendConsiderAmiable) && IsFriendName(t->GetName())) {
+			con->faction = FACTION_AMIABLY;
+		} else {
+			con->faction = FACTION_INDIFFERENTLY;
+		}
 	} else {
 		con->faction = 1;
 	}
@@ -6171,6 +6319,18 @@ void Client::Handle_OP_Consider(const EQApplicationPacket *app)
 		con->faction = FACTION_DUBIOUSLY;
 	}
 
+	// TEMP [friends-test]: consider-byte evidence for the friend-con tests;
+	// remove once the in-game tests have been observed.
+	if (t->IsClient()) {
+		LogInfo(
+			"[consider] target [{}] charid [{}] faction [{}] pvpcon [{}]",
+			t->GetName(),
+			t->CastToClient()->CharacterID(),
+			con->faction,
+			con->pvpcon
+		);
+	}
+
 	QueuePacket(outapp);
 	// only wanted to check raid target once
 	// and need con to still be around so, do it here!
@@ -6208,6 +6368,10 @@ void Client::Handle_OP_Consider(const EQApplicationPacket *app)
 		}
 
 		SendColoredText(color, std::string("This creature would take an army to defeat!"));
+	}
+
+	if (t->IsRareCreature()) {
+		SendColoredText(color, std::string("This is a Rare Creature"));
 	}
 
 	if (t->GetSpecialAbility(SpecialAbility::CharmImmunity)) {
@@ -7518,6 +7682,9 @@ void Client::Handle_OP_FriendsWho(const EQApplicationPacket *app)
 {
 	char *FriendsString = (char*)app->pBuffer;
 	FriendsWho(FriendsString);
+	// UCS persists /friend adds and removes; this packet is the zone's chance
+	// to re-read the friends table (one indexed SELECT) without a re-zone.
+	LoadFriendState();
 	return;
 }
 
@@ -10004,7 +10171,10 @@ void Client::Handle_OP_Ignore(const EQApplicationPacket *app)
 
 void Client::Handle_OP_Illusion(const EQApplicationPacket *app)
 {
-	if (app->size != sizeof(Illusion_Struct)) {
+	// RoF2+ clients send the SoF-era 256-byte Illusion_Struct with 80 trailing
+	// bytes appended (336 total). The prefix layout is unchanged and only the
+	// race field (offset 68) is read here.
+	if (app->size != sizeof(Illusion_Struct) && app->size != 336) {
 		LogError("Received invalid sized OP_Illusion: got [{}], expected [{}]", app->size, sizeof(Illusion_Struct));
 		DumpPacket(app);
 		return;
@@ -10019,17 +10189,22 @@ void Client::Handle_OP_Illusion(const EQApplicationPacket *app)
 		return;
 	}
 
-	Illusion_Struct* bnpc = (Illusion_Struct*)app->pBuffer;
+	Illusion_Struct bnpc;
+	memcpy(&bnpc, app->pBuffer, sizeof(bnpc));
 	//these need to be implemented
 	/*
-	texture		= bnpc->texture;
-	helmtexture	= bnpc->helmtexture;
-	luclinface	= bnpc->luclinface;
+	texture		= bnpc.texture;
+	helmtexture	= bnpc.helmtexture;
+	luclinface	= bnpc.luclinface;
 	*/
-	race = bnpc->race;
+	race = bnpc.race;
 	size = 0;
 
-	entity_list.QueueClients(this, app);
+	// rebroadcast at the canonical 256-byte size every client version accepts
+	auto outapp = new EQApplicationPacket(OP_Illusion, sizeof(Illusion_Struct));
+	memcpy(outapp->pBuffer, &bnpc, sizeof(Illusion_Struct));
+	entity_list.QueueClients(this, outapp);
+	safe_delete(outapp);
 	return;
 }
 
@@ -12764,6 +12939,12 @@ void Client::Handle_OP_PopupResponse(const EQApplicationPacket *app)
 
 	PopupResponse_Struct *popup_response = (PopupResponse_Struct *) app->pBuffer;
 
+	// The guild-hall portal offers a destination with the stone id as its popup id; claim it before
+	// the EQEmu-defined ids below so an unrelated handler can never act on that number.
+	if (NmsHousingPortal::HandlePopup(this, popup_response)) {
+		return;
+	}
+
 	//Get Item Details if POPUPID_REPLACE_SPELLWINDOW was used
 
 	/**
@@ -14880,15 +15061,9 @@ void Client::Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app)
 				break;
 			}
 
-			if (!ml.bucket_name.empty() && !ml.bucket_value.empty()) {
-				DataBucketKey k = GetScopedBucketKeys();
-				k.key = ml.bucket_name;
-
-				auto b = DataBucket::GetData(k);
-				if (b.value.empty() || !zone->CompareDataBucket(ml.bucket_comparison, ml.bucket_value, b.value)) {
-					gate_blocked = true;
-					break;
-				}
+			if (!PassesMerchantBucket(ml)) {
+				gate_blocked = true;
+				break;
 			}
 
 			item_id = ml.item;
@@ -15402,6 +15577,14 @@ void Client::Handle_OP_ShopRequest(const EQApplicationPacket *app)
 
 	// you have to be somewhat close to them to be properly using them
 	if (!NmsVaultIsMerchant(this, tmp->GetID()) && DistanceSquared(m_Position, tmp->GetPosition()) > USE_NPC_RANGE2) {
+		return;
+	}
+
+	// A housing service vendor belongs to the estate that placed it: the plot owner, the guild
+	// whose hall holds it, or a guest the rules allow. Ordinary merchants are never affected --
+	// AllowsMerchant() is true for anything this module does not own.
+	if (!NmsHousingService::AllowsMerchant(this, tmp)) {
+		Message(Chat::Yellow, "This housing vendor is not available to you.");
 		return;
 	}
 
@@ -16270,7 +16453,8 @@ void Client::Handle_OP_TrackUnknown(const EQApplicationPacket *app)
 
 void Client::Handle_OP_TradeAcceptClick(const EQApplicationPacket *app)
 {
-	Mob* with = trade->With();
+	Mob* with = trade ? trade->With() : nullptr;
+	if (DodhBrovilGate::HandleTradeAccept(*this, with)) return;
 	trade->state = TradeAccepted;
 
 	if (with && with->IsClient()) {

@@ -80,7 +80,7 @@ well-formed, and `#housing exterior <door_id> <item_id> <model>` is the probe.
 | Their requirement | Our status |
 | --- | --- |
 | May 10 2013 RoF2 client matching their binary hashes | We target the same build (#630) but cannot validate against their catalogs; ours is identified by our own IDA work |
-| Collision maps (`maps/base`) | **Absent here.** No `maps/base` anywhere under `C:\EQS`; our housing does no collision validation, so nothing depends on it. If we ever add placement validation, this becomes a prerequisite |
+| Collision maps (`maps/base`) | **Present for the housing zones** (2026-11-21 correction — an earlier revision claimed absent): `neighborhood.map` plus the four `phinterior*` interior maps. Our furniture placement still does no collision validation, so nothing depends on them yet; Phase B housing pets (Walk/Run containment) is the first consumer |
 | Original moving-crate item 62586 metadata | Present (`items` 62586, itemtype 11) |
 | Native housing rules enabled in the active ruleset | N/A — see above |
 | `patch_RoF2.conf` gains their opcode symbols | We already map the opcodes we use. Remember the deploy gotcha (§13): the runtime copy in `Build/bin/Release/` is separate |

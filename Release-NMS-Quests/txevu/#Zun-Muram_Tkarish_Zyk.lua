@@ -2,6 +2,49 @@
 
 local init_engage	= false
 
+-- The four Ikaav Ritualists that drive the ZMTZ add timers
+local ikaav_west	= 297147
+local ikaav_north	= 297075
+local ikaav_south	= 297076
+local ikaav_east	= 297077
+
+function count_ikaav()
+	local alive = 0
+	if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_west) then alive = alive + 1 end
+	if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_north) then alive = alive + 1 end
+	if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_south) then alive = alive + 1 end
+	if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_east) then alive = alive + 1 end
+	return alive
+end
+
+-- The fewer Ikaav that are alive, the faster the survivors summon adds
+function add_interval(alive)
+	if alive >= 4 then
+		return 2 * 60 * 1000 -- unchanged 2 minute baseline
+	elseif alive == 3 then
+		return 90 * 1000
+	elseif alive == 2 then
+		return 60 * 1000
+	else
+		return 45 * 1000
+	end
+end
+
+-- The fewer Ikaav that are alive, the more likely a charmable mastruq chaosslayer is summoned
+function spawn_zmtz_add(e, x, y, z, h, alive)
+	local add
+	if alive >= 4 then
+		add = eq.ChooseRandom(297159, 297161, 297161, 297222, 297222, 297223, 297134)
+	elseif alive == 3 then
+		add = eq.ChooseRandom(297159, 297159, 297161, 297222, 297222, 297223, 297134)
+	elseif alive == 2 then
+		add = eq.ChooseRandom(297159, 297159, 297159, 297161, 297222, 297222, 297223)
+	else
+		add = eq.ChooseRandom(297159, 297159, 297159, 297159, 297161, 297222, 297223)
+	end
+	eq.spawn2(add, 0, 0, x, y, z, h):AddToHateList(e.self:GetHateTop(), 1)
+end
+
 function event_signal(e)
   if e.signal == 100 then
     eq.set_timer('vuln', 30 * 1000)
@@ -32,6 +75,7 @@ function event_combat(e)
 		eq.set_timer("OOBcheck", 3000);
 		--eq.stop_timer("fail_check");
 		eq.set_timer("aggrolink", 3 * 1000);
+		eq.set_timer("ikaav_check", 10 * 1000); -- watch for all Ikaav being slain
 		if not eq.is_paused_timer("fail_check") then
 			eq.pause_timer("fail_check");
 		end
@@ -49,6 +93,7 @@ function event_combat(e)
 		eq.stop_timer("OOBcheck");
 		--eq.set_timer("fail_check", 20 * 60 * 1000); --20 min reset
 		eq.stop_timer("aggrolink");
+		eq.stop_timer("ikaav_check");
 		if not init_engage then
 			--30 minutes cumulative to finish or the entire event resets
 			eq.set_timer("fail_check", 1800000)
@@ -63,9 +108,10 @@ function event_timer(e)
 	-- Ritualist Add Handling
 	if e.timer == "ritualist_adds_1" then -- North
 		eq.stop_timer(e.timer);
-		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(297075) then
-			eq.spawn2(eq.ChooseRandom(297159, 297161, 297161, 297222, 297222, 297223, 297134),0,0,1305, 27, -304, 0):AddToHateList(e.self:GetHateTop(),1) -- North
-			eq.set_timer("ritualist_adds_1", 2 * 60 * 1000); -- 2 minute timer
+		local alive = count_ikaav()
+		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_north) then
+			spawn_zmtz_add(e, 1305, 27, -304, 0, alive) -- North
+			eq.set_timer("ritualist_adds_1", add_interval(alive));
 		end
   elseif e.timer == 'vuln' then
     eq.stop_timer('vuln')
@@ -79,22 +125,38 @@ function event_timer(e)
     e.self:ModifyNPCStat("fr", "1000")
 	elseif e.timer == "ritualist_adds_2" then -- East
 		eq.stop_timer(e.timer);
-		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(297077) then
-			eq.spawn2(eq.ChooseRandom(297159, 297161, 297161, 297222, 297222, 297223, 297134),0,0,1276, 0, -304, 384):AddToHateList(e.self:GetHateTop(),1) -- East
-			eq.set_timer("ritualist_adds_2", 2 * 60 * 1000); -- 2 minute timer
+		local alive = count_ikaav()
+		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_east) then
+			spawn_zmtz_add(e, 1276, 0, -304, 384, alive) -- East
+			eq.set_timer("ritualist_adds_2", add_interval(alive));
 		end
 	elseif e.timer == "ritualist_adds_3" then -- South
 		eq.stop_timer(e.timer);
-		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(297076) then
-			eq.spawn2(eq.ChooseRandom(297159, 297161, 297161, 297222, 297222, 297223, 297134),0,0,1305, -27, -304, 256):AddToHateList(e.self:GetHateTop(),1) -- South
-			eq.set_timer("ritualist_adds_3", 2 * 60 * 1000); -- 2 minute timer
+		local alive = count_ikaav()
+		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_south) then
+			spawn_zmtz_add(e, 1305, -27, -304, 256, alive) -- South
+			eq.set_timer("ritualist_adds_3", add_interval(alive));
 		end	
 	elseif e.timer == "ritualist_adds_4" then -- West
 		eq.stop_timer(e.timer);
-		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(297147) then
-			eq.spawn2(eq.ChooseRandom(297159, 297161, 297161, 297222, 297222, 297223, 297134),0,0,1330, 0, -304, 128):AddToHateList(e.self:GetHateTop(),1) -- West
-			eq.set_timer("ritualist_adds_4", 2 * 60 * 1000); -- 2 minute timer
+		local alive = count_ikaav()
+		if eq.get_entity_list():IsMobSpawnedByNpcTypeID(ikaav_west) then
+			spawn_zmtz_add(e, 1330, 0, -304, 128, alive) -- West
+			eq.set_timer("ritualist_adds_4", add_interval(alive));
 		end
+	elseif e.timer == "ikaav_check" then
+		-- All four Ikaav slain: restore one so a charmable chaosslayer can still be summoned
+		if count_ikaav() == 0 and not eq.has_timer("ikaav_restore") then
+			eq.spawn2(ikaav_west, 0, 0, 1353, 0, -305, 384); -- West Ikaav Ritualist
+			eq.set_timer("ikaav_restore", 60 * 1000); -- 60s cooldown on restoration
+			-- Re-arm the add timers (all were stopped while their ritualist was dead)
+			eq.set_timer("ritualist_adds_1", 30 * 1000);
+			eq.set_timer("ritualist_adds_2", 60 * 1000);
+			eq.set_timer("ritualist_adds_3", 90 * 1000);
+			eq.set_timer("ritualist_adds_4", 120 * 1000);
+		end
+	elseif e.timer == "ikaav_restore" then
+		eq.stop_timer("ikaav_restore");
 	elseif e.timer == "fail_check" then
 		-- respawn the whole event
 		eq.depop_all(297147); -- West

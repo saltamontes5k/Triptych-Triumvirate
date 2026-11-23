@@ -2111,11 +2111,13 @@ void NmsVaultApplyLockerBonuses(Client *c, StatBonuses *b)
 	safe_delete(inst);
 }
 
-// Applies ONLY an item's instrument and skill mods (plus the same from its augs) to b -
-// never stats, resists, or any other SPA. Mirrors the BardType switch and SkillModValue
-// block of AddItemBonuses (bonuses.cpp) so a mod-slot item behaves exactly like its worn
-// counterpart for those two effects and nothing else.
-static void NmsVaultApplyFilteredItemMods(const EQ::ItemInstance *inst, StatBonuses *b, bool is_augment = false)
+// Applies ONLY an item's instrument mods, skill mods, and focus effect (plus the same
+// from its augs) to b - never stats, resists, or any other SPA. Mirrors the BardType
+// switch, SkillModValue, and Focus blocks of AddItemBonuses (bonuses.cpp) so a mod-slot
+// item behaves exactly like its worn counterpart for those three effects and nothing
+// else. The focus block sets FocusEffects[type], which is what lets the parked item's
+// focus compete best-wins in GetFocusEffect's locker list (spell_effects.cpp).
+static void NmsVaultApplyFilteredItemMods(Client *c, const EQ::ItemInstance *inst, StatBonuses *b, bool is_augment = false)
 {
 	if (!inst || !inst->IsClassCommon()) {
 		return;
@@ -2189,11 +2191,19 @@ static void NmsVaultApplyFilteredItemMods(const EQ::ItemInstance *inst, StatBonu
 		}
 	}
 
+	// Same focus treatment AddItemBonuses gives worn items: apply the focus spell so
+	// FocusEffects[type] is set and GetFocusEffect's gate opens. The value itself is
+	// not summed here - GetFocusEffect evaluates every candidate (worn and locker)
+	// best-wins through CalcFocusEffect, so nothing double counts.
+	if (c && item->Focus.Effect > 0 && item->Focus.Type == EQ::item::ItemEffectFocus) {
+		c->ApplySpellsBonuses(item->Focus.Effect, item->Focus.Level, b, 0);
+	}
+
 	if (!is_augment) {
 		for (int r = EQ::invaug::SOCKET_BEGIN; r <= EQ::invaug::SOCKET_END; ++r) {
 			const auto *aug_i = inst->GetAugment(r);
 			if (aug_i) {
-				NmsVaultApplyFilteredItemMods(aug_i, b, true);
+				NmsVaultApplyFilteredItemMods(c, aug_i, b, true);
 			}
 		}
 	}
@@ -2238,7 +2248,7 @@ void NmsVaultApplyModBonuses(Client *c, StatBonuses *b)
 			continue;
 		}
 
-		NmsVaultApplyFilteredItemMods(inst, b);
+		NmsVaultApplyFilteredItemMods(c, inst, b);
 		safe_delete(inst);
 	}
 }
@@ -2263,7 +2273,26 @@ int NmsVaultLockerFocusList(Client *c, const EQ::ItemData **out, int max)
 			continue;
 		}
 		const auto *item = database.GetItem(mod.item_id);
-		if (item && item->Focus.Type == EQ::item::ItemEffectFocus && item->Focus.Effect > 0 && IsValidSpell(item->Focus.Effect)) {
+		if (!item) {
+			continue;
+		}
+
+		// Same gate as NmsVaultApplyModBonuses: a parked item lends nothing to a
+		// character who could not wear it. Required level includes its augments,
+		// matching GetItemRequiredLevel(true) on the bonus path.
+		int required_level = item->ReqLevel;
+		for (int j = 0; j < 6; ++j) {
+			const auto *req = mod.aug[j] ? database.GetItem(mod.aug[j]) : nullptr;
+			if (req && req->ReqLevel > required_level) {
+				required_level = req->ReqLevel;
+			}
+		}
+		if (!item->IsEquipable(c->GetBaseRace(), static_cast<uint16>(c->GetClassesBits()))
+			|| c->GetLevel() < required_level) {
+			continue;
+		}
+
+		if (item->Focus.Type == EQ::item::ItemEffectFocus && item->Focus.Effect > 0 && IsValidSpell(item->Focus.Effect)) {
 			out[count++] = item;
 		}
 		for (int j = 0; j < 6 && count < max; ++j) {

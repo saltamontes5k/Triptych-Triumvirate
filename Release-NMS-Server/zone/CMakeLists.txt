@@ -119,7 +119,13 @@ SET(zone_sources
     nms_loot_offers.cpp
     nms_starvation.cpp
     nms_lon_session.cpp
+    nms_friendship.cpp
     nms_housing.cpp
+    nms_housing_actors.cpp
+    nms_housing_service.cpp
+    nms_housing_portal.cpp
+    nms_housing_trophies.cpp
+    nms_housing_pets.cpp
     nms_window.cpp
     tradeskills.cpp
     trading.cpp

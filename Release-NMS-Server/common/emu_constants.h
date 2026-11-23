@@ -595,7 +595,8 @@ namespace SpecialAbility {
 	constexpr int HeadshotImmunity           = 55;
 	constexpr int BotAggroImmunity           = 56;
 	constexpr int BotDamageImmunity          = 57;
-	constexpr int Max                        = 58;
+	constexpr int BlindImmunity              = 58;
+	constexpr int Max                        = 59;
 
 	constexpr int MaxParameters = 9;
 
@@ -661,6 +662,7 @@ static std::map<int, std::string> special_ability_names = {
 	{ SpecialAbility::HeadshotImmunity,           "Immune to Headshot" },
 	{ SpecialAbility::BotAggroImmunity,           "Immune to Bot Aggro" },
 	{ SpecialAbility::BotDamageImmunity,          "Immune to Bot Damage" },
+	{ SpecialAbility::BlindImmunity,              "Immune to Blind" },
 };
 
 namespace HeroicBonusBucket

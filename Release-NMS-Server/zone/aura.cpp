@@ -6,8 +6,8 @@
 #include "string_ids.h"
 #include "raids.h"
 
-Aura::Aura(NPCType *type_data, Mob *owner, AuraRecord &record)
-	: NPC(type_data, 0, owner->GetPosition(), GravityBehavior::Flying), spell_id(record.spell_id),
+Aura::Aura(NPCType *type_data, Mob *owner, AuraRecord &record, const glm::vec4 &position)
+	: NPC(type_data, 0, position, GravityBehavior::Flying), spell_id(record.spell_id),
 	  distance(record.distance),
 	  remove_timer(record.duration), movement_timer(1000), process_timer(1000), aura_id(-1)
 {
@@ -857,10 +857,20 @@ void Aura::Depop(bool skip_strip)
 
 void Mob::MakeAura(uint16 spell_id)
 {
+	MakeAura(spell_id, nullptr);
+}
+
+// A ground-target ring aura spawns once, at the point the caster selected; every
+// other aura spawns on its owner and moves with them. Passing a position is what
+// marks this as a ground aura.
+void Mob::MakeAura(uint16 spell_id, const glm::vec4 *position)
+{
 	// TODO: verify room in AuraMgr
 	if (!IsValidSpell(spell_id)) {
 		return;
 	}
+
+	const bool ground_ring = position != nullptr;
 
 	AuraRecord record{};
 	if (!content_db.GetAuraEntry(spell_id, record)) {
@@ -913,9 +923,9 @@ void Mob::MakeAura(uint16 spell_id)
 
 	strn0cpy(npc_type->name, record.name, 64);
 
-	auto npc = new Aura(npc_type, this, record);
+	auto npc = new Aura(npc_type, this, record, ground_ring ? *position : GetPosition());
 	npc->SetAuraID(spell_id);
-	if (trap) {
+	if (trap && !ground_ring) {
 		npc->TryMoveAlong(5.0f, 0.0f, false);
 	} // try to place 5 units in front
 	entity_list.AddNPC(npc, false);

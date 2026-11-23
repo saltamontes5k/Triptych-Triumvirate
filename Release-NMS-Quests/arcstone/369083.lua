@@ -3,6 +3,7 @@
 local por = require("por_helper");
 
 local function offer_skylance(c, npc)
+	if not por.can_offer(c, npc, 369, 369083, 103665, 70) then return end
 	if not c:IsTaskCompleted(por.tasks.skylance_library) and not c:IsTaskActive(por.tasks.skylance_library) then
 		c:AssignTask(por.tasks.skylance_library);
 		npc:Say("Seek the tower of Skylance and recover the Codex Artifice from its library.");

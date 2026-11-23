@@ -441,6 +441,12 @@ void WorldDatabase::GetCharSelectInfo(uint32 account_id, EQApplicationPacket **o
 				}
 				else {
 					// Armor Materials/Models
+					// Char select is built before any spawn packet, so the client never
+					// sees a showhelm flag for it; honor the saved setting by leaving
+					// the head slot pre-zeroed (bare head).
+					if (matslot == EQ::textures::armorHead && e.show_helm == 0) {
+						continue;
+					}
 					uint32 color = (
 						pp.item_tint.Slot[matslot].UseTint ?
 							pp.item_tint.Slot[matslot].Color :

@@ -82,6 +82,14 @@ bool Client::Process() {
 		// CompleteConnect send ran before MacroQuest's window tree was ready.
 		if (m_nms_loot_restore_timer.Check()) {
 			NmsLootOfferRestoreOnZoneIn(this);
+			m_nms_loot_restore_timer.Disable();
+		}
+
+		// Expiry delivery, on its own slow timer: no list re-send and no "recovered" message
+		// unless an offer actually expired into the bags (the zone-in restore used to repeat
+		// every 3s because Timer::Check() re-arms itself).
+		if (m_nms_loot_expire_timer.Check()) {
+			NmsLootOfferPoll(this);
 		}
 
 		// Coalesced AA table flush: see Client::SendAlternateAdvancementTable.
@@ -153,11 +161,6 @@ bool Client::Process() {
 				SendManaUpdate();
 				SendEnduranceUpdate();
 			}
-		}
-
-		// Deferred zone-in shroud re-apply (see LoadAndApplyShroudState).
-		if (m_shroud_zonein_pending && Timer::GetTimeSeconds() >= m_shroud_zonein_at) {
-			ResendShroudState();
 		}
 
 		/* I haven't naturally updated my position in 10 seconds, updating manually */
@@ -813,7 +816,10 @@ bool Client::Process() {
 			// HP), so nothing needs this. Do not reintroduce it -- pets must never
 			// occupy extended-target slots.
 
-			if (RuleB(Custom, ServerAuthStats) && InZone() && !CAuthorized) {
+			// GM-flagged clients are never exiled for a missing dinput8. The CAuth
+			// auto-pass in Handle_OP_CAuth only runs when that DLL sends the packet,
+			// so without the DLL a GM would still be moved to the Bazaar and nagged.
+			if (RuleB(Custom, ServerAuthStats) && InZone() && !CAuthorized && !GetGM()) {
 				if (RuleB(Custom, BazaarExileUnauthedClients)) {
 					if (CUnauth_tics > 1) {
 						if (GetZoneID() != Zones::BAZAAR) {
@@ -1119,6 +1125,14 @@ void Client::BulkSendInventoryItems()
 	RemoveDuplicateLore();
 	MoveSlotNotAllowed(false);
 
+	// A transformed character receives only the form's own loadout: the real
+	// possessions, bank and bags never reach the client while shrouded. The
+	// unshroud reload sends the real inventory again.
+	if (IsShrouded()) {
+		SendShroudInventoryView();
+		return;
+	}
+
 	EQ::OutBuffer ob;
 	EQ::OutBuffer::pos_type last_pos = ob.tellp();
 
@@ -1181,6 +1195,26 @@ void Client::BulkSendInventoryItems()
 	safe_delete(outapp);
 }
 
+// Shared merchant data-bucket gate: a merchantlist row with a bucket is only
+// offered while the client's scoped bucket satisfies the comparison. Rows with
+// an empty bucket name or value are never gated.
+bool Client::PassesMerchantBucket(const MerchantList& ml)
+{
+	if (ml.bucket_name.empty() || ml.bucket_value.empty()) {
+		return true;
+	}
+
+	DataBucketKey k = GetScopedBucketKeys();
+	k.key = ml.bucket_name;
+
+	const auto b = DataBucket::GetData(k);
+	if (b.value.empty()) {
+		return false;
+	}
+
+	return zone->CompareDataBucket(ml.bucket_comparison, ml.bucket_value, b.value);
+}
+
 void Client::BulkSendMerchantInventory(int merchant_id, int npcid) {
 	const EQ::ItemData* handy_item = nullptr;
 	const EQ::ItemData *item = nullptr;
@@ -1207,23 +1241,9 @@ void Client::BulkSendMerchantInventory(int merchant_id, int npcid) {
 			break;
 		}
 
-		auto bucket_name = ml.bucket_name;
-		auto const& bucket_value = ml.bucket_value;
-		if (!bucket_name.empty() && !bucket_value.empty()) {
-
-			DataBucketKey k = GetScopedBucketKeys();
-			k.key = bucket_name;
-
-			auto b = DataBucket::GetData(k);
-			if (b.value.empty()) {
-				skipped_item = true;
-				continue;
-			}
-
-			if (!zone->CompareDataBucket(ml.bucket_comparison, bucket_value, b.value)) {
-				skipped_item = true;
-				continue;
-			}
+		if (!PassesMerchantBucket(ml)) {
+			skipped_item = true;
+			continue;
 		}
 
 		if (ml.probability != 100 && zone->random.Int(1, 100) > ml.probability) {

@@ -74,8 +74,12 @@ inline void LoadLootStateData(Zone *zone, NPC *npc, const std::string &loot_data
 		}
 
 		if (RuleB(Custom, DoItemUpgrades)) {
-			// Just give up
+			const size_t before = npc->GetLootItems().size();
 			npc->AddItemFixed(e.item_id, e.charges);
+			// Keep the table link, or /nmsloot treats the drop as quest-added and leaves it on the corpse
+			if (npc->GetLootItems().size() > before) {
+				npc->GetLootItems().back()->lootdrop_id = e.lootdrop_id;
+			}
 			continue;
 		}
 

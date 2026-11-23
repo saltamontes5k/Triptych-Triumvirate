@@ -123,3 +123,139 @@ sub get_random_mount {
     $dbh->disconnect();
     return $id;
 }
+
+# ---------------------------------------------------------------------------
+# Vendor stock rotation driver (v420/v421)
+#
+# Ponyboy hosts the re-roll for the three bazaar alt-currency vendors:
+#   1000024 Purveyor_of_Glamour        -- weapon glamours (v420)
+#   1000025 Purveyor_of_Armour_Glamour -- armour glamours (v420)
+#   1000026 Stablehand_Ponyboy         -- mounts          (v421)
+# The vendors' windows come purely from npc_types + merchantlist like
+# Caerulea's; this only rewrites those rows and refreshes the zone's live
+# lists via quest::ReloadMerchants().
+#
+# A re-roll fires when the boot marker differs from the one the last roll
+# recorded:
+#   - quests/bazaar/script_init.lua writes a fresh marker (7-day expiry) once
+#     per zone process boot, so a restart produces a new marker -> re-roll;
+#   - if the server stays up, the marker expires after 7 days -> the hourly
+#     timer below sees an undef marker -> re-roll (the "weekly" arm);
+#   - ordinary respawn cycles keep the marker stable, so they never re-roll.
+# ---------------------------------------------------------------------------
+
+my %STOCK_POOLS = (
+    1000024 => 'weapon',
+    1000025 => 'armour',
+    1000026 => 'mounts',
+);
+my $STOCK_SLOT_COUNT = 20;
+my $STOCK_COST       = 5;    # Triune of Fate per item (alt_currency 6)
+
+sub EVENT_SPAWN {
+    quest::stoptimer("vendor_stock");
+    quest::settimer("vendor_stock", 3600);
+    vendor_stock_roll_check();
+}
+
+sub EVENT_TIMER {
+    return unless $timer eq "vendor_stock";
+    quest::stoptimer("vendor_stock");
+    quest::settimer("vendor_stock", 3600);
+    vendor_stock_roll_check();
+}
+
+sub vendor_stock_roll_check {
+    my $cur = quest::get_data("bazaar_boot_marker");
+
+    # Missing marker: the 7-day expiry elapsed while the server stayed up (the
+    # weekly arm), or script_init.lua's boot-time write failed. Re-arm it here
+    # and treat it as a fresh roll.
+    if (!defined $cur || $cur eq '') {
+        $cur = time();
+        quest::set_data("bazaar_boot_marker", $cur, "604800");
+    }
+
+    my $last = quest::get_data("vendor_last_roll");
+    return if defined $last && $last eq $cur;    # already rolled this boot/week
+
+    if (vendor_stock_reroll()) {
+        quest::set_data("vendor_last_roll", $cur);
+    }
+    # on failure the marker stays unset -> the next hourly tick retries
+}
+
+sub vendor_stock_reroll {
+    my $dbh = plugin::LoadMysql();
+    if (!$dbh) {
+        quest::debug("vendor stock roll: no database handle");
+        return 0;
+    }
+
+    # Glamour pools: the cosmetic glamour namespaces (itemtype 54 aug,
+    # appearance-only; mirror migration v420). Stat-bearing ornaments use
+    # identity charmfiles and never match these.
+    my $pool_weapon = "SELECT id, 65535 AS classes FROM items WHERE name LIKE 'Glamour - %' AND itemtype = 54 AND charmfile = 'ITEMTransAugAll' AND name NOT LIKE 'Summoned%'";
+    my $pool_armour = "SELECT id, 65535 AS classes FROM items WHERE name LIKE 'Glamour - %' AND itemtype = 54 AND charmfile LIKE 'ArmorOrnLea%' AND name NOT LIKE 'Summoned%'";
+    # Mounts: one representative item per distinct mount, preferring the 'Fast'
+    # variant (mirrors Ponyboy's saylink roll, migration v421, minus the
+    # per-player class filter -- the vendor rows gate per class instead, via
+    # merchantlist.classes_required copied from each item's own classes mask).
+    my $pool_mounts = "SELECT id, classes FROM (SELECT i.id, i.classes, ROW_NUMBER() OVER (PARTITION BY s.teleport_zone ORDER BY (s.teleport_zone LIKE '%Fast') DESC, i.id ASC) AS rn FROM items i JOIN spells_new s ON s.id = i.clickeffect WHERE s.teleport_zone IN (SELECT filename FROM horses) AND i.clicktype = 5 AND i.id < 1000000 AND i.classes > 0) ranked WHERE rn = 1";
+
+    my $failed = 0;
+    foreach my $merchant_id (sort { $a <=> $b } keys %STOCK_POOLS) {
+        my $pool_type = $STOCK_POOLS{$merchant_id};
+        my $pool_sql =
+            $pool_type eq 'weapon' ? $pool_weapon :
+            $pool_type eq 'armour' ? $pool_armour :
+            $pool_type eq 'mounts' ? $pool_mounts :
+            undef;
+        unless ($pool_sql) {
+            quest::debug("vendor stock roll: unknown pool for merchant $merchant_id");
+            $failed = 1;
+            next;
+        }
+
+        # Pick first; only touch the live rows once we actually have stock.
+        my @rows;
+        my $pick = $dbh->prepare("SELECT id, classes FROM ($pool_sql) stock_pool ORDER BY RAND() LIMIT $STOCK_SLOT_COUNT");
+        if ($pick && $pick->execute()) {
+            while (my ($id, $classes) = $pick->fetchrow_array()) { push @rows, [$id, $classes]; }
+            $pick->finish();
+        }
+        if ($DBI::err) {
+            quest::debug("vendor stock roll: pool pick failed for merchant $merchant_id: " . ($DBI::errstr || 'unknown'));
+            $failed = 1;
+            next;
+        }
+        if (!scalar @rows) {
+            quest::debug("vendor stock roll: empty pool for merchant $merchant_id, leaving current stock");
+            $failed = 1;
+            next;
+        }
+
+        $dbh->do("DELETE FROM merchantlist WHERE merchantid = ?", undef, $merchant_id);
+        my $ins = $dbh->prepare(
+            'INSERT INTO merchantlist (merchantid, slot, item, faction_required, level_required, min_status, max_status, alt_currency_cost, classes_required, probability, bucket_name, bucket_value, bucket_comparison, min_expansion, max_expansion, content_flags, content_flags_disabled) VALUES (?, ?, ?, 0, 0, 0, 255, ?, ?, 100, \'\', \'\', 0, -1, -1, NULL, NULL)'
+        );
+        my $slot = 1;
+        foreach my $row (@rows) {
+            my ($item_id, $classes) = @$row;
+            $ins->execute($merchant_id, $slot++, $item_id, $STOCK_COST, $classes) or $failed = 1;
+        }
+        $ins->finish();
+        if ($DBI::err) {
+            quest::debug("vendor stock roll: insert failed for merchant $merchant_id: " . ($DBI::errstr || 'unknown'));
+            $failed = 1;
+        }
+    }
+
+    $dbh->disconnect();
+    return 0 if $failed;
+
+    # New rows are in the DB; refresh the zone's in-memory vendor lists so the
+    # next window open serves them.
+    quest::ReloadMerchants();
+    return 1;
+}

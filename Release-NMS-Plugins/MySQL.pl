@@ -1,5 +1,8 @@
 use DBI;
-use JSON;
+# JSON.pm here is the 2.x shim and its JSON::XS path emits
+#   Bareword "Types::Serialiser::Error::" refers to nonexistent package
+# on every zone boot. JSON::PP ships in the same perl and decodes identically.
+use JSON::PP;
 
 sub LoadMysql {
     my $config = load_config("eqemu_config.json");
@@ -31,7 +34,7 @@ sub load_config {
         $content = <$fh>;
     }
     close($fh);
-    return JSON->new->decode($content);
+    return JSON::PP->new->decode($content);
 }
 
 sub try_connect {
@@ -41,6 +44,12 @@ sub try_connect {
     my $db_config = $config->{"server"}{$label};
     my @required_keys = qw(db host username password);
     return unless all_keys_exist($db_config, @required_keys);
+
+    # A section with no username (this tree's content_database is db/host only) is not a usable
+    # connection: DBI falls through to the client default user, MariaDB rejects it, and every call
+    # logs "Access denied for user 'ODBC'@'localhost' (using password: NO)" before falling back to
+    # the real section. Skip it quietly instead of attempting and warning.
+    return unless length $db_config->{username};
     
     # Use the port if it's specified in the config; otherwise, use the default port 3306
     my $port = $db_config->{port} // 3306;

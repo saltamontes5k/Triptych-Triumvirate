@@ -1,4 +1,6 @@
 -- items: 67551
+task_ids = require('task_ids')
+
 local riddles = {
   {
     item = 54068, -- Coffin
@@ -142,7 +144,11 @@ end
 
 local function check_bic(client)
   local qglobals = eq.get_qglobals(client)
-  if qglobals.bic and qglobals.bic == "11" then
+  -- Prefer the task-scoped Breakdown in Communication: Tipt check; keep the
+  -- legacy qglobal working for players who finished it before tasks existed.
+  local on_bic_tipt = client:IsTaskActive(task_ids.bic_tipt) or client:IsTaskCompleted(task_ids.bic_tipt)
+  local legacy_bic = qglobals.bic and qglobals.bic == "11"
+  if legacy_bic or on_bic_tipt then
     client:SummonItem(67551) -- Vaifan's Temporary Power Cell D
     client:Message(MT.NPCQuestSay, "Rikabi the Riddler says 'I sense you have come here seeking something besides passage. Please take this it was left here by one of your people's constructs.'")
   end

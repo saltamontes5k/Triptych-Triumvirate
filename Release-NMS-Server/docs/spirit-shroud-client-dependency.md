@@ -1,7 +1,8 @@
 # Spirit shrouds — client-dependency retirement plan
 
-Status: **plan, nothing implemented.** Revised 2026-11-12 after the shroud/housing investigation and
-the maintainer's decisions below.
+Status: **Tier 0R implemented, linked and running 2026-11-14**, plus two field-test fixes (multiclass
+mask, selection modal) in the same build. Revised 2026-11-12 after the shroud/housing investigation
+and the maintainer's decisions below.
 
 Scope: get shroud code out of `dinput8.dll` (the DLL itself stays — multiclass needs it), and
 collapse the two server-side shroud implementations into one. Decision: **be true to upstream**
@@ -411,7 +412,140 @@ addition, not a prerequisite.
 
 ---
 
-## 8. Review log
+## 8. Tier 0R — implementation record (2026-11-14)
+
+### Landed
+
+| Area | Change |
+|---|---|
+| Zone-in order | `LoadSpiritShroudState()` + `LoadAndApplyShroudState()` + the multiclass `m_pp.classes` assignment moved out of `CompleteConnect()` into `Handle_Connect_OP_ZoneEntry`, after the `m_pp` assembly (`RestTimer` block) and **before** `OP_PlayerProfile` is built |
+| Form change | `Client::ReloadForShroudTransition(why)` in `shroud.cpp`: same-zone `MovePC(zone->GetZoneID(), GetInstanceID(), x, y, z, heading)`; refuses to zone a not-yet-connected client (mission controllers poll from spawn events and retry) |
+| Enter (quest) | `ApplyShroud` ends with the reload; transform/illusion/AA-resend block removed |
+| Exit (quest) | `RemoveShroud(send_updates=true)` ends with the reload; `send_updates=false` (silent zone-in/death hook) still returns without zoning |
+| Enter (native) | `EnterNativeShroud` ends with the reload |
+| Exit (native) | `RestoreNativeShroud` clears the snapshot **before** `RemoveShroud()` so the re-entering client is not seen as still-shrouded |
+| Zone-in UI | New `Client::SendShroudZoneInState()` (called from `CompleteConnect` after `SendAllPackets`): progress / monster-point / template-stat packets that are not profile fields and used to ride the transform |
+| Deleted | `SendShroudTransform`, `FillShroudTransformExtras`, `ResendShroudState`, `m_shroud_zonein_pending`/`_at`, the `client_process.cpp` deferred block, `SerializeShroudSpawn/NormalProfile/Inventory/BankItem`, and their capture helpers `ShroudEncode`/`ShroudEncodingSink` |
+| Kept deliberately | `ENCODE(OP_Shroud)` + `BuildShroudProfileBlock` + `ShroudCaptureStream` (now unreachable; Tier 3 deletes them), `SerializeShroudPreviewItem` (native equipment preview), `Custom:ShroudLiveMode` bits (Tier 1) |
+
+Net: 7 files, +106 / −399 lines.
+
+### Verification status
+
+- **Compiles clean** (common.lib + all zone TUs; no `error C`), link failed only with LNK1104 on the
+  running exes — relink is **owed** with the next stack restart.
+- In-game checklist still outstanding: enter/exit a quest shroud and a mission form; camping/relog
+  while shrouded; zone while shrouded; die while shrouded; Cake Defense icing/root timing after the
+  reload; King of the Monsters; a mission instance (position and instance preserved, not evac'd).
+
+### Field test 2026-11-14 (Cake Defense, live)
+
+Confirmed working: the form applies through the reload, the mission runs, and a character who
+fat-fingered a quit while a cake came back **still a cake** (zone log: "persisted shroud [500]; form
+applied to the zone-in profile") and left cleanly later ("shroud transition reload (leave shroud)").
+Two real bugs showed up and are fixed in the same build:
+
+1. **The form kept the real multiclass class list.** The zone-in profile carried
+   `class_ = <form class>` but `classes = <real multiclass mask>`, and the client renders its
+   class lines from the bitmask — so a cake-shaped Judy read BRD/ROG/BER, and multiclass
+   spell/AA gates followed those classes into the form. Fix: while shrouded the bitmask is the
+   form's single class (`GetPlayerClassBit(m_pp.class_)`), otherwise the `GestaltClasses` bucket.
+2. **The keeper select hung on "Please wait while your transformation is completed."** The client
+   enters that modal when it sends `0x1cd0`; only the empty `0x7786` completion clears it, and the
+   old OP_Shroud transform cleared it implicitly. A zone change queued behind the modal is ignored,
+   so the reload left the client parked. Fix: `Client::SendShroudSelectComplete()`, called at the
+   top of **both** select handlers (legacy `Handle_OP_ShroudSelect` and native
+   `Handle_OP_SpiritShroudSelect`) before anything that can zone the client.
+
+3. **The reload never happened.** `MovePC(same zone, ZoneSolicited)` is a no-op for the RoF2 client:
+   it assumes it is already there and never reconnects (zone log shows the request, then 40 s of the
+   same client's OP_ClientUpdate — no new connection). So the form was applied to `m_pp` (level 65
+   went out as OP_LevelUpdate) while race/class/model stayed real, which is exactly the "werewolf that
+   didn't change form, kept my three classes, just dropped level" report.
+   **`ZoneToSafeCoords` failed the same way** (live 22:04: safe point 144,249 sent, request logged, no
+   reconnect) — so the mode that forces the reload is the one upstream uses
+   (`reference/nsqemu-spirit-shrouds/src/zone/client_spirit_shroud.cpp:733`):
+
+   ```cpp
+   MovePC(zone->GetZoneID(), zone->GetInstanceID(), GetX(), GetY(), GetZ(), GetHeading(),
+          1, EvacToSafeCoords);
+   ```
+
+   The evac branch is the only same-zone transfer the client obeys, because it sends a **decoy** zone
+   id (1, or 2 when in zone 1) — the client refuses any request naming the zone it is already in. Evac
+   itself lands on the zone's safe point, so the current x/y/z/heading goes into the
+   `ShroudReturnPos` bucket and `m_Position` is restored on the next zone-in (2-minute freshness
+   window). That restore is ours, not upstream's — upstream accepts the safe-point landing.
+
+Reported but **not** a shroud defect: AA points moving during the test (56 → 68 in `character_data`).
+The quest shroud never writes `m_pp.aapoints` — its monster points live in a separate pool
+(`m_shroud_points`, spent against `character_shroud_aa`) — and the session's `#damage` kills granted
+AXP on every kill ("You gain bonus AA experience!" in the chat log). Worth re-checking after a
+session without GM kills.
+
+### Risks to watch on first run
+
+1. Mission controllers call `ApplyShroud` from a spawn poll; the first call can land before the
+   client is connected. The reload is skipped then and retried on the next poll — verify the
+   controller's race test (`GetRace() ~= <form race>`) still converges.
+2. `ApplyShroud` now returns before the client has redrawn; buffs the controller casts in the same
+   tick (Cake Defense's Sticky Icing / Parsing Root) are expected to survive the zone, but the
+   "persisted shroud" branch is the safety net.
+3. Anything that read `m_pp` between the old `CompleteConnect` point and this new one now sees the
+   form instead of the real character — same risk the guide names, now shifted earlier.
+
+## 9. Tier 1 — implementation record (2026-11-15)
+
+Tier 0R removed the reason for the client patches, so Tier 1 deleted them. Nothing in
+`dinput8.dll` now exists for shrouds except one content contract that was never shroud-specific.
+
+**Proof first.** On 2026-11-15 the client was run with no `dinput8.dll` at all (system
+DirectInput, no MQ2, no multiclass): shrouding in and out of a Goblin Cleric worked exactly as it
+does with the add-on. The reload path is entirely server-side — form applied before the zone-in
+profile, same-zone evac reload, position restored — so the client builds the form from an ordinary
+`OP_PlayerProfile`. That is the end state the plan wanted: zero client shroud code.
+
+**Removed from `eqgame.cpp`**
+- patch #2 (`0x4C2F60`, NOP the `mov [flt_DD2630],0` in the OP_Shroud self path)
+- patch #3 (`0x4C2F85`, `jnz`→`jmp` forcing the completion branch)
+- patch #4 (`0x579255`, profile-store displacement `0x3408`→`0x340C`)
+- `ShroudRestoreHotbars` and the twelve-tick `g_shroudHotbarFixes*` follow-ups
+- `g_shroudPoseFix` and its `/sit`+`/stand` pulse nudge
+- `g_serverShroudState*`, `ShroudStampServerState`, `ShroudRefreshAAWindow`, `g_aaRefreshAt`
+- the `0x6562` branch and the `0x66b5`/`0x7a27` AA-refresh scheduling in the world-message detour
+- the pulse block that serviced all of the above
+
+**Kept**
+- the AA pane scan bound (`eqgame+0x608CE0`, `0xC34F`→100000), now its own always-applied
+  `ApplyAAPaneScanFix`. It is a content contract — 326 non-shroud rank rows above 49,999 need it —
+  not shroud code, so it stays whether or not a form exists.
+- `ShroudPatchLog`, for that patch's byte guard.
+- `$Shrouded` (`MQ2DataTypes.cpp`, one data read) and every multiclass patch.
+
+**Rule text.** `Custom:ShroudLiveMode` only honours bit 4 now (live-like strip, monster points,
+shroud AA purchases); bits 1, 2 and 8 described fields of the transform's profile block and are
+inert. The description says so and recommends 4. The shipped value may stay 12 — the dead bits are
+ignored.
+
+### The incident this uncovered (unrelated to shrouds, but found by the same rebuild)
+
+The first post-Tier-1 build died at character select: `"Resetting game UI"` → access violation at
+`eqgame+0xDF33` → ~600 further violations at `eqgame+0x1FAEC3` → stack overflow at
+`eqgame+0x4DBFB7`. The client ran fine with no DLL and fine with the pre-11-13 binary.
+
+Cause: `NMS_CLIENT_OOM_HANDLER_REL` was defined as `(0x40DF30 - 0x400000)` = `0xDF30` by the
+2026-11-13 commit that restored the client out-of-memory breadcrumb. `0x40DF30` is already an
+image offset (IDA static `0x80DF30` minus the `0x400000` image base — the handler's own crash
+dialog names `+0040DF45`), so the `EzDetour` patched the front of an unrelated client function
+called during the char-select UI reset. Faulting at `0xDF33`, the byte right after the injected
+five-byte jump, is that function executing the stub's displacement bytes.
+
+Fix: the define is image-relative (`0x80DF30 - 0x400000`) and the detour is byte-guarded against
+the documented prologue `55 8B EC 8B 45 08`; a mismatch logs
+`OOM breadcrumb SKIPPED: prologue mismatch ...` to `NMS_lockdiag.log` and leaves the client
+alone. Verified 2026-11-15: char select, login, shrouding in and out.
+
+## 10. Review log
 
 Independent review, 2026-11-12: every file:line anchor, DB count and upstream quote re-checked
 against the tree and the live `peq`; all confirmed except two noted as author-measured (upstream's

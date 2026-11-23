@@ -198,7 +198,7 @@ LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
 	{
 		case EXCEPTION_ACCESS_VIOLATION:
 			Log(Logs::General, Logs::Crash, "EXCEPTION_ACCESS_VIOLATION");
-			Log(Logs::General, Logs::Crash, "Fault detail: [{}]", FormatExceptionRecord(ExceptionInfo->ExceptionRecord));
+			LogF(Logs::General, Logs::Crash, "Fault detail: [{}]", FormatExceptionRecord(ExceptionInfo->ExceptionRecord));
 			break;
 		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
 			Log(Logs::General, Logs::Crash, "EXCEPTION_ARRAY_BOUNDS_EXCEEDED");
@@ -268,10 +268,10 @@ LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
 	const std::string fault_detail = FormatExceptionRecord(ExceptionInfo->ExceptionRecord);
 
 	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
-		Log(Logs::General, Logs::Crash, "Fault detail: [{}]", fault_detail);
+		LogF(Logs::General, Logs::Crash, "Fault detail: [{}]", fault_detail);
 	}
 
-	Log(
+	LogF(
 		Logs::General,
 		Logs::Crash,
 		"Faulting instruction pointer: [0x{:X}] thread id [{}]",

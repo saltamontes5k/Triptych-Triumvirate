@@ -16,6 +16,7 @@ local camp70_done = false
 local camp40_done = false
 local knock25_done = false
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -48,7 +49,7 @@ local function reset(e)
 	camp40_done = false
 	knock25_done = false
 	clear_adds()
-	for _, t in ipairs({ "corruption", "resetcheck" }) do
+	for _, t in ipairs({ "corruption", "healshare", "tether", "resetcheck" }) do
 		eq.stop_timer(t)
 	end
 	e.self:Heal()
@@ -59,6 +60,13 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- Bahgresh comes in its harder thread!")
+				eq.set_timer("healshare", 15000)
+				eq.set_timer("tether", eq.seconds("12m"))
+			end
 			eq.set_timer("corruption", 45000)
 			-- phase 1: the kyv vanguard
 			for _, id in ipairs(raid.ADD.kyv) do
@@ -86,7 +94,29 @@ function event_timer(e)
 	end
 	if not engaged then return end
 
-	if e.timer == "corruption" then
+	if e.timer == "healshare" then
+		-- hard: live heal-share -- living kyv feed their general
+		eq.set_timer("healshare", 15000)
+		local el = eq.get_entity_list()
+		local kyv_up = false
+		for _, id in ipairs(raid.ADD.kyv) do
+			local mob = el:GetNPCByID(id)
+			if mob and mob.valid and mob:IsEngaged() then kyv_up = true end
+		end
+		if kyv_up then
+			eq.zone_emote(15, "The kyv pour their wounds into Bahgresh!")
+			e.self:SetHP(e.self:GetHP() + math.floor(e.self:GetMaxHP() * 0.01))
+		end
+		return
+	elseif e.timer == "tether" then
+		-- hard: tethered-camp failure timer -- the legions swarm the raid
+		eq.set_timer("tether", 30000)
+		eq.zone_emote(15, "Bahgresh's tethered legions descend on the raid!")
+		for _, client in ipairs(raid.alive_clients(e.self:GetX(), e.self:GetY(), 300)) do
+			raid.hit(e.self, client, 10000)
+		end
+		return
+	elseif e.timer == "corruption" then
 		local victim = raid.random_client(e.self:GetX(), e.self:GetY(), 300)
 		if victim then
 			eq.zone_emote(15, "Dark energy gnaws at " .. victim:GetCleanName() .. "!")
@@ -119,6 +149,6 @@ end
 function event_death_complete(e)
 	clear_adds()
 	eq.zone_emote(15, "General Bahgresh falls. The Army of Light holds the woods.")
-	raid.spawn_chest(e, raid.CHEST.BAHGRESH)
+	raid.spawn_chest(e, raid.chest_for("BAHGRESH", raid.is_hard()))
 	eq.signal(raid.CTRL.BAHGRESH, 1)
 end

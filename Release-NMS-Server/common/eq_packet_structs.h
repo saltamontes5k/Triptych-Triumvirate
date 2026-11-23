@@ -391,6 +391,13 @@ union
 	bool buyer;
 	bool untargetable;
 	uint32 npc_tint_id;
+
+	// Housing actor binding, carried in the RoF2 spawn tail as a 16-character item GUID plus
+	// the estate and item ids. Zero GUID / 0xffffffff ids mean "not a housing actor" and encode
+	// as the sentinel the client already ignores. See zone/mob.cpp FillSpawnStruct.
+	char housing_item_guid[17];
+	uint32 housing_estate_id;
+	uint32 housing_item_id;
 };
 
 struct PlayerState_Struct {
@@ -1940,6 +1947,12 @@ enum ItemPacketType {
     ItemPacketCharmUpdate    = 0x6E, // noted as incorrect
     ItemPacketRecovery       = 0x71,
     ItemPacketParcel         = 0x73,
+    // Housing trophy stat items: internal send tags only (RoF2 real-estate trophy window).
+    // The RoF2 encoder rewrites both to ItemPacketTributeItem on the wire; the tags select
+    // the trophy-tribute slot typing (10 personal / 4 guild slots) and skip the ordinary
+    // possession-slot lookup. Never send these values to a client as-is.
+    ItemPacketPersonalTrophy = 0xF0,
+    ItemPacketGuildTrophy    = 0xF1,
     ItemPacketInvalid        = 0xFF
 };
 

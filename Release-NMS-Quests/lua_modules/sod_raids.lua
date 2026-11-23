@@ -132,4 +132,50 @@ function M.councilor_timer(e)
 	end
 end
 
+-- ---------------------------------------------------------------------------
+-- Hard mode (v464): expeditions requested with 'request hard' carry the
+-- "(Hard)" suffix on the expedition name. Encounters, chests, loot events
+-- and lockouts key off that suffix, so hard and normal run as separate
+-- identities with separate 72h lockouts.
+-- ---------------------------------------------------------------------------
+M.HARD_SUFFIX = " (Hard)"
+
+-- Hard chest npc ids: richer loot, spawned only in hard expeditions.
+M.HARD_CHEST = {
+    ROTT       = 478800,
+    BAHGRESH   = 478801,
+    COUNCIL    = 478802,
+    ERIAK      = 478803,
+    PALLORAX   = 478804,
+    AVATAR     = 478805,
+    KSATHRAX   = 478806,
+    MINDBLIGHT = 478807,
+    MALARIAN   = 478808,
+    CORE       = 478809,
+}
+
+-- True when this zone instance runs a hard expedition.
+function M.is_hard()
+	local exp = eq.get_expedition()
+	return exp.valid and string.find(exp:GetName(), M.HARD_SUFFIX, 1, true) ~= nil
+end
+
+-- Loot event / lockout name and chest npc id for the mode.
+function M.event_name(key, hard)
+	return M.EVENT[key] .. (hard and M.HARD_SUFFIX or "")
+end
+
+function M.chest_for(key, hard)
+	return hard and M.HARD_CHEST[key] or M.CHEST[key]
+end
+
+-- Hard-mode boss scaling: raise max HP and top the mob up to it.
+function M.scale_hard(mob, mult)
+	local hp = math.floor(mob:GetMaxHP() * (mult or 1.5))
+	pcall(function()
+		mob:ModifyNPCStat("max_hp", tostring(hp))
+		mob:SetHP(hp)
+	end)
+end
+
 return M

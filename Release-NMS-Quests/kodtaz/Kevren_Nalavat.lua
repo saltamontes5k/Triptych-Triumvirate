@@ -1,4 +1,17 @@
 task_ids = require('task_ids')
+
+-- Compass markers for the destinations Kevren sends players to. Coordinates
+-- match the expedition compass tables in Gazak/Maroley/Kenra and Tublik's spawn.
+local compass = {
+  tublik   = { x=1279.0,  y=-2004.0, z=-349.375 }, -- NPC: Tublik Narwethar
+  singular = { x=-500.0,  y=-1145.0, z=-384.5 },   -- Temple of Singular Might
+  twin     = { x=-701.0,  y=-1717.0, z=-430.5 },   -- Temple of Twin Struggles
+  trifates = { x=-1054.0, y=-1138.0, z=-417.0 },   -- Temple of the Tri-Fates
+}
+local function mark_compass(e, loc)
+  e.other:MarkSingleCompassLoc(loc.x, loc.y, loc.z)
+end
+
 function event_say(e)
   -- If you don't have Kevren's task done, he has nothing to say to you about BiC
   if not e.other:IsTaskCompleted(task_ids.kevren_task) then
@@ -10,6 +23,7 @@ function event_say(e)
   -- Flag 19: You're done with Kevren
   if e.other:IsTaskCompleted(task_ids.kevren_task) then
     if e.message:findi("hail") then
+       e.other:ClearCompassMark()
        e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..".  You have done all I have asked, but you should see if Tublik needs you for anything else.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
       if not e.other:IsTaskActive(task_ids.tublik_task) and not e.other:IsTaskCompleted(task_ids.tublik_task) then
         e.other:AssignTask(task_ids.tublik_task)
@@ -56,7 +70,8 @@ function event_say(e)
     --Flag 15: Stone Tablet
     if e.other:IsTaskActivityActive(task_ids.kevren_task, 3) or e.other:IsTaskActivityActive(task_ids.kevren_task, 4) or e.other:IsTaskActivityActive(task_ids.kevren_task, 5) then
       if e.message:findi("hail") then
-        e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". You should find Tublik Narwether and ask him for a stone tablet.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
+        mark_compass(e, compass.tublik)
+        e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". You should find Tublik Narwethar and ask him for a stone tablet.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
       end
     end
 
@@ -76,14 +91,14 @@ function event_say(e)
     --Flag 12: You should turn in the skin
     if e.other:IsTaskActivityActive(task_ids.kevren_task, 1) then
       if e.message:findi("hail") then
-         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". Did you find something else from the muramites in Martyr's Passage?  If so, please hand it to me.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
+         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". Did you find something else from the muramites in Martyrs Passage?  If so, please hand it to me.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
       end
     end
 
     --Flag 11: You should turn in the relics
     if e.other:IsTaskActivityActive(task_ids.kevren_task, 0) then
       if e.message:findi("hail") then
-         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". Were you able to find the relics in Martyr's Passage?  If so, please hand them to me.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
+         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Welcome back, " .. e.other:GetCleanName() ..". Were you able to find the relics in Martyrs Passage?  If so, please hand them to me.  Otherwise, if you'd like, we have a chance now to talk [" .. eq.say_link("more") .. "]. You're also more than welcome to attempt the trials again. If so, just let me know you're [" .. eq.say_link("ready to test") .. "] again and we'll proceed down that path. What'll it be, " .. e.other:GetCleanName() .. "?'")
       end
     end
   end
@@ -131,6 +146,7 @@ function event_say(e)
         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat shakes his head, 'You have already completed that trial, the brotherhood needs you to move on to the next challenges before you can return to a trial.")
       end
       if e.message:findi("tri(.*)fates") then
+        mark_compass(e, compass.trifates)
         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Beyond the dark fog to the south lies the Temple of the Tri-Fates. It is the northern-most temple of the three. In front of the temple you will encounter three smaller temples and it is there you will find another of the brotherhood waiting for you. Seek out and speak with Kenra Kalekkio about the troubles within the temple.'")
       end
     end 
@@ -151,6 +167,7 @@ function event_say(e)
         e.other:Message(MT.NPCQuestSay, "Kevren nods his approval, 'Good to hear! If you're interested or have forgotten I can give you some [" .. eq.say_link("background information") .. "] about the mountaintop. If you're ready to proceed, I can explain the [" .. eq.say_link("trials") .. "] to you once more.'")
       end
       if e.message:findi("twin struggles") then
+        mark_compass(e, compass.twin)
         e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Beyond the dark fog to the south lies the Temple of Twin Struggles. It is the southern-most temple of the three. In front of the temple you will encounter two smaller temples and it is there you will find another of the brotherhood waiting for you. Seek out and speak with Maroley Nazuey about the troubles within the temple.'")
       end
       if e.message:findi("singular might") then
@@ -175,6 +192,7 @@ function event_say(e)
       e.other:Message(MT.NPCQuestSay, "Kevren looks relieved to see you. 'Finally the Wayfarers Brotherhood has sent adventurers this far out. I was beginning to wonder what was happening. I'm Kevren Nalavat, one of the brotherhood's traveling scholars. We can talk [" .. eq.say_link("more") .. "] later. The important thing is that you're here and now that you are you'll need to prove that you're up to the challenges facing us on this rugged terrain. I've been all through this area and it's no place to be caught unaware! So what do you say?  Are you [" .. eq.say_link("ready to be tested") .. "]?'")
     end
     if e.message:findi("singular might") then
+      mark_compass(e, compass.singular)
       e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Beyond the dark fog to the south lies the Temple of Singular Might. You can find it between the two other temples. In front of the temple you will find a single, smaller temple where another of the brotherhood is waiting for you. Seek out Gazak Klelkek and speak to him about the troubles within the temple.'")
       if not e.other:IsTaskActive(task_ids.trials_task) then
         e.other:AssignTask(task_ids.trials_task)
@@ -246,15 +264,20 @@ end
 function event_trade(e)
   local item_lib = require("items")
 
+  -- The engine also credits Deliver activities on turn-in; these explicit
+  -- updates make the task progress visible at each step of kevren_task.
   if item_lib.check_turn_in(e.trade, {item1 = 60141, item2 = 60142, item3 = 60143, item4 = 60144}) then
+    e.other:UpdateTaskActivity(task_ids.kevren_task, 0, 4)
     e.other:Message(MT.NPCQuestSay, "Kevren examines the relics for a moment. 'The only thing I can find on these relics are glyphs. They're very old and hard to make out, but it appears that they depict four powers. I would say they refer to the temples around the Altar of Destruction, but I can't be sure. It will take some time to go over these some more. In the meantime, do you have anything else for me that might explain the Muramites' interest in the passage? If not, please do go look again. I'm sure there will be something there we can use!'")
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60145}) then
+    e.other:UpdateTaskActivity(task_ids.kevren_task, 1, 1)
     e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'Aha! I suspected there would be some kind of indication of what they were doing in that passage. I applaud your efforts. I only briefly skimmed the information and from what I can gather, it appears that there are nefarious deeds afoot. I'll need more time to examine this, but I should know what it says in a few moments. Well done, once again, " .. e.other:GetCleanName() .. "!'")
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60146, item2 = 60147, item3 = 60148, item4 = 60149}) then 
+    e.other:UpdateTaskActivity(task_ids.kevren_task, 2, 4)
     e.other:Message(MT.NPCQuestSay, "Kevren examines the strange glyphs. 'These glyphs are faded. I won't be able to decipher them until they've been cleaned up. You'll need to go back to the Martyrs Passage and recover some dust from the grounds nearby. Once you've gotten a pile of dust, you'll need to speak with Tublik Narwethar who is south of the Martyrs Passage. He has a stone tablet that can add some clarity to the glyphs with the help of that dust. Hurry along, " .. e.other:GetCleanName() .. ", this information is important!'")
     e.other:SummonItem(60146)
     e.other:SummonItem(60147)
@@ -263,11 +286,13 @@ function event_trade(e)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60150}) then
+    e.other:UpdateTaskActivity(task_ids.kevren_task, 6, 1)
     e.other:Message(MT.NPCQuestSay, "Kevren copies down the intricate patterns from the glyph. 'Very interesting, but very dangerous. I've gone over the glyphs and they suggest there is great danger in the summoning of some kind of ferocious beast. I need to study the markings further, but since I've transcribed them already, you can keep the glyph for your own use. Nicely done, " .. e.other:GetCleanName() .. ".'")
     e.other:SummonItem(60150)
   end
 
   if item_lib.check_turn_in(e.trade, {item1 = 60151}) then
+    e.other:UpdateTaskActivity(task_ids.kevren_task, 10, 1)
     e.other:Message(MT.NPCQuestSay, "Kevren Nalavat says 'You've done well to stop the summoning, " .. e.other:GetCleanName() .. ". I know it wasn't easy, but you are quickly becoming known as someone who can do what needs to get done. I fear I have run out of things for you to do for now, so you must find Tublik Narwethar and speak with him for further tasks to complete. You can find him to the south of the Martyrs Passage. Farewell for now, " .. e.other:GetCleanName() .. ".'")
   end
 

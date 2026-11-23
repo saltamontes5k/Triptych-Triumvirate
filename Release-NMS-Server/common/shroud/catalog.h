@@ -15,6 +15,7 @@ inline void Validate(const Template& t)
      t.abilities.size() > 300 || t.abilities.size() != t.ability_names.size())
   throw std::invalid_argument("invalid shroud definition");
  if(!std::isfinite(t.model_size) || t.model_size<0 || t.model_size>100)throw std::invalid_argument("invalid shroud model size");
+ if(t.texture>255 || t.helmet_texture>255)throw std::invalid_argument("invalid shroud texture");
  for (auto v : t.attributes) if (v > 1000) throw std::invalid_argument("invalid shroud attribute");
  for (auto v : t.native_stats) if (v > 1000000) throw std::invalid_argument("invalid shroud baseline");
  if(t.equipment.size()>50)throw std::invalid_argument("too many shroud equipment previews");
@@ -68,6 +69,8 @@ inline std::string Snapshot(const Template& t)
  j["has_native_resources"] = t.has_native_resources;
  j["resource_maxima"] = t.resource_maxima;
  j["model_size"] = t.model_size;
+ j["texture"] = t.texture;
+ j["helmet_texture"] = t.helmet_texture;
  j["equipment"]=nlohmann::json::array();
  for(const auto& item:t.equipment)j["equipment"].push_back({{"item_id",item.item_id},{"name",item.name}});
  j["abilities"] = t.abilities;
@@ -110,6 +113,8 @@ inline Template RestoreSnapshot(const std::string& text)
  t.has_native_resources=j.value("has_native_resources",t.has_native_stats);
  t.resource_maxima=j.value("resource_maxima",false);
  t.model_size=j.value("model_size",0.0f);
+ t.texture=j.value("texture",uint32_t(0));
+ t.helmet_texture=j.value("helmet_texture",uint32_t(255));
  if(j.contains("equipment"))for(const auto& item:j.at("equipment"))t.equipment.push_back({item.at("item_id").get<uint32_t>(),item.at("name").get<std::string>()});
  j.at("abilities").get_to(t.abilities);
  j.at("ability_names").get_to(t.ability_names);

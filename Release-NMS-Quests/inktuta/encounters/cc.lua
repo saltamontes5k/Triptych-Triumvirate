@@ -65,7 +65,7 @@ end
 function trigger_signal(e)
   if e.signal == 1 then
     if not eq.has_timer('spawn') then
-      eq.set_timer("spawn", 60 * 1000) --1 minute to Curse Bearers
+      eq.set_timer("spawn", 30 * 1000) --30 seconds to Curse Bearers (also the recurring spawn interval)
     end
   elseif e.signal == 2 then
     if not eq.has_timer('reset') then

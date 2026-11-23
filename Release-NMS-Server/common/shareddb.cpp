@@ -1020,6 +1020,67 @@ bool SharedDatabase::GetInventory(Client *c)
 			}
 		}
 
+		// Socketed augments evolve as first-class items; bind their rows the
+		// same way the parent was just bound (fresh socketed instances from
+		// PutAugment above start with default evolve details, and the parent
+		// binding above only touches the parent instance).
+		if (item->IsClassCommon()) {
+			for (int i = EQ::invaug::SOCKET_BEGIN; i <= EQ::invaug::SOCKET_END; i++) {
+				EQ::ItemInstance *aug = inst->GetAugment(i);
+				if (!aug || !aug->IsEvolving()) {
+					continue;
+				}
+
+				if (slot_id >= EQ::invslot::EQUIPMENT_BEGIN && slot_id <= EQ::invslot::EQUIPMENT_END) {
+					aug->SetEvolveEquipped(true);
+				}
+
+				auto aug_it = std::ranges::find_if(
+					e_results.cbegin(),
+					e_results.cend(),
+					[&](const CharacterEvolvingItemsRepository::CharacterEvolvingItems &x) {
+						return x.item_id == aug->GetID();
+					}
+				);
+
+				if (aug_it == std::end(e_results)) {
+					auto e = CharacterEvolvingItemsRepository::NewEntity();
+
+					e.character_id  = char_id;
+					e.item_id       = aug->GetID();
+					e.equipped      = aug->GetEvolveEquipped();
+					e.final_item_id = EvolvingItemsManager::Instance()->GetFinalItemID(*aug);
+
+					auto r = CharacterEvolvingItemsRepository::InsertOne(*this, e);
+					e.id   = r.id;
+					e_results.push_back(e);
+
+					aug->SetEvolveUniqueID(e.id);
+					aug->SetEvolveCharID(e.character_id);
+					aug->SetEvolveItemID(e.item_id);
+					aug->SetEvolveActivated(e.activated);
+					aug->SetEvolveEquipped(e.equipped);
+					aug->SetEvolveCurrentAmount(e.current_amount);
+					aug->CalculateEvolveProgression();
+					aug->SetEvolveFinalItemID(e.final_item_id);
+				}
+				else {
+					aug->SetEvolveUniqueID(aug_it->id);
+					aug->SetEvolveCharID(aug_it->character_id);
+					aug->SetEvolveItemID(aug_it->item_id);
+					aug->SetEvolveActivated(aug_it->activated);
+					aug->SetEvolveEquipped(aug_it->equipped);
+					aug->SetEvolveCurrentAmount(aug_it->current_amount);
+					aug->CalculateEvolveProgression();
+					aug->SetEvolveFinalItemID(aug_it->final_item_id);
+				}
+
+				// Socketed augs are now listed in the client's Evolution tab, so
+				// activation is the player's choice there - auto-activating here
+				// would also bypass EvolvingItems:MaxActiveEvolvingItems.
+			}
+		}
+
 		int16 put_slot_id;
 		// this had  || slot_id == EQ::invslot::slotCursor ??s
 		if (EQ::ValueWithin(slot_id, EQ::invbag::CURSOR_BAG_BEGIN, EQ::invbag::CURSOR_BAG_END)) {

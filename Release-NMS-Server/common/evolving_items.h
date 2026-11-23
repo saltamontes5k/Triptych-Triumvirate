@@ -16,13 +16,18 @@ namespace EvolvingItems {
 		constexpr int8 TRANSFER_WINDOW_DETAILS = 2;
 		constexpr int8 TRANSFER_XP             = 3;
 		constexpr int8 FINAL_RESULT            = 4;
+		// Server -> our dinput8 dll only: carries the Evolution tab listing
+		// mode (percentage = EvolvingItems:TabExcludeInventoryItems). The tap
+		// swallows it; the stock client handler never sees this action.
+		constexpr int8 TAB_CONFIG              = 5;
 	}
 
 	namespace Types {
-		constexpr int8 AMOUNT_OF_EXP     = 1;
-		constexpr int8 NUMBER_OF_KILLS   = 2;
-		constexpr int8 SPECIFIC_MOB_RACE = 3;
-		constexpr int8 SPECIFIC_ZONE_ID  = 4;
+		constexpr int8 AMOUNT_OF_EXP       = 1;
+		constexpr int8 NUMBER_OF_KILLS     = 2;
+		constexpr int8 SPECIFIC_MOB_RACE   = 3;
+		constexpr int8 SPECIFIC_ZONE_ID    = 4;
+		constexpr int8 POWER_SOURCE_ENERGY = 5;
 	}
 
 	namespace SubTypes {

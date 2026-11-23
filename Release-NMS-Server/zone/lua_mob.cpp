@@ -4218,7 +4218,8 @@ luabind::scope lua_register_special_abilities() {
 		luabind::value("immune_assassinate", SpecialAbility::AssassinateImmunity),
 		luabind::value("immune_headshot", SpecialAbility::HeadshotImmunity),
 		luabind::value("immune_aggro_bot", SpecialAbility::BotAggroImmunity),
-		luabind::value("immune_damage_bot", SpecialAbility::BotDamageImmunity)
+		luabind::value("immune_damage_bot", SpecialAbility::BotDamageImmunity),
+		luabind::value("unblindable", SpecialAbility::BlindImmunity)
 	)];
 }
 

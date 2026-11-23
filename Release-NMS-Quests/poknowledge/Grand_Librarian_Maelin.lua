@@ -167,13 +167,15 @@ function event_say(e)
 	local on_vessel = e.other:IsTaskActive(por.tasks.become_the_vessel) or e.other:IsTaskCompleted(por.tasks.become_the_vessel);
 
 	if text:find("saga skin") then
-		if not (e.other:IsTaskActive(por.tasks.saga_skins) or e.other:IsTaskCompleted(por.tasks.saga_skins)) then
+		if por.can_offer(e.other, e.self, 202, 202125, 58619, 70) and
+			not (e.other:IsTaskActive(por.tasks.saga_skins) or e.other:IsTaskCompleted(por.tasks.saga_skins)) then
 			e.other:AssignTask(por.tasks.saga_skins);
 		end
 		e.self:Say("The warriors of the Plane of Rage wear their history on their hides. Bring me any of those strangely patterned skins and I will translate the markings for you.");
 		return;
 	elseif text:find("become the vessel") then
-		if e.other:IsTaskCompleted(por.tasks.preparing_your_new_skins) and not e.other:IsTaskCompleted(por.tasks.become_the_vessel) then
+		if por.can_offer(e.other, e.self, 202, 202125, 58619, 70, por.tasks.preparing_your_new_skins) and
+			e.other:IsTaskCompleted(por.tasks.preparing_your_new_skins) and not e.other:IsTaskCompleted(por.tasks.become_the_vessel) then
 			if not e.other:IsTaskActive(por.tasks.become_the_vessel) then
 				e.other:AssignTask(por.tasks.become_the_vessel);
 			end

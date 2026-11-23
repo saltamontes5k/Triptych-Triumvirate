@@ -72,6 +72,7 @@ Copyright (C) 2001-2002 EQEMu Development Team (http://eqemu.org)
 #include "../common/classes.h"
 #include "../common/global_define.h"
 #include "../common/eqemu_logsys.h"
+#include "../common/ground_aura_position.h"
 #include "../common/item_instance.h"
 #include "../common/rulesys.h"
 #include "../common/spdat.h"
@@ -939,6 +940,32 @@ bool Mob::DoCastingChecksOnTarget(bool check_on_casting, int32 spell_id, Mob *sp
 	bool ignore_on_casting = false;
 
 	if (check_on_casting) {
+		// A ground-target persistent aura is confined to the ring the caster
+		// selected: validate that client-supplied point before any aura entity
+		// exists. NPC casters never send ring coordinates and keep the old path.
+		if (
+			IsClient() &&
+			spells[spell_id].target_type == ST_Ring &&
+			IsEffectInSpell(spell_id, SE_PersistentEffect)
+		) {
+			if (!EQ::GroundAura::InRange(
+				GetX(), GetY(), GetZ(), GetTargetRingX(), GetTargetRingY(), GetTargetRingZ(),
+				GetActSpellRange(spell_id, spells[spell_id].range), spells[spell_id].min_range
+			)) {
+				MessageString(Chat::Red, TARGET_OUT_OF_RANGE);
+				return false;
+			}
+
+			if (
+				IsDetrimentalSpell(spell_id) &&
+				!spells[spell_id].npc_no_los &&
+				!CheckLosFN(GetTargetRingX(), GetTargetRingY(), GetTargetRingZ(), GetSize())
+			) {
+				MessageString(Chat::Red, CANT_SEE_TARGET);
+				return false;
+			}
+		}
+
 		if (spells[spell_id].target_type == ST_AEClientV1 ||
 			spells[spell_id].target_type == ST_AECaster ||
 			spells[spell_id].target_type == ST_Ring ||
@@ -3084,6 +3111,13 @@ bool Mob::SpellFinished(uint16 spell_id, Mob *spell_target, CastingSlot slot, in
 
 		case TargetRing:
 		{
+			// The aura is one entity at the point the caster selected. The AE still
+			// runs so any other components of the spell land normally.
+			if (IsClient() && IsEffectInSpell(spell_id, SE_PersistentEffect)) {
+				const glm::vec4 ring_position(GetTargetRingLocation(), GetHeading());
+				MakeAura(spell_id, &ring_position);
+			}
+
 			entity_list.AESpell(this, nullptr, spell_id, false, resist_adjust);
 			break;
 		}
@@ -5698,6 +5732,21 @@ bool Mob::IsImmuneToSpell(uint16 spell_id, Mob *caster)
 			Message(Chat::Red, "Your are immune to fear.");
 			LogSpells("Clients has WarCry effect, immune to fear!");
 			caster->MessageString(Chat::Red, IMMUNE_FEAR);	// need to verify message type, not in MQ2Cast for easy look up
+			return true;
+		}
+	}
+
+	if(IsEffectInSpell(spell_id, SE_Blind))
+	{
+		if(GetSpecialAbility(SpecialAbility::BlindImmunity)) {
+			LogSpells("We are immune to Blind spells");
+			caster->Message(Chat::Red, "Your target is immune to blind spells.");	// no IMMUNE_BLIND client string; raw message per the self-charm precedent
+			int32 aggro = caster->CheckAggroAmount(spell_id, this);
+			if(aggro > 0) {
+				AddToHateList(caster, aggro);
+			} else {
+				AddToHateList(caster, 1,0,true,false,false,spell_id);
+			}
 			return true;
 		}
 	}

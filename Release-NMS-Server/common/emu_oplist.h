@@ -772,4 +772,25 @@ N(OP_RealEstatePlacementCommit),     // 0x711a placement commit (C2S, 96 bytes)
 N(OP_RaceChangeRequest),           // 0x754e: RaceChangeWnd "Submit Race"
 N(OP_NMSWindowData),               // 0x140a script-drawn NMS window state: open/close/widgets/canvas frames (S2C)
 N(OP_NMSWindowEvent),              // 0x140b NMS window capability hello + button/key/input/grid/canvas events (C2S)
+// Hailstone housing cross-reference: numbers this tree had no name for, taken from
+// hailstone-client v0.7.1-beta src/net/real_estate_packets.h. Appended last so no existing enum
+// value moves. Mapping a name is not behaviour -- zone/client_packet.cpp k_log_only_rof2 only
+// logs them. Direction is the client's (S2C unless noted).
+N(OP_RealEstateNop1),                 // 0x0351 S2C explicit no-op
+N(OP_RealEstateOwnedItemListToggle),  // 0x0c13 S2C toggle beside the 0x3e00 owned-item list
+N(OP_RealEstateItemSummaryUpdate),    // 0x1097 S2C update an estate's item summary
+N(OP_RealEstateItemRemoved),          // 0x1baf S2C item-summary row removed
+N(OP_RealEstateItemRowAdd),           // 0x2cf7 S2C add one item-summary row
+N(OP_RealEstateAccessList),           // 0x3968 S2C access list; its last dword is optional
+N(OP_RealEstateNop2),                 // 0x3d94 S2C explicit no-op
+N(OP_RealEstateRemove),               // 0x4f09 S2C estate record removal (0x63fd/0x6fd0 body)
+N(OP_RealEstateItemMenu13),           // 0x64a3 item-menu case 13 (C2S, unresolved semantics)
+N(OP_RealEstateOwnedListToggle),      // 0x76c6 S2C toggle beside the 0x2aa7 owned list
+N(OP_RealEstateItemSummaryForget),    // 0x7d28 S2C forget the item summary
+// Fall of Illsalin monster-mission panel (RoF2 May 10 2013). The four wire values are new;
+// the wire/selector adapter is not ported yet, so these are names only until that phase.
+N(OP_FallMonsterCatalogue),
+N(OP_FallMonsterDetails),
+N(OP_FallMonsterSelectRole),
+N(OP_FallMonsterSelectionResult),
 // mail and chat opcodes located in ../mail_oplist.h

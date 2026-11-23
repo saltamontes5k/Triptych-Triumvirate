@@ -3,6 +3,8 @@
 #include "events/player_event_logs.h"
 #include "repositories/character_evolving_items_repository.h"
 
+#include <fmt/format.h>
+
 EvolvingItemsManager::EvolvingItemsManager()
 {
 	m_db         = nullptr;
@@ -68,6 +70,35 @@ void EvolvingItemsManager::DoLootChecks(const uint32 char_id, const uint16 slot_
 	}
 
 	if (!inst.GetEvolveUniqueID()) {
+		// Duplicate-row guard: the login load and runtime socketing can each
+		// create a row for the same (character, item), and the client's
+		// Evolution tab binds against whichever row it finds first - a second
+		// row splits the state (toggle writes one, accrual reads the other).
+		// Bind to the existing row when one is present.
+		auto existing = CharacterEvolvingItemsRepository::GetWhere(
+			*m_db,
+			fmt::format(
+				"`character_id` = '{}' AND `item_id` = '{}' AND `deleted_at` IS NULL",
+				char_id,
+				inst.GetID()
+			)
+		);
+
+		if (!existing.empty()) {
+			const auto &e = existing.front();
+
+			inst.SetEvolveUniqueID(e.id);
+			inst.SetEvolveCharID(e.character_id);
+			inst.SetEvolveItemID(e.item_id);
+			inst.SetEvolveActivated(e.activated);
+			inst.SetEvolveCurrentAmount(e.current_amount);
+			inst.CalculateEvolveProgression();
+			inst.SetEvolveFinalItemID(e.final_item_id);
+			CharacterEvolvingItemsRepository::SetEquipped(*m_db, e.id, inst.GetEvolveEquipped());
+
+			return;
+		}
+
 		auto e = CharacterEvolvingItemsRepository::NewEntity();
 
 		e.character_id  = char_id;

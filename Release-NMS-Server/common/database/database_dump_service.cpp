@@ -20,9 +20,11 @@
 
 #include <string>
 #include <cstdio>
+#include <cstdlib>
 #include <iterator>
 #include <filesystem>
 #include <algorithm>
+#include <vector>
 #include "database_dump_service.h"
 #include "../eqemu_logsys.h"
 #include "../strings.h"
@@ -108,21 +110,86 @@ std::string DatabaseDumpService::GetMySQLVersion()
 const std::string CREDENTIALS_FILE = "login.my.cnf";
 
 /**
+ * Locates mysqldump by full path: every PATH entry, then the standard MariaDB Windows
+ * install locations under %ProgramFiles%. A spawn from a service-like launch context
+ * (world.exe under a task scheduler / WMI wrapper) does not carry an operator PATH, and
+ * the 2026-11-21 migration-backup boot hang came exactly from that kind of context; an
+ * executable addressed by absolute path removes the resolution question entirely.
+ *
+ * @return absolute path with forward or native separators, or "" when not found
+ */
+std::string DatabaseDumpService::ResolveMySQLDumpExecutable()
+{
+	std::vector<std::string> candidates;
+
+	if (const char *path_env = std::getenv("PATH")) {
+		for (auto &dir : Strings::Split(path_env, ';')) {
+			if (dir.empty()) {
+				continue;
+			}
+			candidates.push_back(dir + "\\mysqldump.exe");
+			candidates.push_back(dir + "/mysqldump");
+		}
+	}
+
+	if (const char *program_files = std::getenv("ProgramFiles")) {
+		const std::string mariadb_root = std::string(program_files) + "\\MariaDB";
+		if (File::Exists(mariadb_root)) {
+			for (std::filesystem::directory_iterator it(mariadb_root), end; it != end; ++it) {
+				if (!it->is_directory()) {
+					continue;
+				}
+				candidates.push_back(it->path().string() + "\\bin\\mysqldump.exe");
+			}
+		}
+		candidates.push_back(std::string(program_files) + "\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe");
+	}
+
+	for (const auto &candidate : candidates) {
+		if (File::Exists(candidate)) {
+			return candidate;
+		}
+	}
+
+	return {};
+}
+
+void DatabaseDumpService::SetDumpTimeoutMinutes(int minutes)
+{
+	dump_timeout_minutes = minutes;
+}
+
+void DatabaseDumpService::SetFailOnDumpFailure(bool fail)
+{
+	fail_on_dump_failure = fail;
+}
+
+/**
  * @return
  */
 std::string DatabaseDumpService::GetBaseMySQLDumpCommand()
 {
 	auto config = EQEmuConfig::get();
+
+	std::string executable = ResolveMySQLDumpExecutable();
+	if (executable.empty()) {
+		// Fall back to the bare name: environments that resolve it through PATH keep
+		// working; the caller decides whether an unresolvable dump is fatal.
+		executable = "mysqldump";
+	}
+
 	if (IsDumpContentTables() && !config->ContentDbHost.empty()) {
 		return fmt::format(
-			"mysqldump --defaults-extra-file={} {}",
+			"\"{}\" --defaults-extra-file={} {}",
+			executable,
 			CREDENTIALS_FILE,
 			config->ContentDbName
 		);
 	};
 
 	return fmt::format(
-		"mysqldump --defaults-extra-file={} {}",
+		"\"{}\" --defaults-extra-file={} {}",
+		executable,
 		CREDENTIALS_FILE,
 		config->DatabaseDB
 	);
@@ -318,6 +385,19 @@ void DatabaseDumpService::DatabaseDump()
 		return;
 	}
 	else {
+		// Fail-or-skip gate on mysqldump resolution BEFORE running anything: a dump that
+		// cannot even start must never wedge the caller (see the bounded wait below).
+		if (ResolveMySQLDumpExecutable().empty()) {
+			const std::string cause =
+				"mysqldump was not found on PATH or in the standard MariaDB install locations";
+			if (fail_on_dump_failure) {
+				FailDump(cause);
+				return;
+			}
+			LogError("Database backup skipped: {}. Applying without a backup.", cause);
+			return;
+		}
+
 		const auto execute_command = fmt::format(
 			"{} {} {} {}",
 			GetBaseMySQLDumpCommand(),
@@ -331,7 +411,23 @@ void DatabaseDumpService::DatabaseDump()
 		LogInfo("LOADING... PLEASE WAIT...");
 
 		BuildCredentialsFile();
-		dump_status = Process::execute_status(execute_command, &execution_result);
+		dump_status = Process::execute_status_bounded(
+			execute_command,
+			&execution_result,
+			dump_timeout_minutes * 60 * 1000
+		);
+		if (dump_status == -2) {
+			const std::string cause = fmt::format(
+				"database backup exceeded its [{}] minute cap and was abandoned",
+				dump_timeout_minutes
+			);
+			if (fail_on_dump_failure) {
+				FailDump(cause);
+				return;
+			}
+			LogError("Database backup skipped: {}. Applying without a backup.", cause);
+			return;
+		}
 		if (!execution_result.empty() && IsDumpOutputToConsole()) {
 			std::cout << execution_result;
 		}

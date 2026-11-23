@@ -2020,6 +2020,10 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 						DoPetBagFlush(pet);
 					}
 				}
+
+				// A bag went away: re-align remaining pets to the surviving
+				// bags (pets past the new bag count stay bare).
+				DoPetBagResync(class_id);
 			}
 
 			return true; // Item destroyed by client
@@ -2683,8 +2687,14 @@ bool Client::SwapItem(MoveItem_Struct* move_in) {
 	ApplyWeaponsStance();
 	if (RuleB(Custom, EnablePetBags)) {
 		for (int class_id = Class::Warrior; class_id <= Class::Berserker; class_id++) {
-			auto pet_bag_idx = GetActivePetBagSlot(class_id);
-			if (pet_bag_idx == EQ::InventoryProfile::CalcSlotId(dst_slot_id) || pet_bag_idx == EQ::InventoryProfile::CalcSlotId(src_slot_id)) {
+			bool touched_pet_bag = false;
+			for (auto& pet_bag : CollectActivePetBags(class_id)) {
+				if (pet_bag.first == EQ::InventoryProfile::CalcSlotId(dst_slot_id) || pet_bag.first == EQ::InventoryProfile::CalcSlotId(src_slot_id)) {
+					touched_pet_bag = true;
+					break;
+				}
+			}
+			if (touched_pet_bag) {
 				DoPetBagResync(class_id);
 			}
 		}
@@ -4110,7 +4120,11 @@ void Client::SendItemPacket(int16 slot_id, const EQ::ItemInstance* inst, ItemPac
 		return;
 	}
 
-	if (packet_type != ItemPacketMerchant) {
+	// Housing trophy stat items send window-row slots (0-9 / 0-3) that are not inventory
+	// slots; the lookup guard below only applies to ordinary inventory packets.
+	if (packet_type != ItemPacketMerchant &&
+	    packet_type != ItemPacketPersonalTrophy &&
+	    packet_type != ItemPacketGuildTrophy) {
 		if (slot_id <= EQ::invslot::POSSESSIONS_END && slot_id >= EQ::invslot::POSSESSIONS_BEGIN) {
 			if ((((uint64)1 << slot_id) & GetInv().GetLookup()->PossessionsBitmask) == 0) {
 				LogError("Item not sent to merchant : slot [{}]", slot_id);

@@ -272,6 +272,7 @@
 	void Handle_OP_RaidClearNPCMarks(const EQApplicationPacket* app);
 	void Handle_OP_RandomReq(const EQApplicationPacket* app);
 	void Handle_OP_RealEstateAction5Request(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateCustomInteraction(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateEscrow(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateExit(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateGo(const EQApplicationPacket *app);
@@ -292,6 +293,9 @@
 	void Handle_OP_RealEstateStoreAll(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateTextRequest(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateTransfer(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTrophy(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTrophyOpen(const EQApplicationPacket *app);
+	void Handle_OP_RealEstateTrophyToggle(const EQApplicationPacket *app);
 	void Handle_OP_RealEstateVotingOptOut(const EQApplicationPacket *app);
 	void Handle_OP_ReadBook(const EQApplicationPacket *app);
 	void Handle_OP_Unimplemented(const EQApplicationPacket *app);
@@ -332,6 +336,7 @@
 	void Handle_OP_SpiritShroudPreview(const EQApplicationPacket *app);
 	void Handle_OP_SpiritShroudComplete(const EQApplicationPacket *app);
 	void Handle_OP_SpiritShroudBank(const EQApplicationPacket *app);
+	void Handle_OP_FallMonsterSelect(const EQApplicationPacket *app);
 	void Handle_OP_ShopEnd(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerBuy(const EQApplicationPacket *app);
 	void Handle_OP_ShopPlayerSell(const EQApplicationPacket *app);

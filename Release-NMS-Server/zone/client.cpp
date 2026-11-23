@@ -20,6 +20,7 @@
 #include <string.h>
 #include <stdlib.h> 
 #include <stdio.h>
+#include <random>
 
 // for windows compile
 #ifndef _WINDOWS
@@ -42,7 +43,7 @@ extern volatile bool RunLoops;
 #include "../common/data_verification.h"
 #include "../common/profanity_manager.h"
 #include "../common/data_bucket.h"
-#include "../common/data_bucket.h"
+#include "inventory_session_lease.h"
 #include "dynamic_zone.h"
 #include "expedition_request.h"
 #include "position.h"
@@ -733,7 +734,169 @@ Client::Client(EQStreamInterface *ieqs) : Mob(
 	AI_Init();
 }
 
+namespace {
+std::string LeaseHex(const std::array<uint8_t, 32> &token)
+{
+    static const char digits[] = "0123456789abcdef";
+    std::string out;
+    out.reserve(64);
+    for (auto byte : token) {
+        out.push_back(digits[byte >> 4]);
+        out.push_back(digits[byte & 15]);
+    }
+    return out;
+}
+
+std::array<uint8_t, 32> LeaseToken()
+{
+    std::array<uint8_t, 32> token{};
+    std::random_device rd;
+    for (auto &byte : token) byte = static_cast<uint8_t>(rd());
+    return token;
+}
+
+uint64_t LeaseNumber(const char *text)
+{
+    if (!text || !*text) throw std::runtime_error("lease missing number");
+    std::string value(text);
+    size_t used = 0;
+    const auto number = std::stoull(value, &used);
+    if (used != value.size()) throw std::runtime_error("lease invalid number");
+    return number;
+}
+}
+
+std::shared_ptr<InventorySessionLease> InventorySessionLease::Claim(
+    uint32_t character_id, uint32_t account_id, uint32_t zone_id, uint16_t instance_id,
+    const std::string &process_key, const std::string &client_key)
+{
+    if (!character_id || !account_id || !zone_id || process_key.empty() || client_key.empty()) return {};
+    try {
+        if (!database.TransactionBeginStrict().Success()) return {};
+        auto existing = database.QueryDatabase(
+            "SELECT account_id,active,epoch,HEX(token),process_key,client_key FROM housing_inventory_sessions "
+            "WHERE character_id=" + std::to_string(character_id) + " FOR UPDATE", false);
+        if (!existing.Success()) throw std::runtime_error("lease table unavailable");
+        auto lease = std::make_shared<InventorySessionLease>();
+        lease->character_id_ = character_id;
+        lease->account_id_ = account_id;
+        lease->zone_id_ = zone_id;
+        lease->instance_id_ = instance_id;
+        lease->process_key_ = process_key;
+        lease->client_key_ = client_key;
+        if (existing.RowCount()) {
+            auto row = existing.begin();
+            if (LeaseNumber(row[0]) != account_id) throw std::runtime_error("lease account changed");
+            const bool active = LeaseNumber(row[1]) != 0;
+            if (active && row[4] && row[5] && process_key == row[4] && client_key == row[5]) {
+                lease->epoch_ = LeaseNumber(row[2]);
+                if (!row[3] || std::string(row[3]).size() != 64) throw std::runtime_error("lease token changed");
+                for (size_t i = 0; i < 32; ++i) {
+                    const auto hex = std::string(row[3]).substr(i * 2, 2);
+                    lease->token_[i] = static_cast<uint8_t>(std::stoul(hex, nullptr, 16));
+                }
+                lease->active_ = true;
+                if (!database.TransactionCommitStrict().Success()) return {};
+                return lease;
+            }
+            // A zone change can claim the destination before the old zone
+            // destructor releases. Replace the reservation rather than stranding
+            // the character; the ghost check still removes the old client.
+            lease->epoch_ = LeaseNumber(row[2]) + 1;
+        } else {
+            lease->epoch_ = 1;
+        }
+        lease->token_ = LeaseToken();
+        lease->active_ = true;
+        const auto hex = LeaseHex(lease->token_);
+        const auto process = "'" + database.Escape(process_key) + "'";
+        const auto client = "'" + database.Escape(client_key) + "'";
+        const auto fields = std::to_string(character_id) + "," + std::to_string(account_id) + "," +
+            std::to_string(lease->epoch_) + ",UNHEX('" + hex + "')," + process + "," + client + "," +
+            std::to_string(zone_id) + "," + std::to_string(instance_id);
+        database.QueryDatabase("DELETE FROM housing_inventory_session_history WHERE character_id=" +
+            std::to_string(character_id) + " AND process_key=" + process + " AND client_key=" + client, false);
+        auto history = database.QueryDatabase("INSERT INTO housing_inventory_session_history"
+            "(character_id,account_id,epoch,token,process_key,client_key,zone_id,instance_id,released) VALUES(" +
+            fields + ",0)", false);
+        auto session = database.QueryDatabase("INSERT INTO housing_inventory_sessions"
+            "(character_id,account_id,epoch,token,process_key,client_key,zone_id,instance_id,active) VALUES(" +
+            fields + ",1) ON DUPLICATE KEY UPDATE account_id=VALUES(account_id),epoch=VALUES(epoch),"
+            "token=VALUES(token),process_key=VALUES(process_key),client_key=VALUES(client_key),"
+            "zone_id=VALUES(zone_id),instance_id=VALUES(instance_id),active=1", false);
+        if (!history.Success() || history.RowsAffected() != 1 || !session.Success())
+            throw std::runtime_error("lease insert failed");
+        if (!database.TransactionCommitStrict().Success()) return {};
+        return lease;
+    } catch (const std::exception &) {
+        try { database.TransactionRollbackStrict(); } catch (...) {}
+        return {};
+    }
+}
+
+bool InventorySessionLease::Held() const
+{
+    if (!active_ || !character_id_ || !epoch_) return false;
+    try {
+        // LeaseHex() emits lower-case hex; MariaDB HEX() emits upper-case, so the comparison has to
+        // normalise one side or every claim fails its own re-read and the zone refuses the client.
+        auto result = database.QueryDatabase("SELECT active,epoch,LCASE(HEX(token)) FROM housing_inventory_sessions "
+            "WHERE character_id=" + std::to_string(character_id_), false);
+        if (!result.Success() || result.RowCount() != 1) return false;
+        auto row = result.begin();
+        return LeaseNumber(row[0]) == 1 && LeaseNumber(row[1]) == epoch_ &&
+            row[2] && LeaseHex(token_) == row[2];
+    } catch (...) { return false; }
+}
+
+bool InventorySessionLease::Release()
+{
+    if (!active_ || !character_id_ || !epoch_) return false;
+    try {
+        if (!database.TransactionBeginStrict().Success()) return false;
+        auto history = database.QueryDatabase("UPDATE housing_inventory_session_history SET released=1 "
+            "WHERE character_id=" + std::to_string(character_id_) + " AND epoch=" +
+            std::to_string(epoch_) + " AND released=0", false);
+        auto session = database.QueryDatabase("UPDATE housing_inventory_sessions SET active=0 "
+            "WHERE character_id=" + std::to_string(character_id_) + " AND epoch=" +
+            std::to_string(epoch_) + " AND active=1", false);
+        if (!history.Success() || history.RowsAffected() != 1 ||
+            !session.Success() || session.RowsAffected() != 1) {
+            database.TransactionRollbackStrict();
+            return false;
+        }
+        if (!database.TransactionCommitStrict().Success()) return false;
+        active_ = false;
+        return true;
+    } catch (...) {
+        try { database.TransactionRollbackStrict(); } catch (...) {}
+        return false;
+    }
+}
+
+bool Client::ClaimInventorySession(uint32 character_id, uint32 account_id, uint32 zone_id, uint16 instance_id)
+{
+    if (m_inventory_session_lease && m_inventory_session_lease->Held()) return true;
+    m_inventory_session_lease = InventorySessionLease::Claim(character_id, account_id, zone_id, instance_id,
+        "zone-" + std::to_string(zone_id), std::to_string(account_id) + ":" + std::to_string(character_id));
+    return m_inventory_session_lease && m_inventory_session_lease->Held();
+}
+
+bool Client::HasInventorySessionReservation() const
+{
+    return m_inventory_session_lease && m_inventory_session_lease->Held();
+}
+
+void Client::ReleaseInventorySession()
+{
+    if (m_inventory_session_lease) {
+        m_inventory_session_lease->Release();
+        m_inventory_session_lease.reset();
+    }
+}
+
 Client::~Client() {
+	ReleaseInventorySession();
 	entity_list.RemoveMobFromCloseLists(this);
 	m_close_mobs.clear();
 
@@ -1081,6 +1244,12 @@ bool Client::Save(uint8 iCommitNow, bool update_achievements) {
 	// divergent progression state.
 	if (m_fellowship_xp_persistence_failed || m_fellowship_xp_transaction_active)
 		return false;
+
+	// Fall full-escrow forms own the 17-table snapshot; never persist the form
+	// profile/inventory over the parked real character. The restore path writes
+	// the real rows back atomically.
+	if (m_fall_escrow)
+		return true;
 
 	// Never persist a shroud form: write the real profile, but keep the live
 	// shroud state intact. Calling RemoveShroud() here would un-shroud the
@@ -10063,8 +10232,6 @@ FACTION_VALUE Client::_GetFactionLevel(uint32 char_id, uint32 npc_id, uint32 pla
 
 	if (GetFeigned())
 		return FACTION_INDIFFERENTLY;
-	if(!zone->CanDoCombat())
-		return FACTION_INDIFFERENTLY;
 	if (invisible_undead && tnpc && !tnpc->SeeInvisibleUndead())
 		return FACTION_INDIFFERENTLY;
 	if (IsInvisible(tnpc))
@@ -10076,6 +10243,9 @@ FACTION_VALUE Client::_GetFactionLevel(uint32 char_id, uint32 npc_id, uint32 pla
 		else
 			return FACTION_INDIFFERENTLY;
 	}
+	// pet branch above this so cities (cancombat = 0) still show owner pets as Amiably
+	if(!zone->CanDoCombat())
+		return FACTION_INDIFFERENTLY;
 
 	//First get the NPC's Primary faction
 	if(pFaction > 0)
@@ -14357,23 +14527,51 @@ int16 Client::GetActivePetBagSlot(int class_id) {
     // Check general inventory slots
     evaluate_bags_in_range(EQ::invslot::GENERAL_BEGIN, EQ::invslot::GENERAL_END);
 
-    // If no bag was found, check bank slots
-    if (!active_bag) {
-        evaluate_bags_in_range(EQ::invslot::BANK_BEGIN, EQ::invslot::BANK_END);
-    }
+	// If no bag was found, check bank slots
+	if (!active_bag) {
+		evaluate_bags_in_range(EQ::invslot::BANK_BEGIN, EQ::invslot::BANK_END);
+	}
 
-    return active_bag_slot;
+	return active_bag_slot;
+}
+
+// Every equipped bag valid for the class, general slots first (bank only
+// when no general-slot bag exists), in slot order. Dual-charm pets are
+// geared by position: pet k carries the k-th bag, pets past the end keep
+// whatever they already have.
+std::vector<std::pair<int16, EQ::ItemInstance*>> Client::CollectActivePetBags(int class_id) {
+	std::vector<std::pair<int16, EQ::ItemInstance*>> bags;
+	if (!RuleB(Custom, EnablePetBags)) {
+		return bags;
+	}
+
+	auto collect_bags_in_range = [&](int start_slot, int end_slot) {
+		for (int slot = start_slot; slot <= end_slot; slot++) {
+			auto potential_bag = GetInv().GetItem(slot);
+			if (potential_bag && IsValidPetBagForClass(potential_bag->GetID(), class_id)) {
+				bags.emplace_back(static_cast<int16>(slot), potential_bag);
+			}
+		}
+	};
+
+	collect_bags_in_range(EQ::invslot::GENERAL_BEGIN, EQ::invslot::GENERAL_END);
+
+	if (bags.empty()) {
+		collect_bags_in_range(EQ::invslot::BANK_BEGIN, EQ::invslot::BANK_END);
+	}
+
+	return bags;
 }
 
 bool Client::IsValidPetBagForClass(int bag_id, int class_id) {
     static const std::unordered_map<int, std::vector<int>> class_to_bag_map = {
         {5,  {899980}},
 		{6,  {899981}},
-		{8,  {899983}},
+		{8,  {899983, 899989}},
 		{10, {899984}},
 		{11, {899985, 17727}},
 		{13, {899986, 900000}},
-		{14, {899987, 17726}},
+		{14, {899987, 17726, 899990}},
 		{15, {899988, 17725}},
     };
 
@@ -14402,11 +14600,19 @@ void Client::DoPetBagResync(int class_id) {
 		return;
 	}
 
-	auto pet_bag = GetActivePetBag(class_id);
-	auto pet_bag_slot = GetActivePetBagSlot(class_id);
+	auto pet_bags = CollectActivePetBags(class_id);
+	if (pet_bags.empty()) {
+		return; // no bag equipped for this class -- pets keep their own gear
+	}
+
+	// Pet k carries the k-th bag (pet add order); pets past the bag count
+	// are left alone, same as a class with no bag equipped.
+	int pet_ordinal = 0;
 
 	for (auto pet : GetAllPets()) {
-		if (pet && pet_bag && GetSpellLevel(pet->CastToNPC()->GetPetSpellID(), class_id) < UINT8_MAX) {
+		if (pet && pet_ordinal < static_cast<int>(pet_bags.size()) && GetSpellLevel(pet->CastToNPC()->GetPetSpellID(), class_id) < UINT8_MAX) {
+			auto pet_bag = pet_bags[pet_ordinal].second;
+			auto pet_bag_slot = pet_bags[pet_ordinal].first;
 			NPC* pet_npc = pet->CastToNPC();
 
 			if (IsEffectInSpell(pet_npc->GetPetSpellID(), SE_Charm)) {
@@ -14464,6 +14670,8 @@ void Client::DoPetBagResync(int class_id) {
 			pet->SendWearChange(EQ::textures::weaponSecondary);
 
 			pet_npc->SetAttackTimer();
+
+			pet_ordinal++;
 		}
 	}
 }

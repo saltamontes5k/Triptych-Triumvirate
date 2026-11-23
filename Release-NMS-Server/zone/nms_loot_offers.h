@@ -48,13 +48,17 @@ struct NmsLootOffer {
 	int         expire_remaining = 0;
 };
 
-bool NmsLootOffersEnabled();
+// Custom:LootSystem: 0 off (native looting), 1 offers, 2 roll-off, 3 random, 4 one looter,
+// 5 personal replay rolls (spawn-time tape; corpse keeps quest loot and coin; raids exempt).
+int NmsLootSystemMode();
 bool NmsLootOfferTablesReady();
 
 void NmsLootOfferOnCorpseOpen(Client *c, Corpse *corpse);
 void NmsLootOfferOnCorpseCreated(Corpse *corpse, Client *credit, NPC *source);
-bool NmsLootOfferEmptiesCorpse(Client *credit);
 void NmsLootOfferRestoreOnZoneIn(Client *c);
+// Slow poll: delivers offers that expired while the owner was in the zone, then refreshes the
+// window only when something was actually delivered.
+void NmsLootOfferPoll(Client *c);
 void NmsLootOfferHandleDecision(Client *c, const EQApplicationPacket *app);
 void NmsLootOfferHandlePersonalLootAction(Client *c, const EQApplicationPacket *app);
 bool NmsLootOfferApply(Client *c, const NmsLootOffer &offer, NmsLootAction action, const std::string &pass_to);

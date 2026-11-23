@@ -17,6 +17,8 @@
 */
 #include "client.h"
 
+#include "nms_housing_portal.h"
+
 #include "../common/bazaar.h"
 #include "../common/eq_packet_structs.h"
 #include "../common/eqemu_logsys.h"
@@ -321,6 +323,13 @@ void Client::ResetTrade() {
 void Client::FinishTrade(Mob* tradingWith, bool finalizer, void* event_entry, std::list<void*>* event_details) {
 	if (!tradingWith) {
 		return;
+	}
+
+	// A housing teleport assistant converts exactly one handed-in destination stone into its
+	// estate's pad alignment. The stone is consumed here; everything else falls through to the
+	// ordinary NPC hand-in path below, which returns whatever this did not take.
+	if (tradingWith->IsNPC()) {
+		NmsHousingPortal::TryStoneHandIn(this, tradingWith->CastToNPC());
 	}
 
 	// A native Spirit Shroud form's temporary supplies cannot leave the

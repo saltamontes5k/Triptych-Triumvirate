@@ -20,11 +20,11 @@ function event_timer(e)
 
     if qglobals["CargoClockwork"] == nil and zone_hour == 8 then
         eq.set_global("CargoClockwork", "1", 1, "H2")
-        e.self:Start(177) -- path to windmills
+        eq.start(177) -- path to windmills
     end
 
     if x == 700 and y == -1783 and delivery == 1 then
-        e.self:Stop()
+        eq.stop()
         delivery = 0
     end
 

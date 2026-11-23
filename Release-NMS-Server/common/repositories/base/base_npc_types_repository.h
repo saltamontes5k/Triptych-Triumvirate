@@ -151,6 +151,7 @@ public:
 		uint8_t     multiquest_enabled;
 		uint16_t    npc_tint_id;
 		uint8_t     summon_timer_override;
+		int8_t      rare_creature;
 	};
 
 	static std::string PrimaryKey()
@@ -293,6 +294,7 @@ public:
 			"multiquest_enabled",
 			"npc_tint_id",
 			"summon_timer_override",
+			"rare_creature",
 		};
 	}
 
@@ -431,6 +433,7 @@ public:
 			"multiquest_enabled",
 			"npc_tint_id",
 			"summon_timer_override",
+			"rare_creature",
 		};
 	}
 
@@ -603,6 +606,7 @@ public:
 		e.multiquest_enabled     = 0;
 		e.npc_tint_id            = 0;
 		e.summon_timer_override  = 0;
+		e.rare_creature          = 0;
 
 		return e;
 	}
@@ -771,6 +775,7 @@ public:
 			e.multiquest_enabled     = row[129] ? static_cast<uint8_t>(strtoul(row[129], nullptr, 10)) : 0;
 			e.npc_tint_id            = row[130] ? static_cast<uint16_t>(strtoul(row[130], nullptr, 10)) : 0;
 			e.summon_timer_override  = row[131] ? static_cast<uint8_t>(strtoul(row[131], nullptr, 10)) : 0;
+			e.rare_creature          = row[132] ? static_cast<int8_t>(atoi(row[132])) : 0;
 
 			return e;
 		}
@@ -935,6 +940,7 @@ public:
 		v.push_back(columns[129] + " = " + std::to_string(e.multiquest_enabled));
 		v.push_back(columns[130] + " = " + std::to_string(e.npc_tint_id));
 		v.push_back(columns[131] + " = " + std::to_string(e.summon_timer_override));
+		v.push_back(columns[132] + " = " + std::to_string(e.rare_creature));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -1088,6 +1094,7 @@ public:
 		v.push_back(std::to_string(e.multiquest_enabled));
 		v.push_back(std::to_string(e.npc_tint_id));
 		v.push_back(std::to_string(e.summon_timer_override));
+		v.push_back(std::to_string(e.rare_creature));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -1249,6 +1256,7 @@ public:
 			v.push_back(std::to_string(e.multiquest_enabled));
 			v.push_back(std::to_string(e.npc_tint_id));
 			v.push_back(std::to_string(e.summon_timer_override));
+			v.push_back(std::to_string(e.rare_creature));
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}
@@ -1414,6 +1422,7 @@ public:
 			e.multiquest_enabled     = row[129] ? static_cast<uint8_t>(strtoul(row[129], nullptr, 10)) : 0;
 			e.npc_tint_id            = row[130] ? static_cast<uint16_t>(strtoul(row[130], nullptr, 10)) : 0;
 			e.summon_timer_override  = row[131] ? static_cast<uint8_t>(strtoul(row[131], nullptr, 10)) : 0;
+			e.rare_creature          = row[132] ? static_cast<int8_t>(atoi(row[132])) : 0;
 
 			all_entries.push_back(e);
 		}
@@ -1570,6 +1579,7 @@ public:
 			e.multiquest_enabled     = row[129] ? static_cast<uint8_t>(strtoul(row[129], nullptr, 10)) : 0;
 			e.npc_tint_id            = row[130] ? static_cast<uint16_t>(strtoul(row[130], nullptr, 10)) : 0;
 			e.summon_timer_override  = row[131] ? static_cast<uint8_t>(strtoul(row[131], nullptr, 10)) : 0;
+			e.rare_creature          = row[132] ? static_cast<int8_t>(atoi(row[132])) : 0;
 
 			all_entries.push_back(e);
 		}
@@ -1776,6 +1786,7 @@ public:
 		v.push_back(std::to_string(e.multiquest_enabled));
 		v.push_back(std::to_string(e.npc_tint_id));
 		v.push_back(std::to_string(e.summon_timer_override));
+		v.push_back(std::to_string(e.rare_creature));
 
 		auto results = db.QueryDatabase(
 			fmt::format(
@@ -1930,6 +1941,7 @@ public:
 			v.push_back(std::to_string(e.multiquest_enabled));
 			v.push_back(std::to_string(e.npc_tint_id));
 			v.push_back(std::to_string(e.summon_timer_override));
+			v.push_back(std::to_string(e.rare_creature));
 
 			insert_chunks.push_back("(" + Strings::Implode(",", v) + ")");
 		}

@@ -179,6 +179,42 @@ por.aa = {
   harmonic_dissonance = 574,
 }
 
+-- Fail-closed admission gate for the level-70 PoR group missions. Mirrors the
+-- native PorGroupAdmission checks: exact public-zone NPC placement, minimum
+-- level, prerequisite task and a required item where applicable. Keeping this
+-- in Lua preserves EQS's expedition/bucket model; it is additive, never a
+-- relaxation of an existing check.
+function por.can_offer(client, npc, zone_id, npc_type, spawn_id, level, prerequisite, item_id)
+  if not client or not client.valid or not npc or not npc.valid then return false end
+  local zone = eq.get_zone()
+  if not zone or zone:GetZoneID() ~= zone_id or zone:GetInstanceID() ~= 0 or
+      client:GetZoneInstanceVersion() ~= 0 then return false end
+  if npc:GetNPCTypeID() ~= npc_type or npc:GetSpawnPointID() ~= spawn_id then return false end
+  if client:IsSpiritShrouded() or client:GetLevel() < level then return false end
+  if prerequisite and not client:IsTaskCompleted(prerequisite) then return false end
+  if item_id and not client:HasItem(item_id) then return false end
+  return true
+end
+
+-- Nine Sverag trophy deliveries (upstream ids 920326-920334). Entry is
+-- { local task id, trophy item id, say keyword }. Each task is level 70 and
+-- completes on four of its item, collected in the Devastation (zone 372).
+por.trophy_tasks = {
+  { 303225, 88060, "giant" },
+  { 303226, 88061, "skulls" },
+  { 303227, 88062, "kobolds" },
+  { 303228, 88063, "orcs" },
+  { 303229, 88064, "evil eyes" },
+  { 303230, 88065, "wurines" },
+  { 303231, 88066, "drachnids" },
+  { 303232, 88067, "shiliskins" },
+  { 303233, 88068, "berserkers" },
+}
+
+-- Spawn condition 1 in Sverag decides which single delivery the contact
+-- withholds: 1 = skulls, 2 = giant. Mirrors the upstream controller rotation.
+por.trophy_blocked = { [1] = 303226, [2] = 303225 }
+
 -- Ordered lists (used by scripts; order is not significant beyond readability)
 por.skins = {
   88069, 88070, 88071, 88072, 88073, 88074, 88075, 88076, 88077,

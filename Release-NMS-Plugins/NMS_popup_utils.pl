@@ -27,7 +27,17 @@ my %popups_title = (
     6280040 => "Sympathetic Strike Tutorial",
 );
 
-my %popups_text = (
+# Built on first use, not at file scope. These strings embed plugin::GetMaxClasses(), which
+# reaches quest::get_rule, and the boot plugin sweep (Embperl::DoInit) runs each plugin file's
+# body BEFORE PerlembParser::MapFunctions() binds the quest package. Evaluating the table here
+# therefore died on every zone boot with:
+#   Undefined subroutine &quest::get_rule called at ./quests\plugins/NMS_multiclass_utils.pl line 309
+my %popups_text;
+
+sub BuildPopupTexts {
+    return \%popups_text if %popups_text;
+
+    %popups_text = (
     6280010 => "You've equipped an item in your Power Source slot! It won’t grant stat bonuses while equipped there, but it will gain power as you earn experience. "
                ."With enough experience, it will upgrade to $color_enchanted Enchanted$color_end quality, and later to $color_legendary Legendary$color_end.<br><br>"
                ."The first time you gain experience with the item equipped, it will become $color_object NO DROP$color_end, even if it isn’t $color_object ATTUNABLE$color_end. "
@@ -74,7 +84,10 @@ my %popups_text = (
                ."$color_object Sympathetic Strike$color_end - These abilities will deal additional damage whenever you $color_normal cast a damaging spell from a spell gem$color_end. Your $color_normal Spell Damage$color_end will also be applied.<br><br>"
                ."$color_object Sympathetic Healing$color_end - On the other hand, these abilities will add a healing component to $color_normal every beneficial spell you cast from a spell gem$color_end. Your $color_normal Heal Amount$color_end will also be applied.<br><br>"    
                ."It is important to note that these are, for the most part, $color_object Click Effects$color_end, not worn buffs, and each type will stack with each other.",
-);
+    );
+
+    return \%popups_text;
+}
 
 sub get_popup_config {
     my $popup_id = shift;
@@ -135,7 +148,7 @@ sub popup_exists {
 
     my $exists_in_popups = grep { $_ == $popup_id } values %popups;
 
-    if ($exists_in_popups && exists $popups_text{$popup_id} && exists $popups_title{$popup_id}) {
+    if ($exists_in_popups && exists BuildPopupTexts()->{$popup_id} && exists $popups_title{$popup_id}) {
         return 1;
     }
     
@@ -159,13 +172,13 @@ sub dispatch_popup {
         return 0;
     }
 
-    if (!exists $popups_title{$popup_id} || !exists $popups_text{$popup_id}) {
+    if (!exists $popups_title{$popup_id} || !exists BuildPopupTexts()->{$popup_id}) {
         quest::debug($client->GetCleanName() . " tried to invoke an invalid popup: $popup_id");
         return 0;  
     }
 
     my $title = $popups_title{$popup_id};
-    my $text = $popups_text{$popup_id};
+    my $text = BuildPopupTexts()->{$popup_id};
     my $negative_id = $popup_id + 9;
     my $buttons = 2;
     my $duration = -1;

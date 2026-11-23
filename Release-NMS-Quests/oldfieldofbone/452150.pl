@@ -6,6 +6,9 @@
 # buff makes you non-KoS to nearly everything in Field of Scale while
 # worn. Also the path to the Warmly/Ally tiers of Tynoc's wares.
 sub EVENT_SAY {
+    # v466: her Ring of Scale tasks (304102/304108-111) ride the standard
+    # giver engine; the Bone Mask flow below stays untouched.
+    plugin::SodTaskGiver($client, 452150, $text) if $text !~ /hail/i;
     if ($text =~ /hail/i) {
         if ($client->CountItem(80061) > 0) {
             quest::say("Wear the ancients' face well. Behind that mask the sarnak see only an old ghost of the ages -- walk their camps freely.");

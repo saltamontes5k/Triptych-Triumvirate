@@ -7,8 +7,8 @@ local ZMKP_MinHit = 1430;
 local ZMKP_AtkHit = 400; -- Rage
 local ZMKP_Delay  = 20;
 
--- Time out on Balancing seemed to be about 70 seconds
-local ZMKP_Balance_Timer = 70 * 1000;
+-- Shortened from the ~70s observed timeout so a balance phase resolves promptly
+local ZMKP_Balance_Timer = 45 * 1000;
 
 local ZMKP_Fury		= 100;
 local ZMKP_Rage		= 100;
@@ -51,69 +51,73 @@ function ZMKP_Combat(e)
 	end
 end
 
+function ZMKP_Resolve_Balance(e)
+	eq.stop_timer("balance");
+	eq.stop_timer("wipecheck");
+	eq.signal(298125, 1); -- NPC: #Balance_of_Speed
+	eq.signal(298126, 1); -- NPC: #Balance_of_Defense
+	eq.signal(298127, 1); -- NPC: #Balance_of_Fury
+	eq.signal(298128, 1); -- NPC: #Balance_of_Rage
+
+	local failed = false;
+
+	if not speed_balanced then
+		-- Reduce ZMKP's Attack Delay by 10% each time the Speed mob is out of Balance.
+		ZMKP_Delay = ZMKP_Delay - 2;
+		e.self:ModifyNPCStat("attack_delay",  tostring(ZMKP_Delay));
+		failed = true;
+	end
+
+	if not defense_balanced then
+		ZMKP_AC = ZMKP_AC + 100;
+		e.self:ModifyNPCStat("ac",            tostring(ZMKP_AC));
+		failed = true;
+	end
+
+	if not fury_balanced then
+		ZMKP_MaxHit = ZMKP_MaxHit + 585;
+		ZMKP_MinHit = ZMKP_MinHit + 215;
+		e.self:ModifyNPCStat("max_hit",       tostring(ZMKP_MaxHit));
+		e.self:ModifyNPCStat("min_hit",       tostring(ZMKP_MinHit));
+		failed = true;
+	end
+
+	if not rage_balanced then
+		ZMKP_AtkHit = ZMKP_AtkHit + 200;
+		e.self:ModifyNPCStat("atk",           tostring(ZMKP_AtkHit));
+		failed = true;
+	end
+
+	if failed then
+		eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Your failure to balance the scales has added to Kvxe's already impressive skills.");
+	else
+		eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Kvxe's body trembles as he fails to gather power from the balanced scales.");
+	end
+
+	-- so dots will oddly still hurt him, with enough necros it is possible to skip an event if we just used HP events (live doesn't skip, probably does if you manage to kill him though)
+	-- So instead of just using straight HP events, we gotta do some checking here!
+	if math.floor(e.self:GetHPRatio()) <= (target_hp - 10) then
+		-- we'll we gotta skip an active phase basically, to next balance!
+		eq.set_timer("balance", ZMKP_Balance_Timer);
+		eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Kvxe enters a state of battle meditation.");
+		e.self:SetOOCRegen(0);
+		target_hp = target_hp - 10;
+
+		eq.signal(298125, 2); -- NPC: #Balance_of_Speed
+		eq.signal(298126, 2); -- NPC: #Balance_of_Defense
+		eq.signal(298127, 2); -- NPC: #Balance_of_Fury
+		eq.signal(298128, 2); -- NPC: #Balance_of_Rage
+	else
+		e.self:ProcessSpecialAbilities(ZMKP_Active);
+      e.self:SetSpecialAbility(35, 0)
+		target_hp = target_hp - 10;
+		eq.set_next_hp_event(target_hp);
+	end
+end
+
 function ZMKP_Timer(e)
 	if e.timer == 'balance' then
-		eq.stop_timer(e.timer);
-		eq.stop_timer("wipecheck");
-		eq.signal(298125, 1); -- NPC: #Balance_of_Speed
-		eq.signal(298126, 1); -- NPC: #Balance_of_Defense
-		eq.signal(298127, 1); -- NPC: #Balance_of_Fury
-		eq.signal(298128, 1); -- NPC: #Balance_of_Rage
-
-		local failed = false;
-
-		if not speed_balanced then
-			-- Reduce ZMKP's Attack Delay by 10% each time the Speed mob is out of Balance.
-			ZMKP_Delay = ZMKP_Delay - 2;
-			e.self:ModifyNPCStat("attack_delay",  tostring(ZMKP_Delay));
-			failed = true;
-		end
-
-		if not defense_balanced then
-			ZMKP_AC = ZMKP_AC + 100;
-			e.self:ModifyNPCStat("ac",            tostring(ZMKP_AC));
-			failed = true;
-		end
-
-		if not fury_balanced then
-			ZMKP_MaxHit = ZMKP_MaxHit + 585;
-			ZMKP_MinHit = ZMKP_MinHit + 215;
-			e.self:ModifyNPCStat("max_hit",       tostring(ZMKP_MaxHit));
-			e.self:ModifyNPCStat("min_hit",       tostring(ZMKP_MinHit));
-			failed = true;
-		end
-
-		if not rage_balanced then
-			ZMKP_AtkHit = ZMKP_AtkHit + 200;
-			e.self:ModifyNPCStat("atk",           tostring(ZMKP_AtkHit));
-			failed = true;
-		end
-
-		if failed then
-			eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Your failure to balance the scales has added to Kvxe's already impressive skills.");
-		else
-			eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Kvxe's body trembles as he fails to gather power from the balanced scales.");
-		end
-
-		-- so dots will oddly still hurt him, with enough necros it is possible to skip an event if we just used HP events (live doesn't skip, probably does if you manage to kill him though)
-		-- So instead of just using straight HP events, we gotta do some checking here!
-		if math.floor(e.self:GetHPRatio()) <= (target_hp - 10) then
-			-- we'll we gotta skip an active phase basically, to next balance!
-			eq.set_timer("balance", ZMKP_Balance_Timer);
-			eq.get_entity_list():MessageClose(e.self, false, 120, MT.Yellow, "Kvxe enters a state of battle meditation.");
-			e.self:SetOOCRegen(0);
-			target_hp = target_hp - 10;
-
-			eq.signal(298125, 2); -- NPC: #Balance_of_Speed
-			eq.signal(298126, 2); -- NPC: #Balance_of_Defense
-			eq.signal(298127, 2); -- NPC: #Balance_of_Fury
-			eq.signal(298128, 2); -- NPC: #Balance_of_Rage
-		else
-			e.self:ProcessSpecialAbilities(ZMKP_Active);
-      e.self:SetSpecialAbility(35, 0)
-			target_hp = target_hp - 10;
-			eq.set_next_hp_event(target_hp);
-		end
+		ZMKP_Resolve_Balance(e);
 	elseif e.timer == "wipecheck" then
 		-- Check to see if there are any Clients in the room with ZMKP
 		local client = eq.get_entity_list():GetRandomClient(e.self:GetX(), e.self:GetY(), e.self:GetZ(), 9000);
@@ -216,6 +220,27 @@ function ZMKP_Signal_Balance(e)
 	end
 end
 
+function ZMKP_Signal(e)
+	if e.signal == 3 and eq.has_timer('balance') then
+		-- Resolve the current balance phase now, then re-arm the scales for the next one
+		ZMKP_Resolve_Balance(e);
+		eq.signal(298125, 2); -- NPC: #Balance_of_Speed
+		eq.signal(298126, 2); -- NPC: #Balance_of_Defense
+		eq.signal(298127, 2); -- NPC: #Balance_of_Fury
+		eq.signal(298128, 2); -- NPC: #Balance_of_Rage
+	end
+end
+
+function ZMKP_Say_Balance(e)
+	if e.message:findi("hail") then
+		eq.signal(298029, 3); -- tell ZMKP to run the balance check immediately
+		-- Reactivate this scale so it can be balanced in the next phase
+		e.self:ProcessSpecialAbilities("42,1");
+		e.self:SetHP(e.self:GetMaxHP());
+		e.self:WipeHateList();
+	end
+end
+
 function ZMKP_Hp_Balance(e)
 	if e.hp_event == (target_hp + 3) then
 		local id = e.self:GetNPCTypeID();
@@ -249,6 +274,7 @@ function event_encounter_load(e)
 	eq.register_npc_event('zmkp', Event.spawn,          298029, ZMKP_Spawn);
 	eq.register_npc_event('zmkp', Event.combat,         298029, ZMKP_Combat);
 	eq.register_npc_event('zmkp', Event.timer,          298029, ZMKP_Timer);
+	eq.register_npc_event('zmkp', Event.signal,         298029, ZMKP_Signal);
 	eq.register_npc_event('zmkp', Event.hp,             298029, ZMKP_Hp);
 	eq.register_npc_event('zmkp', Event.death_complete, 298029, ZMKP_Death);
 
@@ -266,6 +292,11 @@ function event_encounter_load(e)
 	eq.register_npc_event('zmkp', Event.hp,             298126, ZMKP_Hp_Balance);
 	eq.register_npc_event('zmkp', Event.hp,             298127, ZMKP_Hp_Balance);
 	eq.register_npc_event('zmkp', Event.hp,             298128, ZMKP_Hp_Balance);
+
+	eq.register_npc_event('zmkp', Event.say,            298125, ZMKP_Say_Balance);
+	eq.register_npc_event('zmkp', Event.say,            298126, ZMKP_Say_Balance);
+	eq.register_npc_event('zmkp', Event.say,            298127, ZMKP_Say_Balance);
+	eq.register_npc_event('zmkp', Event.say,            298128, ZMKP_Say_Balance);
 end
 
 function event_encounter_unload(e)

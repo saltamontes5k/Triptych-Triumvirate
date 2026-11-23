@@ -352,57 +352,6 @@ void Heartbeat()
 
     FireCAuthHandshake(); // Deferred CAuth — main thread, safe to send
 
-    // NMS: shroud transform pose fix — after OP_Shroud the actor keeps the
-    // transform's last frame; cycle /sit then /stand to rebuild the pose.
-    {
-        extern bool g_shroudPoseFix;
-        static int  s_shroudPosePhase = 0;
-        static DWORD s_shroudPoseTick = 0;
-        if (g_shroudPoseFix && gGameState == GAMESTATE_INGAME && pLocalPlayer) {
-            if (s_shroudPosePhase == 0) {
-                EzCommand("/sit");
-                s_shroudPosePhase = 1;
-                s_shroudPoseTick = GetTickCount();
-            } else if (s_shroudPosePhase == 1 &&
-                       GetTickCount() - s_shroudPoseTick > 400) {
-                EzCommand("/stand");
-                s_shroudPosePhase = 0;
-                g_shroudPoseFix = false;
-            }
-        }
-    }
-
-    // NMS: follow-up hotbar restores. The class rebuild triggered by OP_Shroud
-    // can re-hide the bars a moment after the handler returns, so re-show them
-    // a few times over the next second. See ShroudRestoreHotbars() in eqgame.cpp.
-    {
-        extern int   g_shroudHotbarFixesLeft;
-        extern DWORD g_shroudHotbarNextTick;
-        extern void  ShroudRestoreHotbars();
-        if (g_shroudHotbarFixesLeft > 0 && gGameState == GAMESTATE_INGAME &&
-            GetTickCount() >= g_shroudHotbarNextTick) {
-            ShroudRestoreHotbars();
-            --g_shroudHotbarFixesLeft;
-            g_shroudHotbarNextTick = GetTickCount() + 500;
-        }
-        // NMS: keep the server's shroud flag applied -- the profile re-init
-        // that runs inside the OP_Shroud handler clears BaseProfile+0x340C.
-        extern int   g_serverShroudStampLeft;
-        extern DWORD g_serverShroudStampNext;
-        extern void  ShroudStampServerState(const char *);
-        if (g_serverShroudStampLeft > 0 && GetTickCount() >= g_serverShroudStampNext) {
-            ShroudStampServerState("pulse");
-            --g_serverShroudStampLeft;
-            g_serverShroudStampNext = GetTickCount() + 500;
-        }
-        // NMS: repopulate the AA window once the shroud AA-table burst is quiet.
-        extern DWORD g_aaRefreshAt;
-        extern void  ShroudRefreshAAWindow(void);
-        if (g_aaRefreshAt && GetTickCount() >= g_aaRefreshAt) {
-            g_aaRefreshAt = 0;
-            ShroudRefreshAAWindow();
-        }
-    }
 
     // NMS: keep discipline timer-bands applied (native client re-wraps CARecastTimerID
     // mod 20 on spell load; this restores the >=20 banded IDs so classes stay separated).
@@ -906,7 +855,12 @@ void NMS_ObserveCXStrAccess()
 // stack buffer and written with WriteFile. The return-address scan is what says
 // whether the bogus size came from /who, the UI, or MQ-supplied data.
 // -----------------------------------------------------------------------
-#define NMS_CLIENT_OOM_HANDLER_REL (0x40DF30 - 0x400000)
+// The handler is at image offset 0x40DF30 (IDA static 0x80DF30 with the image
+// based at 0x400000 -- which is why its crash dialog names +0040DF45). Subtract
+// 0x400000 from the IDA static, NOT from 0x40DF30: this define used to evaluate
+// to 0xDF30, so the detour patched an unrelated client function and every
+// char-select UI reset faulted at 0xDF33. Keep it image-relative.
+#define NMS_CLIENT_OOM_HANDLER_REL (0x80DF30 - 0x400000)
 
 static void NMS_LogClientOom(size_t size)
 {
@@ -1057,8 +1011,24 @@ void InitializeMQ2Pulse()
     // then writes NULL on purpose so the client faults where the dialog can name it
     // (+0x40DF45). Keep the breadcrumb: without it an OOM fault and a genuine fault look
     // identical, and the "Location: ...+0040DF45" dumps stay unexplained.
-    EzDetour(baseAddress + NMS_CLIENT_OOM_HANDLER_REL,
-        NMS_ClientOomHandler_Detour, NMS_ClientOomHandler_Trampoline);
+    // Prove the prologue before patching: a wrong offset here cost a day of
+    // char-select crashes (see the define above). At 0x40DF30 the client has
+    // 'push ebp / mov ebp,esp / mov eax,[ebp+8]'; anything else means the client
+    // build moved and the breadcrumb must stay off.
+    {
+        const BYTE* probe = (const BYTE*)(baseAddress + NMS_CLIENT_OOM_HANDLER_REL);
+        const BYTE expect[6] = {0x55, 0x8B, 0xEC, 0x8B, 0x45, 0x08};
+        if (memcmp(probe, expect, sizeof(expect)) == 0) {
+            EzDetour(baseAddress + NMS_CLIENT_OOM_HANDLER_REL,
+                NMS_ClientOomHandler_Detour, NMS_ClientOomHandler_Trampoline);
+        } else {
+            char msg[192];
+            wsprintfA(msg,
+                "OOM breadcrumb SKIPPED: prologue mismatch at base+0x%X (%02X %02X %02X %02X)\n",
+                (unsigned)NMS_CLIENT_OOM_HANDLER_REL, probe[0], probe[1], probe[2], probe[3]);
+            NMS_LockDiagLog(msg);
+        }
+    }
     EzDetour(CEverQuest__EnterZone,&CEverQuestHook::EnterZone_Detour,&CEverQuestHook::EnterZone_Trampoline);
     EzDetour(CEverQuest__SetGameState,&CEverQuestHook::SetGameState_Detour,&CEverQuestHook::SetGameState_Trampoline);
     AddCommand("/autoskill", CmdAutoSkill);

@@ -15,7 +15,10 @@ local SNACK_TASK_ID   = 800006
 local SNACK_EXPEDITION = "Old Man McKenzie's Midnight Snack"
 local SPACE_TASK_ID   = 800007
 local SPACE_EXPEDITION = "Old Man McKenzie's Derelict Space Station"
+local LAIR_TASK_ID    = 800008
+local LAIR_EXPEDITION = "Old Man McKenzie's Defending the Lair"
 local MIN_LEVEL       = 40 -- shrouds only go down, never up
+local LAIR_MIN_LEVEL  = 55 -- the Nagafen hallucination wears level-55 scales
 
 local POK_ID = 202 -- zoneidnumber (canonical), not zone.id
 local MCKENZIE_HOME = { x = 263, y = 69, z = -125.375, h = 0 }
@@ -23,6 +26,7 @@ local OOT_ZONEIN    = { x = -9200, y = 390, z = 6, h = 0 } -- oot safe point, op
 local MOORS_ZONEIN  = { x = -1378, y = -612, z = 25, h = 0 } -- moors, beside the PoK stone the whelps race for
 local SKYSHRINE_ZONEIN = { x = -669.7, y = 1068.2, z = 402.8, h = 0 } -- skyshrine maze level (z 373-409)
 local STATION_ZONEIN = { x = 74, y = -696, z = 4.1, h = 2 } -- netherbian, the Dawnshroud arrival pocket
+local LAIR_ZONEIN    = { x = -871, y = -1420, z = 104.88, h = 0 } -- soldungb, Nagafen's own hoard spot
 
 local compass    = { zone = "poknowledge", x = MCKENZIE_HOME.x, y = MCKENZIE_HOME.y, z = MCKENZIE_HOME.z }
 local safereturn = { zone = "poknowledge", x = MCKENZIE_HOME.x, y = MCKENZIE_HOME.y, z = MCKENZIE_HOME.z, h = MCKENZIE_HOME.h }
@@ -65,8 +69,18 @@ local derelict_station = {
 	zonein     = station_zonein
 }
 
+-- The lair takes the whole household: the dragon, his king, his magus, his
+-- warlord, and up to three priests. The controller auto-dresses everyone.
+local defending_the_lair = {
+	expedition = { name = LAIR_EXPEDITION, min_players = 1, max_players = 6 },
+	instance   = { zone = "soldungb", version = 44, duration = eq.seconds("2h") },
+	compass    = compass,
+	safereturn = safereturn,
+	zonein     = { x = LAIR_ZONEIN.x, y = LAIR_ZONEIN.y, z = LAIR_ZONEIN.z, h = LAIR_ZONEIN.h }
+}
+
 -- Mission roster: task ids offered in the select window.
-local MISSION_TASKS = { BOAT_TASK_ID, HUNT_TASK_ID, SNACK_TASK_ID, SPACE_TASK_ID }
+local MISSION_TASKS = { BOAT_TASK_ID, HUNT_TASK_ID, SNACK_TASK_ID, SPACE_TASK_ID, LAIR_TASK_ID }
 
 local function on_boat_expedition(client)
 	local dz = client:GetExpedition()
@@ -88,11 +102,26 @@ local function on_space_expedition(client)
 	return dz.valid and dz:GetName() == SPACE_EXPEDITION
 end
 
+local function on_lair_expedition(client)
+	local dz = client:GetExpedition()
+	return dz.valid and dz:GetName() == LAIR_EXPEDITION
+end
+
 function event_say(e)
 	if e.message:findi("^ready$") then
-		if on_boat_expedition(e.other) or on_hunt_expedition(e.other) or on_snack_expedition(e.other) or on_space_expedition(e.other) then
+		if on_boat_expedition(e.other) or on_hunt_expedition(e.other) or on_snack_expedition(e.other) or on_space_expedition(e.other) or on_lair_expedition(e.other) then
 			e.other:MovePCDynamicZone(e.other:GetExpedition():GetZoneID())
 		end
+		return
+	end
+	if e.message:findi("dragon") or e.message:findi("lair") or e.message:findi("nagafen") then
+		-- the Defending the Lair monologue. The one story he tells from the
+		-- wrong side of it.
+		e.self:Say("You want to hear about the dragon. Everyone wants to hear about the dragon. Nobody wants to hear it the way I tell it -- from BEHIND his eyes.")
+		e.self:Emote("taps the side of his nose like he is checking it for scales.")
+		e.self:Say("Everybody remembers charging DOWN the lair, kid -- the big brave heroes, the fire, the screaming. Nobody ever asks what it was like to BE him. Lord Nagafen. The great red worm. Lying on a mountain of gold, warm as a furnace, and watching the greedy little two-legs come up the hall for YOUR hoard.")
+		e.self:Emote("shakes the empty bottle, listens to it, frowns.")
+		e.self:Say("You know what a dragon's afternoon looks like? It looks like TOAST. Say [" .. eq.say_link("ready") .. "] when the window is open and I'll drop you in the lair wearing the scales. All of you. Don't ask how the dream works -- it's my hallucination, I get to say who's the dragon.")
 		return
 	end
 	if e.message:findi("space") then
@@ -122,9 +151,17 @@ function event_say(e)
 			"Hmph. %s, is it? In my day the sight of a boat on the horizon stopped a war cold. " ..
 			"Never mind an old man's grumbling -- the lessons are in the window. And if you want to hear about the [" ..
 			eq.say_link("maze") .. "], ask me about the maze. Everyone asks eventually. The [" ..
-			eq.say_link("space") .. "] story is extra.",
+			eq.say_link("space") .. "] story is extra, and the [" ..
+			eq.say_link("dragon") .. "] story is the best one.",
 			e.other:GetCleanName()))
-		e.other:TaskSelector(MISSION_TASKS)
+		-- Offer through McKenzie himself. Plain TaskSelector records the
+		-- *client's* entity id as the task giver, and CanAcceptNewTask
+		-- CastToNPCs that id -> "accepted task from missing npc", so the
+		-- accept never reaches event_task_accepted here and no expedition
+		-- is assembled. TaskSelectorFromNPC records this NPC instead.
+		if not e.other:TaskSelectorFromNPC(e.self, MISSION_TASKS) then
+			e.other:Message(15, "Old Man McKenzie waves you off. 'Window's stuck, kid. Hail me again.'")
+		end
 	end
 end
 
@@ -182,6 +219,22 @@ function event_task_accepted(e)
 		local dz = e.other:CreateExpedition(derelict_station)
 		if dz.valid then
 			e.self:Say("So you'll wear the armor. Say [" .. eq.say_link("ready") .. "] and I'll drop your squad on the Derlict Station, out in the deep of space. Purge the Mildew, silence the Leapers of the Dark, cull the crew -- EVERY last one -- and whatever the little light tells you, do NOT fire the station.")
+		end
+	elseif task_id == LAIR_TASK_ID then
+		if e.other:GetLevel() < LAIR_MIN_LEVEL then
+			-- shrouds only go down, never up: the household wears level-55
+			-- scales, so 55 winters is the door (the task row gates the
+			-- select window; this is the script-side net)
+			e.other:Message(15, "Old Man McKenzie squints at you. 'Not yet, kid. That hallucination wears level-55 scales, and you haven't seen 55 winters. The dragon would swallow you like a bad mussel.'")
+			return
+		end
+		if on_lair_expedition(e.other) then
+			e.other:Message(15, "Your household is already assembled! Say '[" .. eq.say_link("ready") .. "]' to return to the lair.")
+			return
+		end
+		local dz = e.other:CreateExpedition(defending_the_lair)
+		if dz.valid then
+			e.self:Say("So you'll wear the scales. Say [" .. eq.say_link("ready") .. "] and I'll drop you in Nagafen's Lair as the dragon himself -- all of you at once, like I said, don't ask. Lie on the hoard a moment. Feel how warm the gold is. Then eight greedy treasure-hunters come up the hall, and you'll find out what a dragon's afternoon looks like. It looks like TOAST.")
 		end
 	end
 end

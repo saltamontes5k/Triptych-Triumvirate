@@ -353,6 +353,12 @@ namespace EQ
 		uint64           GetEvolveCurrentAmount() const { return m_evolving_details.current_amount; }
 		uint32           GetEvolveFinalItemID() const { return m_evolving_details.final_item_id; }
 		uint32           GetAugmentEvolveUniqueID(uint8 augment_index) const;
+		// One-shot EvolvingItems:DelayUponEquipping gate: false until the equip
+		// window has elapsed once for this instance, true afterwards. Without it
+		// the timer was re-armed by inventory re-marks and every gain was
+		// throttled to one per delay (30 s).
+		bool             GetEvolveDelaySatisfied() const { return m_evolve_delay_satisfied; }
+		void             SetEvolveDelaySatisfied(const bool in) const { m_evolve_delay_satisfied = in; }
 		void             SetEvolveEquipped(const bool in) const;
 		void             SetEvolveActivated(const bool in) const { m_evolving_details.activated = in; }
 		void             SetEvolveProgression(const double in) const { m_evolving_details.progression = in; }
@@ -398,6 +404,7 @@ namespace EQ
 		uint32           m_recast_timestamp{0};
 		int              m_task_delivered_count{0};
 		mutable CharacterEvolvingItemsRepository::CharacterEvolvingItems  m_evolving_details{};
+		mutable bool m_evolve_delay_satisfied{false};
 
 		// Items inside of this item (augs or contents) {};
 		std::map<uint8, ItemInstance*>         m_contents {}; // Zero-based index: min=0, max=9

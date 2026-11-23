@@ -209,6 +209,21 @@ void Mob::CalcItemBonuses(StatBonuses* b) {
 				}
 			}
 		}
+
+		// RoF2 personal housing trophies: applied hidden stat items (68733/68736) ride the
+		// same CreateItem/AddItemBonuses path as tributes (zone/nms_housing_trophies.cpp).
+		for (const uint32_t trophy_item : CastToClient()->GetHousingTrophyStatItems()) {
+			if (!trophy_item) {
+				continue;
+			}
+			const EQ::ItemInstance *inst = database.CreateItem(trophy_item);
+			if (!inst) {
+				continue;
+			}
+
+			AddItemBonuses(inst, b, false, true);
+			safe_delete(inst);
+		}
 	}
 
 	if (IsOfClientBot()) {
@@ -3261,6 +3276,10 @@ void Mob::ApplySpellsBonuses(uint16 spell_id, uint8 casterlevel, StatBonuses *ne
 
 			case SE_Blind:
 				if (!RuleB(Combat, AllowRaidTargetBlind) && IsRaidTarget()) { // do not blind raid targets
+					break;
+				}
+
+				if (GetSpecialAbility(SpecialAbility::BlindImmunity)) {
 					break;
 				}
 

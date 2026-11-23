@@ -13,6 +13,7 @@ local raid = require("sod_raids")
 
 local engaged = false
 local adds = {}
+local hard = false
 
 local POTIONS = {
 	"a frothing mitigation draught",
@@ -34,7 +35,7 @@ end
 local function reset(e)
 	engaged = false
 	clear_adds()
-	for _, t in ipairs({ "potion", "adds", "caltrop", "resetcheck" }) do
+	for _, t in ipairs({ "potion", "adds", "caltrop", "dirty", "resetcheck" }) do
 		eq.stop_timer(t)
 	end
 	e.self:Heal()
@@ -64,6 +65,12 @@ function event_combat(e)
 		end
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- Eriak comes in its harder thread!")
+				eq.set_timer("dirty", 60000)
+			end
 			eq.set_timer("potion", 10000)
 			eq.set_timer("adds", 60000)
 			eq.set_timer("caltrop", 45000)
@@ -99,12 +106,18 @@ function event_timer(e)
 		end
 		eq.zone_emote(15, "Ikaav honor guards sweep into the chamber!")
 	elseif e.timer == "caltrop" then
-		for i = 1, 2 do
+		for i = 1, hard and 3 or 2 do
 			local victim = raid.random_client(e.self:GetX(), e.self:GetY(), 300)
 			if victim then
 				eq.zone_emote(15, "Caltrops tear at " .. victim:GetCleanName() .. "!")
-				raid.hit(e.self, victim, 5000)
+				raid.hit(e.self, victim, hard and 7000 or 5000)
 			end
+		end
+	elseif e.timer == "dirty" then
+		-- hard: Dirty Fighting (live mechanic, skipped in normal)
+		eq.zone_emote(15, "Eriak fights dirty -- the front line reels!")
+		for _, client in ipairs(raid.alive_clients(e.self:GetX(), e.self:GetY(), 100)) do
+			raid.hit(e.self, client, 6000)
 		end
 	end
 end
@@ -112,6 +125,6 @@ end
 function event_death_complete(e)
 	clear_adds()
 	eq.zone_emote(15, "Eriak Dechard falls. The Rallosian Empire mourns its favored son.")
-	raid.spawn_chest(e, raid.CHEST.ERIAK)
+	raid.spawn_chest(e, raid.chest_for("ERIAK", raid.is_hard()))
 	eq.signal(raid.CTRL.ERIAK, 1)
 end

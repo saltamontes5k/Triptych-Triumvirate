@@ -56,30 +56,30 @@ local REMAINS_FRIZZNIK	= 'Frizznik`s Remains'
 local REMAINS_ZAJEER	= 'Zajeer`s Remains'
 
 
-function setup_event() -- 4.5 Days
+function setup_event() -- 14h raid lockout
 	Tacvi_Lockouts = {
-		[298039]	= {PXK_EVENT,			eq.seconds('20h'), Spawn_PXK},
-		[298201]	= {PKK_EVENT,			eq.seconds('20h'), Spawn_PKK},
-		[298032]	= {PRT_EVENT,			eq.seconds('20h'), Spawn_PRT},
-		[298029]	= {ZMKP_EVENT,			eq.seconds('20h'), Spawn_ZMKP},
-		[298018]	= {ZMSB_EVENT,			eq.seconds('20h'), Spawn_ZMSB},
-		[298020]	= {ZMMD_EVENT,			eq.seconds('20h'), Spawn_ZMMD},
-		[298023]	= {ZMYV_EVENT,			eq.seconds('20h'), Spawn_ZMYV},
-		[298055]	= {TMCV_EVENT,			eq.seconds('20h'), Spawn_TMCV},
-		[3]		= {REMAINS_LYNDROH,		eq.seconds('20h'), Spawn_REMAINS3},
-		[4]		= {REMAINS_SILIUS,		eq.seconds('20h'), Spawn_REMAINS4},
-		[5]		= {REMAINS_MADDOC,		eq.seconds('20h'), Spawn_REMAINS5},
-		[6]		= {REMAINS_VAHLARA,		eq.seconds('20h'), Spawn_REMAINS6},
-		[7]		= {REMAINS_VALTRON,		eq.seconds('20h'), Spawn_REMAINS7},
-		[8]		= {REMAINS_PRATHUN,		eq.seconds('20h'), Spawn_REMAINS8},
-		[9]		= {REMAINS_RYTAN,		eq.seconds('20h'), Spawn_REMAINS9},
-		[10]		= {REMAINS_XENAIDA,		eq.seconds('20h'), Spawn_REMAINS10},
-		[11]		= {REMAINS_WIJDAN,		eq.seconds('20h'), Spawn_REMAINS11},
-		[12]		= {REMAINS_ABSOR,		eq.seconds('20h'), Spawn_REMAINS12},
-		[13]		= {REMAINS_FRIZZNIK,		eq.seconds('20h'), Spawn_REMAINS13},
-		[14]		= {REMAINS_ZAJEER,		eq.seconds('20h'), Spawn_REMAINS14},
-		[15]		= {REMAINS_RASHERE,		eq.seconds('20h'), Spawn_REMAINS1},
-		[16]		= {REMAINS_KAIKACHI,		eq.seconds('20h'), Spawn_REMAINS2}
+		[298039]	= {PXK_EVENT,			eq.seconds('14h'), Spawn_PXK},
+		[298201]	= {PKK_EVENT,			eq.seconds('14h'), Spawn_PKK},
+		[298032]	= {PRT_EVENT,			eq.seconds('14h'), Spawn_PRT},
+		[298029]	= {ZMKP_EVENT,			eq.seconds('14h'), Spawn_ZMKP},
+		[298018]	= {ZMSB_EVENT,			eq.seconds('14h'), Spawn_ZMSB},
+		[298020]	= {ZMMD_EVENT,			eq.seconds('14h'), Spawn_ZMMD},
+		[298023]	= {ZMYV_EVENT,			eq.seconds('14h'), Spawn_ZMYV},
+		[298055]	= {TMCV_EVENT,			eq.seconds('14h'), Spawn_TMCV},
+		[3]		= {REMAINS_LYNDROH,		eq.seconds('14h'), Spawn_REMAINS3},
+		[4]		= {REMAINS_SILIUS,		eq.seconds('14h'), Spawn_REMAINS4},
+		[5]		= {REMAINS_MADDOC,		eq.seconds('14h'), Spawn_REMAINS5},
+		[6]		= {REMAINS_VAHLARA,		eq.seconds('14h'), Spawn_REMAINS6},
+		[7]		= {REMAINS_VALTRON,		eq.seconds('14h'), Spawn_REMAINS7},
+		[8]		= {REMAINS_PRATHUN,		eq.seconds('14h'), Spawn_REMAINS8},
+		[9]		= {REMAINS_RYTAN,		eq.seconds('14h'), Spawn_REMAINS9},
+		[10]		= {REMAINS_XENAIDA,		eq.seconds('14h'), Spawn_REMAINS10},
+		[11]		= {REMAINS_WIJDAN,		eq.seconds('14h'), Spawn_REMAINS11},
+		[12]		= {REMAINS_ABSOR,		eq.seconds('14h'), Spawn_REMAINS12},
+		[13]		= {REMAINS_FRIZZNIK,		eq.seconds('14h'), Spawn_REMAINS13},
+		[14]		= {REMAINS_ZAJEER,		eq.seconds('14h'), Spawn_REMAINS14},
+		[15]		= {REMAINS_RASHERE,		eq.seconds('14h'), Spawn_REMAINS1},
+		[16]		= {REMAINS_KAIKACHI,		eq.seconds('14h'), Spawn_REMAINS2}
 	};
 end
 
@@ -94,14 +94,8 @@ function event_spawn(e)
 		setup_event();
 	end
 
-	-- Door at zone in; Talking to Sensnil will unlock
-	Door_Lock(18);
-
-	-- Doors to TMCV
-	Door_Lock(10);
-	Door_Lock(11);
-	Door_Lock(14);
-	Door_Lock(19);
+	-- Derive all door state from the raid's 14h lockouts (entry doors stay open)
+	Manage_Doors(false);
 
 	for k,v in pairs(Tacvi_Lockouts) do
 		if v[3] and not expedition:HasLockout(v[1]) then
@@ -173,6 +167,20 @@ function Spawn_TMCV()
 	eq.spawn2(298014, 0, 0, 462, -171, 32, 128.2); -- NPC: #Tunat`Muram_Cuu_Vauax
 end
 
+-- Doors are derived from the raid's 14h lockouts: a cleared boss (lockout present)
+-- opens exactly the doors that boss used to gate. No extra lockouts are assigned here.
+local Boss_Doors = {
+	[PXK_EVENT]		= {3, 4, 5, 23},		-- PKK South Exit, PXK North Exit, PKK Entrance, PRT Entrance
+	[PKK_EVENT]		= {6, 7, 8, 13},		-- PKK North/South Exit, ZMSB Entrance, ZMMD Entrance
+	[ZMSB_EVENT]	= {9, 10},				-- ZMSB Exit, ZMSB Tunat Entrance
+	[ZMMD_EVENT]	= {12, 11},				-- ZMMD Exit, ZMMD Tunat Entrance
+	[PRT_EVENT]		= {17, 22, 21, 16},		-- PRT North/South Exit, ZMYV Entrance, ZMKP Entrance
+	[ZMYV_EVENT]	= {20, 19},				-- ZMYV Exit, ZMYV Tunat Entrance
+	[ZMKP_EVENT]	= {15, 14}				-- ZMKP Exit, ZMKP Tunat Entrance
+}
+
+local Open_Doors = {18, 2} -- Main Entrance, PXK Entrance: always accessible for this instance
+
 function Door_Lock(door_id)
 	local door	= 0;
 	door		= entity_list:FindDoor(door_id);
@@ -189,59 +197,45 @@ function Door_Unlock(door_id)
 	end
 end
 
+function Lock_All_Doors()
+	for door_id = 2, 23 do
+		Door_Lock(door_id);
+	end
+end
+
+function Manage_Doors(lock_all)
+	if lock_all then
+		Lock_All_Doors();
+		return;
+	end
+
+	local expedition = eq.get_expedition()
+	if not expedition.valid then
+		return;
+	end
+
+	Lock_All_Doors();
+
+	-- Entry doors are always open
+	for _, door_id in ipairs(Open_Doors) do
+		Door_Unlock(door_id);
+	end
+
+	-- Unlock the progression doors for each boss already cleared under the 14h lockout
+	for event_name, door_ids in pairs(Boss_Doors) do
+		if expedition:HasLockout(event_name) then
+			for _, door_id in ipairs(door_ids) do
+				Door_Unlock(door_id);
+			end
+		end
+	end
+end
+
 function event_signal(e)
 	if e.signal == 1 then -- Lock all doors
-		for i = 2, 23 do
-			eq.get_entity_list():FindDoor(i):SetLockPick(-1);
-		end
-	elseif e.signal == 2 then -- Unlock all cleared doors
-		local expedition = eq.get_expedition()
-		if expedition.valid then
-			-- Unlock main door and PXK door always
-			eq.get_entity_list():FindDoor(18):SetLockPick(0); -- Main Entrance
-			eq.get_entity_list():FindDoor(2):SetLockPick(0); -- PXK Entrance
-
-			if expedition:HasLockout(PXK_EVENT) then -- unlock PXK North/South and PKK/PRT Entrance
-				eq.get_entity_list():FindDoor(3):SetLockPick(0); -- PKK South Exit
-				eq.get_entity_list():FindDoor(4):SetLockPick(0); -- PXK North Exit
-				eq.get_entity_list():FindDoor(5):SetLockPick(0); -- PKK Entrance
-				eq.get_entity_list():FindDoor(23):SetLockPick(0); -- PRT Entrance
-			end
-
-			if expedition:HasLockout(PKK_EVENT) then -- unlock PKK North/South and ZMSB/ZMMD Entrance
-				eq.get_entity_list():FindDoor(6):SetLockPick(0); -- PKK South Exit
-				eq.get_entity_list():FindDoor(7):SetLockPick(0); -- PKK North Exit
-				eq.get_entity_list():FindDoor(8):SetLockPick(0); -- ZMSB Entrance
-				eq.get_entity_list():FindDoor(13):SetLockPick(0); -- ZMMD Entrance
-			end
-
-			if expedition:HasLockout(ZMSB_EVENT) then -- unlock ZMSB Exit and ZMSB Tunat Entrance
-				eq.get_entity_list():FindDoor(9):SetLockPick(0); -- ZMSB Exit
-				eq.get_entity_list():FindDoor(10):SetLockPick(0); -- ZMSB Tunat
-			end
-
-			if expedition:HasLockout(ZMMD_EVENT) then -- unlock ZMMD Exit and ZMMD Tunat Entrance
-				eq.get_entity_list():FindDoor(12):SetLockPick(0); -- ZMMD Exit
-				eq.get_entity_list():FindDoor(11):SetLockPick(0); -- ZMMD Tunat
-			end
-
-			if expedition:HasLockout(PRT_EVENT) then -- unlock PRT North/South and ZMYV/ZMKP Entrance
-				eq.get_entity_list():FindDoor(17):SetLockPick(0); -- PRT South Exit
-				eq.get_entity_list():FindDoor(22):SetLockPick(0); -- PRT North Exit
-				eq.get_entity_list():FindDoor(21):SetLockPick(0); -- ZMYV Entrance
-				eq.get_entity_list():FindDoor(16):SetLockPick(0); -- ZMKP Entrance
-			end
-
-			if expedition:HasLockout(ZMYV_EVENT) then -- unlock ZMYV Exit and ZMYV Tunat Entrance
-				eq.get_entity_list():FindDoor(20):SetLockPick(0); -- ZMYV Exit
-				eq.get_entity_list():FindDoor(19):SetLockPick(0); -- ZMYV Tunat
-			end
-
-			if expedition:HasLockout(ZMKP_EVENT) then -- unlock ZMKP Exit and ZMKP Tunat Entrance
-				eq.get_entity_list():FindDoor(15):SetLockPick(0); -- ZMKP Exit
-				eq.get_entity_list():FindDoor(14):SetLockPick(0); -- ZMKP Tunat
-			end
-		end
+		Manage_Doors(true);
+	elseif e.signal == 2 then -- Re-derive door state from the 14h raid lockouts
+		Manage_Doors(false);
 	elseif Tacvi_Lockouts[e.signal] ~= nil then
 		AddLockout(Tacvi_Lockouts[e.signal]);
 	end

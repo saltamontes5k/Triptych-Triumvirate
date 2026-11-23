@@ -123,6 +123,8 @@ function stonemite_spawn(e)
 end
 
 function bloodfeaster_spawn(e)
+  e.self:SetSpecialAbility(24, 0)
+  e.self:SetSpecialAbility(35, 0)
 	e.self:ModSkillDmgTaken(0, 10)
 	e.self:ModSkillDmgTaken(2, 10)
 	e.self:ModSkillDmgTaken(36, -10)

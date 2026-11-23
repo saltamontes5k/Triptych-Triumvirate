@@ -43,7 +43,7 @@ class Aura : public NPC
 {
 	// NOTE: We may have to override more virtual functions if they're causing issues
 public:
-	Aura(NPCType *type_data, Mob *owner, AuraRecord &record);
+	Aura(NPCType *type_data, Mob *owner, AuraRecord &record, const glm::vec4 &position);
 	~Aura() { };
 
 	bool IsAura() const { return true; }

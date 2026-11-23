@@ -23,15 +23,18 @@ function event_enter_zone(e)
   end
 end
 
+-- These clue pieces are ground spawns, so looting them is what advances the
+-- task. The task engine only auto-credits Loot activities for corpse loot, so
+-- the ground-spawn pickups are credited here, along with the follow-up Deliver
+-- activities (Tublik no longer requires a hand-in for these items).
 function event_player_pickup(e)
-  if e.item:GetID() == 60162 or e.item:GetID() == 60163 or e.item:GetID() == 60164 or e.item:GetID() == 60165 then
-    e.self:UpdateTaskActivity(task_ids.tublik_task, 7, 1)
-  end
-end
-
-function event_player_pickup(e)
-  if e.item:GetID() == 60167 or e.item:GetID() == 60168 or e.item:GetID() == 60169 then
-    e.self:UpdateTaskActivity(task_ids.tublik_task, 11, 1)
+  local item_id = e.item:GetID()
+  if item_id == 60162 or item_id == 60163 or item_id == 60164 or item_id == 60165 then
+    e.self:UpdateTaskActivity(task_ids.tublik_task, 7, 1)   -- Frayed Flesh Scraps looted
+    e.self:UpdateTaskActivity(task_ids.tublik_task, 8, 4)   -- no hand-in needed
+  elseif item_id == 60167 or item_id == 60168 or item_id == 60169 then
+    e.self:UpdateTaskActivity(task_ids.tublik_task, 11, 1)  -- trial temple clues looted
+    e.self:UpdateTaskActivity(task_ids.tublik_task, 12, 3)  -- no hand-in needed
   end
 end
 

@@ -120,6 +120,15 @@ local TRIAL_DIALS = {
 
 local DIAL_ORDER = { 8, 9, 10, 11, 12 }
 
+-- The Forsaken's Hourglass (9921017, second Xebuxoruk drop, migration
+-- v449): a persistent pass, never consumed -- with it in inventory, a dial
+-- click boots the Time B instance at zone Phase 3 (the Terris-Thule /
+-- Saryrn / Tallon Zek / Vallon Zek wing) instead of P0, and lands you at
+-- the door-62 teleporter destination where those four are up. Bank the
+-- hourglass to run the trials normally.
+local HOURGLASS_ITEM_ID = 9921017
+local SKIP_LANDING = { x = -395, y = 0, z = 350, h = 127 }
+
 local function attunement_key(self)
     return "potimea-dials-" .. self:CharacterID()
 end
@@ -181,6 +190,10 @@ function event_click_door(e)
 
     if dial then
         local expedition = e.self:GetExpedition()
+        -- The Forsaken's Hourglass: inventory-only check, so banking it
+        -- opts out and the trials run normally.
+        local has_hourglass = e.self:CountItem(HOURGLASS_ITEM_ID) > 0
+        local created = false
 
         if not expedition.valid then
             if e.self:HasExpeditionLockout("The Prison of the Forsaken", "Plane of Time") then
@@ -198,6 +211,7 @@ function event_click_door(e)
 
             local expedition_identifier = string.format("potime-%d-phase", expedition:GetID())
             eq.set_data(expedition_identifier, "0", "14H")
+            created = true
         end
 
         local instance_id = tonumber(expedition:GetInstanceID()) or 0
@@ -206,7 +220,30 @@ function event_click_door(e)
             return
         end
 
+        -- Hourglass pass: boot this fresh instance at zone Phase 3 (the
+        -- Terris/Saryrn/TZ/VZ wing) instead of P0. The key is the exact one
+        -- potimeb/zone_status.lua SaveState/RestoreState persists
+        -- (<inst>-pz:<name>, 7d TTL); the controller restores it before
+        -- do_the_spawn reads Phase, so the first boot runs the phase-3
+        -- branch (SpawnPhaseFour). ResetVariables does not touch Phase.
+        -- Killing the four bosses resumes the normal chain (signal 5 ->
+        -- Phase 4 -> god courtyard -> Quarm).
+        if created and has_hourglass then
+            eq.set_data(instance_id .. "-pz:Phase", "3", "7d")
+        end
+
         local used = remember_dial(e.self, door_id)
+
+        -- Once an instance sits at the Phase-4 wing or later (hourglass skip
+        -- or a raid that earned it), dial clicks land there instead of a
+        -- trial wing: raidmates and wipe recovery funnel in without the
+        -- item. Same landing the door-62 teleporter gives at Phase >= 3.
+        local skipped = tonumber(eq.get_data(instance_id .. "-pz:Phase")) or 0
+        if skipped >= 3 then
+            e.self:Message(MT.Yellow, "The hourglass turns over and the sands run backward. Time folds forward, and you stand where Terris-Thule, Saryrn and the Zek twins await.")
+            e.self:MovePCInstance(POTIMEB_ZONEID, instance_id, SKIP_LANDING.x, SKIP_LANDING.y, SKIP_LANDING.z, SKIP_LANDING.h)
+            return
+        end
 
         e.self:Message(MT.Yellow, string.format(
             "The %s dial turns beneath your hand. The ring of time shudders and the way to the %s trial opens.",
@@ -240,8 +277,15 @@ function event_click_door(e)
         enter_xeb_expedition(e)
 
     elseif door_id == 2 then -- OBJ_VOIDPORTAL: SoD void entry
+        -- Land in the player's earned Void version. The bucket is written
+        -- by plugins/NMS_sod_utils.pl on every theme/flag change and
+        -- backfilled on every zone-in; default thevoida covers
+        -- pre-feature accounts (SodMercTierBackfill runs on this same
+        -- zone-in, before the door can be clicked).
         e.self:Message(MT.Yellow, "You step through the timeshear rift...")
-        e.self:MovePC(Zone.thevoida, -79, -158, 33, 0)
+        local ver = tonumber(eq.get_data(e.self:AccountID() .. "-sod-void-version")) or 1
+        if ver < 1 then ver = 1 elseif ver > 7 then ver = 7 end
+        e.self:MovePC(Zone["thevoid" .. string.char(96 + ver)], -79, -158, 33, 0)
 
     elseif door_id == 1 then
         e.self:Message(MT.Yellow, "You step through time in to a conflux of ages.")

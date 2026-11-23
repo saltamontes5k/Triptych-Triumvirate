@@ -196,6 +196,8 @@ bool DatabaseUpdate::UpdateManifest(
 			auto s = DatabaseDumpService();
 			s.SetDumpAllTables(true);
 			s.SetDumpWithCompression(true);
+			s.SetDumpTimeoutMinutes(m_dump_timeout_minutes);
+			s.SetFailOnDumpFailure(m_fail_on_dump_failure);
 			s.DatabaseDump();
 			LogInfo("{}", Strings::Repeat("-", BREAK_LENGTH));
 		}
@@ -331,6 +333,20 @@ DatabaseUpdate *DatabaseUpdate::SetContentDatabase(Database *db)
 DatabaseUpdate *DatabaseUpdate::SetSkipBackup(bool skip)
 {
 	m_skip_backup = skip;
+
+	return this;
+}
+
+DatabaseUpdate *DatabaseUpdate::SetDumpTimeoutMinutes(int minutes)
+{
+	m_dump_timeout_minutes = minutes;
+
+	return this;
+}
+
+DatabaseUpdate *DatabaseUpdate::SetFailOnDumpFailure(bool fail)
+{
+	m_fail_on_dump_failure = fail;
 
 	return this;
 }

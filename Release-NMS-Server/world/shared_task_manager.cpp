@@ -15,6 +15,8 @@
 #include "../common/repositories/completed_shared_task_members_repository.h"
 #include "../common/repositories/completed_shared_task_activity_state_repository.h"
 #include "../common/repositories/shared_task_dynamic_zones_repository.h"
+#include "../common/dodh_bellfast_admission.h"
+#include "../common/dodh_longshadow_admission.h"
 #include <ctime>
 
 SharedTaskManager::SharedTaskManager()
@@ -1306,6 +1308,26 @@ bool SharedTaskManager::CanRequestSharedTask(uint32_t task_id, const SharedTaskR
 {
 	auto task = GetSharedTaskDataByTaskId(task_id);
 	if (task.id == 0) {
+		return false;
+	}
+
+	// Authored Depths of Darkhollow earned prerequisites. These gates only
+	// deny: a missing task, faction row, completion archive or unreadable
+	// group level fails closed and cannot grant the mission.
+	if (DodhLongshadowAdmission::Managed(task.id) &&
+	    (request.group_type != SharedTaskRequestGroupType::Group ||
+	     !DodhLongshadowAdmission::EarnedPrerequisites(*m_database, task.id, request.leader_id))) {
+		ClientList::Instance()->SendCharacterMessage(
+			request.leader_id, Chat::Red,
+			"Dustspirit requires a group and the earlier completed Longshadow missions.");
+		return false;
+	}
+
+	if (DodhBellfastAdmission::Managed(task.id) &&
+	    (request.group_type != SharedTaskRequestGroupType::Group ||
+	     request.character_ids.size() < 3 || request.character_ids.size() > 6 ||
+	     !DodhBellfastAdmission::EarnedPrerequisites(*m_database, task.id, request.leader_id) ||
+	     !DodhBellfastAdmission::MinimumAverageLevelMet(*m_database, request.character_ids))) {
 		return false;
 	}
 

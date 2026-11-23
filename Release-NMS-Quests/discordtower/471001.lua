@@ -21,6 +21,7 @@ local cycle_idx = 1
 local cycling = false
 local ooze_queue = 0
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -49,6 +50,11 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				eq.zone_emote(15, "The timeshear hardens -- the Mindblight comes in its harder thread!")
+			end
 			eq.set_timer("aura", 12000)
 			eq.zone_emote(15, "The Mindblight convulses -- stay inside the chamber or be unmade!")
 		end
@@ -71,7 +77,7 @@ function event_timer(e)
 		for _, client in ipairs(raid.alive_clients(e.self:GetX(), e.self:GetY(), 300)) do
 			if math.abs(client:GetX() - e.self:GetX()) > 150
 				or math.abs(client:GetY() - e.self:GetY()) > 150 then
-				raid.hit(e.self, client, 8000)
+				raid.hit(e.self, client, hard and 12000 or 8000)
 				outside = outside + 1
 			end
 		end
@@ -82,7 +88,16 @@ function event_timer(e)
 		if ooze_queue > 0 then
 			ooze_queue = ooze_queue - 1
 			local mob = raid.spawn_add(raid.ADD.ooze, e.self, 70)
-			if mob then adds[#adds + 1] = mob:GetID() end
+			if mob then
+				adds[#adds + 1] = mob:GetID()
+				-- hard: Disgusting Goop -- the ooze splatters as it forms
+				if hard then
+					for _, client in ipairs(raid.alive_clients(mob:GetX(), mob:GetY(), 100)) do
+						raid.hit(e.self, client, 3000)
+					end
+					eq.zone_emote(15, "Disgusting goop splatters around the newborn ooze!")
+				end
+			end
 			eq.zone_emote(15, "A Mindshear Ooze bloats out of the walls!")
 			if ooze_queue > 0 then eq.set_timer("ooze", 12000) end
 		end
@@ -97,13 +112,13 @@ function event_timer(e)
 		cycle_idx = cycle_idx + 1
 		cycling = true
 		raid.set_invul(e.self, true)
-		for i = 1, 3 do
+		for i = 1, hard and 4 or 3 do
 			local mob = raid.spawn_add(raid.ADD.mindgnawer, e.self, 80)
 			if mob then adds[#adds + 1] = mob:GetID() end
 		end
-		ooze_queue = 3
+		ooze_queue = hard and 4 or 3
 		eq.set_timer("ooze", 3000)
-		eq.set_timer("reform", 60000)
+		eq.set_timer("reform", hard and 45000 or 60000)
 		eq.zone_emote(15, "The Mindblight dissolves into the walls -- mindgnawers and oozes pour out!")
 	end
 end
@@ -112,6 +127,6 @@ function event_death_complete(e)
 	clear_adds()
 	eq.stop_timer("ooze")
 	eq.zone_emote(15, "The Mindblight bursts apart -- the citadel's first room falls silent.")
-	raid.spawn_chest(e, raid.CHEST.MINDBLIGHT)
+	raid.spawn_chest(e, raid.chest_for("MINDBLIGHT", raid.is_hard()))
 	eq.signal(raid.CTRL.MINDBLIGHT, 1)
 end

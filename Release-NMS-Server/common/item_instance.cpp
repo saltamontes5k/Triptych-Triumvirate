@@ -2172,6 +2172,7 @@ void EQ::ItemInstance::SetEvolveEquipped(const bool in) const
 		return;
 	}
 
+	const bool was_equipped = m_evolving_details.equipped != 0;
 	m_evolving_details.equipped = in;
 	if (in && !GetTimers().contains("evolve")) {
 		SetTimer("evolve", RuleI(EvolvingItems, DelayUponEquipping));
@@ -2179,7 +2180,18 @@ void EQ::ItemInstance::SetEvolveEquipped(const bool in) const
 	}
 
 	if (in) {
-		GetTimers().at("evolve").SetTimer(RuleI(EvolvingItems, DelayUponEquipping));
+		// A redundant re-mark of an already-equipped item must not restart
+		// the equip window: inventory paths re-mark worn evolving items
+		// repeatedly, which kept the 30s delay permanently fresh and blocked
+		// every accrual. Only a genuine unequip -> equip transition re-arms;
+		// the unequip path disables the timer, and a disabled timer still
+		// sits in the map, so the previous equipped flag is what separates a
+		// transition from a re-mark. (Callers that mark false and then true in
+		// the same breath - _PutItem, DoLootChecks, the swap paths - therefore
+		// still re-arm; the zone's delay latch is what makes that harmless.)
+		if (!was_equipped) {
+			GetTimers().at("evolve").SetTimer(RuleI(EvolvingItems, DelayUponEquipping));
+		}
 		return;
 	}
 

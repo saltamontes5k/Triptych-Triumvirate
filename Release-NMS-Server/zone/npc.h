@@ -243,6 +243,45 @@ public:
 	inline uint32 GetLoottableID() const { return m_loottable_id; }
 	inline bool DropsGlobalLoot() const { return !m_skip_global_loot && RuleB(Custom, EnableGlobalLoot); }
 	void RollIndependentLoot(LootItems &out); // /nmsloot: roll this NPC's tables into out without touching its own loot
+
+	// NMS personal replay rolls (Custom:LootSystem mode 5): one item produced by replaying the
+	// spawn-time loot-source tape. Value semantics only -- no LootItem, no ItemInstance, no
+	// corpse or NPC ownership, no pointers. Safe to hold, copy and hand to delivery later.
+	struct PersonalLootRollResult {
+		uint32 item_id;  // final id, i.e. after any table-time upgrade
+		uint16 charges;  // from the selected lootdrop entry's item_charges
+
+		// Diagnostic / provenance only, not needed to deliver the item.
+		// source_lootdrop_id identifies the lootdrop, NOT a unique lootdrop-entry row.
+		uint32 source_loottable_id;
+		bool   source_is_global;
+		uint32 source_lootdrop_id;
+	};
+
+	// Result of one RollPersonalLoot() call. source_history_available separates the two cases
+	// the dispatcher must not confuse: false -> no captured replayable history exists (e.g. a
+	// zone-suspend restored NPC), so personal replay is unavailable and the caller keeps native
+	// loot; true -> the tape was replayed, and items may legitimately be empty because the RNG
+	// produced no drops.
+	struct PersonalLootRoll {
+		bool                                source_history_available = false;
+		std::vector<PersonalLootRollResult> items;
+	};
+
+	// Replay the spawn-time tape and return the rolled items by value. Intentionally
+	// non-const: it advances zone->random and temporarily sets m_loading_global_loot for
+	// table-time upgrades. No persistent mutation of loot/delivery state.
+	PersonalLootRoll RollPersonalLoot();
+
+	// Pure read, no RNG, no mutation: every final id must resolve before the dispatcher
+	// strips any corpse row, because stripped rows cannot be restored.
+	bool ValidatePersonalLootItems(const PersonalLootRoll &roll);
+
+	// Death-time upgrades on a personal roll, mirroring the two physical passes in NPC::Death:
+	// the LootBuff pass and the combined seasonal/hardcore pass. The passes are independent --
+	// each calls DoUpgradeLoot() once per item, so an item can be upgraded twice when both
+	// fire, exactly like the physical loot. Consumes zone->random, emits no messages.
+	void ApplyPersonalDeathUpgrades(std::vector<PersonalLootRollResult> &items, bool loot_buff_enabled, bool seasonal_or_hardcore);
 	inline uint32 GetCopper() const { return m_loot_copper; }
 	inline uint32 GetSilver() const { return m_loot_silver; }
 	inline uint32 GetGold() const { return m_loot_gold; }
@@ -577,6 +616,7 @@ public:
 
 	bool IsRaidTarget() const { return raid_target; };
 	bool IsRareSpawn() const { return rare_spawn; }
+	bool IsRareCreature() const { return rare_creature; }
 	void ResetHPUpdateTimer() { send_hp_update_timer.Start(); }
 
 	bool IgnoreDespawn() { return ignore_despawn; }
@@ -744,6 +784,17 @@ protected:
 	uint32    m_loot_platinum;
 	LootItems m_loot_items;
 	LootItems *m_loot_item_sink = nullptr; // /nmsloot: set only during RollIndependentLoot
+
+	// NMS personal replay rolls (mode 5): the loottables this NPC actually consumed at spawn,
+	// in order; is_global is part of the identity (cash rolls only for the NPC's own table,
+	// and DoUpgradeLoot's Fabled forcing keys off it). Captured in AddLootTable once every
+	// early-out has passed; never cleared at death or corpse creation. Suppressed while
+	// m_loot_item_sink is set so a death-time RollIndependentLoot reroll never pollutes it.
+	struct LootSourceEntry {
+		uint32 loottable_id;
+		bool   is_global;
+	};
+	std::vector<LootSourceEntry> m_loot_source_tables;
 
 	// zone state
 	bool m_resumed_from_zone_suspend = false;

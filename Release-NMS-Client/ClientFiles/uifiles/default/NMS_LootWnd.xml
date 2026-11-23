@@ -92,7 +92,7 @@
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
   <TopAnchorOffset>26</TopAnchorOffset>
-  <BottomAnchorOffset>108</BottomAnchorOffset>
+  <BottomAnchorOffset>136</BottomAnchorOffset>
   <LeftAnchorOffset>8</LeftAnchorOffset>
   <RightAnchorOffset>296</RightAnchorOffset>
     <Style_Border>true</Style_Border>
@@ -133,7 +133,7 @@
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
   <TopAnchorOffset>26</TopAnchorOffset>
-  <BottomAnchorOffset>108</BottomAnchorOffset>
+  <BottomAnchorOffset>136</BottomAnchorOffset>
   <LeftAnchorOffset>288</LeftAnchorOffset>
   <RightAnchorOffset>8</RightAnchorOffset>
     <Style_Border>true</Style_Border>
@@ -168,8 +168,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>8</LeftAnchorOffset>
   <RightAnchorOffset>72</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -203,8 +203,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>76</LeftAnchorOffset>
   <RightAnchorOffset>140</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -238,8 +238,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>144</LeftAnchorOffset>
   <RightAnchorOffset>208</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -273,10 +273,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
-  <LeftAnchorOffset>76</LeftAnchorOffset>
-  <RightAnchorOffset>140</RightAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
+  <LeftAnchorOffset>212</LeftAnchorOffset>
+  <RightAnchorOffset>276</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Tribute</Text>
   <TextColor>
@@ -307,10 +307,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
-  <LeftAnchorOffset>76</LeftAnchorOffset>
-  <RightAnchorOffset>140</RightAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
+  <LeftAnchorOffset>280</LeftAnchorOffset>
+  <RightAnchorOffset>344</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Vault</Text>
   <TextColor>
@@ -341,10 +341,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
-  <LeftAnchorOffset>76</LeftAnchorOffset>
-  <RightAnchorOffset>140</RightAnchorOffset>
+  <TopAnchorOffset>98</TopAnchorOffset>
+  <BottomAnchorOffset>74</BottomAnchorOffset>
+  <LeftAnchorOffset>8</LeftAnchorOffset>
+  <RightAnchorOffset>72</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Destroy</Text>
   <TextColor>
@@ -376,10 +376,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
-  <LeftAnchorOffset>212</LeftAnchorOffset>
-  <RightAnchorOffset>288</RightAnchorOffset>
+  <TopAnchorOffset>98</TopAnchorOffset>
+  <BottomAnchorOffset>74</BottomAnchorOffset>
+  <LeftAnchorOffset>76</LeftAnchorOffset>
+  <RightAnchorOffset>186</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Pass to Target</Text>
   <TextColor>
@@ -399,7 +399,7 @@
   <ScreenID>NMSLootAlwaysCheck</ScreenID>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>300</X>
+    <X>352</X>
     <Y>316</Y>
   </Location>
   <Size>
@@ -410,10 +410,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>96</TopAnchorOffset>
-  <BottomAnchorOffset>80</BottomAnchorOffset>
-  <LeftAnchorOffset>300</LeftAnchorOffset>
-  <RightAnchorOffset>316</RightAnchorOffset>
+  <TopAnchorOffset>124</TopAnchorOffset>
+  <BottomAnchorOffset>108</BottomAnchorOffset>
+  <LeftAnchorOffset>352</LeftAnchorOffset>
+  <RightAnchorOffset>368</RightAnchorOffset>
   <TooltipReference></TooltipReference>
   <Style_Checkbox>true</Style_Checkbox>
   <Text></Text>
@@ -429,21 +429,21 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>320</X>
+    <X>370</X>
     <Y>315</Y>
   </Location>
   <Size>
-    <CX>84</CX>
+    <CX>42</CX>
     <CY>16</CY>
   </Size>
   <TopAnchorToTop>false</TopAnchorToTop>
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>97</TopAnchorOffset>
-  <BottomAnchorOffset>81</BottomAnchorOffset>
-  <LeftAnchorOffset>320</LeftAnchorOffset>
-  <RightAnchorOffset>404</RightAnchorOffset>
+  <TopAnchorOffset>125</TopAnchorOffset>
+  <BottomAnchorOffset>109</BottomAnchorOffset>
+  <LeftAnchorOffset>370</LeftAnchorOffset>
+  <RightAnchorOffset>412</RightAnchorOffset>
   <Text>Always</Text>
   <TextColor>
     <R>255</R>
@@ -471,10 +471,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>70</TopAnchorOffset>
-  <BottomAnchorOffset>46</BottomAnchorOffset>
-  <LeftAnchorOffset>8</LeftAnchorOffset>
-  <RightAnchorOffset>118</RightAnchorOffset>
+  <TopAnchorOffset>98</TopAnchorOffset>
+  <BottomAnchorOffset>74</BottomAnchorOffset>
+  <LeftAnchorOffset>190</LeftAnchorOffset>
+  <RightAnchorOffset>300</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Keep All</Text>
   <TextColor>
@@ -506,10 +506,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>70</TopAnchorOffset>
-  <BottomAnchorOffset>46</BottomAnchorOffset>
-  <LeftAnchorOffset>122</LeftAnchorOffset>
-  <RightAnchorOffset>232</RightAnchorOffset>
+  <TopAnchorOffset>98</TopAnchorOffset>
+  <BottomAnchorOffset>74</BottomAnchorOffset>
+  <LeftAnchorOffset>304</LeftAnchorOffset>
+  <RightAnchorOffset>414</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Bank All</Text>
   <TextColor>
@@ -541,10 +541,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>70</TopAnchorOffset>
-  <BottomAnchorOffset>46</BottomAnchorOffset>
-  <LeftAnchorOffset>236</LeftAnchorOffset>
-  <RightAnchorOffset>386</RightAnchorOffset>
+  <TopAnchorOffset>98</TopAnchorOffset>
+  <BottomAnchorOffset>74</BottomAnchorOffset>
+  <LeftAnchorOffset>418</LeftAnchorOffset>
+  <RightAnchorOffset>568</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
   <Text>Sell All</Text>
   <TextColor>
@@ -576,8 +576,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>288</LeftAnchorOffset>
   <RightAnchorOffset>226</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -611,8 +611,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>222</LeftAnchorOffset>
   <RightAnchorOffset>160</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -646,8 +646,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>156</LeftAnchorOffset>
   <RightAnchorOffset>94</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -681,8 +681,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>100</TopAnchorOffset>
-  <BottomAnchorOffset>76</BottomAnchorOffset>
+  <TopAnchorOffset>128</TopAnchorOffset>
+  <BottomAnchorOffset>104</BottomAnchorOffset>
   <LeftAnchorOffset>90</LeftAnchorOffset>
   <RightAnchorOffset>8</RightAnchorOffset>
   <Style_Checkbox>false</Style_Checkbox>
@@ -705,8 +705,8 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>412</X>
-    <Y>346</Y>
+    <X>8</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>56</CX>
@@ -716,10 +716,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>288</LeftAnchorOffset>
-  <RightAnchorOffset>232</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>692</LeftAnchorOffset>
+  <RightAnchorOffset>636</RightAnchorOffset>
   <Text>No rule:</Text>
   <TextColor>
     <R>200</R>
@@ -735,8 +735,8 @@
   <ScreenID>NMSLootDefAskCheck</ScreenID>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>472</X>
-    <Y>346</Y>
+    <X>72</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>16</CX>
@@ -746,10 +746,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>228</LeftAnchorOffset>
-  <RightAnchorOffset>212</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>628</LeftAnchorOffset>
+  <RightAnchorOffset>612</RightAnchorOffset>
   <TooltipReference></TooltipReference>
   <Style_Checkbox>true</Style_Checkbox>
   <Text></Text>
@@ -765,8 +765,8 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>490</X>
-    <Y>346</Y>
+    <X>90</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>32</CX>
@@ -776,10 +776,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>210</LeftAnchorOffset>
-  <RightAnchorOffset>178</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>610</LeftAnchorOffset>
+  <RightAnchorOffset>578</RightAnchorOffset>
   <Text>Ask</Text>
   <TextColor>
     <R>255</R>
@@ -795,8 +795,8 @@
   <ScreenID>NMSLootDefBagCheck</ScreenID>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>526</X>
-    <Y>346</Y>
+    <X>132</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>16</CX>
@@ -806,10 +806,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>174</LeftAnchorOffset>
-  <RightAnchorOffset>158</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>568</LeftAnchorOffset>
+  <RightAnchorOffset>552</RightAnchorOffset>
   <TooltipReference></TooltipReference>
   <Style_Checkbox>true</Style_Checkbox>
   <Text></Text>
@@ -825,8 +825,8 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>544</X>
-    <Y>346</Y>
+    <X>150</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>32</CX>
@@ -836,10 +836,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>156</LeftAnchorOffset>
-  <RightAnchorOffset>124</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>550</LeftAnchorOffset>
+  <RightAnchorOffset>518</RightAnchorOffset>
   <Text>Keep</Text>
   <TextColor>
     <R>255</R>
@@ -855,8 +855,8 @@
   <ScreenID>NMSLootDefBankCheck</ScreenID>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>580</X>
-    <Y>346</Y>
+    <X>192</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>16</CX>
@@ -866,10 +866,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>120</LeftAnchorOffset>
-  <RightAnchorOffset>104</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>508</LeftAnchorOffset>
+  <RightAnchorOffset>492</RightAnchorOffset>
   <TooltipReference></TooltipReference>
   <Style_Checkbox>true</Style_Checkbox>
   <Text></Text>
@@ -885,8 +885,8 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>598</X>
-    <Y>346</Y>
+    <X>210</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>38</CX>
@@ -896,10 +896,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>102</LeftAnchorOffset>
-  <RightAnchorOffset>64</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>490</LeftAnchorOffset>
+  <RightAnchorOffset>452</RightAnchorOffset>
   <Text>Bank</Text>
   <TextColor>
     <R>255</R>
@@ -915,8 +915,8 @@
   <ScreenID>NMSLootDefSellCheck</ScreenID>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>640</X>
-    <Y>346</Y>
+    <X>258</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>16</CX>
@@ -926,10 +926,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>60</LeftAnchorOffset>
-  <RightAnchorOffset>44</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>442</LeftAnchorOffset>
+  <RightAnchorOffset>426</RightAnchorOffset>
   <TooltipReference></TooltipReference>
   <Style_Checkbox>true</Style_Checkbox>
   <Text></Text>
@@ -945,8 +945,8 @@
   <Font>3</Font>
   <RelativePosition>true</RelativePosition>
   <Location>
-    <X>658</X>
-    <Y>346</Y>
+    <X>276</X>
+    <Y>368</Y>
   </Location>
   <Size>
     <CX>34</CX>
@@ -956,10 +956,10 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>false</LeftAnchorToLeft>
   <RightAnchorToLeft>false</RightAnchorToLeft>
-  <TopAnchorOffset>66</TopAnchorOffset>
-  <BottomAnchorOffset>50</BottomAnchorOffset>
-  <LeftAnchorOffset>42</LeftAnchorOffset>
-  <RightAnchorOffset>8</RightAnchorOffset>
+  <TopAnchorOffset>72</TopAnchorOffset>
+  <BottomAnchorOffset>56</BottomAnchorOffset>
+  <LeftAnchorOffset>424</LeftAnchorOffset>
+  <RightAnchorOffset>390</RightAnchorOffset>
   <Text>Sell</Text>
   <TextColor>
     <R>255</R>
@@ -977,7 +977,7 @@
   <RelativePosition>true</RelativePosition>
   <Location>
     <X>8</X>
-    <Y>372</Y>
+    <Y>396</Y>
   </Location>
   <Size>
     <CX>684</CX>
@@ -987,8 +987,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>40</TopAnchorOffset>
-  <BottomAnchorOffset>24</BottomAnchorOffset>
+  <TopAnchorOffset>44</TopAnchorOffset>
+  <BottomAnchorOffset>28</BottomAnchorOffset>
   <LeftAnchorOffset>8</LeftAnchorOffset>
   <RightAnchorOffset>692</RightAnchorOffset>
   <Text>Click an item, then choose what to do. Inspect prints an item link in chat. Always saves a rule.</Text>
@@ -1008,7 +1008,7 @@
   <RelativePosition>true</RelativePosition>
   <Location>
     <X>8</X>
-    <Y>390</Y>
+    <Y>414</Y>
   </Location>
   <Size>
     <CX>684</CX>
@@ -1018,8 +1018,8 @@
   <BottomAnchorToTop>false</BottomAnchorToTop>
   <LeftAnchorToLeft>true</LeftAnchorToLeft>
   <RightAnchorToLeft>true</RightAnchorToLeft>
-  <TopAnchorOffset>22</TopAnchorOffset>
-  <BottomAnchorOffset>6</BottomAnchorOffset>
+  <TopAnchorOffset>26</TopAnchorOffset>
+  <BottomAnchorOffset>10</BottomAnchorOffset>
   <LeftAnchorOffset>8</LeftAnchorOffset>
   <RightAnchorOffset>692</RightAnchorOffset>
   <Text>Sell Normal sells normal-tier items only and keeps Enchanted and Legendary.</Text>

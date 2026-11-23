@@ -109,6 +109,15 @@ static int Shields[] = {
 // areCustomNPCsEnabled if set to true will allow the NPCs defined in NPCs[] to be injected in game
 bool areCustomNPCsEnabled = false;
 
+// areRetroRacesEnabled if set to true remaps the race->model table at registration time
+// (CRaceGenderInfoManager::AddRaceGender) for clients in classic/old-models mode:
+// froglok 330 renders as the classic froglok (FRO), drakkin 522 as sarnak (SRW), and
+// vah shir 130 as kerran (CPM/CPF). AllLuclinPcModelsOff=TRUE flips all three; vah shir
+// additionally honors its own UseLuclinVahShirMale/Female keys (the stock client
+// special-cases 130 before the master switch). New-models clients keep standard models.
+// Requires the matching code registrations in the client's GlobalLoad_chr.txt files.
+bool areRetroRacesEnabled = true;
+
 // NPC Entry:
 // raceID is the index. If it's a new NPC, start at 733. You'll need to update the rule NPC:MaxRaceID
 // GenderID ranges from 0 to 2 usually

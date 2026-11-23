@@ -122,10 +122,10 @@ sub EVENT_SAY {
     quest::say("Good, be on your way then. Return to me when you have completed your objective. I wish you luck and await your return.");
   }
   if (($text=~/pit of the lost/i) && defined($qglobals{ikky}) && ($qglobals{ikky} >= 4)) {
-    quest::say("I'm glad you've decided to continue helping the brotherhood. We can always use adventurers like you. There have been some mysterious happenings coming from the Pit of the Lost. I don't have the information on what's going on, but another of the brotherhood nearby does. You must venture south of the Martyrs Passage and speak with Tublik Narwether. He will know what's going on.");
+    quest::say("I'm glad you've decided to continue helping the brotherhood. We can always use adventurers like you. There have been some mysterious happenings coming from the Pit of the Lost. I don't have the information on what's going on, but another of the brotherhood nearby does. You must venture south of the Martyrs Passage and speak with Tublik Narwethar. He will know what's going on.");
   }
   if (($text=~/crumbled sanctuary/i) && defined($qglobals{ikky}) && ($qglobals{ikky} >= 4)) {
-    quest::say("I'm glad you're sticking around to help out with some additional tasks. We can certainly use the help. On the east side of the largest temple to the west, there exists a crumbled temple. As of yet, we're unsure what the cause or reason of the destruction was. I don't have all the information, but Tublik Narwether does. Seek him out to the south of the Martyrs Passage and find out what you can from him.");
+    quest::say("I'm glad you're sticking around to help out with some additional tasks. We can certainly use the help. On the east side of the largest temple to the west, there exists a crumbled temple. As of yet, we're unsure what the cause or reason of the destruction was. I don't have all the information, but Tublik Narwethar does. Seek him out to the south of the Martyrs Passage and find out what you can from him.");
   }
   if ((($text=~/temple of the damned/i) || ($text=~/discover their plan/i)) && defined($qglobals{ikky}) && ($qglobals{ikky} == 5)) {
     quest::say("You must go into the Temple of the Damned. It is the temple directly behind me with the fog looming around it. Explore the temple and search for the instruments of power that the Legion of Mata Muram priests are collecting. Once you have the relics in hand, return them to me so I can study them further. Good luck to you, $name.");

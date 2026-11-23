@@ -9,6 +9,20 @@ namespace SpiritShroud {
 // RoF2 AA window rebuild enumerates IDs [0,49999), unlike its unbounded cache.
 inline constexpr uint32_t RoF2AAExclusiveMaximum = 49999;
 inline bool EnumerableRank(uint32_t id) { return id && id < RoF2AAExclusiveMaximum; }
+// Ability-id band holding the ported monster-ability catalog (utils/sql/
+// 20261117_shroud_aa_mapping_v442.sql). The rows are bound per form and listed
+// in the client's Monster Abilities pane; every engine check that keys off the
+// ShroudPassive/ShroudActive categories must accept the band as well, which is
+// what this predicate is for.
+inline constexpr uint32_t NativeAbilityFirst = 46000;
+inline constexpr uint32_t NativeAbilityLast  = 46999;
+inline bool NativeAbility(uint32_t id)
+{
+    // The ported catalog, plus the live-captured Imp Wizard 5 starter set
+    // (upstream utils/sql/shroud/007) which shares the presentation.
+    return (id >= NativeAbilityFirst && id <= NativeAbilityLast) ||
+           (id >= 48000 && id <= 48006);
+}
 using Bytes = std::vector<uint8_t>;
 inline uint32_t Read32(const uint8_t* p) { return uint32_t(p[0])|(uint32_t(p[1])<<8)|(uint32_t(p[2])<<16)|(uint32_t(p[3])<<24); }
 inline void Put32(Bytes& out,uint32_t v) { for(unsigned i=0;i<4;++i) out.push_back(uint8_t(v>>(8*i))); }
@@ -32,6 +46,9 @@ struct Template {
  std::array<uint32_t,NativeStatCount> native_stats{};
  bool has_native_stats{},has_native_resources{},resource_maxima{};
  float model_size{};
+ // Mob texture overrides carried from the legacy rows (0 = race default,
+ // helmet 255 = none). The dwarven ghost hull needs texture 3 to render.
+ uint32_t texture{},helmet_texture{255};
  std::vector<uint32_t> abilities,ability_names,free_abilities;
  std::vector<Equipment> equipment;
  // Captured free highest ranks may have no evidenced predecessor chain.

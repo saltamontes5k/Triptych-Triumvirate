@@ -13,6 +13,11 @@ function event_say(e)
 			e.self:Say("You cannot enter the tower without the Enraged Flesh Charm. Grand Librarian Maelin in the Plane of Knowledge can prepare one, if you are worthy.");
 			return;
 		end
+		if not por.can_offer(e.other, e.self, 372, 372000, 103726, 70,
+			por.tasks.become_the_vessel, por.items.enraged_flesh_charm) then
+			e.self:Say("You are not yet prepared to seek the corruption.");
+			return;
+		end
 		if e.other:IsTaskCompleted(por.tasks.samples_of_corruption) then
 			e.self:Say("You have already brought me the proof I needed. Give me the Silent Harmonic Chime and I will do what I can.");
 		elseif not e.other:IsTaskActive(por.tasks.samples_of_corruption) then

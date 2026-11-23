@@ -33,7 +33,7 @@ function event_say(e)
 		else
 			e.other:Message(MT.NPCQuestSay, "Jerimo Jiao says, 'Place your hands on one of the altars behind me and the way will be revealed. Be wary for you are about to encounter some of the most vicious trusik known. If for any reason you wish to return, place your hands on the golem within the temple.'");
 			local dz = e.other:CreateExpedition(uqua_raid)
-      dz.AddReplayLockout(eq.seconds("14h"))
+      dz:AddReplayLockout(eq.seconds("14h"))
 		end
 	end
 end

@@ -32,6 +32,11 @@ public:
 	DatabaseUpdate *SetDatabase(Database *db);
 	DatabaseUpdate *SetContentDatabase(Database *db);
 	DatabaseUpdate *SetSkipBackup(bool skip);
+	// Pass-throughs for the pre-migration backup: how long the dump child may run before
+	// it is abandoned, and whether a failed/unresolvable backup exits (operator CLI) or
+	// logs loudly and applies without the backup (the boot path must not wedge on it).
+	DatabaseUpdate *SetDumpTimeoutMinutes(int minutes);
+	DatabaseUpdate *SetFailOnDumpFailure(bool fail);
 	bool HasPendingUpdates();
 
 	static DatabaseUpdate* Instance()
@@ -42,6 +47,8 @@ public:
 
 private:
 	bool m_skip_backup = false;
+	int  m_dump_timeout_minutes = 15;
+	bool m_fail_on_dump_failure = true;
 	Database *m_database;
 	Database *m_content_database;
 	static bool CheckVersionsUpToDate(DatabaseVersion v, DatabaseVersion b);

@@ -17,6 +17,7 @@ local portals = { 80, 60, 40, 20 }
 local portal_idx = 1
 local sentinels_up = false
 local adds = {}
+local hard = false
 
 local function clear_adds()
 	local el = eq.get_entity_list()
@@ -44,7 +45,13 @@ function event_combat(e)
 	if e.joined then
 		if not engaged then
 			engaged = true
-			eq.set_timer("draw", 40000)
+			hard = raid.is_hard()
+			if hard then
+				raid.scale_hard(e.self, 1.5)
+				portals = { 90, 80, 60, 40, 20 }
+				eq.zone_emote(15, "The timeshear hardens -- Pallorax comes in its harder thread!")
+			end
+			eq.set_timer("draw", hard and 25000 or 40000)
 			eq.zone_emote(15, "Pallorax the Soul Slayer howls -- the hunt begins!")
 		end
 		eq.stop_timer("resetcheck")
@@ -82,7 +89,7 @@ function event_timer(e)
 		portal_idx = portal_idx + 1
 		sentinels_up = true
 		raid.set_invul(e.self, true)
-		for i = 1, 2 do
+		for i = 1, hard and 3 or 2 do
 			local mob = raid.spawn_add(raid.ADD.sentinel, e.self, 60)
 			if mob then
 				adds[#adds + 1] = mob:GetID()
@@ -100,6 +107,6 @@ end
 function event_death_complete(e)
 	clear_adds()
 	eq.zone_emote(15, "Pallorax the Soul Slayer is slain. Three tower keys tumble from his hide.")
-	raid.spawn_chest(e, raid.CHEST.PALLORAX)
+	raid.spawn_chest(e, raid.chest_for("PALLORAX", raid.is_hard()))
 	eq.signal(raid.CTRL.PALLORAX, 1)
 end

@@ -6,6 +6,22 @@ local channeler_alive			= 2;
 local barxt_alive				= true;
 local init_queued 				= false;
 
+-- Items of Destructive Protection block the Aura of Destruction while carried.
+local destructive_protection_items = {
+	67736, 67737, 67738, 67739,
+	1067736, 1067737, 1067738, 1067739,
+	2067736, 2067737, 2067738, 2067739,
+}
+
+local function has_destructive_protection(client)
+	for _, item_id in ipairs(destructive_protection_items) do
+		if client:HasItem(item_id) then
+			return true
+		end
+	end
+	return false
+end
+
 function add_loot(e)
   local item_ids = {68740, 68741, 68742, 68743, 68744, 68745, 68746, 68747, 68748, 68749, 68750, 68751, 68752, 68753, 68754, 68755, 68756, 68757}
   local item1 = item_ids[math.random(#item_ids)]
@@ -188,7 +204,11 @@ function aura_timer(e)
 	if e.timer == "aoe" then
 		local target = eq.get_entity_list():GetRandomClient(e.self:GetX(), e.self:GetY(), e.self:GetZ(), 360 * 360)
 		if target.valid then
-			e.self:CastSpell(5120, target:GetID()) --Withering Destruction
+			if has_destructive_protection(target) then
+				target:Message(MT.Yellow, "Your item of Destructive Protection absorbs the Aura of Destruction.")
+			else
+				e.self:CastSpell(5120, target:GetID()) --Withering Destruction
+			end
 		end
 	elseif e.timer == "healthcheck" then
 		if guardian_alive then

@@ -19,7 +19,8 @@ PreviewRankRange PreviewRange(const Template& form, const Rank* requested)
  PreviewRankRange result;
  if (!requested || !requested->base_ability || form.class_id < 1 || form.class_id > 16) return result;
  const auto* ability = requested->base_ability;
- if ((ability->category != 3 && ability->category != 4) ||
+ if (((ability->category != 3 && ability->category != 4) &&
+      !NativeAbility(ability->id)) ||
      !(ability->classes & (1U << form.class_id))) return result;
  std::set<uint32_t> available(form.abilities.begin(), form.abilities.end());
  std::vector<const Rank*> chain;
@@ -43,7 +44,8 @@ template<class Rank>
 bool HideCachedRank(const Template* form, const Rank* rank)
 {
  return rank && rank->base_ability && EnumerableRank(rank->id) &&
-  (rank->base_ability->category==3 || rank->base_ability->category==4) &&
+  (rank->base_ability->category==3 || rank->base_ability->category==4 ||
+   NativeAbility(rank->base_ability->id)) &&
   (!form || !PreviewRange(*form,rank).valid);
 }
 
