@@ -447,7 +447,7 @@ Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: 
 ## Future Plans
 - More modernization to match more current versions of EQEMU
 - Various changes that catch eye
-- more scaffolding, hope to have progression up to uf at least semi-retail, then after that start filling with custom
+- more scaffolding, hope to have progression up to uf, then after that start filling with custom
 - force lvl 60+ to v1 shards for better compatibility with ldon+ zones
 - future plans for future xpansions/newbie quests at pok level - revamp these to pop-tier or better, especially zones that get looked over due to server's progression-style (crescent reach, eastern wastes, etc)
 - explorer path scaffold for ldon+ scaffold, only hero available right now
@@ -456,6 +456,12 @@ Rank I = idol hand-in as before (god-followers at the Bazaar keeper; agnostics: 
 - marriage system with live eq style con ally to spouse
 - nimbus and more illusion prizes
 - unique utility spells/aas
+- get arcade working when I remember to look at it, more card game fixes, fitting games for Crowe's
+- add ability to change religion at religious quest npc by giving them water of their religion
+- server rule opt in land rent and escrow with possible events like Georgist monopoly game 
+- way to attain trophies outside of gm summoning items
+- make shroud tab useful for multiclassing and shrouds
+- PoWar content and custom content, also a lvl 85 version of the zone if you are above 65
 
 ## Credits
 
